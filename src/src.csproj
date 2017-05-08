@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project Sdk="Microsoft.NET.Sdk">  
+  <PropertyGroup>
+    <TargetFramework>netstandard1.4</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <!--<PackageReference Include="System.Reflection.Extensions" Version="4.3.0"/>-->
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0"/>
+  </ItemGroup>
+</Project>
