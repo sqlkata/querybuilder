@@ -19,7 +19,7 @@
     <projectUrl>https://github.com/sqlkata/querybuilder</projectUrl>
 
     <!-- The icon is used in Visual Studio's package manager UI -->
-    <iconUrl>https://github.com/sqlkata/querybuilder/nuget_icon.png</iconUrl>
+    <iconUrl>https://github.com/sqlkata/querybuilder/logo.png</iconUrl>
 
     <!-- If true, this value prompts the user to accept the license when
             installing the package. -->
