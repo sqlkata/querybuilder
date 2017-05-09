@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/test/bin/Debug/netcoreapp1.1/test.dll",
+            "program": "${workspaceRoot}/example/bin/Debug/netcoreapp1.1/example.dll",
             "args": [],
-            "cwd": "${workspaceRoot}/test",
+            "cwd": "${workspaceRoot}/example",
             "console": "internalConsole",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

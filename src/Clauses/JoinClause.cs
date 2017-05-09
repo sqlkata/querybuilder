@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace SqlKata
@@ -11,6 +12,15 @@ namespace SqlKata
             {
                 return Join.Bindings.ToArray();
             }
+        }
+
+        public override AbstractClause Clone()
+        {
+            return new BaseJoin
+            {
+                Join = Join.Clone(),
+                Component = Component,
+            };
         }
     }
 

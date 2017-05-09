@@ -410,7 +410,7 @@ namespace SqlKata
         }
         public Q WhereIn(string column, Func<Query, Query> callback)
         {
-            var query = callback.Invoke(new Query(_compiler));
+            var query = callback.Invoke(new Query());
             return WhereIn(column, query);
         }
 
@@ -495,7 +495,7 @@ namespace SqlKata
         }
         public Q WhereExists(Func<Query, Query> callback)
         {
-            var childQuery = new Query(_compiler).SetParent(this);
+            var childQuery = new Query().SetParent(this);
             return WhereExists(callback.Invoke(childQuery));
         }
 

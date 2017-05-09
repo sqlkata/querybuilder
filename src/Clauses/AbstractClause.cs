@@ -7,16 +7,11 @@ namespace SqlKata
         public string Component { get; set; }
         public virtual object[] Bindings
         {
-            get
-            {
-                return new object[] { };
-            }
-
-            set
-            {
-
-            }
+            get => new object[] { };
+            set { }
         }
+
+        public abstract AbstractClause Clone();
     }
 
 }

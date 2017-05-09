@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
@@ -11,6 +9,15 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public bool Ascending { get; set; } = true;
+
+        public override AbstractClause Clone()
+        {
+            return new OrderBy
+            {
+                Column = Column,
+                Ascending = Ascending
+            };
+        }
     }
 
     public class RawOrderBy : AbstractOrderBy, RawInterface
@@ -19,20 +26,29 @@ namespace SqlKata
         public string Expression { get; set; }
         public override object[] Bindings
         {
-            get
-            {
-                return _bindings;
-            }
+            get => _bindings;
             set
             {
                 _bindings = value;
             }
         }
+
+        public override AbstractClause Clone()
+        {
+            return new RawOrderBy
+            {
+                Expression = Expression,
+                Bindings = _bindings
+            };
+        }
     }
 
     public class OrderByRandom : AbstractOrderBy
     {
-
+        public override AbstractClause Clone()
+        {
+            return new OrderByRandom();
+        }
     }
 
 }

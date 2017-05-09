@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SqlKata
 {
-    public class AbstractFrom : AbstractClause
+    public abstract class AbstractFrom : AbstractClause
     {
 
     }
@@ -14,6 +14,15 @@ namespace SqlKata
     public class From : AbstractFrom
     {
         public string Table { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new From
+            {
+                Table = Table,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -23,6 +32,15 @@ namespace SqlKata
     {
         public Query Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new QueryFrom
+            {
+                Query = Query.Clone(),
+                Component = Component,
+            };
+        }
     }
 
     public class RawFrom : AbstractFrom, RawInterface
@@ -31,14 +49,21 @@ namespace SqlKata
         public string Expression { get; set; }
         public override object[] Bindings
         {
-            get
-            {
-                return _bindings;
-            }
+            get => _bindings;
             set
             {
                 _bindings = value;
             }
+        }
+
+        public override AbstractClause Clone()
+        {
+            return new RawFrom
+            {
+                Expression = Expression,
+                Bindings = _bindings,
+                Component = Component,
+            };
         }
     }
 
