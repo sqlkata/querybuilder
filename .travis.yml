@@ -4,5 +4,7 @@ dotnet: 1.0.1
 dist: trusty
 install:
   - dotnet restore src/SqlKata.csproj
+  - dotnet restore test/test.csproj
 script:
   - dotnet build src/SqlKata.csproj
+  - dotnet test test/test.csproj
