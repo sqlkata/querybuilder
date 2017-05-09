@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
     <metadata>
     <!-- The identifier that must be unique within the hosting gallery -->
-    <id>SqlKata.QueryBuilder</id>
+    <id>SqlKata-QueryBuilder</id>
 
     <!-- The package version number that is used when resolving dependencies -->
     <version>1.0.0</version>

@@ -1,0 +1,8 @@
+language: csharp
+mono: none
+dotnet: 1.0.1
+dist: trusty
+install:
+  - dotnet restore src/SqlKata.csproj
+script:
+  - dotnet build src/SqlKata.csproj

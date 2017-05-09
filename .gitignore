@@ -5,6 +5,7 @@
 *.pfx
 config.json
 npm-debug.log
+test
 
 # User-specific files
 *.suo
