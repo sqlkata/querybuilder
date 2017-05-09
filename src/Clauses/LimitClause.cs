@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,19 +11,14 @@ namespace SqlKata
 
         public override object[] Bindings
         {
-            get
-            {
-                return new[] { _limit, _offset }
-                .Where(x => x > 0).Cast<object>().ToArray();
-            }
+            get => new[] { _limit, _offset }.Where(x => x > 0)
+                .Cast<object>()
+                .ToArray();
         }
 
         public int Limit
         {
-            get
-            {
-                return _limit;
-            }
+            get => _limit;
 
             set
             {
@@ -35,10 +31,7 @@ namespace SqlKata
 
         public int Offset
         {
-            get
-            {
-                return _offset;
-            }
+            get => _offset;
 
             set
             {
@@ -74,6 +67,16 @@ namespace SqlKata
         public LimitOffset Clear()
         {
             return ClearLimit().ClearOffset();
+        }
+
+        public override AbstractClause Clone()
+        {
+            return new LimitOffset
+            {
+                Offset = Offset,
+                Limit = Limit,
+                Component = Component,
+            };
         }
     }
 }

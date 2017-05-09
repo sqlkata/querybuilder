@@ -36,9 +36,15 @@ namespace SqlKata
                 return res3;
             }
         }
-
-        public Join(Compiler compiler) : base(compiler)
+        public Join() : base()
         {
+        }
+
+        public override Join Clone()
+        {
+            var clone = base.Clone();
+            clone._type = _type;
+            return clone;
         }
 
         public Join AsType(string type)
@@ -85,7 +91,7 @@ namespace SqlKata
 
         public override Join NewQuery()
         {
-            return new Join(_compiler);
+            return new Join();
         }
     }
 }

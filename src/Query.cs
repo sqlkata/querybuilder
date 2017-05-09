@@ -24,8 +24,16 @@ namespace SqlKata
             return new Raw(value);
         }
 
-        public Query(Compiler compiler) : base(compiler)
+        public Query() : base()
         {
+        }
+
+        public override Query Clone()
+        {
+            var clone = base.Clone();
+            clone._Alias = _Alias;
+            clone._Distinct = _Distinct;
+            return clone;
         }
 
         public Query As(string alias)
@@ -196,22 +204,9 @@ namespace SqlKata
             return GroupByRaw(expression.Value, expression.Bindings);
         }
 
-        public SqlResult ToSql(bool format = false)
-        {
-            _compiler.IsDebug = format;
-
-            var query = _compiler.OnBeforeCompile(this);
-
-            var sql = _compiler.CompileSelect(query);
-
-            sql = _compiler.OnAfterCompile(sql, query.Bindings);
-
-            return new SqlResult(sql, query.Bindings);
-        }
-
         public override Query NewQuery()
         {
-            return new Query(_compiler);
+            return new Query();
         }
 
     }

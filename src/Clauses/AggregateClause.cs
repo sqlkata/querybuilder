@@ -7,5 +7,15 @@ namespace SqlKata
     {
         public List<string> Columns { get; set; }
         public string Type { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new AggregateClause
+            {
+                Type = Type,
+                Columns = new List<string>(Columns),
+                Component = Component,
+            };
+        }
     }
 }

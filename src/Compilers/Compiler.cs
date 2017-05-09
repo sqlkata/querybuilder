@@ -22,6 +22,14 @@ namespace SqlKata.Compilers
             "lock",
         };
 
+        public SqlResult Compile(Query query)
+        {
+            query = OnBeforeCompile(query);
+            var sql = CompileSelect(query);
+            sql = OnAfterCompile(sql, query.Bindings);
+            return new SqlResult(sql, query.Bindings);
+        }
+
         public virtual Query OnBeforeCompile(Query query)
         {
             return query;
@@ -132,7 +140,7 @@ namespace SqlKata.Compilers
 
                 var compiled = CompileSelect(fromQuery);
 
-                return "(" + separator + compiled + separator + ")" + alias;
+                return "(" + compiled + ")" + alias;
             }
 
             if (from is From)
@@ -324,7 +332,7 @@ namespace SqlKata.Compilers
             return JoinComponents(sql, "having");
         }
 
-        protected virtual string CompileLimit(Query query)
+        public virtual string CompileLimit(Query query)
         {
             var limitOffset = query.GetOne("limit") as LimitOffset;
 
@@ -336,7 +344,7 @@ namespace SqlKata.Compilers
             return "";
         }
 
-        protected virtual string CompileOffset(Query query)
+        public virtual string CompileOffset(Query query)
         {
             var limitOffset = query.GetOne("limit") as LimitOffset;
 

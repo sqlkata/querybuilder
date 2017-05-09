@@ -11,7 +11,6 @@ namespace SqlKata
     }
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        protected Compiler _compiler;
         protected string[] bindingsOrder = new[] {
             "select", "from", "join", "where", "group", "having", "order", "limit", "union",
         };
@@ -42,9 +41,21 @@ namespace SqlKata
             }
         }
 
-        public BaseQuery(Compiler compiler)
+        public BaseQuery()
         {
-            _compiler = compiler;
+        }
+
+        /// <summary>
+        /// Return a cloned copy of the current query.
+        /// </summary>
+        /// <returns></returns>
+        public virtual Q Clone()
+        {
+            var q = NewQuery();
+
+            q.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
+
+            return q;
         }
 
         public Q SetParent(AbstractQuery parent)
@@ -238,7 +249,7 @@ namespace SqlKata
 
         public Q From(Func<Query, Query> callback, string alias = null)
         {
-            var query = new Query(_compiler);
+            var query = new Query();
 
             query.SetParent((Q)this);
 

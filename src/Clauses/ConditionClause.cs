@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SqlKata
 {
-    public class AbstractCondition : AbstractClause
+    public abstract class AbstractCondition : AbstractClause
     {
         public bool IsOr { get; set; } = false;
         public bool IsNot { get; set; } = false;
@@ -18,11 +19,37 @@ namespace SqlKata
         public string Operator { get; set; }
         public virtual T Value { get; set; }
         public override object[] Bindings => new object[] { Value };
+
+        public override AbstractClause Clone()
+        {
+            return new BasicCondition<T>
+            {
+                Column = Column,
+                Operator = Operator,
+                Value = Value,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     public class BasicStringCondition : BasicCondition<string>
     {
         public bool CaseSensitive { get; set; } = false;
+        public override AbstractClause Clone()
+        {
+            return new BasicStringCondition
+            {
+                Column = Column,
+                Operator = Operator,
+                Value = Value,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                CaseSensitive = CaseSensitive,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -30,10 +57,23 @@ namespace SqlKata
     /// </summary>
     public class TwoColumnsCondition : AbstractCondition
     {
+
         public string First { get; set; }
         public string Operator { get; set; }
         public string Second { get; set; }
 
+        public override AbstractClause Clone()
+        {
+            return new TwoColumnsCondition
+            {
+                First = First,
+                Operator = Operator,
+                Second = Second,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -45,6 +85,19 @@ namespace SqlKata
         public string Operator { get; set; }
         public Query Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new QueryCondition<T>
+            {
+                Column = Column,
+                Operator = Operator,
+                Query = Query.Clone(),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -55,6 +108,19 @@ namespace SqlKata
         public string Column { get; set; }
         public List<T> Values { get; set; }
         public override object[] Bindings => Values.Select(x => x as object).ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new InCondition<T>
+            {
+                Column = Column,
+                Values = new List<T>(Values),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
+
     }
 
     /// <summary>
@@ -65,6 +131,18 @@ namespace SqlKata
         public string Column { get; set; }
         public Query Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new InQueryCondition
+            {
+                Column = Column,
+                Query = Query.Clone(),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -76,6 +154,19 @@ namespace SqlKata
         public T Higher { get; set; }
         public T Lower { get; set; }
         public override object[] Bindings => new object[] { Lower, Higher };
+
+        public override AbstractClause Clone()
+        {
+            return new BetweenCondition<T>
+            {
+                Column = Column,
+                Higher = Higher,
+                Lower = Lower,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -84,16 +175,38 @@ namespace SqlKata
     public class NullCondition : AbstractCondition
     {
         public string Column { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new NullCondition
+            {
+                Column = Column,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
     /// Represents a "nested" clause condition.
-    /// i.e OR (ColA = "A")
+    /// i.e OR (myColumn = "A")
     /// </summary>
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new NestedCondition<T>
+            {
+                Query = Query.Clone(),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     /// <summary>
@@ -103,6 +216,17 @@ namespace SqlKata
     {
         public T Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
+
+        public override AbstractClause Clone()
+        {
+            return new ExistsCondition<T>
+            {
+                Query = Query.Clone(),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
     }
 
     public class RawCondition : AbstractCondition, RawInterface
@@ -111,14 +235,23 @@ namespace SqlKata
         public string Expression { get; set; }
         public override object[] Bindings
         {
-            get
-            {
-                return _bindings;
-            }
+            get => _bindings;
             set
             {
                 _bindings = value;
             }
+        }
+
+        public override AbstractClause Clone()
+        {
+            return new RawCondition
+            {
+                Expression = Expression,
+                Bindings = _bindings,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
         }
     }
 
