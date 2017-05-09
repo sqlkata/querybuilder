@@ -27,6 +27,11 @@ namespace SqlKata.Compilers
             return query;
         }
 
+        public virtual string OnAfterCompile(string sql, List<object> bindings)
+        {
+            return sql;
+        }
+
         public virtual string CompileSelect(Query query)
         {
             if (!query.Has("select"))
@@ -182,16 +187,18 @@ namespace SqlKata.Compilers
 
             var constraints = join.Get<AbstractCondition>("where");
 
-            foreach (var item in constraints)
+            for (var i = 0; i < constraints.Count; i++)
             {
-                var compiled = CompileCondition(item);
+                var compiled = CompileCondition(constraints[i]);
 
                 if (string.IsNullOrEmpty(compiled))
                 {
                     break;
                 }
 
-                wheres.Add(compiled);
+                var boolOperator = i == 0 ? "" : constraints[i].IsOr ? "OR " : "AND ";
+
+                wheres.Add(boolOperator + compiled);
             }
 
             var onClause = constraints.Any() ? "ON " + string.Join(" ", wheres) : "";

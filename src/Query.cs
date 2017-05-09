@@ -204,6 +204,8 @@ namespace SqlKata
 
             var sql = _compiler.CompileSelect(query);
 
+            sql = _compiler.OnAfterCompile(sql, query.Bindings);
+
             return new SqlResult(sql, query.Bindings);
         }
 
