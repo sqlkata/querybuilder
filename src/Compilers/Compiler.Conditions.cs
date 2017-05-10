@@ -6,6 +6,15 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
 
+        protected virtual string CompileCondition(AbstractCondition clause)
+        {
+            var name = clause.GetType().Name;
+            name = name.Substring(0, name.IndexOf("Condition"));
+
+            var methodName = "Compile" + name + "Condition";
+            return dynamicCompile(methodName, clause);
+        }
+        
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
         {
             var sql = new List<string>();
@@ -26,9 +35,20 @@ namespace SqlKata.Compilers
 
             return JoinComponents(sql, "conditions");
         }
+
         protected virtual string CompileRawCondition(RawCondition x)
         {
             return x.Expression;
+        }
+
+        protected virtual string CompileSubQueryCondition<T>(QueryCondition<T> x) where T : BaseQuery<T>
+        {
+            var select = CompileQuery(x.Query);
+
+            var alias = string.IsNullOrEmpty(x.Query._Alias) ? "" : " AS " + x.Query._Alias;
+
+            return Wrap(x.Column) + " " + x.Operator + " (" + select + ")" + alias;
+
         }
 
         protected virtual string CompileBasicCondition<T>(BasicCondition<T> x)

@@ -22,6 +22,11 @@ namespace SqlKata.Compilers
             "lock",
         };
 
+        public Compiler()
+        {
+            Inflector = new Inflector();
+        }
+
         public SqlResult Compile(Query query)
         {
             query = OnBeforeCompile(query);
@@ -32,12 +37,76 @@ namespace SqlKata.Compilers
 
         public virtual Query OnBeforeCompile(Query query)
         {
+            // Transfrom deep join expressions to regular join
+
+            var deepJoins = query.Get<AbstractJoin>("join").OfType<DeepJoin>().ToList();
+
+            foreach (var join in deepJoins)
+            {
+                TransfromDeepJoin(query, join);
+
+                // Remove it from the query, since it's now converted
+                query.Clauses.Remove(join);
+            }
+
             return query;
         }
 
         public virtual string OnAfterCompile(string sql, List<object> bindings)
         {
             return sql;
+        }
+
+        public virtual Query TransfromDeepJoin(Query query, DeepJoin join)
+        {
+            var exp = join.Expression;
+
+            var tokens = exp.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (!tokens.Any())
+            {
+                return query;
+            }
+
+
+            var from = query.GetOne<AbstractFrom>("from");
+
+            if (from == null)
+            {
+                return query;
+            }
+
+            string tableOrAlias = from.Alias;
+
+            if (string.IsNullOrEmpty(tableOrAlias))
+            {
+                throw new InvalidOperationException("No table or alias found for the main query, This information is needed in order to generate a Deep Join");
+            }
+
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var source = i == 0 ? tableOrAlias : tokens[i - 1];
+                var target = tokens[i];
+
+                string sourceKey;
+                string targetKey;
+
+                if (join.SourceKeyGenerator != null)
+                {
+                    // developer wants to use the lambda overloaded method then
+                    sourceKey = join.SourceKeyGenerator.Invoke(target);
+                    targetKey = join.TargetKeyGenerator?.Invoke(target) ?? "Id";
+                }
+                else
+                {
+                    sourceKey = Singular(target) + join.SourceKeySuffix;
+                    targetKey = join.TargetKey;
+                }
+
+                query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
+            }
+
+            return query;
         }
 
         public virtual string CompileSelect(Query query)
@@ -186,43 +255,14 @@ namespace SqlKata.Compilers
         {
 
             var from = join.GetOne<AbstractFrom>("from");
+            var conditions = join.Get<AbstractCondition>("where");
 
             var joinTable = CompileTableExpression(from);
+            var constraints = CompileConditions(conditions);
 
+            var onClause = conditions.Any() ? $" ON {constraints}" : "";
 
-            // Compile constraints 
-            var wheres = new List<string>();
-
-            var constraints = join.Get<AbstractCondition>("where");
-
-            for (var i = 0; i < constraints.Count; i++)
-            {
-                var compiled = CompileCondition(constraints[i]);
-
-                if (string.IsNullOrEmpty(compiled))
-                {
-                    break;
-                }
-
-                var boolOperator = i == 0 ? "" : constraints[i].IsOr ? "OR " : "AND ";
-
-                wheres.Add(boolOperator + compiled);
-            }
-
-            var onClause = constraints.Any() ? "ON " + string.Join(" ", wheres) : "";
-
-            return $"{join.Type} JOIN {joinTable} {onClause}";
-        }
-
-
-
-        protected virtual string CompileCondition(AbstractCondition clause)
-        {
-            var name = clause.GetType().Name;
-            name = name.Substring(0, name.IndexOf("Condition"));
-
-            var methodName = "Compile" + name + "Condition";
-            return dynamicCompile(methodName, clause);
+            return $"{join.Type} JOIN {joinTable}{onClause}";
         }
 
         protected virtual string CompileWheres(Query query)
@@ -255,15 +295,6 @@ namespace SqlKata.Compilers
             }
 
             return "";
-        }
-
-
-
-        protected virtual string CompileSubQueryCondition<T>(QueryCondition<T> x) where T : BaseQuery<T>
-        {
-            var select = CompileQuery(x.Query);
-            var alias = string.IsNullOrEmpty(x.Query._Alias) ? "" : " AS " + x.Query._Alias;
-            return Wrap(x.Column) + " " + x.Operator + " (" + select + ")" + alias;
         }
 
         protected virtual string CompileGroups(Query query)

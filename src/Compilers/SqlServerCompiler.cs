@@ -19,6 +19,8 @@ namespace SqlKata.Compilers
 
         public override Query OnBeforeCompile(Query query)
         {
+            query = base.OnBeforeCompile(query);
+
             var limitOffset = query.GetOne("limit") as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())

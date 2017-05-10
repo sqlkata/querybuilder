@@ -6,6 +6,7 @@ namespace SqlKata.Compilers
 {
     public abstract class AbstractCompiler
     {
+        public Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
         public bool IsDebug = false;
@@ -185,6 +186,16 @@ namespace SqlKata.Compilers
         public List<string> WrapArray(List<string> values)
         {
             return values.Select(x => Wrap(x)).ToList();
+        }
+
+        public virtual string Singular(string value)
+        {
+            return Inflector.Singularize(value);
+        }
+
+        public virtual string Plural(string value)
+        {
+            return Inflector.Pluralize(value);
         }
     }
 }
