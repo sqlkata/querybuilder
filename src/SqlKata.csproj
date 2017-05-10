@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Project Sdk="Microsoft.NET.Sdk">  
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <VersionSuffix>$(VersionSuffix)</VersionSuffix>
     <TargetFramework>netcoreapp1.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
