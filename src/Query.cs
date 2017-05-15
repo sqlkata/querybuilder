@@ -193,7 +193,8 @@ namespace SqlKata
         {
             Add("group", new RawColumn
             {
-                Expression = expression
+                Expression = expression,
+                Bindings = bindings,
             });
 
             return this;

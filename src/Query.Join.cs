@@ -105,7 +105,7 @@ namespace SqlKata
             return DeepJoin(expression, sourceKeyGenerator, targetKeyGenerator, "cross");
         }
 
-        public Query Join(Func<Join, Join> callback)
+        private Query Join(Func<Join, Join> callback)
         {
             var join = callback.Invoke(new Join().AsInner());
 
@@ -131,9 +131,9 @@ namespace SqlKata
             return Join(j => j.JoinWith(table).Where(callback).AsType(type));
         }
 
-        public Query Join(Query query, string type = "inner")
+        public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner")
         {
-            return Join(j => j.JoinWith(query).AsType(type));
+            return Join(j => j.JoinWith(query).Where(onCallback).AsType(type));
         }
 
         public Query LeftJoin(string table, string first, string second, string op = "=")
@@ -146,6 +146,11 @@ namespace SqlKata
             return Join(table, callback, "left");
         }
 
+        public Query LeftJoin(Query query, Func<Join, Join> onCallback)
+        {
+            return Join(query, onCallback, "left");
+        }
+
         public Query RightJoin(string table, string first, string second, string op = "=")
         {
             return Join(table, first, second, op, "right");
@@ -154,6 +159,11 @@ namespace SqlKata
         public Query RightJoin(string table, Func<Join, Join> callback)
         {
             return Join(table, callback, "right");
+        }
+
+        public Query RightJoin(Query query, Func<Join, Join> onCallback)
+        {
+            return Join(query, onCallback, "right");
         }
 
         public Query CrossJoin(string table)

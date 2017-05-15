@@ -65,7 +65,7 @@ namespace SqlKata
                 throw new ArgumentException("Cannot set the same query as a parent of itself");
             }
 
-            this.Parent = (Q)parent;
+            this.Parent = parent;
             return (Q)this;
         }
 

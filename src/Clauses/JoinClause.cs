@@ -41,6 +41,7 @@ namespace SqlKata
         {
             return new DeepJoin
             {
+                Component = Component,
                 Type = Type,
                 Expression = Expression,
                 SourceKeySuffix = SourceKeySuffix,

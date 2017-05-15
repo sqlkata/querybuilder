@@ -14,6 +14,7 @@ namespace SqlKata
         {
             return new OrderBy
             {
+                Component = Component,
                 Column = Column,
                 Ascending = Ascending
             };
@@ -37,6 +38,7 @@ namespace SqlKata
         {
             return new RawOrderBy
             {
+                Component = Component,
                 Expression = Expression,
                 Bindings = _bindings
             };

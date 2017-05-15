@@ -14,7 +14,7 @@ namespace SqlKata.Compilers
             var methodName = "Compile" + name + "Condition";
             return dynamicCompile(methodName, clause);
         }
-        
+
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
         {
             var sql = new List<string>();
@@ -88,9 +88,13 @@ namespace SqlKata.Compilers
                 {
                     x.Value = "%" + x.Value;
                 }
-                else
+                else if (x.Operator == "contains")
                 {
                     x.Value = "%" + x.Value + "%";
+                }
+                else
+                {
+                    x.Value = x.Value;
                 }
             }
 
@@ -104,7 +108,7 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        protected virtual string CompileNestedCondition(NestedCondition<Query> x)
+        protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
             if (!x.Query.Has("where"))
             {
