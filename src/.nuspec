@@ -5,7 +5,7 @@
     <id>SqlKata-QueryBuilder</id>
 
     <!-- The package version number that is used when resolving dependencies -->
-    <version>1.0.0-beta-2</version>
+    <version>1.0.0-beta-3</version>
 
     <!-- Authors contain text that appears directly on the gallery -->
     <authors>Ahmad Moussawi</authors>
