@@ -41,12 +41,16 @@ namespace SqlKata.Compilers
 
             var deepJoins = query.Get<AbstractJoin>("join").OfType<DeepJoin>().ToList();
 
-            foreach (var join in deepJoins)
+            foreach (var deepJoin in deepJoins)
             {
-                TransfromDeepJoin(query, join);
+                var index = query.Clauses.IndexOf(deepJoin);
 
-                // Remove it from the query, since it's now converted
-                query.Clauses.Remove(join);
+                query.Clauses.Remove(deepJoin);
+                foreach (var join in TransfromDeepJoin(query, deepJoin))
+                {
+                    query.Clauses.Insert(index, join);
+                    index++;
+                }
             }
 
             return query;
@@ -57,7 +61,7 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        public virtual Query TransfromDeepJoin(Query query, DeepJoin join)
+        public virtual IEnumerable<BaseJoin> TransfromDeepJoin(Query query, DeepJoin join)
         {
             var exp = join.Expression;
 
@@ -65,7 +69,7 @@ namespace SqlKata.Compilers
 
             if (!tokens.Any())
             {
-                return query;
+                yield break;
             }
 
 
@@ -73,7 +77,7 @@ namespace SqlKata.Compilers
 
             if (from == null)
             {
-                return query;
+                yield break;
             }
 
             string tableOrAlias = from.Alias;
@@ -103,10 +107,16 @@ namespace SqlKata.Compilers
                     targetKey = join.TargetKey;
                 }
 
-                query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
+                // yield query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
+                yield return new BaseJoin
+                {
+                    Component = "join",
+                    Join = new Join().AsType(join.Type).JoinWith(target).On
+                    ($"{source}.{sourceKey}", $"{target}.{targetKey}", "=")
+                };
             }
 
-            return query;
+            // return query;
         }
 
         public virtual string CompileSelect(Query query)
