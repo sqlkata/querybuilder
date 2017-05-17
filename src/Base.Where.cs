@@ -371,28 +371,45 @@ namespace SqlKata
             return Or().Not(true).WhereBetween(column, lower, higher);
         }
 
-        public Q WhereIn<T>(string column, List<T> values)
+        public Q WhereIn<T>(string column, IEnumerable<T> values)
         {
+            // If the developer has passed a string most probably he wants List<string>
+            // since string is considered as List<char>
+            if (values is string)
+            {
+                string val = values as string;
+
+                return Add("where", new InCondition<string>
+                {
+                    Column = column,
+                    IsOr = getOr(),
+                    IsNot = getNot(),
+                    Values = new List<string> { val }
+                });
+            }
+
             return Add("where", new InCondition<T>
             {
                 Column = column,
                 IsOr = getOr(),
                 IsNot = getNot(),
-                Values = values.ToList()
+                Values = values.Distinct().ToList()
             });
+
+
         }
 
-        public Q OrWhereIn<T>(string column, List<T> values)
+        public Q OrWhereIn<T>(string column, IEnumerable<T> values)
         {
             return Or().WhereIn(column, values);
         }
 
-        public Q WhereNotIn<T>(string column, List<T> values)
+        public Q WhereNotIn<T>(string column, IEnumerable<T> values)
         {
             return Not(true).WhereIn(column, values);
         }
 
-        public Q OrWhereNotIn<T>(string column, List<T> values)
+        public Q OrWhereNotIn<T>(string column, IEnumerable<T> values)
         {
             return Or().Not(true).WhereIn(column, values);
         }

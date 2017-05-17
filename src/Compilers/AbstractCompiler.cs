@@ -173,7 +173,7 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public string Parametrize<T>(List<T> values)
+        public string Parametrize<T>(IEnumerable<T> values)
         {
             return string.Join(", ", values.Select(x => Parameter(x)));
         }

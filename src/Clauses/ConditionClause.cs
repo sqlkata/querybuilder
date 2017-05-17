@@ -106,7 +106,7 @@ namespace SqlKata
     public class InCondition<T> : AbstractCondition
     {
         public string Column { get; set; }
-        public List<T> Values { get; set; }
+        public IEnumerable<T> Values { get; set; }
         public override object[] Bindings => Values.Select(x => x as object).ToArray();
 
         public override AbstractClause Clone()
