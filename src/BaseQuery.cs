@@ -11,9 +11,7 @@ namespace SqlKata
     }
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        protected string[] bindingsOrder = new[] {
-            "select", "from", "join", "where", "group", "having", "order", "limit", "union",
-        };
+        protected virtual string[] bindingOrder { get; }
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
 
         private bool orFlag = false;
@@ -24,7 +22,7 @@ namespace SqlKata
         {
             get
             {
-                var hasBindings = bindingsOrder
+                var hasBindings = bindingOrder
                     .Select(x => Get(x))
                     .Where(x => x.Any() && x.Where(b => b.Bindings.Count() > 0).Any())
                     .ToList();
@@ -212,7 +210,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q From(string table)
         {
-            return Clear("from").Add("from", new From
+            return Clear("from").Add("from", new FromClause
             {
                 Table = table
             });
@@ -227,7 +225,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return Clear("from").Add("from", new QueryFrom
+            return Clear("from").Add("from", new QueryFromClause
             {
                 Query = query
             });
@@ -235,7 +233,7 @@ namespace SqlKata
 
         public Q FromRaw(string expression, params object[] bindings)
         {
-            return Clear("from").Add("from", new RawFrom
+            return Clear("from").Add("from", new RawFromClause
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()

@@ -7,8 +7,52 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
-        public bool _Distinct { get; set; } = false;
-        public string _Alias { get; set; }
+        public bool IsDistinct { get; set; } = false;
+        public string QueryAlias { get; set; }
+        public string Method { get; set; }
+
+        protected override string[] bindingOrder
+        {
+            get
+            {
+                if (Method == "insert")
+                {
+                    return new[] {
+                        "insert",
+                    };
+                }
+
+                if (Method == "update")
+                {
+                    return new[] {
+                        "update", "where",
+                    };
+                }
+
+                if (Method == "delete")
+                {
+                    return new[] {
+                        "where",
+                    };
+                }
+
+                return new[] {
+                    "select",
+                    "from",
+                    "join",
+                    "where",
+                    "group",
+                    "having",
+                    "order",
+                    "limit",
+                    "union",
+                };
+            }
+        }
+
+        protected string[] deleteBindingsOrder = new[] {
+            "where",
+        };
 
         protected List<string> operators = new List<string> {
             "=", "<", ">", "<=", ">=", "<>", "!=",
@@ -28,17 +72,23 @@ namespace SqlKata
         {
         }
 
+        public Query(string table) : base()
+        {
+            From(table);
+        }
+
         public override Query Clone()
         {
             var clone = base.Clone();
-            clone._Alias = _Alias;
-            clone._Distinct = _Distinct;
+            clone.QueryAlias = QueryAlias;
+            clone.IsDistinct = IsDistinct;
+            clone.Method = Method;
             return clone;
         }
 
         public Query As(string alias)
         {
-            _Alias = alias;
+            QueryAlias = alias;
             return this;
         }
 
@@ -112,7 +162,7 @@ namespace SqlKata
 
         public Query Distinct()
         {
-            _Distinct = true;
+            IsDistinct = true;
             return this;
         }
 

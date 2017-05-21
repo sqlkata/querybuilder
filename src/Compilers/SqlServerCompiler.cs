@@ -17,11 +17,9 @@ namespace SqlKata.Compilers
             return '[' + value.Replace("]", "]]") + ']';
         }
 
-        public override Query OnBeforeCompile(Query query)
+        protected override Query OnBeforeSelect(Query query)
         {
-            query = base.OnBeforeCompile(query);
-
-            var limitOffset = query.GetOne("limit") as LimitOffset;
+            var limitOffset = query.GetOne<LimitOffset>("limit");
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
@@ -31,25 +29,38 @@ namespace SqlKata.Compilers
 
             // Surround the original query with a parent query, then restrict the result to the offset provided, see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
 
-            var cloned = query.Clone();
-            var wrapper = query.NewQuery();
 
             var rowNumberColName = Wrap("row_num");
 
-            var orderStatement = CompileOrders(cloned) ?? "ORDER BY (SELECT 0)";
+            var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
-            cloned.Clear("order");
 
-            // Clear up the limit clauses since we will replace them with the 
-            // "WhereRaw" below
-            cloned.Clear("limit");
+
+            // get a clone without the limit and order
+            query.Clear("order");
+            query.Clear("limit");
+            var cloned = query.Clone();
+
+            // Now clear other stuff
+            query.Clear("select");
+            query.Clear("from");
+            query.Clear("join");
+            query.Clear("where");
+            query.Clear("group");
+            query.Clear("having");
+            query.Clear("union");
+
+            // Transform the query to make it a parent query
+            query.Select("*");
 
             if (!cloned.Has("columns"))
             {
-                cloned.Select("*");
+                cloned.SelectRaw("*");
             }
 
             cloned.SelectRaw($"ROW_NUMBER() OVER ({orderStatement}) AS {rowNumberColName}");
+
+            query.From(cloned);
 
             if (limitOffset.HasLimit())
             {
@@ -59,7 +70,7 @@ namespace SqlKata.Compilers
                         limitOffset.Limit + limitOffset.Offset,
                     };
 
-                wrapper.WhereRaw($"{rowNumberColName} BETWEEN ? AND ?", bindings);
+                query.WhereRaw($"{rowNumberColName} BETWEEN ? AND ?", bindings);
             }
             else
             {
@@ -67,15 +78,12 @@ namespace SqlKata.Compilers
                          limitOffset.Offset + 1
                     };
 
-                wrapper.WhereRaw($"{rowNumberColName} >= ?", bindings);
+                query.WhereRaw($"{rowNumberColName} >= ?", bindings);
             }
 
-            // clear the limit and offset
             limitOffset.Clear();
 
-            wrapper.From(cloned);
-
-            return wrapper;
+            return query;
 
         }
 

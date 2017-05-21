@@ -30,29 +30,32 @@ namespace SqlKata.Compilers
         public SqlResult Compile(Query query)
         {
             query = OnBeforeCompile(query);
-            var sql = CompileSelect(query);
+
+            string sql;
+
+            if (query.Method == "insert")
+            {
+                sql = CompileInsert(query);
+            }
+            else if (query.Method == "delete")
+            {
+                sql = CompileDelete(query);
+            }
+            else if (query.Method == "update")
+            {
+                sql = CompileUpdate(query);
+            }
+            else
+            {
+                sql = CompileSelect(query);
+            }
+
             sql = OnAfterCompile(sql, query.Bindings);
             return new SqlResult(sql, query.Bindings);
         }
 
-        public virtual Query OnBeforeCompile(Query query)
+        protected virtual Query OnBeforeCompile(Query query)
         {
-            // Transfrom deep join expressions to regular join
-
-            var deepJoins = query.Get<AbstractJoin>("join").OfType<DeepJoin>().ToList();
-
-            foreach (var deepJoin in deepJoins)
-            {
-                var index = query.Clauses.IndexOf(deepJoin);
-
-                query.Clauses.Remove(deepJoin);
-                foreach (var join in TransfromDeepJoin(query, deepJoin))
-                {
-                    query.Clauses.Insert(index, join);
-                    index++;
-                }
-            }
-
             return query;
         }
 
@@ -60,67 +63,10 @@ namespace SqlKata.Compilers
         {
             return sql;
         }
-
-        public virtual IEnumerable<BaseJoin> TransfromDeepJoin(Query query, DeepJoin join)
-        {
-            var exp = join.Expression;
-
-            var tokens = exp.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (!tokens.Any())
-            {
-                yield break;
-            }
-
-
-            var from = query.GetOne<AbstractFrom>("from");
-
-            if (from == null)
-            {
-                yield break;
-            }
-
-            string tableOrAlias = from.Alias;
-
-            if (string.IsNullOrEmpty(tableOrAlias))
-            {
-                throw new InvalidOperationException("No table or alias found for the main query, This information is needed in order to generate a Deep Join");
-            }
-
-            for (var i = 0; i < tokens.Length; i++)
-            {
-                var source = i == 0 ? tableOrAlias : tokens[i - 1];
-                var target = tokens[i];
-
-                string sourceKey;
-                string targetKey;
-
-                if (join.SourceKeyGenerator != null)
-                {
-                    // developer wants to use the lambda overloaded method then
-                    sourceKey = join.SourceKeyGenerator.Invoke(target);
-                    targetKey = join.TargetKeyGenerator?.Invoke(target) ?? "Id";
-                }
-                else
-                {
-                    sourceKey = Singular(target) + join.SourceKeySuffix;
-                    targetKey = join.TargetKey;
-                }
-
-                // yield query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
-                yield return new BaseJoin
-                {
-                    Component = "join",
-                    Join = new Join().AsType(join.Type).JoinWith(target).On
-                    ($"{source}.{sourceKey}", $"{target}.{targetKey}", "=")
-                };
-            }
-
-            // return query;
-        }
-
         public virtual string CompileSelect(Query query)
         {
+            query = OnBeforeSelect(query);
+
             if (!query.Has("select"))
             {
                 query.Select("*");
@@ -129,6 +75,98 @@ namespace SqlKata.Compilers
             var results = CompileComponents(query);
 
             return JoinComponents(results, "select");
+        }
+
+        protected virtual Query OnBeforeSelect(Query query)
+        {
+            return query;
+        }
+
+        /// <summary>
+        /// Compile INSERT into statement
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        protected virtual string CompileInsert(Query query)
+        {
+            if (!query.Has("from"))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOne<AbstractFrom>("from");
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            var insert = query.Get<InsertClause>("insert");
+
+            List<string> sql = new List<string>();
+
+            return "INSERT INTO " + CompileTableExpression(from)
+                + " (" + string.Join(", ", insert.Select(x => x.Column)) + ") "
+                + "VALUES (" + string.Join(", ", insert.Select(x => Parameter(x.Value))) + ")";
+        }
+
+        protected virtual string CompileUpdate(Query query)
+        {
+            if (!query.Has("from"))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOne<AbstractFrom>("from");
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            var toUpdate = query.Get<InsertClause>("update");
+
+            var sql = new List<string>();
+
+            foreach (var item in toUpdate)
+            {
+                sql.Add($"{item.Column} = {Parameter(item.Value)}");
+            }
+
+            var where = CompileWheres(query);
+
+            if (!string.IsNullOrEmpty(where))
+            {
+                where = " " + where;
+            }
+
+            return "UPDATE " + CompileTableExpression(from)
+                + " SET " + string.Join(", ", sql)
+                + where;
+        }
+
+        protected virtual string CompileDelete(Query query)
+        {
+            if (!query.Has("from"))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOne<AbstractFrom>("from");
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            var where = CompileWheres(query);
+
+            if (!string.IsNullOrEmpty(where))
+            {
+                where = " " + where;
+            }
+
+            return "DELETE FROM " + CompileTableExpression(from) + where;
         }
 
         protected List<string> CompileComponents(Query query)
@@ -175,7 +213,7 @@ namespace SqlKata.Compilers
 
             var columns = query.Get("select").Cast<AbstractColumn>().ToList();
 
-            var select = (query._Distinct ? "SELECT DISTINCT " : "SELECT ");
+            var select = (query.IsDistinct ? "SELECT DISTINCT " : "SELECT ");
             return select + (columns.Any() ? Columnize(columns) : "*");
         }
 
@@ -196,7 +234,7 @@ namespace SqlKata.Compilers
 
             var columns = Columnize(cols);
 
-            if (query._Distinct && columns != "*")
+            if (query.IsDistinct && columns != "*")
             {
                 columns = "DISTINCT " + columns;
             }
@@ -206,25 +244,25 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileTableExpression(AbstractFrom from)
         {
-            if (from is RawFrom)
+            if (from is RawFromClause)
             {
-                return (from as RawFrom).Expression;
+                return (from as RawFromClause).Expression;
             }
 
-            if (from is QueryFrom)
+            if (from is QueryFromClause)
             {
-                var fromQuery = (from as QueryFrom).Query;
+                var fromQuery = (from as QueryFromClause).Query;
 
-                var alias = string.IsNullOrEmpty(fromQuery._Alias) ? "" : " AS " + WrapValue(fromQuery._Alias);
+                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
 
                 var compiled = CompileSelect(fromQuery);
 
                 return "(" + compiled + ")" + alias;
             }
 
-            if (from is From)
+            if (from is FromClause)
             {
-                return WrapTable((from as From).Table);
+                return WrapTable((from as FromClause).Table);
             }
 
             throw InvalidClauseException("TableExpression", from);
@@ -249,19 +287,35 @@ namespace SqlKata.Compilers
                 return null;
             }
 
+            // Transfrom deep join expressions to regular join
+
+            var deepJoins = query.Get<AbstractJoin>("join").OfType<DeepJoin>().ToList();
+
+            foreach (var deepJoin in deepJoins)
+            {
+                var index = query.Clauses.IndexOf(deepJoin);
+
+                query.Clauses.Remove(deepJoin);
+                foreach (var join in TransfromDeepJoin(query, deepJoin))
+                {
+                    query.Clauses.Insert(index, join);
+                    index++;
+                }
+            }
+
             var joins = query.Get<BaseJoin>("join");
 
             var sql = new List<string>();
 
             foreach (var item in joins)
             {
-                sql.Add(compileJoin(item.Join));
+                sql.Add(CompileJoin(item.Join));
             }
 
             return JoinComponents(sql, "join");
         }
 
-        protected virtual string compileJoin(Join join, bool isNested = false)
+        protected virtual string CompileJoin(Join join, bool isNested = false)
         {
 
             var from = join.GetOne<AbstractFrom>("from");
@@ -301,7 +355,7 @@ namespace SqlKata.Compilers
 
             if (query is Join)
             {
-                return compileJoin((query as Join), isNested);
+                return CompileJoin((query as Join), isNested);
             }
 
             return "";
@@ -336,7 +390,7 @@ namespace SqlKata.Compilers
                     return (x as RawOrderBy).Expression;
                 }
 
-                var direction = (x as OrderBy).Ascending ? "ASC" : "DESC";
+                var direction = (x as OrderBy).Ascending ? "" : "DESC";
 
                 return Wrap((x as OrderBy).Column) + " " + direction;
             });
@@ -444,7 +498,7 @@ namespace SqlKata.Compilers
             return str.Substring(0, 1).ToUpper() + str.Substring(1).ToLower();
         }
 
-        protected string dynamicCompile(string name, AbstractClause clause)
+        protected string DynamicCompile(string name, AbstractClause clause)
         {
 
             MethodInfo methodInfo = this.GetType()
@@ -464,6 +518,66 @@ namespace SqlKata.Compilers
 
             return result as string;
         }
+
+        protected virtual IEnumerable<BaseJoin> TransfromDeepJoin(Query query, DeepJoin join)
+        {
+            var exp = join.Expression;
+
+            var tokens = exp.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (!tokens.Any())
+            {
+                yield break;
+            }
+
+
+            var from = query.GetOne<AbstractFrom>("from");
+
+            if (from == null)
+            {
+                yield break;
+            }
+
+            string tableOrAlias = from.Alias;
+
+            if (string.IsNullOrEmpty(tableOrAlias))
+            {
+                throw new InvalidOperationException("No table or alias found for the main query, This information is needed in order to generate a Deep Join");
+            }
+
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var source = i == 0 ? tableOrAlias : tokens[i - 1];
+                var target = tokens[i];
+
+                string sourceKey;
+                string targetKey;
+
+                if (join.SourceKeyGenerator != null)
+                {
+                    // developer wants to use the lambda overloaded method then
+                    sourceKey = join.SourceKeyGenerator.Invoke(target);
+                    targetKey = join.TargetKeyGenerator?.Invoke(target) ?? "Id";
+                }
+                else
+                {
+                    sourceKey = Singular(target) + join.SourceKeySuffix;
+                    targetKey = join.TargetKey;
+                }
+
+                // yield query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
+                yield return new BaseJoin
+                {
+                    Component = "join",
+                    Join = new Join().AsType(join.Type).JoinWith(target).On
+                    ($"{source}.{sourceKey}", $"{target}.{targetKey}", "=")
+                };
+            }
+
+        }
+
     }
+
+
 
 }

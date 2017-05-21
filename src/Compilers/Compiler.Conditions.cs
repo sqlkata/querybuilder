@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
             name = name.Substring(0, name.IndexOf("Condition"));
 
             var methodName = "Compile" + name + "Condition";
-            return dynamicCompile(methodName, clause);
+            return DynamicCompile(methodName, clause);
         }
 
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
@@ -45,7 +45,7 @@ namespace SqlKata.Compilers
         {
             var select = CompileQuery(x.Query);
 
-            var alias = string.IsNullOrEmpty(x.Query._Alias) ? "" : " AS " + x.Query._Alias;
+            var alias = string.IsNullOrEmpty(x.Query.QueryAlias) ? "" : " AS " + x.Query.QueryAlias;
 
             return Wrap(x.Column) + " " + x.Operator + " (" + select + ")" + alias;
 

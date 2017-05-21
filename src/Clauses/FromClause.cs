@@ -15,7 +15,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a "from" clause.
     /// </summary>
-    public class From : AbstractFrom
+    public class FromClause : AbstractFrom
     {
         public string Table { get; set; }
 
@@ -36,7 +36,7 @@ namespace SqlKata
 
         public override AbstractClause Clone()
         {
-            return new From
+            return new FromClause
             {
                 Table = Table,
                 Component = Component,
@@ -47,7 +47,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a "from subquery" clause.
     /// </summary>
-    public class QueryFrom : AbstractFrom
+    public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
         public override object[] Bindings => Query.Bindings.ToArray();
@@ -56,13 +56,13 @@ namespace SqlKata
         {
             get
             {
-                return Query._Alias;
+                return Query.QueryAlias;
             }
         }
 
         public override AbstractClause Clone()
         {
-            return new QueryFrom
+            return new QueryFromClause
             {
                 Query = Query.Clone(),
                 Component = Component,
@@ -70,7 +70,7 @@ namespace SqlKata
         }
     }
 
-    public class RawFrom : AbstractFrom, RawInterface
+    public class RawFromClause : AbstractFrom, RawInterface
     {
         protected object[] _bindings;
         public string Expression { get; set; }
@@ -87,7 +87,7 @@ namespace SqlKata
 
         public override AbstractClause Clone()
         {
-            return new RawFrom
+            return new RawFromClause
             {
                 Expression = Expression,
                 Bindings = _bindings,

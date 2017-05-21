@@ -68,7 +68,7 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) WHERE [row_num] >= 11", c[0]);
-            Assert.Equal("SELECT * FROM `users` OFFSET 10", c[1]);
+            Assert.Equal("SELECT * FROM `users` LIMIT 18446744073709551615 OFFSET 10", c[1]);
             Assert.Equal("SELECT * FROM \"users\" OFFSET 10", c[2]);
         }
 
@@ -90,12 +90,12 @@ namespace SqlKata.Tests
         [Theory()]
         [InlineData(-100)]
         [InlineData(0)]
-        public void OffsetSqlServer_Should_Be_Ignored(int offset)
+        public void OffsetSqlServer_Should_Be_Ignored_If_Zero_Or_Negative(int offset)
         {
             var q = new Query().From("users").Offset(offset);
             var c = _sqlsrv.Compile(q);
 
-            Assert.Equal("SELECT * FROM [users]", c.ToString());
+            Assert.Equal("SELECT * FROM [users]", c.ToString()); 
         }
 
         [Fact]
@@ -105,6 +105,18 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
+        }
+
+        public void DeepJoin()
+        {
+            var q = new Query().From("streets").DeepJoin("cities.countries");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [streets] INNER JOIN [cities] ON [streets].[cityId] = [cities].[Id] INNER JOIN [countries] ON [streets].[countryId] = [countries].[Id]", c[0]);
+
+            Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `streets`.`countryId` = `countries`.`Id`", c[1]);
+
+            Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"streets\".\"countryId\" = \"countries\".\"Id\"", c[1]);
         }
     }
 }

@@ -10,7 +10,6 @@ namespace SqlKata
             get => new object[] { };
             set { }
         }
-
         public abstract AbstractClause Clone();
     }
 

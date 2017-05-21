@@ -19,6 +19,7 @@ namespace SqlKata
                 _type = value.ToUpper();
             }
         }
+        
         public override List<object> Bindings
         {
             get
