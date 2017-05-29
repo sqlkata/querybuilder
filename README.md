@@ -1,9 +1,9 @@
-# SqlKata Query Builder 方
+# SqlKata Query Builder
+<!--方-->
 
 [![Build Status](https://travis-ci.org/sqlkata/querybuilder.svg?branch=master)](https://travis-ci.org/sqlkata/querybuilder)
 
 <img src="/logo.png?raw=true" width="180" height="180" />
-<!--![Logo](./logo.svg)-->
 
 A powerful Sql Query Builder written in C#, secure and framework agnostic.
 
