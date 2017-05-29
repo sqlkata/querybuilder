@@ -5,13 +5,15 @@
 
 <img src="/logo.png?raw=true" width="180" height="180" />
 
-A powerful Sql Query Builder written in C#, secure and framework agnostic.
+A powerful Sql Query Builder written in C#. it's secure and framework agnostic.
 
 Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
 
-SqlKata has an expressive API and follow a clean naming convention, very similar to the SQL syntax, that make writing SQL queries easy and funny, without the need to read long pages of documentations.
+SqlKata has an expressive API. it follows a clean naming convention, which is very similar to the SQL syntax. 
 
-It provides a level of abstraction over the supported database engines, that allows you to work with multiple database with the same unified API.
+It make writing SQL queries easy and funny, with no need to read long pages of documentations.
+
+It provides a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others.
 
@@ -97,9 +99,9 @@ Install-Package SqlKata -Pre
 ```
 
 ## What Next ?
-While SqlKata is still in beta, I've stopped adding new features untilI get a stable release.
+While SqlKata is still in beta, I've stopped adding new features until I get a stable release.
 
-But to give you an idea about my priorities, I will add the support to Execute Queries, Caching mechanism and to support more native features across the available compilers. 
+But to give you an idea about my priorities, I will add the support to Execute Queries, Caching mechanism and to support more native features across available compilers. 
 
 ## Contributions
 I don't have a strict contribution guide till the moment, but you can contribute with ideas, bug fixing, or add more test cases.
