@@ -5,7 +5,7 @@
 <img src="/logo.png?raw=true" width="180" height="180" />
 <!--![Logo](./logo.svg)-->
 
-A powerful Sql Query Builder written in C#, easy, safe and framework agnostic.
+A powerful Sql Query Builder written in C#, secure and framework agnostic.
 
 Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
 
