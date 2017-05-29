@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/sqlkata/querybuilder.svg?branch=master)](https://travis-ci.org/sqlkata/querybuilder)
 
+![Logo](./logo.svg)
+
 A powerful Sql Query Builder written in C#, easy, safe and framework agnostic.
 
 Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
