@@ -2,11 +2,13 @@
 
 [![Build Status](https://travis-ci.org/sqlkata/querybuilder.svg?branch=master)](https://travis-ci.org/sqlkata/querybuilder)
 
-A powerful Sql Query Builder written in C#, inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
+A powerful Sql Query Builder written in C#, easy, safe and framework agnostic.
 
-SqlKata follow a clean naming convention, very similar to the SQL syntax, to make writing SQL queries easy and funny, without the need to read long pages of documentations.
+Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
 
-It provides a level of abstraction over the supported database engines, so you won't change your code when you need to upgrade to a newer database version, or if you want to switch to another database provider.
+SqlKata has an expressive API and follow a clean naming convention, very similar to the SQL syntax, that make writing SQL queries easy and funny, without the need to read long pages of documentations.
+
+It provides a level of abstraction over the supported database engines, that allows you to work with multiple database with the same unified API.
 
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others.
 
