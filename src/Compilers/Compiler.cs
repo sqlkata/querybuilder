@@ -130,7 +130,7 @@ namespace SqlKata.Compilers
 
             foreach (var item in toUpdate)
             {
-                sql.Add($"{item.Column} = {Parameter(item.Value)}");
+                sql.Add($"{Wrap(item.Column)} = {Parameter(item.Value)}");
             }
 
             var where = CompileWheres(query);
