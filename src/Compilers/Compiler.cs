@@ -106,7 +106,7 @@ namespace SqlKata.Compilers
             List<string> sql = new List<string>();
 
             return "INSERT INTO " + CompileTableExpression(from)
-                + " (" + string.Join(", ", insert.Select(x => x.Column)) + ") "
+                + " (" + string.Join(", ", insert.Select(x => Wrap(x.Column))) + ") "
                 + "VALUES (" + string.Join(", ", insert.Select(x => Parameter(x.Value))) + ")";
         }
 
