@@ -4,31 +4,28 @@
 [![Build Status](https://travis-ci.org/sqlkata/querybuilder.svg?branch=master)](https://travis-ci.org/sqlkata/querybuilder)
 
 <img src="/logo.png?raw=true" width="180" height="180" />
+SqlKata Query Builder is a powerful Sql Query Builder written in C#. 
 
-A powerful Sql Query Builder written in C#. it's secure and framework agnostic.
+it's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder, and Knex. 
 
-Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
+SqlKata has an expressive API. it follows a clean naming convention, which is very similar to the SQL syntax.
 
-SqlKata has an expressive API. It follows a clean naming convention, which is very similar to the SQL syntax. 
-
-It makes writing SQL queries easy and funny, with no need to read long pages of documentations.
+It make writing SQL queries easy and funny, with no need to read long pages of documentations. 
 
 It provides a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
-SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others.
-
-Currently it has built-in compilers for **SqlServer 2008** and above, **MySql 5** and **PostgreSql 9**.
+SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others. Currently it has built-in compilers for SqlServer 2008 and above, MySql 5 and PostgreSql 9.**PostgreSql 9**.
 
 ## Some fresh code
 ```cs
 var compiler = new SqlServerCompiler();
 
-var includeSportsCars = true;
+var withSportCars = true;
 
 var fastCarsQuery = new Query("Cars")
     .Where("Speed", ">", 120);
 
-if(includeSportsCars) 
+if(withSportCars) 
 {
     query.OrWhere("Official", true);
 }
@@ -59,26 +56,26 @@ var fastCarsQuery = db.Cars
     .Where(x => x.MaxSpeed > 120 || x.IsSportCar);
 ```
 
-Now if in some conditions you wont need to include the sports cars, you have to parametrize this condition.
+But if in some conditions you wont need to include sports cars, you have to parametrize this condition.
 
 ```cs
-var includeSportsCars = false;
+bool withSportCars = Config.Get("cars.include.sports");
 
 var fastCarsQuery = db.Cars
     .Where(x => x.MaxSpeed > 120)
-    .Where(x => includeSportsCars || x.IsSportsCar);
+    .Where(x => withSportCars || x.IsSportsCar);
 ```
 
-Now this query will retrieve sports cars, only if the **includeSportsCars** variable is **true**.
+Now this query will retrieve sports cars, only if the **withSportCars** variable is **true**.
 
-One problem here is that developers may get confused easily by these kind of constraints, another problem is that **includeSportsCars** get evaluated on the database server. 
+One problem here is that developers may get confused easily by these kind of constraints, another problem is that **withSportCars** get evaluated on the database server. 
 
 To avoid this you have either to use advanced solutions like the [Predicate Builder](http://www.albahari.com/nutshell/predicatebuilder.aspx) or you should write two separate queries.
 
 ```cs
-var fastCarsQuery = db.Cars.AsQueryable();
+IQueryable<Car> fastCarsQuery;
 
-if(includeSportsCars)
+if(withSportCars)
 {
     fastCarsQuery = fastCarsQuery.Where(x => x.MaxSpeed > 120 || x.IsSportsCar);
 } else 
