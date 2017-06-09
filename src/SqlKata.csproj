@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <PackageId>SqlKata</PackageId>
+    <PackageTags>sql;query-builder;dynamic-query</PackageTags>
+    <Title>SqlKata The C# Sql Query Builder</Title>
+    <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql and PostgreSql</Description>
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <Authors>Ahmad Moussawi</Authors>
+    <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
+    <TargetFrameworks>netstandard1.3;net40;net45;net451;</TargetFrameworks>
   </PropertyGroup>
-  <ItemGroup>
-    <!--<PackageReference Include="System.Reflection.Extensions" Version="4.3.0"/>-->
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard1.3'">
+    <DefineConstants>FEATURE_TYPE_INFO</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0"/>
   </ItemGroup>
 </Project>

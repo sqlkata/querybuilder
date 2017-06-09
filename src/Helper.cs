@@ -66,14 +66,24 @@ namespace SqlKata
             while (toCheck != null && toCheck != typeof(object))
             {
 
-                var cur = toCheck.GetTypeInfo().IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+                var isGeneric = toCheck
+#if FEATURE_TYPE_INFO                
+            .GetTypeInfo()
+#endif
+            .IsGenericType;
+
+                var cur = isGeneric ? toCheck.GetGenericTypeDefinition() : toCheck;
 
                 if (generic == cur)
                 {
                     return true;
                 }
 
-                toCheck = toCheck.GetTypeInfo().BaseType;
+                toCheck = toCheck
+#if FEATURE_TYPE_INFO                
+            .GetTypeInfo()
+#endif
+                    .BaseType;
             }
             return false;
         }

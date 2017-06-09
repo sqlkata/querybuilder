@@ -509,9 +509,16 @@ namespace SqlKata.Compilers
                 throw new Exception($"Failed to locate a compiler for {name}.");
             }
 
-            if (methodInfo.GetGenericArguments().Any() && clause.GetType().GetTypeInfo().IsGenericType)
+            var isGeneric = clause.GetType()
+#if FEATURE_TYPE_INFO
+            .GetTypeInfo()
+#endif
+            .IsGenericType;
+
+            if (isGeneric && methodInfo.GetGenericArguments().Any())
             {
-                methodInfo = methodInfo.MakeGenericMethod(clause.GetType().GenericTypeArguments.First());
+                var args = clause.GetType().GetGenericArguments();
+                methodInfo = methodInfo.MakeGenericMethod(args);
             }
 
             var result = methodInfo.Invoke(this, new object[] { clause });
