@@ -86,11 +86,11 @@ if(withSportCars)
 ```
 
 ## Installation
-Currently SqlKata is supported on `netcoreapp1.0`.
+Currently SqlKata is supported on `netstandard1.3`, `net40`,  `net45` and `net451`.
 
 ```bash
 ## using dotnet-cli
-dotnet add package SqlKata -v 1.0.0-beta-32
+dotnet add package SqlKata -v 1.0.0-beta-4
 
 ## or run from the package manager
 Install-Package SqlKata -Pre
