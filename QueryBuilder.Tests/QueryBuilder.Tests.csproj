@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\SqlKata.csproj" />
+    <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
 
 </Project>
