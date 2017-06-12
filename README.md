@@ -28,7 +28,7 @@ var fastCarsQuery = new Query("Cars")
 
 if(withSportCars) 
 {
-    query.OrWhere("Official", true);
+    query.OrWhere("IsSportCar", true);
 }
 
 string sql = compiler.Compile(query).ToSql();
@@ -42,13 +42,13 @@ I've started building this Query Builder, when I was developing big applications
 before I've used to write my SQL queries in strings, and things get worse quickly when you have some dynamic conditions, and even when you are working with multiple database providers, like SqlServer and PostgreSql with the same code base.
 
 ## What about Linq and EntityFramework
-Linq provide a strongly typed query mechanism with a High Level of abstraction, while this is good to some extent, but you get very limited when you need more flexiblity and a lower level of control.
+Linq provide a strongly typed query mechanism with a High Level of abstraction, while this is good to some extent, but you get very limited when you need more flexibility and a lower level of control.
 
 for instance if you need to *select from* | *filter over* a SubQuery, make complex joins, or using SQL functions.
 
 One case that I've always face is the missing **OrWhere** functionality.
 
-In linq to Get all cars that are faster than 120mph **OR** the car is categorized as sports car.
+In Linq to Get all cars that are faster than 120mph **OR** the car is categorized as sports car.
 
 You can write your query like this: 
 
@@ -57,7 +57,7 @@ var fastCarsQuery = db.Cars
     .Where(x => x.MaxSpeed > 120 || x.IsSportCar);
 ```
 
-But if in some conditions you wont need to include sports cars, you have to parametrize this condition.
+But if in some conditions you wont need to include sports cars, you have to parameterize this condition.
 
 ```cs
 bool withSportCars = Config.Get("cars.include.sports");
