@@ -26,10 +26,10 @@ var fastCarsQuery = new Query("Cars")
 
 if(withSportCars) 
 {
-    query.OrWhere("IsSportCar", true);
+    fastCarsQuery.OrWhere("IsSportCar", true);
 }
 
-string sql = compiler.Compile(query).ToSql();
+string sql = compiler.Compile(fastCarsQuery).Sql;
 ```
 
 Check out the docs for other examples [SqlKata docs](http://sqlkata.vivida-apps.com)
