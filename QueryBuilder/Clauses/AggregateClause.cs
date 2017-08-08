@@ -12,6 +12,7 @@ namespace SqlKata
         {
             return new AggregateClause
             {
+                Engine = Engine,
                 Type = Type,
                 Columns = new List<string>(Columns),
                 Component = Component,

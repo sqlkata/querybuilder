@@ -15,6 +15,7 @@ namespace SqlKata
         {
             return new Column
             {
+                Engine = Engine,
                 Name = Name,
                 Component = Component,
             };
@@ -24,12 +25,16 @@ namespace SqlKata
     public class QueryColumn : AbstractColumn
     {
         public Query Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
 
         public override AbstractClause Clone()
         {
             return new QueryColumn
             {
+                Engine = Engine,
                 Query = Query.Clone(),
                 Component = Component,
             };
@@ -38,24 +43,21 @@ namespace SqlKata
 
     public class RawColumn : AbstractColumn, RawInterface
     {
-        protected object[] _bindings;
-
         public string Expression { get; set; }
-        public override object[] Bindings
+        protected object[] _bindings;
+        public object[] Bindings { set => _bindings = value; }
+        public override object[] GetBindings(string engine)
         {
-            get => _bindings;
-            set
-            {
-                _bindings = value;
-            }
+            return _bindings;
         }
 
         public override AbstractClause Clone()
         {
             return new RawColumn
             {
+                Engine = Engine,
                 Expression = Expression,
-                Bindings = _bindings,
+                _bindings = _bindings,
                 Component = Component,
             };
         }

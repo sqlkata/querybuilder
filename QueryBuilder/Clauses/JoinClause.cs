@@ -11,18 +11,17 @@ namespace SqlKata
     public class BaseJoin : AbstractJoin
     {
         public Join Join { get; set; }
-        public override object[] Bindings
+
+        public override object[] GetBindings(string engine)
         {
-            get
-            {
-                return Join.Bindings.ToArray();
-            }
+            return Join.GetBindings(engine).ToArray();
         }
 
         public override AbstractClause Clone()
         {
             return new BaseJoin
             {
+                Engine = Engine,
                 Join = Join.Clone(),
                 Component = Component,
             };
@@ -41,6 +40,7 @@ namespace SqlKata
         {
             return new DeepJoin
             {
+                Engine = Engine,
                 Component = Component,
                 Type = Type,
                 Expression = Expression,

@@ -1,3 +1,5 @@
+using System;
+
 namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
@@ -14,6 +16,7 @@ namespace SqlKata
         {
             return new OrderBy
             {
+                Engine = Engine,
                 Component = Component,
                 Column = Column,
                 Ascending = Ascending
@@ -25,22 +28,21 @@ namespace SqlKata
     {
         protected object[] _bindings;
         public string Expression { get; set; }
-        public override object[] Bindings
+        public object[] Bindings { set => _bindings = value; }
+
+        public override object[] GetBindings(string engine)
         {
-            get => _bindings;
-            set
-            {
-                _bindings = value;
-            }
+            return _bindings;
         }
 
         public override AbstractClause Clone()
         {
             return new RawOrderBy
             {
+                Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                Bindings = _bindings
+                _bindings = _bindings
             };
         }
     }
@@ -49,7 +51,10 @@ namespace SqlKata
     {
         public override AbstractClause Clone()
         {
-            return new OrderByRandom();
+            return new OrderByRandom
+            {
+                Engine = Engine,
+            };
         }
     }
 

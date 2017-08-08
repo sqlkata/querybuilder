@@ -5,11 +5,12 @@ namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {
+        protected string _alias;
         /// <summary>
         /// Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
-        public abstract string Alias { get; }
+        public virtual string Alias { get => _alias; set => _alias = value; }
     }
 
     /// <summary>
@@ -38,6 +39,7 @@ namespace SqlKata
         {
             return new FromClause
             {
+                Alias = Alias,
                 Table = Table,
                 Component = Component,
             };
@@ -50,13 +52,16 @@ namespace SqlKata
     public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
 
         public override string Alias
         {
             get
             {
-                return Query.QueryAlias;
+                return string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
             }
         }
 
@@ -64,6 +69,8 @@ namespace SqlKata
         {
             return new QueryFromClause
             {
+                Engine = Engine,
+                Alias = Alias,
                 Query = Query.Clone(),
                 Component = Component,
             };
@@ -72,25 +79,22 @@ namespace SqlKata
 
     public class RawFromClause : AbstractFrom, RawInterface
     {
-        protected object[] _bindings;
         public string Expression { get; set; }
-        public override object[] Bindings
+        protected object[] _bindings;
+        public object[] Bindings { set => _bindings = value; }
+        public override object[] GetBindings(string engine)
         {
-            get => _bindings;
-            set
-            {
-                _bindings = value;
-            }
+            return _bindings;
         }
-
-        public override string Alias => null;
 
         public override AbstractClause Clone()
         {
             return new RawFromClause
             {
+                Engine = Engine,
+                Alias = Alias,
                 Expression = Expression,
-                Bindings = _bindings,
+                _bindings = _bindings,
                 Component = Component,
             };
         }

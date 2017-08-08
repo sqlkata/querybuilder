@@ -110,12 +110,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
-            if (!x.Query.Has("where"))
+            if (!x.Query.Has("where", EngineCode))
             {
                 return null;
             }
 
-            var sql = CompileConditions(x.Query.Get<AbstractCondition>("where"));
+            var sql = CompileConditions(x.Query.Get<AbstractCondition>("where", EngineCode));
             var op = x.IsNot ? "NOT " : "";
 
             return $"{op}({sql})";

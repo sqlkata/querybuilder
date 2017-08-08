@@ -95,7 +95,7 @@ namespace SqlKata.Tests
             var q = new Query().From("users").Offset(offset);
             var c = _sqlsrv.Compile(q);
 
-            Assert.Equal("SELECT * FROM [users]", c.ToString()); 
+            Assert.Equal("SELECT * FROM [users]", c.ToString());
         }
 
         [Fact]
@@ -117,6 +117,35 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `streets`.`countryId` = `countries`.`Id`", c[1]);
 
             Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"streets\".\"countryId\" = \"countries\".\"Id\"", c[1]);
+        }
+
+        public void CteAndBindings()
+        {
+            var query = new Query("Races")
+                        .For("mysql", s =>
+                            s.With("range", q => q.From("seqtbl").Select("Id").Where("Id", "<", 33))
+                            .WhereIn("RaceAuthor",
+                                q => q.From("Users").Select("Name").Where("Status", "Available")
+                            )
+                        )
+                        .For("sqlsrv", s =>
+                            s.With("range",
+                                q => q.From("Sequence").Select("Number").Where("Number", "<", 78)
+                            )
+                            .Limit(25).Offset(20)
+                        )
+                        .For("postgres",
+                            s => s.With("range", q => q.FromRaw("generate_series(1, 33) as d").Select("d")).Where("Name", "3778")
+                        )
+                        .Where("Id", ">", 55)
+                        .WhereBetween("Value", 18, 24);
+            
+            var c = Compile(query);
+
+            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races]WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) WHERE [[row_num]]] BETWEEN 21 AND 45", c[0]);
+            Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) SELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = Available) AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
+            
+            Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) SELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
         }
     }
 }

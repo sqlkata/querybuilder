@@ -7,22 +7,8 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler : AbstractCompiler
     {
-        private string[] selectComponents = new string[] {
-            "aggregate",
-            "columns",
-            "from",
-            "joins",
-            "wheres",
-            "groups",
-            "havings",
-            "orders",
-            "limit",
-            "offset",
-            "unions",
-            "lock",
-        };
 
-        public Compiler()
+        public Compiler() : base()
         {
             Inflector = new Inflector();
         }
@@ -50,8 +36,17 @@ namespace SqlKata.Compilers
                 sql = CompileSelect(query);
             }
 
-            sql = OnAfterCompile(sql, query.Bindings);
-            return new SqlResult(sql, query.Bindings);
+            if (query.Get("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            // filter out foreign clauses so we get the bindings
+            // just for the current engine
+            var bindings = query.GetBindings(EngineCode);
+
+            sql = OnAfterCompile(sql, bindings);
+            return new SqlResult(sql, bindings);
         }
 
         protected virtual Query OnBeforeCompile(Query query)
@@ -63,11 +58,41 @@ namespace SqlKata.Compilers
         {
             return sql;
         }
+
+        public virtual string CompileCte(Query query)
+        {
+            var clauses = query.Get<AbstractFrom>("cte", EngineCode);
+
+            if (!clauses.Any())
+            {
+                return "";
+            }
+
+            var sql = new List<string>();
+
+            foreach (var cte in clauses)
+            {
+                if (cte is RawFromClause)
+                {
+                    RawFromClause clause = (cte as RawFromClause);
+                    sql.Add($"{WrapValue(clause.Alias)} AS ({clause.Expression})");
+                }
+                else if (cte is QueryFromClause)
+                {
+                    QueryFromClause clause = (cte as QueryFromClause);
+                    sql.Add($"{WrapValue(clause.Alias)} AS ({CompileSelect(clause.Query)})");
+                }
+            }
+
+            return "WITH " + string.Join(", ", sql) + " ";
+        }
+
+
         public virtual string CompileSelect(Query query)
         {
             query = OnBeforeSelect(query);
 
-            if (!query.Has("select"))
+            if (!query.Has("select", EngineCode))
             {
                 query.Select("*");
             }
@@ -89,19 +114,19 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         protected virtual string CompileInsert(Query query)
         {
-            if (!query.Has("from"))
+            if (!query.Has("from", EngineCode))
             {
                 throw new InvalidOperationException("No table set to insert");
             }
 
-            var from = query.GetOne<AbstractFrom>("from");
+            var from = query.GetOne<AbstractFrom>("from", EngineCode);
 
             if (!(from is FromClause))
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var insert = query.Get<InsertClause>("insert");
+            var insert = query.Get<InsertClause>("insert", EngineCode);
 
             List<string> sql = new List<string>();
 
@@ -112,19 +137,19 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileUpdate(Query query)
         {
-            if (!query.Has("from"))
+            if (!query.Has("from", EngineCode))
             {
-                throw new InvalidOperationException("No table set to insert");
+                throw new InvalidOperationException("No table set to update");
             }
 
-            var from = query.GetOne<AbstractFrom>("from");
+            var from = query.GetOne<AbstractFrom>("from", EngineCode);
 
             if (!(from is FromClause))
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var toUpdate = query.Get<InsertClause>("update");
+            var toUpdate = query.Get<InsertClause>("update", EngineCode);
 
             var sql = new List<string>();
 
@@ -147,12 +172,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileDelete(Query query)
         {
-            if (!query.Has("from"))
+            if (!query.Has("from", EngineCode))
             {
-                throw new InvalidOperationException("No table set to insert");
+                throw new InvalidOperationException("No table set to delete");
             }
 
-            var from = query.GetOne<AbstractFrom>("from");
+            var from = query.GetOne<AbstractFrom>("from", EngineCode);
 
             if (!(from is FromClause))
             {
@@ -201,17 +226,17 @@ namespace SqlKata.Compilers
             // If the query is actually performing an aggregating select, we will let that
             // compiler handle the building of the select clauses, as it will need some
             // more syntax that is best handled by that function to keep things neat.
-            if (query.Has("aggregate"))
+            if (query.Has("aggregate", EngineCode))
             {
                 return null;
             }
 
-            if (!query.Has("select"))
+            if (!query.Has("select", EngineCode))
             {
                 return null;
             }
 
-            var columns = query.Get("select").Cast<AbstractColumn>().ToList();
+            var columns = query.Get("select", EngineCode).Cast<AbstractColumn>().ToList();
 
             var select = (query.IsDistinct ? "SELECT DISTINCT " : "SELECT ");
             return select + (columns.Any() ? Columnize(columns) : "*");
@@ -220,7 +245,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileAggregate(Query query)
         {
 
-            if (!query.Has("aggregate"))
+            if (!query.Has("aggregate", EngineCode))
             {
                 return null;
             }
@@ -270,26 +295,26 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileFrom(Query query)
         {
-            if (!query.Has("from"))
+            if (!query.Has("from", EngineCode))
             {
                 return null;
             }
 
-            var from = query.GetOne<AbstractFrom>("from");
+            var from = query.GetOne<AbstractFrom>("from", EngineCode);
 
             return "FROM " + CompileTableExpression(from);
         }
 
         protected virtual string CompileJoins(Query query)
         {
-            if (!query.Has("join"))
+            if (!query.Has("join", EngineCode))
             {
                 return null;
             }
 
             // Transfrom deep join expressions to regular join
 
-            var deepJoins = query.Get<AbstractJoin>("join").OfType<DeepJoin>().ToList();
+            var deepJoins = query.Get<AbstractJoin>("join", EngineCode).OfType<DeepJoin>().ToList();
 
             foreach (var deepJoin in deepJoins)
             {
@@ -303,7 +328,7 @@ namespace SqlKata.Compilers
                 }
             }
 
-            var joins = query.Get<BaseJoin>("join");
+            var joins = query.Get<BaseJoin>("join", EngineCode);
 
             var sql = new List<string>();
 
@@ -318,8 +343,8 @@ namespace SqlKata.Compilers
         protected virtual string CompileJoin(Join join, bool isNested = false)
         {
 
-            var from = join.GetOne<AbstractFrom>("from");
-            var conditions = join.Get<AbstractCondition>("where");
+            var from = join.GetOne<AbstractFrom>("from", EngineCode);
+            var conditions = join.Get<AbstractCondition>("where", EngineCode);
 
             var joinTable = CompileTableExpression(from);
             var constraints = CompileConditions(conditions);
@@ -331,12 +356,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileWheres(Query query)
         {
-            if (!query.Has("from") || !query.Has("where"))
+            if (!query.Has("from", EngineCode) || !query.Has("where", EngineCode))
             {
                 return null;
             }
 
-            var conditions = query.Get<AbstractCondition>("where");
+            var conditions = query.Get<AbstractCondition>("where", EngineCode);
             var sql = CompileConditions(conditions);
 
             return $"WHERE {sql}";
@@ -363,12 +388,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileGroups(Query query)
         {
-            if (!query.Has("group"))
+            if (!query.Has("group", EngineCode))
             {
                 return null;
             }
 
-            var cols = query.Get("group")
+            var cols = query.Get("group", EngineCode)
                 .Select(x => x as AbstractColumn)
                 .ToList();
 
@@ -377,12 +402,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileOrders(Query query)
         {
-            if (!query.Has("order"))
+            if (!query.Has("order", EngineCode))
             {
                 return null;
             }
 
-            var columns = query.Get<AbstractOrderBy>("order").Select(x =>
+            var columns = query.Get<AbstractOrderBy>("order", EngineCode).Select(x =>
             {
 
                 if (x is RawOrderBy)
@@ -400,7 +425,7 @@ namespace SqlKata.Compilers
 
         public string CompileHavings(Query query)
         {
-            if (!query.Has("having"))
+            if (!query.Has("having", EngineCode))
             {
                 return null;
             }
@@ -408,7 +433,7 @@ namespace SqlKata.Compilers
             var sql = new List<string>();
             string boolOperator;
 
-            var havings = query.Get("having")
+            var havings = query.Get("having", EngineCode)
                 .Cast<AbstractCondition>()
                 .ToList();
 
@@ -429,7 +454,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileLimit(Query query)
         {
-            var limitOffset = query.GetOne("limit") as LimitOffset;
+            var limitOffset = query.GetOne("limit", EngineCode) as LimitOffset;
 
             if (limitOffset != null && limitOffset.HasLimit())
             {
@@ -441,7 +466,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileOffset(Query query)
         {
-            var limitOffset = query.GetOne("limit") as LimitOffset;
+            var limitOffset = query.GetOne("limit", EngineCode) as LimitOffset;
 
             if (limitOffset != null && limitOffset.HasOffset())
             {
@@ -538,7 +563,7 @@ namespace SqlKata.Compilers
             }
 
 
-            var from = query.GetOne<AbstractFrom>("from");
+            var from = query.GetOne<AbstractFrom>("from", EngineCode);
 
             if (from == null)
             {

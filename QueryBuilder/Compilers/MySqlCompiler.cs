@@ -2,6 +2,11 @@ namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
+        public MySqlCompiler() : base()
+        {
+            EngineCode = "mysql";
+        }
+
         /// <summary>
         /// Wrap a single string in keyword identifiers.
         /// </summary>
@@ -16,7 +21,7 @@ namespace SqlKata.Compilers
 
         public override string CompileOffset(Query query)
         {
-            var limitOffset = query.GetOne("limit") as LimitOffset;
+            var limitOffset = query.GetOne("limit", EngineCode) as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {

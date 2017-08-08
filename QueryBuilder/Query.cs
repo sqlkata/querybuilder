@@ -18,25 +18,26 @@ namespace SqlKata
                 if (Method == "insert")
                 {
                     return new[] {
-                        "insert",
+                        "cte", "insert",
                     };
                 }
 
                 if (Method == "update")
                 {
                     return new[] {
-                        "update", "where",
+                        "cte", "update", "where",
                     };
                 }
 
                 if (Method == "delete")
                 {
                     return new[] {
-                        "where",
+                        "cte", "where",
                     };
                 }
 
                 return new[] {
+                    "cte",
                     "select",
                     "from",
                     "join",
@@ -49,10 +50,6 @@ namespace SqlKata
                 };
             }
         }
-
-        protected string[] deleteBindingsOrder = new[] {
-            "where",
-        };
 
         protected List<string> operators = new List<string> {
             "=", "<", ">", "<=", ">=", "<>", "!=",
@@ -92,9 +89,66 @@ namespace SqlKata
             return this;
         }
 
+        public Query For(string engine, Func<Query, Query> fn)
+        {
+            EngineScope = engine;
+
+            var result = fn.Invoke(this);
+
+            // reset the engine
+            EngineScope = null;
+
+            return result;
+        }
+
+        public Query With(Query query)
+        {
+            // Clear query alias and add it to the containing clause
+            if (string.IsNullOrWhiteSpace(query.QueryAlias))
+            {
+                throw new InvalidOperationException("No Alias found for the CTE query");
+            }
+
+            var alias = query.QueryAlias.Trim();
+
+            // clear the query alias
+            query.QueryAlias = null;
+
+            return Add("cte", new QueryFromClause
+            {
+                Query = query.SetEngineScope(EngineScope),
+                Alias = alias,
+            });
+        }
+
+        public Query With(Func<Query, Query> fn)
+        {
+            return With(fn.Invoke(new Query()));
+        }
+
+        public Query With(string alias, Query query)
+        {
+            return With(query.As(alias));
+        }
+
+        public Query With(string alias, Func<Query, Query> fn)
+        {
+            return With(alias, fn.Invoke(new Query()));
+        }
+
+        public Query WithRaw(string alias, string sql, params object[] bindings)
+        {
+            return Add("cte", new RawFromClause
+            {
+                Alias = alias,
+                Expression = sql,
+                Bindings = Helper.Flatten(bindings).ToArray(),
+            });
+        }
+
         public Query Limit(int value)
         {
-            var clause = GetOne("limit") as LimitOffset;
+            var clause = GetOne("limit", EngineScope) as LimitOffset;
 
             if (clause != null)
             {
@@ -110,7 +164,7 @@ namespace SqlKata
 
         public Query Offset(int value)
         {
-            var clause = GetOne("limit") as LimitOffset;
+            var clause = GetOne("limit", EngineScope) as LimitOffset;
 
             if (clause != null)
             {
@@ -198,7 +252,14 @@ namespace SqlKata
             return this;
         }
 
-
+        public Query OrderBy(string column, bool ascending)
+        {
+            return Add("order", new OrderBy
+            {
+                Column = column,
+                Ascending = ascending
+            });
+        }
 
         public Query OrderBy(string column, string ordering = "asc")
         {
@@ -212,13 +273,11 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-
             return Add("order", new RawOrderBy
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
             });
-
         }
 
         public Query OrderByRandom(string seed)
@@ -257,7 +316,7 @@ namespace SqlKata
 
         public override Query NewQuery()
         {
-            return new Query();
+            return new Query().SetEngineScope(EngineScope);
         }
 
     }

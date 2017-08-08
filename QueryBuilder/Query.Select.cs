@@ -60,7 +60,7 @@ namespace SqlKata
         {
             Add("column", new QueryColumn
             {
-                Query = query.As(alias),
+                Query = query.As(alias).SetEngineScope(EngineScope),
             });
 
             return this;

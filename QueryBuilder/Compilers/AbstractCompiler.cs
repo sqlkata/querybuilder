@@ -6,6 +6,7 @@ namespace SqlKata.Compilers
 {
     public abstract class AbstractCompiler
     {
+        public string EngineCode;
         public Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";

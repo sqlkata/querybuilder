@@ -19,24 +19,7 @@ namespace SqlKata
                 _type = value.ToUpper();
             }
         }
-        
-        public override List<object> Bindings
-        {
-            get
-            {
-                var res = Clauses
-                     .Select(x => x.Bindings)
-                        .ToList()
-                        .Where(x => x != null)
-                        .ToList();
 
-                var res2 = res.SelectMany(x => x).ToList();
-
-                var res3 = res2.Where(x => x != null).ToList();
-
-                return res3;
-            }
-        }
         public Join() : base()
         {
         }
@@ -92,7 +75,7 @@ namespace SqlKata
 
         public override Join NewQuery()
         {
-            return new Join();
+            return new Join().SetEngineScope(EngineScope);
         }
     }
 }

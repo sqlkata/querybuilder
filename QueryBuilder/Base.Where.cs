@@ -422,12 +422,13 @@ namespace SqlKata
                 Column = column,
                 IsOr = getOr(),
                 IsNot = getNot(),
-                Query = query
+                Query = query.SetEngineScope(EngineScope)
             });
         }
         public Q WhereIn(string column, Func<Query, Query> callback)
         {
             var query = callback.Invoke(new Query());
+
             return WhereIn(column, query);
         }
 
@@ -481,7 +482,7 @@ namespace SqlKata
             {
                 Column = column,
                 Operator = op,
-                Query = query,
+                Query = query.SetEngineScope(EngineScope),
                 IsNot = getNot(),
                 IsOr = getOr(),
             });
@@ -505,7 +506,7 @@ namespace SqlKata
 
             return Add("where", new ExistsCondition<Query>
             {
-                Query = query,
+                Query = query.SetEngineScope(EngineScope),
                 IsNot = getNot(),
                 IsOr = getOr(),
             });
@@ -542,15 +543,6 @@ namespace SqlKata
         {
             return Or().Not(true).WhereExists(callback);
         }
-
-        public Q OrderBy(string column, bool ascending)
-        {
-            return Add("order", new OrderBy
-            {
-                Column = column,
-                Ascending = ascending
-            });
-
-        }
+        
     }
 }

@@ -9,6 +9,7 @@ namespace SqlKata
     {
         protected AbstractQuery Parent;
     }
+
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
         protected virtual string[] bindingOrder { get; }
@@ -16,27 +17,40 @@ namespace SqlKata
 
         private bool orFlag = false;
         private bool notFlag = false;
+        public string EngineScope = null;
 
-
-        public virtual List<object> Bindings
+        public Q SetEngineScope(string engine)
         {
-            get
+            this.EngineScope = engine;
+
+            this.Clauses = this.Clauses.Select(x =>
             {
-                var hasBindings = bindingOrder
-                    .Select(x => Get(x))
-                    .Where(x => x.Any() && x.Where(b => b.Bindings.Count() > 0).Any())
-                    .ToList();
+                x.Engine = engine;
+                return x;
+            }).ToList();
 
-                var bindings = hasBindings
-                .SelectMany(x => x)
-                .Select(x => x.Bindings)
-                .ToList()
-                .Where(x => x != null)
-                .SelectMany(x => x)
-                .ToList();
+            return (Q)this;
+        }
 
-                return bindings;
+        public virtual List<AbstractClause> OrderedClauses(string engine)
+        {
+            return bindingOrder.SelectMany(x => Get(x, engine)).ToList();
+        }
+
+        public virtual List<object> GetBindings(string engine)
+        {
+            var result = new List<object>();
+
+            foreach (var item in bindingOrder)
+            {
+                var bindings = Get(item, engine)
+                    .SelectMany(clause => clause.GetBindings(engine))
+                    .Where(x => x != null);
+
+                result.AddRange(bindings);
             }
+
+            return result;
         }
 
         public BaseQuery()
@@ -71,7 +85,9 @@ namespace SqlKata
 
         public Q NewChild()
         {
-            return NewQuery().SetParent((Q)this);
+            var newQuery = NewQuery().SetParent((Q)this);
+            newQuery.EngineScope = this.EngineScope;
+            return newQuery;
         }
 
         /// <summary>
@@ -82,6 +98,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q Add(string component, AbstractClause clause)
         {
+            clause.Engine = EngineScope;
             clause.Component = component;
             Clauses.Add(clause);
 
@@ -92,9 +109,14 @@ namespace SqlKata
         /// Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
-        public List<C> Get<C>(string component) where C : AbstractClause
+        public List<C> Get<C>(string component, string engineCode = null) where C : AbstractClause
         {
-            return Clauses.Where(x => x.Component == component).Cast<C>().ToList();
+            var clauses = Clauses
+                .Where(x => x.Component == component)
+                .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                .Cast<C>();
+
+            return clauses.ToList();
         }
 
         /// <summary>
@@ -102,18 +124,19 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public List<AbstractClause> Get(string component)
+        public List<AbstractClause> Get(string component, string engineCode = null)
         {
-            return Get<AbstractClause>(component);
+            return Get<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
         /// Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
-        public C GetOne<C>(string component) where C : AbstractClause
+        public C GetOne<C>(string component, string engineCode = null) where C : AbstractClause
         {
-            return Get<C>(component).FirstOrDefault();
+            return Get<C>(component, engineCode)
+            .FirstOrDefault();
         }
 
         /// <summary>
@@ -121,9 +144,9 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public AbstractClause GetOne(string component)
+        public AbstractClause GetOne(string component, string engineCode = null)
         {
-            return GetOne<AbstractClause>(component);
+            return GetOne<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
@@ -131,9 +154,9 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public bool Has(string component)
+        public bool Has(string component, string engineCode = null)
         {
-            return Get(component).Any();
+            return Get(component, engineCode).Any();
         }
 
         /// <summary>
@@ -141,9 +164,13 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public Q Clear(string component)
+        public Q Clear(string component, string engineCode = null)
         {
-            Clauses = Clauses.Where(x => x.Component != component).ToList();
+            Clauses = Clauses
+                .Where(x => x.Component != component)
+                .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                .ToList();
+
             return (Q)this;
         }
 
@@ -225,7 +252,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return Clear("from").Add("from", new QueryFromClause
+            return Clear("from", EngineScope).Add("from", new QueryFromClause
             {
                 Query = query
             });
@@ -233,7 +260,7 @@ namespace SqlKata
 
         public Q FromRaw(string expression, params object[] bindings)
         {
-            return Clear("from").Add("from", new RawFromClause
+            return Clear("from", EngineScope).Add("from", new RawFromClause
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()

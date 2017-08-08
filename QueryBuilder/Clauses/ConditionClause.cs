@@ -18,12 +18,16 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public virtual T Value { get; set; }
-        public override object[] Bindings => new object[] { Value };
+        public override object[] GetBindings(string engine)
+        {
+            return new object[] { Value };
+        }
 
         public override AbstractClause Clone()
         {
             return new BasicCondition<T>
             {
+                Engine = Engine,
                 Column = Column,
                 Operator = Operator,
                 Value = Value,
@@ -41,6 +45,7 @@ namespace SqlKata
         {
             return new BasicStringCondition
             {
+                Engine = Engine,
                 Column = Column,
                 Operator = Operator,
                 Value = Value,
@@ -57,7 +62,6 @@ namespace SqlKata
     /// </summary>
     public class TwoColumnsCondition : AbstractCondition
     {
-
         public string First { get; set; }
         public string Operator { get; set; }
         public string Second { get; set; }
@@ -66,6 +70,7 @@ namespace SqlKata
         {
             return new TwoColumnsCondition
             {
+                Engine = Engine,
                 First = First,
                 Operator = Operator,
                 Second = Second,
@@ -84,12 +89,16 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public Query Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
 
         public override AbstractClause Clone()
         {
             return new QueryCondition<T>
             {
+                Engine = Engine,
                 Column = Column,
                 Operator = Operator,
                 Query = Query.Clone(),
@@ -107,12 +116,16 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public IEnumerable<T> Values { get; set; }
-        public override object[] Bindings => Values.Select(x => x as object).ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Values.Select(x => x).Cast<object>().ToArray();
+        }
 
         public override AbstractClause Clone()
         {
             return new InCondition<T>
             {
+                Engine = Engine,
                 Column = Column,
                 Values = new List<T>(Values),
                 IsOr = IsOr,
@@ -128,14 +141,17 @@ namespace SqlKata
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
-        public string Column { get; set; }
         public Query Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
-
+        public string Column { get; set; }
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
         public override AbstractClause Clone()
         {
             return new InQueryCondition
             {
+                Engine = Engine,
                 Column = Column,
                 Query = Query.Clone(),
                 IsOr = IsOr,
@@ -153,12 +169,16 @@ namespace SqlKata
         public string Column { get; set; }
         public T Higher { get; set; }
         public T Lower { get; set; }
-        public override object[] Bindings => new object[] { Lower, Higher };
+        public override object[] GetBindings(string engine)
+        {
+            return new object[] { Lower, Higher };
+        }
 
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
             {
+                Engine = Engine,
                 Column = Column,
                 Higher = Higher,
                 Lower = Lower,
@@ -180,6 +200,7 @@ namespace SqlKata
         {
             return new NullCondition
             {
+                Engine = Engine,
                 Column = Column,
                 IsOr = IsOr,
                 IsNot = IsNot,
@@ -195,12 +216,16 @@ namespace SqlKata
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
 
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
             {
+                Engine = Engine,
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
@@ -215,12 +240,16 @@ namespace SqlKata
     public class ExistsCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
-        public override object[] Bindings => Query.Bindings.ToArray();
+        public override object[] GetBindings(string engine)
+        {
+            return Query.GetBindings(engine).ToArray();
+        }
 
         public override AbstractClause Clone()
         {
             return new ExistsCondition<T>
             {
+                Engine = Engine,
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
@@ -231,23 +260,21 @@ namespace SqlKata
 
     public class RawCondition : AbstractCondition, RawInterface
     {
-        protected object[] _bindings;
         public string Expression { get; set; }
-        public override object[] Bindings
+        protected object[] _bindings;
+        public object[] Bindings { set => _bindings = value; }
+        public override object[] GetBindings(string engine)
         {
-            get => _bindings;
-            set
-            {
-                _bindings = value;
-            }
+            return _bindings;
         }
 
         public override AbstractClause Clone()
         {
             return new RawCondition
             {
+                Engine = Engine,
                 Expression = Expression,
-                Bindings = _bindings,
+                _bindings = _bindings,
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,
