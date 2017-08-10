@@ -13,6 +13,16 @@ namespace SqlKata.Compilers
             Inflector = new Inflector();
         }
 
+        protected override string OpeningIdentifier()
+        {
+            return "\"";
+        }
+
+        protected override string ClosingIdentifier()
+        {
+            return "\"";
+        }
+
         public SqlResult Compile(Query query)
         {
             query = OnBeforeCompile(query);
@@ -75,7 +85,7 @@ namespace SqlKata.Compilers
                 if (cte is RawFromClause)
                 {
                     RawFromClause clause = (cte as RawFromClause);
-                    sql.Add($"{WrapValue(clause.Alias)} AS ({clause.Expression})");
+                    sql.Add($"{WrapValue(clause.Alias)} AS ({WrapIdentifiers(clause.Expression)})");
                 }
                 else if (cte is QueryFromClause)
                 {
@@ -271,7 +281,7 @@ namespace SqlKata.Compilers
         {
             if (from is RawFromClause)
             {
-                return (from as RawFromClause).Expression;
+                return WrapIdentifiers((from as RawFromClause).Expression);
             }
 
             if (from is QueryFromClause)
@@ -412,7 +422,7 @@ namespace SqlKata.Compilers
 
                 if (x is RawOrderBy)
                 {
-                    return (x as RawOrderBy).Expression;
+                    return WrapIdentifiers((x as RawOrderBy).Expression);
                 }
 
                 var direction = (x as OrderBy).Ascending ? "" : "DESC";

@@ -8,6 +8,18 @@ namespace SqlKata
     public class Join : BaseQuery<Join>
     {
         protected string _type = "INNER";
+
+        protected override string[] bindingOrder
+        {
+            get
+            {
+                return new[] {
+                    "from",
+                    "where",
+                };
+            }
+        }
+
         public string Type
         {
             get

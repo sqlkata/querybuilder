@@ -38,7 +38,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileRawCondition(RawCondition x)
         {
-            return x.Expression;
+            return WrapIdentifiers(x.Expression);
         }
 
         protected virtual string CompileSubQueryCondition<T>(QueryCondition<T> x) where T : BaseQuery<T>

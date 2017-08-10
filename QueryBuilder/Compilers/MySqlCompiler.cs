@@ -1,3 +1,5 @@
+using System;
+
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
@@ -7,16 +9,14 @@ namespace SqlKata.Compilers
             EngineCode = "mysql";
         }
 
-        /// <summary>
-        /// Wrap a single string in keyword identifiers.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override string WrapValue(string value)
+        protected override string OpeningIdentifier()
         {
-            if (value == "*") return value;
+            return "`";
+        }
 
-            return '`' + value.Replace("`", "``") + '`';
+        protected override string ClosingIdentifier()
+        {
+            return "`";
         }
 
         public override string CompileOffset(Query query)
@@ -36,6 +36,15 @@ namespace SqlKata.Compilers
             }
 
             return "OFFSET ?";
+        }
+    }
+
+    public static class MySqlCompilerExtensions
+    {
+        public static string ENGINE_CODE = "mysql";
+        public static Query ForMySql(this Query src, Func<Query, Query> fn)
+        {
+            return src.For(MySqlCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

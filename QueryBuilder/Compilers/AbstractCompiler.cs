@@ -9,7 +9,6 @@ namespace SqlKata.Compilers
         public string EngineCode;
         public Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
-        public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
         public bool IsDebug = false;
         protected string separator
         {
@@ -19,12 +18,13 @@ namespace SqlKata.Compilers
             }
         }
 
+        protected abstract string OpeningIdentifier();
+        protected abstract string ClosingIdentifier();
+
         protected string JoinComponents(List<string> components, string section = null)
         {
             return string.Join(separator, components);
         }
-
-
 
         /// <summary>
         /// Wrap a table in keyword identifiers.
@@ -34,52 +34,6 @@ namespace SqlKata.Compilers
         public string WrapTable(string table)
         {
             return Wrap(this.TablePrefix + table, true);
-        }
-
-        public string Wrap(object value, bool prefixAlias = false)
-        {
-            if (value is Raw)
-            {
-                return Wrap((value as Raw));
-            }
-
-            if (value is string)
-            {
-                return Wrap((value as string));
-            }
-
-            if (Helper.IsNumber(value))
-            {
-                return value + "";
-            }
-
-            if (value is DateTime)
-            {
-                return FormatDateTime((DateTime)value);
-            }
-
-            return value.ToString();
-
-        }
-
-        /// <summary>
-        /// Format input for different types, e.g. DateTime
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public object FormatInput(object value)
-        {
-            if (value is DateTime)
-            {
-                return FormatDateTime((DateTime)value);
-            }
-
-            return value;
-        }
-
-        private string FormatDateTime(DateTime dateTime)
-        {
-            return dateTime.ToString(DateFormat);
         }
 
         /// <summary>
@@ -123,7 +77,7 @@ namespace SqlKata.Compilers
 
         public string Wrap(Raw value)
         {
-            return value.Value;
+            return WrapIdentifiers(value.Value);
         }
 
         /// <summary>
@@ -135,14 +89,17 @@ namespace SqlKata.Compilers
         {
             if (value == "*") return value;
 
-            return '"' + value.Replace("\"", "\"\"") + '"';
+            var opening = this.OpeningIdentifier();
+            var closing = this.ClosingIdentifier();
+
+            return opening + value.Replace(closing, closing + closing) + closing;
         }
 
         public string Parameter<T>(T value)
         {
             if (value is Raw)
             {
-                return (value as Raw).Value;
+                return WrapIdentifiers((value as Raw).Value);
             }
 
             return "?";
@@ -160,7 +117,7 @@ namespace SqlKata.Compilers
             {
                 if (x is RawColumn)
                 {
-                    return (x as RawColumn).Expression;
+                    return WrapIdentifiers((x as RawColumn).Expression);
                 }
 
                 return Wrap((x as Column).Name);
@@ -187,6 +144,13 @@ namespace SqlKata.Compilers
         public List<string> WrapArray(List<string> values)
         {
             return values.Select(x => Wrap(x)).ToList();
+        }
+
+        public string WrapIdentifiers(string input)
+        {
+            return input
+                .Replace("{", this.OpeningIdentifier())
+                .Replace("}", this.ClosingIdentifier());
         }
 
         public virtual string Singular(string value)

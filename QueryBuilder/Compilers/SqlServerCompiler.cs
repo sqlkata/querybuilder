@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,16 +11,14 @@ namespace SqlKata.Compilers
             EngineCode = "sqlsrv";
         }
 
-        /// <summary>
-        /// Wrap a single string in keyword identifiers.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override string WrapValue(string value)
+        protected override string OpeningIdentifier()
         {
-            if (value == "*") return value;
+            return "[";
+        }
 
-            return '[' + value.Replace("]", "]]") + ']';
+        protected override string ClosingIdentifier()
+        {
+            return "]";
         }
 
         protected override Query OnBeforeSelect(Query query)
@@ -39,12 +38,14 @@ namespace SqlKata.Compilers
 
             var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
+            var orderClause = query.Get("order", EngineCode);
+
 
             // get a clone without the limit and order
             query.Clear("order");
             query.Clear("limit");
             var subquery = query.Clone();
-            
+
             subquery.Clear("cte");
 
             // Now clear other stuff
@@ -64,7 +65,11 @@ namespace SqlKata.Compilers
                 subquery.SelectRaw("*");
             }
 
-            subquery.SelectRaw($"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}");
+            // Add the row_number select, and put back the bindings here if any
+            subquery.SelectRaw(
+                    $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
+                    orderClause.SelectMany(x => x.GetBindings(EngineCode))
+            );
 
             query.From(subquery);
 
@@ -129,6 +134,15 @@ namespace SqlKata.Compilers
         public override string CompileRandom(string seed)
         {
             return "NEWID()";
+        }
+    }
+
+    public static class SqlServerCompilerExtensions
+    {
+        public static string ENGINE_CODE = "sqlsrv";
+        public static Query ForSqlServer(this Query src, Func<Query, Query> fn)
+        {
+            return src.For(SqlServerCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }
