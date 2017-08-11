@@ -136,14 +136,26 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var insert = query.Get<InsertClause>("insert", EngineCode);
+            var insert = query.GetOne<AbstractInsertClause>("insert", EngineCode);
 
-            List<string> sql = new List<string>();
 
-            return "INSERT INTO " + CompileTableExpression(from)
-                + " (" + string.Join(", ", insert.Select(x => Wrap(x.Column))) + ") "
-                + "VALUES (" + string.Join(", ", insert.Select(x => Parameter(x.Value))) + ")";
+            if (insert is InsertClause)
+            {
+                var clause = insert as InsertClause;
+
+                return "INSERT INTO " + CompileTableExpression(from)
+                + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
+                + "VALUES (" + string.Join(", ", Parametrize(clause.Values)) + ")";
+            }
+            else
+            {
+                var clause = insert as InsertQueryClause;
+                return "INSERT INTO " + CompileTableExpression(from)
+                + " " + CompileSelect(clause.Query);
+            }
+
         }
+
 
         protected virtual string CompileUpdate(Query query)
         {
@@ -159,13 +171,13 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var toUpdate = query.Get<InsertClause>("update", EngineCode);
+            var toUpdate = query.GetOne<InsertClause>("update", EngineCode);
 
             var sql = new List<string>();
 
-            foreach (var item in toUpdate)
+            for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
-                sql.Add($"{Wrap(item.Column)} = {Parameter(item.Value)}");
+                sql.Add($"{Wrap(toUpdate.Columns[i])} = ?");
             }
 
             var where = CompileWheres(query);

@@ -17,14 +17,11 @@ namespace SqlKata
 
             Method = "insert";
 
-            for (var i = 0; i < columns.Count(); i++)
+            Clear("insert").Add("insert", new InsertClause
             {
-                Add("insert", new InsertClause
-                {
-                    Column = columns.ElementAt(i),
-                    Value = values.ElementAt(i)
-                });
-            }
+                Columns = columns.ToList(),
+                Values = values.ToList()
+            });
 
             return this;
         }
@@ -34,14 +31,31 @@ namespace SqlKata
 
             Method = "insert";
 
-            for (var i = 0; i < data.Count; i++)
+            Clear("insert").Add("insert", new InsertClause
             {
-                Add("insert", new InsertClause
-                {
-                    Column = data.ElementAt(i).Key,
-                    Value = data.ElementAt(i).Value,
-                });
-            }
+                Columns = data.Keys.ToList(),
+                Values = data.Values.ToList()
+            });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Produces insert from subquery
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public Query Insert(IEnumerable<string> columns, Query query)
+        {
+
+            Method = "insert";
+
+            Clear("insert").Add("insert", new InsertQueryClause
+            {
+                Columns = columns.ToList(),
+                Query = query
+            });
 
             return this;
         }

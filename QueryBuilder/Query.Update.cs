@@ -17,14 +17,11 @@ namespace SqlKata
 
             Method = "update";
 
-            for (var i = 0; i < columns.Count(); i++)
+            Clear("update").Add("update", new InsertClause
             {
-                Add("update", new InsertClause
-                {
-                    Column = columns.ElementAt(i),
-                    Value = values.ElementAt(i)
-                });
-            }
+                Columns = columns.ToList(),
+                Values = values.ToList()
+            });
 
             return this;
         }
@@ -34,14 +31,11 @@ namespace SqlKata
 
             Method = "update";
 
-            for (var i = 0; i < data.Count; i++)
+            Clear("update").Add("update", new InsertClause
             {
-                Add("update", new InsertClause
-                {
-                    Column = data.ElementAt(i).Key,
-                    Value = data.ElementAt(i).Value,
-                });
-            }
+                Columns = data.Keys.ToList(),
+                Values = data.Values.ToList(),
+            });
 
             return this;
         }
