@@ -114,7 +114,7 @@ namespace SqlKata.Compilers
 
                 query.Clear("limit");
 
-                return "SELECT TOP ?" + compiled.Substring(6);
+                return "SELECT TOP (?)" + compiled.Substring(6);
             }
 
             return compiled;
