@@ -23,11 +23,11 @@ namespace SqlKata
         {
             this.EngineScope = engine;
 
-            this.Clauses = this.Clauses.Select(x =>
-            {
-                x.Engine = engine;
-                return x;
-            }).ToList();
+            // this.Clauses = this.Clauses.Select(x =>
+            // {
+            //     x.Engine = engine;
+            //     return x;
+            // }).ToList();
 
             return (Q)this;
         }
