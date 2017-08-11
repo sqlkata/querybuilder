@@ -96,9 +96,14 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="clause"></param>
         /// <returns></returns>
-        public Q Add(string component, AbstractClause clause)
+        public Q Add(string component, AbstractClause clause, string engineCode = null)
         {
-            clause.Engine = EngineScope;
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
+            clause.Engine = engineCode;
             clause.Component = component;
             Clauses.Add(clause);
 
@@ -111,6 +116,11 @@ namespace SqlKata
         /// <returns></returns>
         public List<C> Get<C>(string component, string engineCode = null) where C : AbstractClause
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             var clauses = Clauses
                 .Where(x => x.Component == component)
                 .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
@@ -126,6 +136,11 @@ namespace SqlKata
         /// <returns></returns>
         public List<AbstractClause> Get(string component, string engineCode = null)
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             return Get<AbstractClause>(component, engineCode);
         }
 
@@ -135,6 +150,11 @@ namespace SqlKata
         /// <returns></returns>
         public C GetOne<C>(string component, string engineCode = null) where C : AbstractClause
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             return Get<C>(component, engineCode)
             .FirstOrDefault();
         }
@@ -146,6 +166,11 @@ namespace SqlKata
         /// <returns></returns>
         public AbstractClause GetOne(string component, string engineCode = null)
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             return GetOne<AbstractClause>(component, engineCode);
         }
 
@@ -156,6 +181,11 @@ namespace SqlKata
         /// <returns></returns>
         public bool Has(string component, string engineCode = null)
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             return Get(component, engineCode).Any();
         }
 
@@ -166,9 +196,13 @@ namespace SqlKata
         /// <returns></returns>
         public Q Clear(string component, string engineCode = null)
         {
+            if (engineCode == null)
+            {
+                engineCode = EngineScope;
+            }
+
             Clauses = Clauses
-                .Where(x => x.Component != component)
-                .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                .Where(x => !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
             return (Q)this;
@@ -252,7 +286,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return Clear("from", EngineScope).Add("from", new QueryFromClause
+            return Clear("from").Add("from", new QueryFromClause
             {
                 Query = query
             });
@@ -260,7 +294,7 @@ namespace SqlKata
 
         public Q FromRaw(string expression, params object[] bindings)
         {
-            return Clear("from", EngineScope).Add("from", new RawFromClause
+            return Clear("from").Add("from", new RawFromClause
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
