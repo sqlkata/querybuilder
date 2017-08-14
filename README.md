@@ -1,8 +1,6 @@
 # SqlKata Query Builder
-<!--方-->
 
-[![Build Status](https://travis-ci.org/sqlkata/querybuilder.svg?branch=master)](https://travis-ci.org/sqlkata/querybuilder)
-[![Build status](https://ci.appveyor.com/api/projects/status/bp4nevwspxai5vqj?svg=true)](https://ci.appveyor.com/project/ahmad-moussawi/querybuilder)
+[![Build status](https://ci.appveyor.com/api/projects/status/bh022c0ol5u6s41p?svg=true)](https://ci.appveyor.com/project/ahmad-moussawi/querybuilder)
 
 <img src="/logo.png?raw=true" width="180" height="180" />
 SqlKata Query Builder is a powerful Sql Query Builder written in C#. 
@@ -28,10 +26,10 @@ var fastCarsQuery = new Query("Cars")
 
 if(withSportCars) 
 {
-    query.OrWhere("IsSportCar", true);
+    fastCarsQuery.OrWhere("IsSportCar", true);
 }
 
-string sql = compiler.Compile(query).ToSql();
+string sql = compiler.Compile(fastCarsQuery).Sql;
 ```
 
 Check out the docs for other examples [SqlKata docs](http://sqlkata.vivida-apps.com)
