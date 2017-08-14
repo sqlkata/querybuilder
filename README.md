@@ -13,7 +13,7 @@ It make writing SQL queries easy and funny, with no need to read long pages of d
 
 It provides a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
-SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others. Currently it has built-in compilers for SqlServer 2008 and above, MySql 5 and PostgreSql 9.**PostgreSql 9**.
+SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others. Currently it has built-in compilers for SqlServer 2008 and above, MySql 5 and PostgreSql 9.
 
 ## Some fresh code
 ```cs
@@ -84,18 +84,18 @@ if(withSportCars)
 ```
 
 ## Installation
-Currently SqlKata is supported on `netstandard1.3`, `net40`,  `net45` and `net451`.
+SqlKata is supported on `netstandard1.3`, yes am planing to support it on more platforms.
 
 ```bash
 ## using dotnet-cli
-dotnet add package SqlKata -v 1.0.0-beta-4
+dotnet add package SqlKata -v 1.0.0-beta-353
 
 ## or run from the package manager
-Install-Package SqlKata -Pre
+Install-Package SqlKata -Version 1.0.0-beta-353
 ```
 
 ## What Next ?
-While SqlKata is still in beta, I've stopped adding new features until I get a stable release.
+While SqlKata is still in beta, I've stopped adding new major features until I get a stable release.
 
 But to give you an idea about my priorities, I will add the support to Execute Queries, Caching mechanism and to support more native features across available compilers. 
 
