@@ -2,6 +2,8 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/bh022c0ol5u6s41p?svg=true)](https://ci.appveyor.com/project/ahmad-moussawi/querybuilder)
 
+[![SqlKata on Nuget](https://img.shields.io/nuget/vpre/SqlKata.svg)](https://www.nuget.org/packages/SqlKata)
+
 <img src="/logo.png?raw=true" width="180" height="180" />
 SqlKata Query Builder is a powerful Sql Query Builder written in C#. 
 
