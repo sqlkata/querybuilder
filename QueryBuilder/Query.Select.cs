@@ -58,7 +58,7 @@ namespace SqlKata
 
         public Query Select(Query query, string alias)
         {
-            Add("column", new QueryColumn
+            Add("select", new QueryColumn
             {
                 Query = query.As(alias).SetEngineScope(EngineScope),
             });

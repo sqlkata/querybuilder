@@ -23,6 +23,32 @@ namespace SqlKata.Compilers
             return "\"";
         }
 
+        /// <summary>
+        /// Compile a single column clause
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <returns></returns>
+
+        public string CompileColumn(AbstractColumn column)
+        {
+            if (column is RawColumn)
+            {
+                return WrapIdentifiers((column as RawColumn).Expression);
+            }
+
+            if (column is QueryColumn)
+            {
+                var clause = (column as QueryColumn);
+
+                var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapValue(clause.Query.QueryAlias)}";
+
+                return "(" + CompileSelect(clause.Query) + $"){alias}";
+            }
+
+            return Wrap((column as Column).Name);
+
+        }
+
         public SqlResult Compile(Query query)
         {
             query = OnBeforeCompile(query);
@@ -150,8 +176,16 @@ namespace SqlKata.Compilers
             else
             {
                 var clause = insert as InsertQueryClause;
+
+                var columns = "";
+
+                if (clause.Columns.Any())
+                {
+                    columns = $"({string.Join(", ", WrapArray(clause.Columns))}) ";
+                }
+
                 return "INSERT INTO " + CompileTableExpression(from)
-                + " " + CompileSelect(clause.Query);
+                + " " + columns + CompileSelect(clause.Query);
             }
 
         }
@@ -260,8 +294,11 @@ namespace SqlKata.Compilers
 
             var columns = query.Get("select", EngineCode).Cast<AbstractColumn>().ToList();
 
+            var cols = columns.Select(x => CompileColumn(x));
+
             var select = (query.IsDistinct ? "SELECT DISTINCT " : "SELECT ");
-            return select + (columns.Any() ? Columnize(columns) : "*");
+
+            return select + (cols.Any() ? string.Join(", ", cols) : "*");
         }
 
         protected virtual string CompileAggregate(Query query)
@@ -274,19 +311,21 @@ namespace SqlKata.Compilers
 
             var ag = query.Get("aggregate").Cast<AggregateClause>().First();
 
-            var cols = ag.Columns
+            var columns = ag.Columns
                 .Select(x => new Column { Name = x })
                 .Cast<AbstractColumn>()
                 .ToList();
 
-            var columns = Columnize(cols);
+            var cols = columns.Select(x => CompileColumn(x));
 
-            if (query.IsDistinct && columns != "*")
+            var sql = string.Join(", ", cols);
+
+            if (query.IsDistinct)
             {
-                columns = "DISTINCT " + columns;
+                sql = "DISTINCT " + sql;
             }
 
-            return "SELECT " + ag.Type.ToUpper() + "(" + columns + ") AS " + Wrap("count");
+            return "SELECT " + ag.Type.ToUpper() + "(" + sql + ") AS " + WrapValue(ag.Type);
         }
 
         protected virtual string CompileTableExpression(AbstractFrom from)
@@ -415,11 +454,9 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var cols = query.Get("group", EngineCode)
-                .Select(x => x as AbstractColumn)
-                .ToList();
+            var columns = query.Get<AbstractColumn>("group", EngineCode).Select(x => CompileColumn(x));
 
-            return "GROUP BY " + Columnize(cols);
+            return "GROUP BY " + string.Join(", ", columns);
         }
 
         protected virtual string CompileOrders(Query query)
@@ -437,9 +474,9 @@ namespace SqlKata.Compilers
                     return WrapIdentifiers((x as RawOrderBy).Expression);
                 }
 
-                var direction = (x as OrderBy).Ascending ? "" : "DESC";
+                var direction = (x as OrderBy).Ascending ? "" : " DESC";
 
-                return Wrap((x as OrderBy).Column) + " " + direction;
+                return Wrap((x as OrderBy).Column) + direction;
             });
 
             return "ORDER BY " + string.Join(", ", columns);

@@ -106,27 +106,6 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Convert an array of column names into a delimited string.
-        /// </summary>
-        /// <param name="columns"></param>
-        /// <returns></returns>
-
-        public string Columnize(IEnumerable<AbstractColumn> columns)
-        {
-            var cols = columns.Select(x =>
-            {
-                if (x is RawColumn)
-                {
-                    return WrapIdentifiers((x as RawColumn).Expression);
-                }
-
-                return Wrap((x as Column).Name);
-            });
-
-            return string.Join(", ", cols);
-        }
-
-        /// <summary>
         /// Create query parameter place-holders for an array.
         /// </summary>
         /// <param name="values"></param>
