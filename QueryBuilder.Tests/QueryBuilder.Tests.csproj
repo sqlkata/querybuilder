@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.0;net45</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.0;net452</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   
@@ -9,8 +9,8 @@
       <DefineConstants>NETSTANDARD13</DefineConstants>
       <DefineConstants>FEATURE_TYPE_INFO</DefineConstants>
     </PropertyGroup>
-    
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+        
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
       <DefineConstants>NET45</DefineConstants>
   </PropertyGroup>
 
@@ -19,12 +19,12 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="1.0.0" />
   </ItemGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
       <Reference Include="System" />
   </ItemGroup>
 
