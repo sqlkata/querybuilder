@@ -60,11 +60,14 @@ namespace SqlKata.Compilers
             // Transform the query to make it a parent query
             query.Select("*");
 
-            if (!subquery.Has("columns", EngineCode))
+            if (!subquery.Has("select", EngineCode))
             {
                 subquery.SelectRaw("*");
             }
 
+            //Add an alias name to the subquery
+            subquery.As("subquery");
+            
             // Add the row_number select, and put back the bindings here if any
             subquery.SelectRaw(
                     $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
