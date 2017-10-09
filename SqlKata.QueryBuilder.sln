@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryBuilder", "QueryBuilder\QueryBuilder.csproj", "{661F16E7-9C88-4E2D-BCBA-2D62BE178DA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlKata.QueryBuilder", "SqlKata.QueryBuilder\SqlKata.QueryBuilder.csproj", "{661F16E7-9C88-4E2D-BCBA-2D62BE178DA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryBuilder.Tests", "QueryBuilder.Tests\QueryBuilder.Tests.csproj", "{BF95B7BD-0DA2-4F96-B7E6-DFD5BC319AE2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlKata.QueryBuilder.Tests", "SqlKata.QueryBuilder.Tests\SqlKata.QueryBuilder.Tests.csproj", "{BF95B7BD-0DA2-4F96-B7E6-DFD5BC319AE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

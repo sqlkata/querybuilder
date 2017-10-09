@@ -9,8 +9,7 @@
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-      <DefineConstants>NETSTANDARD13</DefineConstants>
-      <DefineConstants>FEATURE_TYPE_INFO</DefineConstants>
+      <DefineConstants>NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
     </PropertyGroup>
         
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
@@ -32,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
+    <ProjectReference Include="..\SqlKata.QueryBuilder\SqlKata.QueryBuilder.csproj" />
   </ItemGroup>
 
 </Project>
