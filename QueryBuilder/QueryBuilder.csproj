@@ -8,14 +8,24 @@
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFrameworks>netstandard1.3;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard1.3</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+    <DefineConstants>NETSTANDARD13</DefineConstants>
     <DefineConstants>FEATURE_TYPE_INFO</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <DefineConstants>NET45</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0"/>
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System" />
   </ItemGroup>
 </Project>
