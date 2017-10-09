@@ -1,0 +1,13 @@
+<!-- net45 -->
+<Project>
+  <PropertyGroup>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
+    <DefineConstants>$(DefineConstants);ASYNC;NET45</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" Pack="false"/>
+    <Reference Include="System.Core" Pack="false" />
+  </ItemGroup>  
+</Project>
