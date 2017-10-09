@@ -1,0 +1,10 @@
+<!-- netstandard1.3 -->
+<Project>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0"/>
+  </ItemGroup>
+</Project>
