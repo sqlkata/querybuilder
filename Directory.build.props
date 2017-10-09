@@ -1,8 +1,7 @@
 <Project>
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
-
-    <Copyright>2017 SqlKata</Copyright>
+    <VersionSuffix>$(VersionSuffix)</VersionSuffix>
 
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -14,28 +13,18 @@
     <PackageLicenseUrl>https://github.com/sqlkata/querybuilder/licence</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
+    <Authors>Ahmad Moussawi</Authors>
+    <Copyright>2017 SqlKata</Copyright>
     
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
     <DefaultLanguage>en-US</DefaultLanguage>
     <IncludeSymbols>false</IncludeSymbols>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard1.3</TargetFrameworks>
   </PropertyGroup>
 
-  <!-- Workarounds for https://github.com/NuGet/Home/issues/4853 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-    <Reference Include="System.Core" Pack="false" />
-  </ItemGroup>
-  
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-    <DefineConstants>$(DefineConstants);ASYNC</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);ASYNC;COREFX</DefineConstants>
-  </PropertyGroup>
+  <Import Project="Directory.net45.build.props" Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' OR '$(TargetFramework)' == 'net452'" />
+  <Import Project="Directory.netstandard13.build.props" Condition=" '$(TargetFramework)' == 'netstandard1.3'" />
   
   <ItemGroup>
     <PackageReference Include="SourceLink.Create.GitHub" Version="2.0.2" PrivateAssets="All" /> 
