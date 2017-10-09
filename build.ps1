@@ -42,10 +42,10 @@ Write-Host "Base Version: $(CalculateVersion)"
 
 $packageOutputFolder = "$PSScriptRoot\.nupkgs"
 $projectsToBuild =
-    'SqlKata.QueryBuilder'
+    'QueryBuilder'
 
 $testsToRun =
-    'SqlKata.QueryBuilder.Tests'    
+    'QueryBuilder.Tests'    
 
 if (!$Version -and !$BuildNumber) {
     Write-Host "ERROR: You must supply either a -Version or -BuildNumber argument. `

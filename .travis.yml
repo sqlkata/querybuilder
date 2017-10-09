@@ -3,8 +3,8 @@ mono: none
 dotnet: 1.0.1
 dist: trusty
 install:
-  - dotnet restore SqlKata.QueryBuilder/SqlKata.QueryBuilder.csproj
-  - dotnet restore SqlKata.QueryBuilder.Tests/SqlKata.QueryBuilder.Tests.csproj
+  - dotnet restore QueryBuilder/QueryBuilder.csproj
+  - dotnet restore QueryBuilder.Tests/QueryBuilder.Tests.csproj
 script:
-  - dotnet build SqlKata.QueryBuilder/SqlKata.QueryBuilder.csproj
-  - dotnet test SqlKata.QueryBuilder.Tests/SqlKata.QueryBuilder.Tests.csproj
+  - dotnet build QueryBuilder/QueryBuilder.csproj
+  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj
