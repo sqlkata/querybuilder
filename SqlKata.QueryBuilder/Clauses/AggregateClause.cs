@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder.Clauses
 {
     public class AggregateClause : AbstractClause
     {

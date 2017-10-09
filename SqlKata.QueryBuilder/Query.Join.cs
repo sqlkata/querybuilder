@@ -1,6 +1,7 @@
 using System;
+using SqlKata.QueryBuilder.Clauses;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public partial class Query
     {

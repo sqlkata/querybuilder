@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using SqlKata.Compilers;
+using SqlKata.QueryBuilder.Clauses;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public class Join : BaseQuery<Join>
     {

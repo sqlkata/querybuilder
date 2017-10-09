@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace SqlKata
+namespace SqlKata.QueryBuilder.Clauses
 {
     public interface RawInterface
     {

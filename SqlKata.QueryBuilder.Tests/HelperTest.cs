@@ -1,7 +1,6 @@
-using System;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.QueryBuilder.Tests
 {
     public class HelperTest
     {

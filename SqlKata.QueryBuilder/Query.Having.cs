@@ -1,4 +1,6 @@
-namespace SqlKata
+using SqlKata.QueryBuilder.Clauses;
+
+namespace SqlKata.QueryBuilder
 {
     public partial class Query
     {

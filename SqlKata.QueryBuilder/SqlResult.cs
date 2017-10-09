@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public class SqlResult
     {

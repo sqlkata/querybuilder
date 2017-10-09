@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
     public abstract class AbstractCompiler
     {
         public string EngineCode;
-        public Inflector Inflector { get; protected set; }
+        public Inflector.Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public bool IsDebug = false;
         protected string separator

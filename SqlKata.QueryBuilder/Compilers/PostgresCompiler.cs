@@ -1,6 +1,6 @@
 using System;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
     public class PostgresCompiler : Compiler
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder.Inflector
 {
     /// <summary>
     /// An inflector class based on 

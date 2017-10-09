@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using SqlKata.QueryBuilder.Clauses;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
     public class SqlServerCompiler : Compiler
     {

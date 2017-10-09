@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using SqlKata.Compilers;
+using SqlKata.QueryBuilder.Compilers;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.QueryBuilder.Tests
 {
     public class QueryBuilderTest
     {

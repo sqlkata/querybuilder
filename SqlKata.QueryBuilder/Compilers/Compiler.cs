@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.QueryBuilder.Clauses;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
     public partial class Compiler : AbstractCompiler
     {
 
         public Compiler() : base()
         {
-            Inflector = new Inflector();
+            Inflector = new Inflector.Inflector();
         }
 
         protected override string OpeningIdentifier()
@@ -668,7 +669,5 @@ namespace SqlKata.Compilers
         }
 
     }
-
-
 
 }

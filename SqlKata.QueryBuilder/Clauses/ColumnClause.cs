@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace SqlKata
+namespace SqlKata.QueryBuilder.Clauses
 {
     public abstract class AbstractColumn : AbstractClause
     {

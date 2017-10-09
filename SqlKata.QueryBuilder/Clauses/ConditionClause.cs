@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder.Clauses
 {
     public abstract class AbstractCondition : AbstractClause
     {
