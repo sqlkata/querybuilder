@@ -37,7 +37,7 @@ dotnet restore -v Minimal # Restore all packages
 
 # Build all
 # Note the exclude: https://github.com/dotnet/cli/issues/1342
-for d in QueryBuilder; do 
+for d in SqlKata.QueryBuilder; do 
     # if [ "$d" != "*.EntityFramework.StrongName" ]; then
         echo "Building $d"
         pushd "$d"

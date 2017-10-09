@@ -22,11 +22,11 @@
   </PropertyGroup>
 
   <!-- Workarounds for https://github.com/NuGet/Home/issues/4853 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'" >
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'" >
     <Reference Include="System.Core" Pack="false" />
   </ItemGroup>
   
