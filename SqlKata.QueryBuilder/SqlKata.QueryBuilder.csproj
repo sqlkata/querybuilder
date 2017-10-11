@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>SqlKata</PackageId>
+    <PackageId>SqlKata.QueryBuilder</PackageId>
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
     <Title>SqlKata The C# Sql Query Builder</Title>
     <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql and PostgreSql</Description>
