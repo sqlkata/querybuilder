@@ -34,7 +34,6 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
 }
 
 $cmd = "dotnet pack /nologo /verbosity:q /p:PackageOutputPath=`"$OutputDirectory`" /p:BuildNumber=$BuildNumber"
-Write-Host $cmd
 
 if($nobuild)
 {
