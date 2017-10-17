@@ -1,11 +1,17 @@
 [CmdletBinding(PositionalBinding=$false)]
 param(
     [int]$BuildNumber,
+    [int]$PullRequestNumber,
     [bool]$nobuild=$true,
     [bool]$norestore=$true
 )
 
 $ErrorActionPreference = "Stop"
+
+if($PullRequestNumber)
+{
+    Write-Host "This is a pull request build, skipping packaging" -Foreground "Yellow"
+}
 $OutputDirectory = "$PSScriptRoot\.nupkgs"
 
 if(!(Test-Path "version.props"))
