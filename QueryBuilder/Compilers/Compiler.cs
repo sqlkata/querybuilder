@@ -1,3 +1,4 @@
+using QueryBuilder.Compilers.Generated;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,22 @@ namespace SqlKata.Compilers
 
             return Wrap((column as Column).Name);
 
+        }
+
+        public SqlResult Compile<T>(Query query, string find = "", string column = "")
+            where T: IGeneratedBy
+        {
+            if (query.Method != "insert")
+                throw new Exception("Compile Only Method Insert.");
+
+            SqlResult sqlResult = Compile(query);
+            IGeneratedBy generatedBy = 
+                string.IsNullOrEmpty(find) && string.IsNullOrEmpty(column)
+                ? Activator.CreateInstance<T>()
+                : (IGeneratedBy)Activator.CreateInstance(typeof(T), find, column);
+            generatedBy.Merge(sqlResult);
+
+            return sqlResult;
         }
 
         public SqlResult Compile(Query query)

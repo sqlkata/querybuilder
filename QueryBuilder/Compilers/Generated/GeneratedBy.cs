@@ -8,19 +8,19 @@ namespace QueryBuilder.Compilers.Generated
 
         public GeneratedByType GeneratedByType { get; private set; }
 
-        public string FindWord { get; private set; }
+        public string Find { get; private set; }
 
-        public string ColumnName { get; private set; }
+        public string Column { get; private set; }
 
-        public GeneratedBy(string commandSqlLastId, GeneratedByType generatedByType, string findWord = "", string columnName = "")
+        public GeneratedBy(string commandSqlLastId, GeneratedByType generatedByType, string find = "", string column = "")
         {
             CommandSqlLastId = commandSqlLastId;
             GeneratedByType = generatedByType;
-            FindWord = findWord;
-            ColumnName = columnName;
+            Find = find;
+            Column = column;
         }
 
-        public void Render(SqlResult result)
+        public void Merge(SqlResult result)
         {            
             switch(GeneratedByType)
             {                
@@ -31,7 +31,7 @@ namespace QueryBuilder.Compilers.Generated
                     }
                 case GeneratedByType.Insert:
                     {
-                        result.RawSql.Insert(result.RawSql.IndexOf(FindWord), CommandSqlLastId);
+                        result.RawSql.Insert(result.RawSql.IndexOf(Find), CommandSqlLastId);
                         break;
                     }            
             }

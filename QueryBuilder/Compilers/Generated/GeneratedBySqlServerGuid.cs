@@ -2,11 +2,11 @@
 {
     public sealed class GeneratedBySqlServerGuid: GeneratedBy, IGeneratedBy
     {
-        public GeneratedBySqlServerGuid(string findWord, string columnName)
-            :base("OUTPUT inserted.{name}", GeneratedByType.Insert, findWord, columnName)
+        public GeneratedBySqlServerGuid(string find, string column)
+            :base("OUTPUT inserted.{name}", GeneratedByType.Insert, find, column)
         {
-            if (string.IsNullOrEmpty(columnName))
-                CommandSqlLastId = CommandSqlLastId.Replace(".{name}", columnName);
+            if (string.IsNullOrEmpty(column))
+                CommandSqlLastId = CommandSqlLastId.Replace(".{name}", column);
         }
     }
 }

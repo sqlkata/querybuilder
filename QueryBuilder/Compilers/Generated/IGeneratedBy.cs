@@ -5,8 +5,8 @@ namespace QueryBuilder.Compilers.Generated
     {
         string CommandSqlLastId { get; set; }
         GeneratedByType GeneratedByType { get; }
-        string FindWord { get; }
-        void Render(SqlResult result);
-        string ColumnName { get; }
+        string Find { get; }
+        void Merge(SqlResult result);
+        string Column { get; }
     }
 }

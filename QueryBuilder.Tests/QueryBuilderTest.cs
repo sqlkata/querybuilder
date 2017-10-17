@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SqlKata.Compilers;
 using Xunit;
+using QueryBuilder.Compilers.Generated;
 
 namespace SqlKata.Tests
 {
@@ -20,6 +21,18 @@ namespace SqlKata.Tests
                 _pg.Compile(q.Clone()).ToString(),
             };
         }
+
+        private string[] CompileGeneratedBy(Query q)
+        {
+            return new[]
+            {
+                _sqlsrv.Compile<GeneratedBySqlServerIdentity>(q).ToString(),
+                _sqlsrv.Compile<GeneratedBySqlServerGuid>(q).ToString(),
+                _mysql.Compile<GeneratedByMysqlAuto>(q).ToString(),
+                _pg.Compile<GeneratedByPostgresSerial>(q).ToString()
+            };
+        }
+
         public QueryBuilderTest()
         {
             _sqlsrv = new SqlServerCompiler();
@@ -187,6 +200,19 @@ namespace SqlKata.Tests
             Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) INSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
             
             Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) INSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+        }
+
+        [Fact]
+        public void GeneratedBy()
+        {
+            var query = new Query("table")
+                .Insert(
+                    new string[] { "name", "year" },
+                    new object[] { "s", 2000 }
+                );
+
+            var c = CompileGeneratedBy(query);
+           
         }
     }
 }
