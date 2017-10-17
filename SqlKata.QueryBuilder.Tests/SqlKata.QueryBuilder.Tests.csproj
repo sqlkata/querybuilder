@@ -5,8 +5,12 @@
     <TargetFrameworks>netcoreapp1.0;net452</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp1.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
+<<<<<<< HEAD:SqlKata.QueryBuilder.Tests/SqlKata.QueryBuilder.Tests.csproj
     <AssemblyName>SqlKata.QueryBuilder.Tests</AssemblyName>
     <RootNamespace>SqlKata.QueryBuilder.Tests</RootNamespace>
+=======
+    <IsPackable>false</IsPackable>
+>>>>>>> update-build-scripts:QueryBuilder.Tests/QueryBuilder.Tests.csproj
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
