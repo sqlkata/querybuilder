@@ -1,112 +1,63 @@
 [CmdletBinding(PositionalBinding=$false)]
 param(
-    [string] $Version,
-    [string] $BuildNumber,
     [bool] $CreatePackages,
     [bool] $RunTests = $true,
-    [string] $PullRequestNumber
+    [int] $BuildNumber, 
+    [bool] $SourceLinkEnable = $false
 )
 
-function CalculateVersion() {
-    if ($version) {
-        return $version
-    }
+$ErrorActionPreference = "Stop"
 
-    $semVersion = '';
-    $path = $pwd;
-    while (!$semVersion) {
-        if (Test-Path (Join-Path $path "semver.txt")) {
-            $semVersion = Get-Content (Join-Path $path "semver.txt")
-            break
-        }
-        if ($PSScriptRoot -eq $path) {
-            break
-        }
-        $path = Split-Path $path -Parent
-    }
-
-    if (!$semVersion) {
-        Write-Error "semver.txt was not found in $pwd or any parent directory"
-        Exit 1
-    }
-
-    return "$semVersion-$BuildNumber"
+if(!(Test-Path "version.props"))
+{
+    Write-Host "You are missing version.props, I need it please"
+    Exit
 }
 
+function Invoke-ExpressionEx($expression) {
+    Invoke-Expression $expression
+    if ($LastExitCode -ne 0) { 
+        Write-Host "Error encountered, aborting." -Foreground "Red"
+        Exit 1
+    }
+}
+
+$stdSwitches = " /nologo /verbosity:q /p:BuildNumber=$BuildNumber"
+if($SourceLinkEnable)
+{
+    $stdSwitches += " /p:CI=true"
+}
+
+$versionProps = [xml](Get-Content "version.props")
+$versionPrefix = $versionProps.Project.PropertyGroup.VersionPrefix
+$versionSuffix = $versionProps.Project.PropertyGroup.VersionSuffix
+
 Write-Host "Run Parameters:" -ForegroundColor Cyan
-Write-Host "Version: $Version"
+Write-Host "Version: $versionPrefix"
+Write-Host "Version Suffix: $versionSuffix"
 Write-Host "BuildNumber: $BuildNumber"
 Write-Host "CreatePackages: $CreatePackages"
 Write-Host "RunTests: $RunTests"
-Write-Host "Base Version: $(CalculateVersion)"
 
-$packageOutputFolder = "$PSScriptRoot\.nupkgs"
-$projectsToBuild =
-    'QueryBuilder'
+Write-Host "Cleaning" -ForegroundColor "Magenta"
+Invoke-ExpressionEx ('dotnet msbuild /t:Clean' + $stdSwitches)
 
-$testsToRun =
-    'QueryBuilder.Tests'    
+Write-Host "Restoring" -ForegroundColor "Magenta"
+Invoke-ExpressionEx ('dotnet msbuild /t:Restore' + $stdSwitches)
 
-if (!$Version -and !$BuildNumber) {
-    Write-Host "ERROR: You must supply either a -Version or -BuildNumber argument. `
-  Use -Version `"4.0.0`" for explicit version specification, or `
-  Use -BuildNumber `"12345`" for generation using <semver.txt>-<buildnumber>" -ForegroundColor Yellow
-    Exit 1
+Write-Host "Building" -ForegroundColor "Magenta"
+Invoke-ExpressionEx ('dotnet msbuild /t:Build' + $stdSwitches)
+
+# Tests should really be in their own subfolder but oh well
+$testProjects = Get-ChildItem -Path $PSScriptRoot -Filter "*Tests.csproj" -Recurse
+Write-Host "Testing (found " -NoNewLine -ForegroundColor "Magenta"
+Write-Host ("{0}" -f $testProjects.Count) -ForegroundColor "Yellow" -NoNewLine
+Write-Host " test projects)" -ForegroundColor "Magenta"
+
+foreach($testProject in  $testProjects)
+{
+    Invoke-ExpressionEx ("dotnet test /nologo -v q --no-restore --no-build "+$testProject.FullName)
 }
 
-if ($PullRequestNumber) {
-    Write-Host "Building for a pull request (#$PullRequestNumber), skipping packaging." -ForegroundColor Yellow
-    $CreatePackages = $false
-}
-
-if ($RunTests) {   
-    dotnet restore /ConsoleLoggerParameters:Verbosity=Quiet
-    foreach ($project in $testsToRun) {
-        Write-Host "Running tests: $project (all frameworks)" -ForegroundColor "Magenta"
-        Push-Location "$project"
-
-        dotnet test
-        if ($LastExitCode -ne 0) { 
-            Write-Host "Error with tests, aborting build." -Foreground "Red"
-            Pop-Location
-            Exit 1
-        }
-
-        Write-Host "Tests passed!" -ForegroundColor "Green"
-	    Pop-Location
-    }
-}
-
-if ($CreatePackages) {
-    mkdir -Force $packageOutputFolder | Out-Null
-    Write-Host "Clearing existing $packageOutputFolder..." -NoNewline
-    Get-ChildItem $packageOutputFolder | Remove-Item
-    Write-Host "done." -ForegroundColor "Green"
-
-    Write-Host "Building all packages" -ForegroundColor "Green"
-}
-
-foreach ($project in $projectsToBuild) {
-    Write-Host "Working on $project`:" -ForegroundColor "Magenta"
-	
-	Push-Location ".\$project"
-
-    $semVer = CalculateVersion
-
-    Write-Host "  Restoring and packing $project... (Version:" -NoNewline -ForegroundColor "Magenta"
-    Write-Host $semVer -NoNewline -ForegroundColor "Cyan"
-    Write-Host ")" -ForegroundColor "Magenta"
-    
-    $targets = "Restore"
-    if ($CreatePackages) {
-        $targets += ";Pack"
-    }
-
-	dotnet msbuild "/t:$targets" "/p:Configuration=Release" "/p:Version=$semVer" "/p:PackageOutputPath=$packageOutputFolder" "/p:CI=true" "/p:NuGetBuildTasksPackTargets='000'"
-
-	Pop-Location
-
-    Write-Host "Done." -ForegroundColor "Green"
-    Write-Host ""
-}
-Write-Host "Build Complete." -ForegroundColor "Green"
+Write-Host "Success! :D" -ForegroundColor "Green"
+Exit 0
