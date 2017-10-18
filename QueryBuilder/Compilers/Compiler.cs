@@ -57,10 +57,10 @@ namespace SqlKata.Compilers
                 throw new Exception("Compile Only Method Insert.");
 
             SqlResult sqlResult = Compile(query);
-            IGeneratedBy generatedBy =
-                string.IsNullOrEmpty(find) && string.IsNullOrEmpty(column)
+            IGeneratedBy generatedBy = (string.IsNullOrEmpty(find) && string.IsNullOrEmpty(column))
                 ? Activator.CreateInstance<T>()
                 : (IGeneratedBy)Activator.CreateInstance(typeof(T), new object[2] { find, column });
+
             generatedBy.Merge(sqlResult);
 
             return sqlResult;
