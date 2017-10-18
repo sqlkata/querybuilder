@@ -5,8 +5,8 @@
         public GeneratedBySqlServerGuid(string find, string column)
             :base("OUTPUT inserted.{name}", GeneratedByType.Insert, find, column)
         {
-            if (string.IsNullOrEmpty(column))
-                CommandSqlLastId = CommandSqlLastId.Replace(".{name}", column);
+            if (!string.IsNullOrEmpty(column) && !string.IsNullOrEmpty(find))
+                CommandSqlLastId = CommandSqlLastId.Replace("{name}", column);
         }
     }
 }

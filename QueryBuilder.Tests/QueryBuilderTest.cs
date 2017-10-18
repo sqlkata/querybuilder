@@ -26,10 +26,10 @@ namespace SqlKata.Tests
         {
             return new[]
             {
-                _sqlsrv.Compile<GeneratedBySqlServerIdentity>(q).ToString(),
-                _sqlsrv.Compile<GeneratedBySqlServerGuid>(q).ToString(),
+                _sqlsrv.Compile<GeneratedBySqlServerIdentity>(q).ToString(),                
                 _mysql.Compile<GeneratedByMysqlAuto>(q).ToString(),
-                _pg.Compile<GeneratedByPostgresSerial>(q).ToString()
+                _pg.Compile<GeneratedByPostgresSerial>(q).ToString(),
+                _sqlsrv.Compile<GeneratedBySqlServerGuid>(q, "VALUE", "id").ToString(),
             };
         }
 
@@ -208,11 +208,23 @@ namespace SqlKata.Tests
             var query = new Query("table")
                 .Insert(
                     new string[] { "name", "year" },
-                    new object[] { "s", 2000 }
+                    new object[] { "sqlkata", 2000 }
                 );
 
             var c = CompileGeneratedBy(query);
-           
+
+            //SQLServer Identity Field
+            Assert.Equal("INSERT INTO [table] ([name], [year]) VALUES (sqlkata, 2000);SELECT SCOPE_IDENTITY();", c[0]);
+            
+            //MySql Auto_Increment Field
+            Assert.Equal("INSERT INTO `table` (`name`, `year`) VALUES (sqlkata, 2000);SELECT LAST_INSERT_ID();", c[1]);
+            
+            //PostGresql Serial Field
+            Assert.Equal("INSERT INTO \"table\" (\"name\", \"year\") VALUES (sqlkata, 2000);SELECT lastval();", c[2]);
+            
+            //SQLServer Guid Field
+            Assert.Equal("INSERT INTO [table] ([name], [year]) OUTPUT inserted.id VALUES (sqlkata, 2000)", c[3]);
+
         }
     }
 }

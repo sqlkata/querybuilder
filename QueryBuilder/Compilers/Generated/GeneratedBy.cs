@@ -31,7 +31,8 @@ namespace QueryBuilder.Compilers.Generated
                     }
                 case GeneratedByType.Insert:
                     {
-                        result.RawSql.Insert(result.RawSql.IndexOf(Find), CommandSqlLastId);
+                        result.RawSql =
+                            result.RawSql.Insert(result.RawSql.IndexOf(Find), CommandSqlLastId + " ");
                         break;
                     }            
             }
