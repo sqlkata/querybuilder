@@ -86,14 +86,14 @@ if(withSportCars)
 ```
 
 ## Installation
-SqlKata is supported on `netstandard1.3`, yes am planing to support it on more platforms.
+SqlKata is supported on `netstandard1.3`, while we are planning to support it on more platforms, if you can help please let us know.
 
 ```bash
 ## using dotnet-cli
-dotnet add package SqlKata -v 1.0.0-beta-353
+dotnet add package SqlKata -v 1.0.0-beta-354
 
 ## or run from the package manager
-Install-Package SqlKata -Version 1.0.0-beta-353
+Install-Package SqlKata -Version 1.0.0-beta-354
 ```
 
 ## What Next ?
