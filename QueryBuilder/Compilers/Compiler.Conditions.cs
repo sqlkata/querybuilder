@@ -41,14 +41,11 @@ namespace SqlKata.Compilers
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileSubQueryCondition<T>(QueryCondition<T> x) where T : BaseQuery<T>
+        protected virtual string CompileQueryCondition<T>(QueryCondition<T> x) where T : BaseQuery<T>
         {
             var select = CompileQuery(x.Query);
 
-            var alias = string.IsNullOrEmpty(x.Query.QueryAlias) ? "" : " AS " + x.Query.QueryAlias;
-
-            return Wrap(x.Column) + " " + x.Operator + " (" + select + ")" + alias;
-
+            return Wrap(x.Column) + " " + x.Operator + " (" + select + ")";
         }
 
         protected virtual string CompileBasicCondition<T>(BasicCondition<T> x)
