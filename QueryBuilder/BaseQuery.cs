@@ -45,7 +45,8 @@ namespace SqlKata
             {
                 var bindings = Get(item, engine)
                     .SelectMany(clause => clause.GetBindings(engine))
-                    .Where(x => x != null);
+                    .Where(x => x != null)
+                    .Select(this.RestoreNullValues());
 
                 result.AddRange(bindings);
             }
@@ -313,6 +314,32 @@ namespace SqlKata
             query.SetParent((Q)this);
 
             return From(callback.Invoke(query), alias);
+        }
+
+        protected Func<object, object> BackupNullValues()
+        {
+            return (x) =>
+            {
+                if (x == null)
+                {
+                    return new NullValue();
+                }
+
+                return x;
+            };
+        }
+
+        protected Func<object, object> RestoreNullValues()
+        {
+            return (x) =>
+            {
+                if (x is NullValue)
+                {
+                    return null;
+                }
+
+                return x;
+            };
         }
 
     }

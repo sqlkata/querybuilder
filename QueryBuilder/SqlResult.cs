@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlKata
 {
@@ -38,7 +39,30 @@ namespace SqlKata
 
         public override string ToString()
         {
-            return Helper.ReplaceAll(RawSql, "?", i => RawBindings[i] + "");
+            return Helper.ReplaceAll(RawSql, "?", i =>
+            {
+                var value = RawBindings[i];
+
+                if (value == null)
+                {
+                    return "NULL";
+                }
+
+                if (isNumber(value))
+                {
+                    return value + "";
+                }
+
+                return $"'{value}'";
+
+            });
+        }
+
+        private bool isNumber(object val)
+        {
+            if (val == null) return false;
+
+            return val.ToString().All(x => char.IsDigit(x));
         }
 
     }

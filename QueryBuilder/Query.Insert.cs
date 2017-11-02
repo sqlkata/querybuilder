@@ -10,6 +10,12 @@ namespace SqlKata
 
         public Query Insert(IEnumerable<string> columns, IEnumerable<object> values)
         {
+
+            if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
+            {
+                throw new InvalidOperationException("Columns and Values cannot be null or empty");
+            }
+
             if (columns.Count() != values.Count())
             {
                 throw new InvalidOperationException("Columns count should be equal to Values count");
@@ -20,7 +26,7 @@ namespace SqlKata
             Clear("insert").Add("insert", new InsertClause
             {
                 Columns = columns.ToList(),
-                Values = values.ToList()
+                Values = values.Select(this.BackupNullValues()).ToList()
             });
 
             return this;
@@ -29,12 +35,17 @@ namespace SqlKata
         public Query Insert(Dictionary<string, object> data)
         {
 
+            if (data == null || data.Count == 0)
+            {
+                throw new InvalidOperationException("Values dictionary cannot be null or empty");
+            }
+
             Method = "insert";
 
             Clear("insert").Add("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.ToList()
+                Values = data.Values.Select(this.BackupNullValues()).ToList()
             });
 
             return this;
