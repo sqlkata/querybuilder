@@ -183,10 +183,36 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) INSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [subquery] WHERE [row_num] BETWEEN 11 AND 20", c[0]);
-            
+
             Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) INSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
-            
+
             Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) INSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+        }
+
+        [Fact]
+        public void InsertWithNullValues()
+        {
+            var query = new Query("Books").Insert(
+                new[] { "Id", "Author", "ISBN", "Date" },
+                new object[] { 1, "Author 1", "123456", null }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Date]) VALUES (1, 'Author 1', 123456, NULL)", c[0]);
+        }
+
+        [Fact]
+        public void UpdateWithNullValues()
+        {
+            var query = new Query("Books").Where("Id", 1).Update(
+                new[] { "Author", "Date", "Version" },
+                new object[] { "Author 1", null, null }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1", c[0]);
         }
     }
 }
