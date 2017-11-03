@@ -1,20 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netcoreapp1.0;net452</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp1.0</TargetFrameworks>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
   
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-      <DefineConstants>NETSTANDARD13</DefineConstants>
-      <DefineConstants>FEATURE_TYPE_INFO</DefineConstants>
-    </PropertyGroup>
-        
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
-      <DefineConstants>NET45</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
@@ -25,12 +15,7 @@
     <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="1.0.0" />
   </ItemGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
-      <Reference Include="System" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
-
 </Project>

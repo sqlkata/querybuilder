@@ -1,9 +1,7 @@
 <Project>
+  <Import Project="version.props"/>
   <PropertyGroup>
-    <VersionPrefix>1.0.0</VersionPrefix>
-
     <Copyright>2017 SqlKata</Copyright>
-
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!--<AssemblyOriginatorKeyFile>../SqlKata.snk</AssemblyOriginatorKeyFile>-->
@@ -19,6 +17,7 @@
     <DebugType>embedded</DebugType>
     <DefaultLanguage>en-US</DefaultLanguage>
     <IncludeSymbols>false</IncludeSymbols>
+    <VersionSuffix Condition="'$(VersionSuffix)' != '' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
   </PropertyGroup>
 
   <!-- Workarounds for https://github.com/NuGet/Home/issues/4853 -->
@@ -27,14 +26,15 @@
     <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR  '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
+    <Reference Include="System" Pack="false" />
     <Reference Include="System.Core" Pack="false" />
   </ItemGroup>
-  
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-    <DefineConstants>$(DefineConstants);ASYNC</DefineConstants>
+    <DefineConstants>$(DefineConstants);ASYNC;NET45</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);ASYNC;COREFX</DefineConstants>
+    <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
