@@ -90,10 +90,10 @@ SqlKata is supported on `netstandard1.3`, while we are planning to support it on
 
 ```bash
 ## using dotnet-cli
-dotnet add package SqlKata -v 1.0.0-beta-354
+dotnet add package SqlKata -v 1.0.0-beta-355
 
 ## or run from the package manager
-Install-Package SqlKata -Version 1.0.0-beta-354
+Install-Package SqlKata -Version 1.0.0-beta-355
 ```
 
 ## What Next ?
