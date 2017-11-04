@@ -17,11 +17,4 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0"/>
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-    <DefineConstants>$(DefineConstants);ASYNC;NET45</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
-  </PropertyGroup>
 </Project>
