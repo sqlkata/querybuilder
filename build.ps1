@@ -26,7 +26,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $msgColor = @{Default="White"; Heading="Cyan"; Danger="Red"; Success="Green"; Attention="Yellow"}
-$debug = $true
+$debug = $false
 
 function Die ($message) {
     Write-Host ">>> ERROR:`t$message`n" -ForegroundColor $msgColor.Danger
@@ -134,7 +134,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack /nologo /verbosity:q /p:PackageOutputPath=`"$outputPath`" /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack /nologo /verbosity:q --output=`"$outputPath`" /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
