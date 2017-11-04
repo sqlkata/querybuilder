@@ -3,6 +3,7 @@
     <TargetFrameworks>netcoreapp1.0;net452</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp1.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   
   <ItemGroup>
