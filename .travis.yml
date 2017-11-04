@@ -7,4 +7,4 @@ install:
   - dotnet msbuild /t:Restore
 script:
   - dotnet msbuild /t:Build
-  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj
+  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj --no-build
