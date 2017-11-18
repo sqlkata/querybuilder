@@ -16,17 +16,21 @@ Switch to enable to execution of tests in the solution
 .PARAMETER SourceLinkEnable
 Switch to enable a build property for SourceLink
 
+.PARAMETER DebugBuild
+Switch to produce a debug build
+
 #>
 [CmdletBinding(PositionalBinding=$false)]
 param(
     [int] $BuildNumber,
     [int] $PullRequestNumber,
     [switch] $RunTests,
-    [switch] $SourceLinkEnable
+    [switch] $SourceLinkEnable,
+    [switch] $DebugBuild
 )
 $ErrorActionPreference = "Stop"
 $msgColor = @{Default="White"; Heading="Cyan"; Danger="Red"; Success="Green"; Attention="Yellow"}
-$debug = $false
+$BuildConfiguration = 'Release'
 
 function Die ($message) {
     Write-Host ">>> ERROR:`t$message`n" -ForegroundColor $msgColor.Danger
@@ -62,8 +66,12 @@ function Done()
 function Invoke-ExpressionEx($expression) {
     try
     {
-        if($debug -eq $false) { Invoke-Expression $expression | Out-Null }
-        else { Invoke-Expression $expression }
+        if($DebugBuild -eq $false) { Invoke-Expression $expression | Out-Null }
+        else 
+        { 
+            Msg "`tInvoking Expression: $expression" $msgColor.Default
+            Invoke-Expression $expression
+        }
         if (!$? -or $LastExitCode -ne 0)
         {
             throw "Non zero return code: $LastExitCode"
@@ -74,11 +82,15 @@ function Invoke-ExpressionEx($expression) {
 }
 
 Msg "`n>>> SqlKata QueryBuilder Build Script`n" $msgColor.Heading
-
+if($DebugBuild) 
+{ 
+    Msg "`tDEBUG BUILD" $msgColor.Attention 
+    $BuildConfiguration = 'Debug'
+}
 if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0) { Die "Build Number or Pull Request Number must be supplied" }
 if(!(Test-Path "version.props")) { Die "Unable to locate required file: version.props" }
 $outputPath = "$PSScriptRoot\.nupkgs"
-$stdSwitches = " /nologo /verbosity:q /p:BuildNumber=$BuildNumber"
+$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:q /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
 {
@@ -134,7 +146,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack /nologo /verbosity:q --output=`"$outputPath`" /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack /nologo /verbosity:q --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
