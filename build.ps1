@@ -128,7 +128,7 @@ if($RunTests)
     foreach($testProject in  $testProjects)
     {
         Msg "`t`t- $testProject" $msgColor.Attention
-        Invoke-ExpressionEx ("dotnet test /nologo -v q --no-restore --no-build "+$testProject.FullName)
+        Invoke-ExpressionEx ("dotnet test /nologo -v q /p:Configuration=$BuildConfiguration --no-restore --no-build "+$testProject.FullName)
         Msg "`t`t`tOK" $msgColor.Success
     }
 }
