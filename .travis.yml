@@ -3,8 +3,8 @@ mono: none
 dotnet: 1.0.1
 dist: trusty
 install:
-  - dotnet restore QueryBuilder/QueryBuilder.csproj
-  - dotnet restore QueryBuilder.Tests/QueryBuilder.Tests.csproj
+  - dotnet msbuild /t:Clean
+  - dotnet msbuild /t:Restore
 script:
-  - dotnet build QueryBuilder/QueryBuilder.csproj
-  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj
+  - dotnet msbuild /t:Build
+  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj --no-build
