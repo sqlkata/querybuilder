@@ -15,13 +15,13 @@ It make writing SQL queries easy and funny, with no need to read long pages of d
 
 It provides a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
-SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others. Currently it has built-in compilers for SqlServer 2008 and above, MySql 5 and PostgreSql 9.
+SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements, Deep Joins and others. Currently it has built-in compilers for SqlServer 2008 and above, MySql and PostgreSql.
 
 ## Some fresh code
 ```cs
 var compiler = new SqlServerCompiler();
 
-var withSportCars = true;
+var withSportCars = Config.get('IncludeSportsCar');
 
 var fastCarsQuery = new Query("Cars")
     .Where("Speed", ">", 120);
@@ -34,56 +34,12 @@ if(withSportCars)
 string sql = compiler.Compile(fastCarsQuery).Sql;
 ```
 
-Check out the docs for other examples [SqlKata docs](http://sqlkata.vivida-apps.com)
+Check out the docs for other examples [SqlKata docs](http://sqlkata.com)
 
 ## Why do I need a Query Builder ?
 I've started building this Query Builder, when I was developing big applications that have complex dashboards, and reports.
 
 before I've used to write my SQL queries in strings, and things get worse quickly when you have some dynamic conditions, and even when you are working with multiple database providers, like SqlServer and PostgreSql with the same code base.
-
-## What about Linq and EntityFramework
-Linq provide a strongly typed query mechanism with a High Level of abstraction, while this is good to some extent, but you get very limited when you need more flexibility and a lower level of control.
-
-for instance if you need to *select from* | *filter over* a SubQuery, make complex joins, or using SQL functions.
-
-One case that I've always face is the missing **OrWhere** functionality.
-
-In Linq to Get all cars that are faster than 120mph **OR** the car is categorized as sports car.
-
-You can write your query like this: 
-
-```cs
-var fastCarsQuery = db.Cars
-    .Where(x => x.MaxSpeed > 120 || x.IsSportCar);
-```
-
-But if in some conditions you wont need to include sports cars, you have to parameterize this condition.
-
-```cs
-bool withSportCars = Config.Get("cars.include.sports");
-
-var fastCarsQuery = db.Cars
-    .Where(x => x.MaxSpeed > 120)
-    .Where(x => withSportCars || x.IsSportsCar);
-```
-
-Now this query will retrieve sports cars, only if the **withSportCars** variable is **true**.
-
-One problem here is that developers may get confused easily by these kind of constraints, another problem is that **withSportCars** get evaluated on the database server. 
-
-To avoid this you have either to use advanced solutions like the [Predicate Builder](http://www.albahari.com/nutshell/predicatebuilder.aspx) or you should write two separate queries.
-
-```cs
-IQueryable<Car> fastCarsQuery;
-
-if(withSportCars)
-{
-    fastCarsQuery = fastCarsQuery.Where(x => x.MaxSpeed > 120 || x.IsSportsCar);
-} else 
-{
-    fastCarsQuery = fastCarsQuery.Where(x => x.MaxSpeed > 120);
-}
-```
 
 ## Installation
 SqlKata is supported on both __dotnet standard__ and __net framework 4.5.*__.
