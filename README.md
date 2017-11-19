@@ -86,15 +86,10 @@ if(withSportCars)
 ```
 
 ## Installation
-SqlKata is supported on `netstandard1.3`, while we are planning to support it on more platforms, if you can help please let us know.
+SqlKata is supported on both __dotnet standard__ and __net framework 4.5.*__.
 
-```bash
-## using dotnet-cli
-dotnet add package SqlKata -v 1.0.0-beta-355
+To install it check the installation guide from the [Installing SqlKata](https://sqlkata.com/docs#installation)
 
-## or run from the package manager
-Install-Package SqlKata -Version 1.0.0-beta-355
-```
 
 ## What Next ?
 While SqlKata is still in beta, I've stopped adding new major features until I get a stable release.
@@ -106,3 +101,4 @@ I don't have a strict contribution guide till the moment, but you can contribute
 
 One simple note to keep in mind, that there is no room for complex or unclean features.
 
+A big thanks for all [contributors](https://github.com/sqlkata/querybuilder/graphs/contributors), for making SqlKata an awesome library 
