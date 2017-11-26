@@ -12,13 +12,13 @@ namespace SqlKata
             // Clear up the following statements since they are not needed in 
             // case of aggregation
 
-            (GetOne("limit") as LimitOffset)?.Clear();
+            (GetOneComponent("limit") as LimitOffset)?.Clear();
 
-            Clear("select")
-            .Clear("group")
-            .Clear("order")
-            .Clear("aggregate")
-            .Add("aggregate", new AggregateClause
+            ClearComponent("select")
+            .ClearComponent("group")
+            .ClearComponent("order")
+            .ClearComponent("aggregate")
+            .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
                 Columns = columns.ToList()
@@ -27,7 +27,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Count(params string[] columns)
+        public Query AsCount(params string[] columns)
         {
             var cols = columns.ToList();
 
@@ -39,26 +39,26 @@ namespace SqlKata
             return Aggregate("count", cols.ToArray());
         }
 
-        public Query Avg(string column)
+        public Query AsAvg(string column)
         {
             return Aggregate("avg", column);
         }
-        public Query Average(string column)
+        public Query AsAverage(string column)
         {
-            return Avg(column);
+            return AsAvg(column);
         }
 
-        public Query Sum(string column)
+        public Query AsSum(string column)
         {
             return Aggregate("sum", column);
         }
 
-        public Query Max(string column)
+        public Query AsMax(string column)
         {
             return Aggregate("max", column);
         }
 
-        public Query Min(string column)
+        public Query AsMin(string column)
         {
             return Aggregate("min", column);
         }

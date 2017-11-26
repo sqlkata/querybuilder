@@ -19,7 +19,7 @@ namespace SqlKata
             string type = "inner"
         )
         {
-            return Add("join", new DeepJoin
+            return AddComponent("join", new DeepJoin
             {
                 Type = type,
                 Expression = expression,
@@ -43,7 +43,7 @@ namespace SqlKata
             string type = "inner"
         )
         {
-            return Add("join", new DeepJoin
+            return AddComponent("join", new DeepJoin
             {
                 Type = type,
                 Expression = expression,
@@ -109,7 +109,7 @@ namespace SqlKata
         {
             var join = callback.Invoke(new Join().AsInner());
 
-            return Add("join", new BaseJoin
+            return AddComponent("join", new BaseJoin
             {
                 Join = join.SetEngineScope(EngineScope)
             });

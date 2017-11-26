@@ -8,7 +8,7 @@ namespace SqlKata
     {
 
 
-        public Query Insert(IEnumerable<string> columns, IEnumerable<object> values)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
 
             if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
@@ -23,7 +23,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            Clear("insert").Add("insert", new InsertClause
+            ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = columns.ToList(),
                 Values = values.Select(this.BackupNullValues()).ToList()
@@ -32,7 +32,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Insert(Dictionary<string, object> data)
+        public Query AsInsert(Dictionary<string, object> data)
         {
 
             if (data == null || data.Count == 0)
@@ -42,7 +42,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            Clear("insert").Add("insert", new InsertClause
+            ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
                 Values = data.Values.Select(this.BackupNullValues()).ToList()
@@ -57,12 +57,12 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        public Query Insert(IEnumerable<string> columns, Query query)
+        public Query AsInsert(IEnumerable<string> columns, Query query)
         {
 
             Method = "insert";
 
-            Clear("insert").Add("insert", new InsertQueryClause
+            ClearComponent("insert").AddComponent("insert", new InsertQueryClause
             {
                 Columns = columns.ToList(),
                 Query = query
