@@ -166,7 +166,7 @@ namespace SqlKata.Tests
         [Fact]
         public void SqlServerTop()
         {
-            var query = new Query("table").First();
+            var query = new Query("table").Limit(1);
             Assert.Equal("SELECT TOP (@p0) * FROM [table]", _sqlsrv.Compile(query).Sql);
         }
 
