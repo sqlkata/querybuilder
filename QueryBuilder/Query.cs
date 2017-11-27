@@ -80,6 +80,8 @@ namespace SqlKata
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
+            clone.Compiler = Compiler;
+            clone.Connection = Connection;
             return clone;
         }
 
@@ -114,7 +116,7 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return Add("cte", new QueryFromClause
+            return AddComponent("cte", new QueryFromClause
             {
                 Query = query.SetEngineScope(EngineScope),
                 Alias = alias,
@@ -138,7 +140,7 @@ namespace SqlKata
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return Add("cte", new RawFromClause
+            return AddComponent("cte", new RawFromClause
             {
                 Alias = alias,
                 Expression = sql,
@@ -148,7 +150,7 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var clause = GetOne("limit", EngineScope) as LimitOffset;
+            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
 
             if (clause != null)
             {
@@ -156,7 +158,7 @@ namespace SqlKata
                 return this;
             }
 
-            return Add("limit", new LimitOffset
+            return AddComponent("limit", new LimitOffset
             {
                 Limit = value
             });
@@ -164,7 +166,7 @@ namespace SqlKata
 
         public Query Offset(int value)
         {
-            var clause = GetOne("limit", EngineScope) as LimitOffset;
+            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
 
             if (clause != null)
             {
@@ -172,7 +174,7 @@ namespace SqlKata
                 return this;
             }
 
-            return Add("limit", new LimitOffset
+            return AddComponent("limit", new LimitOffset
             {
                 Offset = value
             });
@@ -207,11 +209,6 @@ namespace SqlKata
         public Query ForPage(int page, int perPage = 15)
         {
             return Skip((page - 1) * perPage).Take(perPage);
-        }
-
-        public Query First()
-        {
-            return this.Limit(1);
         }
 
         public Query Distinct()
@@ -254,7 +251,7 @@ namespace SqlKata
 
         public Query OrderBy(string column, bool ascending)
         {
-            return Add("order", new OrderBy
+            return AddComponent("order", new OrderBy
             {
                 Column = column,
                 Ascending = ascending
@@ -273,7 +270,7 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return Add("order", new RawOrderBy
+            return AddComponent("order", new RawOrderBy
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
@@ -282,14 +279,14 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return Add("order", new OrderByRandom { });
+            return AddComponent("order", new OrderByRandom { });
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
-                Add("group", new Column
+                AddComponent("group", new Column
                 {
                     Name = column
                 });
@@ -300,7 +297,7 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            Add("group", new RawColumn
+            AddComponent("group", new RawColumn
             {
                 Expression = expression,
                 Bindings = bindings,

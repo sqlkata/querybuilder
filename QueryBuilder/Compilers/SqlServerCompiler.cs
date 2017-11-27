@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
         protected override Query OnBeforeSelect(Query query)
         {
-            var limitOffset = query.GetOne<LimitOffset>("limit", EngineCode);
+            var limitOffset = query.GetOneComponent<LimitOffset>("limit", EngineCode);
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
@@ -38,29 +38,29 @@ namespace SqlKata.Compilers
 
             var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
-            var orderClause = query.Get("order", EngineCode);
+            var orderClause = query.GetComponent("order", EngineCode);
 
 
             // get a clone without the limit and order
-            query.Clear("order");
-            query.Clear("limit");
+            query.ClearComponent("order");
+            query.ClearComponent("limit");
             var subquery = query.Clone();
 
-            subquery.Clear("cte");
+            subquery.ClearComponent("cte");
 
             // Now clear other stuff
-            query.Clear("select");
-            query.Clear("from");
-            query.Clear("join");
-            query.Clear("where");
-            query.Clear("group");
-            query.Clear("having");
-            query.Clear("union");
+            query.ClearComponent("select");
+            query.ClearComponent("from");
+            query.ClearComponent("join");
+            query.ClearComponent("where");
+            query.ClearComponent("group");
+            query.ClearComponent("having");
+            query.ClearComponent("union");
 
             // Transform the query to make it a parent query
             query.Select("*");
 
-            if (!subquery.Has("select", EngineCode))
+            if (!subquery.HasComponent("select", EngineCode))
             {
                 subquery.SelectRaw("*");
             }
@@ -102,7 +102,7 @@ namespace SqlKata.Compilers
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limitOffset = query.GetOne("limit", EngineCode) as LimitOffset;
+            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
             {
@@ -115,7 +115,7 @@ namespace SqlKata.Compilers
                     Bindings = new object[] { limitOffset.Limit }
                 });
 
-                query.Clear("limit");
+                query.ClearComponent("limit");
 
                 return "SELECT TOP (?)" + compiled.Substring(6);
             }

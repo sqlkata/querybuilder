@@ -34,7 +34,7 @@ namespace SqlKata
 
         public virtual List<AbstractClause> OrderedClauses(string engine)
         {
-            return bindingOrder.SelectMany(x => Get(x, engine)).ToList();
+            return bindingOrder.SelectMany(x => GetComponent(x, engine)).ToList();
         }
 
         public virtual List<object> GetBindings(string engine)
@@ -43,7 +43,7 @@ namespace SqlKata
 
             foreach (var item in bindingOrder)
             {
-                var bindings = Get(item, engine)
+                var bindings = GetComponent(item, engine)
                     .SelectMany(clause => clause.GetBindings(engine))
                     .Where(x => x != null)
                     .Select(this.RestoreNullValues());
@@ -97,7 +97,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="clause"></param>
         /// <returns></returns>
-        public Q Add(string component, AbstractClause clause, string engineCode = null)
+        public Q AddComponent(string component, AbstractClause clause, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -115,7 +115,7 @@ namespace SqlKata
         /// Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
-        public List<C> Get<C>(string component, string engineCode = null) where C : AbstractClause
+        public List<C> GetComponent<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
             {
@@ -135,28 +135,28 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public List<AbstractClause> Get(string component, string engineCode = null)
+        public List<AbstractClause> GetComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
             {
                 engineCode = EngineScope;
             }
 
-            return Get<AbstractClause>(component, engineCode);
+            return GetComponent<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
         /// Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
-        public C GetOne<C>(string component, string engineCode = null) where C : AbstractClause
+        public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
             {
                 engineCode = EngineScope;
             }
 
-            return Get<C>(component, engineCode)
+            return GetComponent<C>(component, engineCode)
             .FirstOrDefault();
         }
 
@@ -165,14 +165,14 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public AbstractClause GetOne(string component, string engineCode = null)
+        public AbstractClause GetOneComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
             {
                 engineCode = EngineScope;
             }
 
-            return GetOne<AbstractClause>(component, engineCode);
+            return GetOneComponent<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
@@ -180,14 +180,14 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public bool Has(string component, string engineCode = null)
+        public bool HasComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
             {
                 engineCode = EngineScope;
             }
 
-            return Get(component, engineCode).Any();
+            return GetComponent(component, engineCode).Any();
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace SqlKata
         /// </summary>
         /// <param name="component"></param>
         /// <returns></returns>
-        public Q Clear(string component, string engineCode = null)
+        public Q ClearComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -272,7 +272,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q From(string table)
         {
-            return Clear("from").Add("from", new FromClause
+            return ClearComponent("from").AddComponent("from", new FromClause
             {
                 Table = table
             });
@@ -287,7 +287,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return Clear("from").Add("from", new QueryFromClause
+            return ClearComponent("from").AddComponent("from", new QueryFromClause
             {
                 Query = query
             });
@@ -295,7 +295,7 @@ namespace SqlKata
 
         public Q FromRaw(string expression, params object[] bindings)
         {
-            return Clear("from").Add("from", new RawFromClause
+            return ClearComponent("from").AddComponent("from", new RawFromClause
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
