@@ -2,7 +2,7 @@
   <!-- Implicit import of directory.build.props doesn't seem to work from the linux cli, import manually -->
   <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props"/>
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.0;net451</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.0;net452</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp1.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <IsPackable>false</IsPackable>
