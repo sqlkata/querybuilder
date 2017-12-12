@@ -32,7 +32,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Update(Dictionary<string, object> data)
+        public Query Update(IReadOnlyDictionary<string, object> data)
         {
 
             if (data == null || data.Count == 0)

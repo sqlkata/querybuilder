@@ -32,7 +32,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Insert(Dictionary<string, object> data)
+        public Query Insert(IReadOnlyDictionary<string, object> data)
         {
 
             if (data == null || data.Count == 0)
