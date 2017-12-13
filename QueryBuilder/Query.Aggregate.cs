@@ -6,19 +6,19 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query Aggregate(string type, params string[] columns)
+        public Query AsAggregate(string type, params string[] columns)
         {
 
             // Clear up the following statements since they are not needed in 
             // case of aggregation
 
-            (GetOne("limit") as LimitOffset)?.Clear();
+            (GetOneComponent("limit") as LimitOffset)?.Clear();
 
-            Clear("select")
-            .Clear("group")
-            .Clear("order")
-            .Clear("aggregate")
-            .Add("aggregate", new AggregateClause
+            ClearComponent("select")
+            .ClearComponent("group")
+            .ClearComponent("order")
+            .ClearComponent("aggregate")
+            .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
                 Columns = columns.ToList()
@@ -27,7 +27,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Count(params string[] columns)
+        public Query AsCount(params string[] columns)
         {
             var cols = columns.ToList();
 
@@ -36,31 +36,31 @@ namespace SqlKata
                 cols.Add("*");
             }
 
-            return Aggregate("count", cols.ToArray());
+            return AsAggregate("count", cols.ToArray());
         }
 
-        public Query Avg(string column)
+        public Query AsAvg(string column)
         {
-            return Aggregate("avg", column);
+            return AsAggregate("avg", column);
         }
-        public Query Average(string column)
+        public Query AsAverage(string column)
         {
-            return Avg(column);
-        }
-
-        public Query Sum(string column)
-        {
-            return Aggregate("sum", column);
+            return AsAvg(column);
         }
 
-        public Query Max(string column)
+        public Query AsSum(string column)
         {
-            return Aggregate("max", column);
+            return AsAggregate("sum", column);
         }
 
-        public Query Min(string column)
+        public Query AsMax(string column)
         {
-            return Aggregate("min", column);
+            return AsAggregate("max", column);
+        }
+
+        public Query AsMin(string column)
+        {
+            return AsAggregate("min", column);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SqlKata
                 return Not(op != "=").HavingNull(column);
             }
 
-            return Add("having", new BasicCondition<T>
+            return AddComponent("having", new BasicCondition<T>
             {
                 Column = column,
                 Operator = op,
@@ -40,7 +40,7 @@ namespace SqlKata
 
         public Query HavingNull(string column)
         {
-            return Add("having", new NullCondition
+            return AddComponent("having", new NullCondition
             {
                 Column = column,
                 IsOr = getOr(),
@@ -65,7 +65,7 @@ namespace SqlKata
 
         public Query HavingRaw(string expression, params object[] bindings)
         {
-            Add("having", new RawCondition
+            AddComponent("having", new RawCondition
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()

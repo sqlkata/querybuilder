@@ -6,7 +6,9 @@ namespace SqlKata
     public class Raw
     {
         private readonly string _value;
+        
         public List<object> Bindings { get; set; } = new List<object>();
+        
         public string Value
         {
             get

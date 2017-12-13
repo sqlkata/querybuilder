@@ -69,7 +69,7 @@ namespace SqlKata
 
         public Join On(string first, string second, string op = "=")
         {
-            return Add("where", new TwoColumnsCondition
+            return AddComponent("where", new TwoColumnsCondition
             {
                 First = first,
                 Second = second,
