@@ -13,8 +13,6 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query);
 
-            Console.WriteLine(compiled.ToString());
-
             return xQuery.Connection.Query<T>(compiled.Sql, compiled.Bindings);
         }
 
