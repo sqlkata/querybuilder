@@ -8,7 +8,7 @@ namespace SqlKata
     {
 
 
-        public Query Update(IEnumerable<string> columns, IEnumerable<object> values)
+        public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
 
             if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
@@ -23,7 +23,7 @@ namespace SqlKata
 
             Method = "update";
 
-            Clear("update").Add("update", new InsertClause
+            ClearComponent("update").AddComponent("update", new InsertClause
             {
                 Columns = columns.ToList(),
                 Values = values.Select(this.BackupNullValues()).ToList()
@@ -32,7 +32,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Update(IReadOnlyDictionary<string, object> data)
+        public Query AsUpdate(IReadOnlyDictionary<string, object> data)
         {
 
             if (data == null || data.Count == 0)
@@ -42,7 +42,7 @@ namespace SqlKata
 
             Method = "update";
 
-            Clear("update").Add("update", new InsertClause
+            ClearComponent("update").AddComponent("update", new InsertClause
             {
                 Columns = data.Keys.ToList(),
                 Values = data.Values.Select(this.BackupNullValues()).ToList(),

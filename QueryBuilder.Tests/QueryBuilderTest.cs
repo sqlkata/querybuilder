@@ -175,7 +175,7 @@ namespace SqlKata.Tests
         {
             var query = new Query("expensive_cars")
             .With("old_cards", new Query("all_cars").Where("year", "<", 2000))
-            .Insert(
+            .AsInsert(
                     new[] { "name", "model", "year" },
                     new Query("old_cars").Where("price", ">", 100).ForPage(2, 10)
             );
@@ -192,7 +192,7 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithNullValues()
         {
-            var query = new Query("Books").Insert(
+            var query = new Query("Books").AsInsert(
                 new[] { "Id", "Author", "ISBN", "Date" },
                 new object[] { 1, "Author 1", "123456", null }
             );
@@ -205,7 +205,7 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithNullValues()
         {
-            var query = new Query("Books").Where("Id", 1).Update(
+            var query = new Query("Books").Where("Id", 1).AsUpdate(
                 new[] { "Author", "Date", "Version" },
                 new object[] { "Author 1", null, null }
             );

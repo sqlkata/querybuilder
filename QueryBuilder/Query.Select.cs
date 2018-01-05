@@ -11,7 +11,7 @@ namespace SqlKata
 
             foreach (var column in columns)
             {
-                Add("select", new Column
+                AddComponent("select", new Column
                 {
                     Name = column
                 });
@@ -28,7 +28,7 @@ namespace SqlKata
         {
             Method = "select";
 
-            Add("select", new RawColumn
+            AddComponent("select", new RawColumn
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
@@ -63,7 +63,7 @@ namespace SqlKata
         {
             Method = "select";
 
-            Add("select", new QueryColumn
+            AddComponent("select", new QueryColumn
             {
                 Query = query.As(alias).SetEngineScope(EngineScope),
             });
