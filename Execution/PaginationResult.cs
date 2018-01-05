@@ -80,7 +80,7 @@ namespace SqlKata.Execution
             return this.Query.Paginate<T>(Page - 1, PerPage);
         }
 
-        public PaginationIterator<T> All
+        public PaginationIterator<T> Each
         {
             get
             {
