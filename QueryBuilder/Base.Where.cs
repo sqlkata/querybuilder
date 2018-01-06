@@ -37,7 +37,7 @@ namespace SqlKata
             return Where(column, "=", value);
         }
 
-        public Q Where<T>(Dictionary<string, T> values)
+        public Q Where<T>(IReadOnlyDictionary<string, T> values)
         {
             var query = (Q)this;
             var orFlag = getOr();
