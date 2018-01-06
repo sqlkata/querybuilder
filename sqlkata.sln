@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryBuilder", "QueryBuilde
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryBuilder.Tests", "QueryBuilder.Tests\QueryBuilder.Tests.csproj", "{BF95B7BD-0DA2-4F96-B7E6-DFD5BC319AE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Execution", "Execution\Execution.csproj", "{38422976-61C1-4ADF-962D-8B6FB31A4C5D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlKata.Execution", "SqlKata.Execution\SqlKata.Execution.csproj", "{38422976-61C1-4ADF-962D-8B6FB31A4C5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
