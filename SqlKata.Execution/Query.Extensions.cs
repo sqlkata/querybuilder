@@ -9,7 +9,7 @@ namespace SqlKata.Execution
     {
         public static IEnumerable<T> Get<T>(this Query query)
         {
-            var xQuery = (XQuery)query;
+            var xQuery = castToXQuery(query, nameof(Get));
 
             var compiled = xQuery.Compiler.Compile(query);
 
@@ -24,7 +24,7 @@ namespace SqlKata.Execution
         public static T FirstOrDefault<T>(this Query query)
         {
 
-            var xQuery = (XQuery)query;
+            var xQuery = castToXQuery(query, nameof(FirstOrDefault));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
 
@@ -36,6 +36,23 @@ namespace SqlKata.Execution
         {
             return FirstOrDefault<dynamic>(query);
         }
+
+        public static T First<T>(this Query query)
+        {
+
+            var xQuery = castToXQuery(query, nameof(First));
+
+            var compiled = xQuery.Compiler.Compile(query.Limit(1));
+
+            return xQuery.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
+
+        }
+
+        public static dynamic First(this Query query)
+        {
+            return First<dynamic>(query);
+        }
+
 
 
         public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25)
@@ -51,7 +68,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var xQuery = (XQuery)query;
+            var xQuery = castToXQuery(query, nameof(Paginate));
 
             var count = query.Clone().Count<long>();
 
@@ -73,34 +90,64 @@ namespace SqlKata.Execution
             return query.Paginate<dynamic>(page, perPage);
         }
 
-        public static T First<T>(this Query query)
+        public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
+            var result = query.Paginate<T>(1, chunkSize);
 
-            var xQuery = (XQuery)query;
+            if (!func(result.List, 1))
+            {
+                return;
+            }
 
-            var compiled = xQuery.Compiler.Compile(query.Limit(1));
-
-            return xQuery.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
+            while (result.HasNext)
+            {
+                result = result.Next();
+                if (!func(result.List, result.Page))
+                {
+                    return;
+                }
+            }
 
         }
 
-        public static dynamic First(this Query query)
+        public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
         {
-            return First<dynamic>(query);
+            query.Chunk<dynamic>(chunkSize, func);
+        }
+
+        public static void Chunk<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action)
+        {
+            var result = query.Paginate<T>(1, chunkSize);
+
+            action(result.List, 1);
+
+            while (result.HasNext)
+            {
+                result = result.Next();
+                action(result.List, result.Page);
+            }
+
+        }
+
+        public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
+        {
+            query.Chunk(chunkSize, action);
         }
 
         public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            var xQuery = (XQuery)query;
+
+            var xQuery = castToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
         }
 
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            var xQuery = (XQuery)query;
+            var xQuery = castToXQuery(query, nameof(Update));
 
             var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
 
@@ -109,14 +156,25 @@ namespace SqlKata.Execution
 
         public static int Delete(this Query query)
         {
-            var xQuery = (XQuery)query;
+            var xQuery = castToXQuery(query, nameof(Delete));
 
             var compiled = xQuery.Compiler.Compile(query.AsDelete());
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
         }
 
+        private static XQuery castToXQuery(Query query, string method)
+        {
+            var xQuery = query as XQuery;
 
+            if (xQuery is null)
+            {
+                throw new InvalidOperationException($"the {method} method can only be used with `XQuery` instances, consider using the `QueryFactory.Create()` to create executable queries");
+            }
+
+            return xQuery;
+
+        }
 
     }
 }

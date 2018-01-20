@@ -18,17 +18,17 @@ namespace SqlKata.Execution
             Compiler = compiler;
         }
 
-        public Query Create()
+        public Query Query()
         {
             return new XQuery(this.Connection, this.Compiler);
         }
 
-        public Query Create(string table)
+        public Query Query(string table)
         {
-            return Create().From(table);
+            return Query().From(table);
         }
 
-        public Query Create(Query query)
+        public Query Query(Query query)
         {
             var xQuery = new XQuery(this.Connection, this.Compiler);
 
