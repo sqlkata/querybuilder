@@ -53,8 +53,6 @@ namespace SqlKata.Execution
             return First<dynamic>(query);
         }
 
-
-
         public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25)
         {
 
@@ -131,7 +129,7 @@ namespace SqlKata.Execution
 
         public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
         {
-            query.Chunk(chunkSize, action);
+            query.Chunk<dynamic>(chunkSize, action);
         }
 
         public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
