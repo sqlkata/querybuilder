@@ -9,7 +9,7 @@ namespace SqlKata
         public Query AsAggregate(string type, params string[] columns)
         {
 
-            // Clear up the following statements since they are not needed in 
+            // Clear up the following statements since they are not needed in
             // case of aggregation
 
             (GetOneComponent("limit") as LimitOffset)?.Clear();

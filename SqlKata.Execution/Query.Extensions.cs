@@ -9,7 +9,7 @@ namespace SqlKata.Execution
     {
         public static IEnumerable<T> Get<T>(this Query query)
         {
-            var xQuery = castToXQuery(query, nameof(Get));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Get));
 
             var compiled = xQuery.Compiler.Compile(query);
 
@@ -24,7 +24,7 @@ namespace SqlKata.Execution
         public static T FirstOrDefault<T>(this Query query)
         {
 
-            var xQuery = castToXQuery(query, nameof(FirstOrDefault));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefault));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
 
@@ -40,7 +40,7 @@ namespace SqlKata.Execution
         public static T First<T>(this Query query)
         {
 
-            var xQuery = castToXQuery(query, nameof(First));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(First));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
 
@@ -68,7 +68,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var xQuery = castToXQuery(query, nameof(Paginate));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Paginate));
 
             var count = query.Clone().Count<long>();
 
@@ -137,7 +137,7 @@ namespace SqlKata.Execution
         public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
         {
 
-            var xQuery = castToXQuery(query, nameof(Insert));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
 
@@ -147,7 +147,7 @@ namespace SqlKata.Execution
 
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            var xQuery = castToXQuery(query, nameof(Update));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
 
             var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
 
@@ -156,24 +156,11 @@ namespace SqlKata.Execution
 
         public static int Delete(this Query query)
         {
-            var xQuery = castToXQuery(query, nameof(Delete));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Delete));
 
             var compiled = xQuery.Compiler.Compile(query.AsDelete());
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
-        }
-
-        private static XQuery castToXQuery(Query query, string method)
-        {
-            var xQuery = query as XQuery;
-
-            if (xQuery is null)
-            {
-                throw new InvalidOperationException($"the {method} method can only be used with `XQuery` instances, consider using the `QueryFactory.Create()` to create executable queries");
-            }
-
-            return xQuery;
-
         }
 
     }

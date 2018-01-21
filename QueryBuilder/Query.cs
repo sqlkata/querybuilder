@@ -209,11 +209,6 @@ namespace SqlKata
             return Skip((page - 1) * perPage).Take(perPage);
         }
 
-        public Query First()
-        {
-            return this.Limit(1);
-        }
-
         public Query Distinct()
         {
             IsDistinct = true;
