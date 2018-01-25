@@ -294,7 +294,7 @@ namespace SqlKata.Compilers
 
             var columns = query.GetComponents("select", EngineCode).Cast<AbstractColumn>().ToList();
 
-            var cols = columns.Select(x => CompileColumn(x));
+            var cols = columns.Select(CompileColumn).ToArray();
 
             var select = (query.IsDistinct ? "SELECT DISTINCT " : "SELECT ");
 
