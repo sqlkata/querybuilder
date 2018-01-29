@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SqlKata.Compilers;
+using SqlKata.Execution;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -213,6 +214,12 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1", c[0]);
+        }
+
+        [Fact]
+        public void ShouldThrowException()
+        {
+            var query = new Query("Books").Get();
         }
     }
 }
