@@ -6,7 +6,7 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query Delete()
+        public Query AsDelete()
         {
             Method = "delete";
             return this;

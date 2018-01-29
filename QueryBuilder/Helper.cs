@@ -67,7 +67,7 @@ namespace SqlKata
             {
 
                 var isGeneric = toCheck
-#if FEATURE_TYPE_INFO                
+#if FEATURE_TYPE_INFO
             .GetTypeInfo()
 #endif
             .IsGenericType;
@@ -80,7 +80,7 @@ namespace SqlKata
                 }
 
                 toCheck = toCheck
-#if FEATURE_TYPE_INFO                
+#if FEATURE_TYPE_INFO
             .GetTypeInfo()
 #endif
                     .BaseType;

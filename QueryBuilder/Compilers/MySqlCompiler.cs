@@ -21,7 +21,7 @@ namespace SqlKata.Compilers
 
         public override string CompileOffset(Query query)
         {
-            var limitOffset = query.GetOne("limit", EngineCode) as LimitOffset;
+            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
