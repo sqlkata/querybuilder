@@ -50,9 +50,15 @@ namespace SqlKata
                 {
                     Select((string)item);
                 }
+                else if (item is Query)
+                {
+                    var query = item as Query;
+
+                    Select(query, query.QueryAlias);
+                }
                 else
                 {
-                    throw new ArgumentException("only string and Raw are allowed");
+                    throw new ArgumentException("only `String`, `Raw` and `Query` are allowed");
                 }
             }
 
