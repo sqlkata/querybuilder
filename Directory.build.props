@@ -12,7 +12,7 @@
     <PackageLicenseUrl>https://github.com/sqlkata/querybuilder/licence</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
-    
+
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
     <DefaultLanguage>en-US</DefaultLanguage>
@@ -33,12 +33,17 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
     <DefineConstants>$(DefineConstants);ASYNC;NET45</DefineConstants>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
   </PropertyGroup>
-  
+
+  <PropertyGroup Condition=" '$(TargetFramework) == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD20;FEATURE_TYPE_INFO</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.6.0" PrivateAssets="All" /> 
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.6.0" PrivateAssets="All" />
     <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.4.0" PrivateAssets="All" />
   </ItemGroup>
 </Project>
