@@ -6,6 +6,6 @@
     <PackageReference Include="dapper" Version="1.50.4" />
   </ItemGroup>
   <PropertyGroup>
-    <TargetFrameworks>net451;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
   </PropertyGroup>
 </Project>

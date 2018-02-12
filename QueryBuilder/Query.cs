@@ -9,7 +9,7 @@ namespace SqlKata
     {
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
-        public string Method { get; set; }
+        public string Method { get; set; } = "select";
 
         protected override string[] bindingOrder
         {
@@ -46,7 +46,7 @@ namespace SqlKata
                     "having",
                     "order",
                     "limit",
-                    "union",
+                    "combine", // union, except, intersect
                 };
             }
         }

@@ -54,6 +54,7 @@ namespace SqlKata.Compilers
             query = OnBeforeCompile(query);
 
             string sql;
+            var bindings = new List<object>();
 
             if (query.Method == "insert")
             {
@@ -72,14 +73,9 @@ namespace SqlKata.Compilers
                 sql = CompileSelect(query);
             }
 
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql = CompileCte(query) + sql;
-            }
-
             // filter out foreign clauses so we get the bindings
             // just for the current engine
-            var bindings = query.GetBindings(EngineCode);
+            bindings = query.GetBindings(EngineCode);
 
             sql = OnAfterCompile(sql, bindings);
             return new SqlResult(sql, bindings);
@@ -135,7 +131,36 @@ namespace SqlKata.Compilers
 
             var results = CompileComponents(query);
 
-            return JoinComponents(results, "select");
+            var sql = JoinComponents(results, "select");
+
+            // Handle CTEs
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            // Handle UNION, EXCEPT and INTERSECT
+            if (query.GetComponents("combine", EngineCode).Any())
+            {
+                var combinedQueries = new List<string>();
+
+                var clauses = query.GetComponents<Combine>("combine", EngineCode);
+
+                combinedQueries.Add("(" + sql + ")");
+
+                foreach (var clause in clauses)
+                {
+                    var combineOperator = clause.Operation.ToUpper() + " " + (clause.All ? "ALL " : "");
+                    var compiled = CompileSelect(clause.Query);
+
+                    combinedQueries.Add($"{combineOperator}({compiled})");
+                }
+
+                sql = JoinComponents(combinedQueries, "combine");
+
+            }
+
+            return sql;
         }
 
         protected virtual Query OnBeforeSelect(Query query)
@@ -162,6 +187,8 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
+            string sql;
+
             var insert = query.GetOneComponent<AbstractInsertClause>("insert", EngineCode);
 
 
@@ -169,7 +196,7 @@ namespace SqlKata.Compilers
             {
                 var clause = insert as InsertClause;
 
-                return "INSERT INTO " + CompileTableExpression(from)
+                sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
                 + "VALUES (" + string.Join(", ", Parametrize(clause.Values)) + ")";
             }
@@ -184,9 +211,16 @@ namespace SqlKata.Compilers
                     columns = $"({string.Join(", ", WrapArray(clause.Columns))}) ";
                 }
 
-                return "INSERT INTO " + CompileTableExpression(from)
+                sql = "INSERT INTO " + CompileTableExpression(from)
                 + " " + columns + CompileSelect(clause.Query);
             }
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
 
         }
 
@@ -207,11 +241,12 @@ namespace SqlKata.Compilers
 
             var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
 
-            var sql = new List<string>();
+            var parts = new List<string>();
+            string sql;
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
-                sql.Add($"{Wrap(toUpdate.Columns[i])} = ?");
+                parts.Add($"{Wrap(toUpdate.Columns[i])} = ?");
             }
 
             var where = CompileWheres(query);
@@ -221,9 +256,16 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            return "UPDATE " + CompileTableExpression(from)
-                + " SET " + string.Join(", ", sql)
+            sql = "UPDATE " + CompileTableExpression(from)
+                + " SET " + string.Join(", ", parts)
                 + where;
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
         }
 
         protected virtual string CompileDelete(Query query)
@@ -240,6 +282,8 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
+            string sql;
+
             var where = CompileWheres(query);
 
             if (!string.IsNullOrEmpty(where))
@@ -247,7 +291,14 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            return "DELETE FROM " + CompileTableExpression(from) + where;
+            sql = "DELETE FROM " + CompileTableExpression(from) + where;
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
         }
 
         protected List<string> CompileComponents(Query query)
@@ -264,7 +315,6 @@ namespace SqlKata.Compilers
                 this.CompileOrders(query),
                 this.CompileLimit(query),
                 this.CompileOffset(query),
-                this.CompileUnions(query),
                 this.CompileLock(query),
             })
             .ToList()
@@ -533,12 +583,6 @@ namespace SqlKata.Compilers
             }
 
             return "";
-        }
-
-        protected virtual string CompileUnions(Query query)
-        {
-            // throw new NotImplementedException();
-            return null;
         }
 
         protected virtual string CompileLock(Query query)

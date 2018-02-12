@@ -224,5 +224,96 @@ namespace SqlKata.Tests
                 new Query("Books").Get();
             });
         }
+
+        [Fact]
+        public void Union()
+        {
+            var laptops = new Query("Laptops");
+            var mobiles = new Query("Phones").Union(laptops);
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones]) UNION (SELECT * FROM [Laptops])", c[0]);
+
+        }
+
+        [Fact]
+        public void MultipleUnion()
+        {
+            var laptops = new Query("Laptops");
+            var tablets = new Query("Tablets");
+
+            var mobiles = new Query("Phones").Union(laptops).Union(tablets);
+
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones]) UNION (SELECT * FROM [Laptops]) UNION (SELECT * FROM [Tablets])", c[0]);
+
+        }
+
+        [Fact]
+        public void MultipleUnionWithBindings()
+        {
+            var laptops = new Query("Laptops").Where("Price", ">", 1000);
+            var tablets = new Query("Tablets").Where("Price", ">", 2000);
+
+            var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).Union(tablets);
+
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION (SELECT * FROM [Tablets] WHERE [Price] > 2000)", c[0]);
+
+        }
+
+        [Fact]
+        public void MultipleUnionWithBindingsAndPagination()
+        {
+            var laptops = new Query("Laptops").Where("Price", ">", 1000);
+            var tablets = new Query("Tablets").Where("Price", ">", 2000).ForPage(2);
+
+            var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).UnionAll(tablets);
+
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION ALL (SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [subquery] WHERE [row_num] BETWEEN 16 AND 30)", c[0]);
+
+        }
+
+        [Fact]
+        public void UnionWithCallbacks()
+        {
+            var mobiles = new Query("Phones")
+                .Where("Price", "<", 3000)
+                .Union(q => q.From("Laptops"))
+                .UnionAll(q => q.From("Tablets"));
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops]) UNION ALL (SELECT * FROM [Tablets])", c[0]);
+
+        }
+
+        [Fact]
+        public void UnionWithDifferentEngine()
+        {
+            var mobiles = new Query("Phones")
+                .Where("Price", "<", 300)
+                .ForSqlServer(scope => scope.Except(q => q.From("Phones").WhereNot("Os", "iOS")))
+                .ForPostgres(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
+                .ForMySql(scope => scope.IntersectAll(q => q.From("Watches").Where("Os", "Android")))
+                .UnionAll(q => q.From("Tablets").Where("Price", "<", 100));
+
+            var c = Compile(mobiles);
+
+            Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 300) EXCEPT (SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS')) UNION ALL (SELECT * FROM [Tablets] WHERE [Price] < 100)", c[0]);
+
+            Assert.Equal("(SELECT * FROM `Phones` WHERE `Price` < 300) INTERSECT ALL (SELECT * FROM `Watches` WHERE `Os` = 'Android') UNION ALL (SELECT * FROM `Tablets` WHERE `Price` < 100)", c[1]);
+
+            Assert.Equal("(SELECT * FROM \"Phones\" WHERE \"Price\" < 300) UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)", c[2]);
+
+        }
     }
 }
