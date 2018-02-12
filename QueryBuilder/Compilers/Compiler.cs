@@ -144,16 +144,27 @@ namespace SqlKata.Compilers
             {
                 var combinedQueries = new List<string>();
 
-                var clauses = query.GetComponents<Combine>("combine", EngineCode);
+                var clauses = query.GetComponents<AbstractCombine>("combine", EngineCode);
 
                 combinedQueries.Add("(" + sql + ")");
 
                 foreach (var clause in clauses)
                 {
-                    var combineOperator = clause.Operation.ToUpper() + " " + (clause.All ? "ALL " : "");
-                    var compiled = CompileSelect(clause.Query);
+                    if (clause is Combine)
+                    {
+                        var combineClause = clause as Combine;
 
-                    combinedQueries.Add($"{combineOperator}({compiled})");
+                        var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
+
+                        var compiled = CompileSelect(combineClause.Query);
+
+                        combinedQueries.Add($"{combineOperator}({compiled})");
+                    }
+                    else
+                    {
+                        var combineRawClause = clause as RawCombine;
+                        combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
+                    }
                 }
 
                 sql = JoinComponents(combinedQueries, "combine");

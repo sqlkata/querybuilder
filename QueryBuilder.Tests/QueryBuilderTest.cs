@@ -315,5 +315,26 @@ namespace SqlKata.Tests
             Assert.Equal("(SELECT * FROM \"Phones\" WHERE \"Price\" < 300) UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)", c[2]);
 
         }
+
+        [Fact]
+        public void CombineRaw()
+        {
+            var query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM Devices");
+
+            var c = Compile(query);
+
+            Assert.Equal("(SELECT * FROM [Mobiles]) UNION ALL SELECT * FROM Devices", c[0]);
+        }
+
+        [Fact]
+        public void CombineRawWithPlaceholders()
+        {
+            var query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM {Devices}");
+
+            var c = Compile(query);
+
+            Assert.Equal("(SELECT * FROM [Mobiles]) UNION ALL SELECT * FROM [Devices]", c[0]);
+            Assert.Equal("(SELECT * FROM `Mobiles`) UNION ALL SELECT * FROM `Devices`", c[1]);
+        }
     }
 }
