@@ -143,6 +143,17 @@ namespace SqlKata.Execution
 
         }
 
+        public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
+        }
+
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));

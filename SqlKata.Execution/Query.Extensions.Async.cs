@@ -142,6 +142,17 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
         }
 
+        public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
+
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+
+        }
+
         public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(UpdateAsync));
