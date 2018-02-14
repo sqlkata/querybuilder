@@ -43,9 +43,28 @@ namespace SqlKata.Compilers
 
                 var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapColumn(clause.Query.QueryAlias)}";
 
-                var fallbackColumns = string.Join(", ", clause.Fallbacks.Select(c => c.Type == FallbackType.Column ? Wrap(c.Value.ToString()) : WrapValue(c.Value)));
+                var fallbackColumns = string.Join(", ",
+                    clause.Fallbacks.Select(c =>
+                    {
+                        switch (c.Type)
+                        {
+                            case FallbackType.Query:
+                                var query = c.Value as Query;
+                                if (query != null)
+                                {
+                                    return "(" + CompileQuery(query) + ")";
+                                }
+                                throw new InvalidOperationException("Fallback of query is not query");
+                            case FallbackType.Column:
+                                return Wrap(c.Value.ToString());
+                            case FallbackType.Value:
+                                return WrapValue(c.Value);
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }));
 
-                return "COALESCE((" + CompileQuery(clause.Query) + "), " + fallbackColumns + ")" + alias;
+                return $"COALESCE(({CompileQuery(clause.Query)}), {fallbackColumns}){alias}";
             }
 
             if (column is QueryColumn)

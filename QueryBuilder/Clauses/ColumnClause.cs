@@ -43,6 +43,7 @@ namespace SqlKata
 
     public enum FallbackType
     {
+        Query,
         Column,
         Value
     }
@@ -52,20 +53,22 @@ namespace SqlKata
         public FallbackType Type { get;set; }
         public object Value { get;set; }
 
-        public CoalesceFallback()
-        {
-        }
-
-        public CoalesceFallback(string value)
-        {
-            Value = value;
-            Type = FallbackType.Column;
-        }
-
         public CoalesceFallback(object value, FallbackType type)
         {
             Value = value;
             Type = type;
+        }
+
+        public CoalesceFallback(Query query)
+        {
+            Value = query;
+            Type = FallbackType.Query;
+        }
+
+        public CoalesceFallback(Func<Query, Query> callback)
+        {
+            Value = callback.Invoke(new Query());
+            Type = FallbackType.Query;
         }
     }
 

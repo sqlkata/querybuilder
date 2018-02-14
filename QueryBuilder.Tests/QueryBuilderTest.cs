@@ -89,7 +89,7 @@ namespace SqlKata.Tests
                 {
                     new CoalesceFallback("CreatedDateUTC", FallbackType.Column),
                     new CoalesceFallback("NotSet", FallbackType.Value),
-                    new CoalesceFallback(new DateTime(2000, 1, 1), FallbackType.Value)
+                    new CoalesceFallback(new DateTime(2000, 1, 1), FallbackType.Value),
                 });
 
             var c = Compile(q);
