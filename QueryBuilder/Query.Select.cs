@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlKata
 {
@@ -37,6 +39,34 @@ namespace SqlKata
             return this;
         }
 
+        public Query SelectCoalesce(Query query, string alias, params string[] fallbackColumns)
+        {
+            var fallbacks = fallbackColumns.Select(t => new CoalesceFallback(t, FallbackType.Column)).ToList();
+            return SelectCoalesce(query, alias, fallbacks);
+        }
+
+        public Query SelectCoalesce(Func<Query, Query> callback, string alias, params string[] fallbackColumns)
+        {
+            return SelectCoalesce(callback.Invoke(NewQuery()), alias, fallbackColumns);
+        }
+
+        public Query SelectCoalesce(Query query, string alias, List<CoalesceFallback> fallbacks)
+        {
+            Method = "select";
+
+            AddComponent("select", new CoalesceColumn
+            {
+                Query = query.As(alias),
+                Fallbacks = fallbacks
+            });
+
+            return this;
+        }
+
+        public Query SelectCoalesce(Func<Query, Query> callback, string alias, List<CoalesceFallback> fallbacks)
+        {
+            return SelectCoalesce(callback.Invoke(NewQuery()), alias, fallbacks);
+        }
 
         public Query Select(params object[] columns)
         {

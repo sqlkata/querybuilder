@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -26,7 +27,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Compile a single column clause
         /// </summary>
-        /// <param name="columns"></param>
+        /// <param name="column"></param>
         /// <returns></returns>
 
         public string CompileColumn(AbstractColumn column)
@@ -36,11 +37,22 @@ namespace SqlKata.Compilers
                 return WrapIdentifiers((column as RawColumn).Expression);
             }
 
+            if (column is CoalesceColumn)
+            {
+                var clause = column as CoalesceColumn;
+
+                var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapColumn(clause.Query.QueryAlias)}";
+
+                var fallbackColumns = string.Join(", ", clause.Fallbacks.Select(c => c.Type == FallbackType.Column ? Wrap(c.Value.ToString()) : WrapValue(c.Value)));
+
+                return "COALESCE((" + CompileQuery(clause.Query) + "), " + fallbackColumns + ")" + alias;
+            }
+
             if (column is QueryColumn)
             {
                 var clause = (column as QueryColumn);
 
-                var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapValue(clause.Query.QueryAlias)}";
+                var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapColumn(clause.Query.QueryAlias)}";
 
                 return "(" + CompileSelect(clause.Query) + $"){alias}";
             }
@@ -53,34 +65,41 @@ namespace SqlKata.Compilers
         {
             query = OnBeforeCompile(query);
 
-            string sql;
+            var sqlBuilder = new StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(query.Name))
+            {
+                sqlBuilder.AppendFormat("--ID:{0}", query.Name);
+            }
 
             if (query.Method == "insert")
             {
-                sql = CompileInsert(query);
+                sqlBuilder.Append(CompileInsert(query));
             }
             else if (query.Method == "delete")
             {
-                sql = CompileDelete(query);
+                sqlBuilder.Append(CompileDelete(query));
             }
             else if (query.Method == "update")
             {
-                sql = CompileUpdate(query);
+                sqlBuilder.Append(CompileUpdate(query));
             }
             else
             {
-                sql = CompileSelect(query);
+                sqlBuilder.Append(CompileSelect(query));
             }
 
             if (query.GetComponents("cte", EngineCode).Any())
             {
-                sql = CompileCte(query) + sql;
+                sqlBuilder.Insert(0, CompileCte(query));
             }
 
             // filter out foreign clauses so we get the bindings
             // just for the current engine
             var bindings = query.GetBindings(EngineCode);
 
+            var sql = sqlBuilder.ToString();
+            sqlBuilder.Length = 0;
             sql = OnAfterCompile(sql, bindings);
             return new SqlResult(sql, bindings);
         }
@@ -111,12 +130,12 @@ namespace SqlKata.Compilers
                 if (cte is RawFromClause)
                 {
                     RawFromClause clause = (cte as RawFromClause);
-                    sql.Add($"{WrapValue(clause.Alias)} AS ({WrapIdentifiers(clause.Expression)})");
+                    sql.Add($"{WrapColumn(clause.Alias)} AS ({WrapIdentifiers(clause.Expression)})");
                 }
                 else if (cte is QueryFromClause)
                 {
                     QueryFromClause clause = (cte as QueryFromClause);
-                    sql.Add($"{WrapValue(clause.Alias)} AS ({CompileSelect(clause.Query)})");
+                    sql.Add($"{WrapColumn(clause.Alias)} AS ({CompileSelect(clause.Query)})");
                 }
             }
 
@@ -325,7 +344,7 @@ namespace SqlKata.Compilers
                 sql = "DISTINCT " + sql;
             }
 
-            return "SELECT " + ag.Type.ToUpper() + "(" + sql + ") AS " + WrapValue(ag.Type);
+            return "SELECT " + ag.Type.ToUpper() + "(" + sql + ") AS " + WrapColumn(ag.Type);
         }
 
         protected virtual string CompileTableExpression(AbstractFrom from)
@@ -339,7 +358,7 @@ namespace SqlKata.Compilers
             {
                 var fromQuery = (from as QueryFromClause).Query;
 
-                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
+                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapColumn(fromQuery.QueryAlias);
 
                 var compiled = CompileSelect(fromQuery);
 

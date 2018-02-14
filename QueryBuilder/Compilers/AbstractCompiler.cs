@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata.Compilers
 {
@@ -52,7 +53,7 @@ namespace SqlKata.Compilers
                     segments[2] = this.TablePrefix + segments[2];
                 }
 
-                return Wrap(segments[0]) + " AS " + WrapValue(segments[2]);
+                return Wrap(segments[0]) + " AS " + WrapColumn(segments[2]);
             }
 
             if (value.Contains("."))
@@ -65,14 +66,14 @@ namespace SqlKata.Compilers
                         return WrapTable(x);
                     }
 
-                    return WrapValue(x);
+                    return WrapColumn(x);
 
                 }));
             }
 
             // If we reach here then the value does not contain an "AS" alias 
             // nor dot "." expression, so wrap it as regular value.
-            return WrapValue(value);
+            return WrapColumn(value);
         }
 
         public string Wrap(Raw value)
@@ -81,11 +82,11 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Wrap a single string in keyword identifiers.
+        /// Wrap a single column name string in keyword identifiers.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public virtual string WrapValue(string value)
+        public virtual string WrapColumn(string value)
         {
             if (value == "*") return value;
 
@@ -93,6 +94,32 @@ namespace SqlKata.Compilers
             var closing = this.ClosingIdentifier();
 
             return opening + value.Replace(closing, closing + closing) + closing;
+        }
+
+        /// <summary>
+        /// Wrap a static value string in type identifiers.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public virtual string WrapValue(object value)
+        {
+            var type = value.GetType();
+            if (type.IsAssignableFrom(typeof(string)))
+            {
+                return $"'{(string)value}'";
+            }
+
+            if (type.IsAssignableFrom(typeof(DateTime)))
+            {
+                return $"'{(DateTime)value:O}'";
+            }
+
+            if (type.IsAssignableFrom(typeof(int)) || type.IsAssignableFrom(typeof(long)) || type.IsAssignableFrom(typeof(float)) || type.IsAssignableFrom(typeof(decimal)) || type.IsAssignableFrom(typeof(double)))
+            {
+                return value.ToString();
+            }
+
+            return $"'{value}'";
         }
 
         public string Parameter<T>(T value)

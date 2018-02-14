@@ -7,10 +7,9 @@ namespace SqlKata.Tests
 {
     public class QueryBuilderTest
     {
-        private readonly Compiler _pg;
+        private readonly PostgresCompiler _pg;
         private readonly MySqlCompiler _mysql;
-
-        public SqlServerCompiler _sqlsrv { get; private set; }
+        private readonly SqlServerCompiler _sqlsrv;
 
         private string[] Compile(Query q)
         {
@@ -33,9 +32,9 @@ namespace SqlKata.Tests
             var q = new Query().From("users").Select("id", "name");
             var c = Compile(q);
 
-            Assert.Equal(c[0], "SELECT [id], [name] FROM [users]");
-            Assert.Equal(c[1], "SELECT `id`, `name` FROM `users`");
-            Assert.Equal(c[2], "SELECT \"id\", \"name\" FROM \"users\"");
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`", c[1]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[2]);
         }
 
         [Fact]
@@ -48,6 +47,58 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT `id`, `name` FROM `users` AS `u`", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\" AS \"u\"", c[2]);
         }
+
+        [Fact]
+        public void CoalesceSelectWithColumnFallback()
+        {
+            var q = new Query("users").SelectCoalesce(
+                query => query.From("userlogins").Select("DateUTC").WhereColumns("id", "=", "userlogins.userid")
+                    .OrderByDesc("DateUTC").Limit(1), "LastLoginUTC", "CreatedDateUTC");
+
+            var c = Compile(q);
+
+            Assert.Equal("SELECT COALESCE((SELECT TOP (1) [DateUTC] FROM [userlogins] WHERE [id] = [userlogins].[userid] ORDER BY [DateUTC] DESC), [CreatedDateUTC]) AS [LastLoginUTC] FROM [users]", c[0]);
+            Assert.Equal("SELECT COALESCE((SELECT `DateUTC` FROM `userlogins` WHERE `id` = `userlogins`.`userid` ORDER BY `DateUTC` DESC LIMIT 1), `CreatedDateUTC`) AS `LastLoginUTC` FROM `users`", c[1]);
+            Assert.Equal("SELECT COALESCE((SELECT \"DateUTC\" FROM \"userlogins\" WHERE \"id\" = \"userlogins\".\"userid\" ORDER BY \"DateUTC\" DESC LIMIT 1), \"CreatedDateUTC\") AS \"LastLoginUTC\" FROM \"users\"", c[2]);
+        }
+
+        [Fact]
+        public void CoalesceSelectWithValueFallback()
+        {
+            var q = new Query("users").SelectCoalesce(
+                query => query.From("userlogins").Select("DateUTC").WhereColumns("id", "=", "userlogins.userid")
+                    .OrderByDesc("DateUTC").Limit(1), "LastLoginUTC", new List<CoalesceFallback>
+                {
+                    new CoalesceFallback("NotSet", FallbackType.Value),
+                    new CoalesceFallback(new DateTime(2000, 1, 1), FallbackType.Value)
+                });
+
+            var c = Compile(q);
+
+            Assert.Equal("SELECT COALESCE((SELECT TOP (1) [DateUTC] FROM [userlogins] WHERE [id] = [userlogins].[userid] ORDER BY [DateUTC] DESC), 'NotSet', '2000-01-01T00:00:00.0000000') AS [LastLoginUTC] FROM [users]", c[0]);
+            Assert.Equal("SELECT COALESCE((SELECT `DateUTC` FROM `userlogins` WHERE `id` = `userlogins`.`userid` ORDER BY `DateUTC` DESC LIMIT 1), 'NotSet', '2000-01-01T00:00:00.0000000') AS `LastLoginUTC` FROM `users`", c[1]);
+            Assert.Equal("SELECT COALESCE((SELECT \"DateUTC\" FROM \"userlogins\" WHERE \"id\" = \"userlogins\".\"userid\" ORDER BY \"DateUTC\" DESC LIMIT 1), 'NotSet', '2000-01-01T00:00:00.0000000') AS \"LastLoginUTC\" FROM \"users\"", c[2]);
+        }
+
+        [Fact]
+        public void CoalesceSelectWithMixedFallback()
+        {
+            var q = new Query("users").SelectCoalesce(
+                query => query.From("userlogins").Select("DateUTC").WhereColumns("id", "=", "userlogins.userid")
+                    .OrderByDesc("DateUTC").Limit(1), "LastLoginUTC", new List<CoalesceFallback>
+                {
+                    new CoalesceFallback("CreatedDateUTC", FallbackType.Column),
+                    new CoalesceFallback("NotSet", FallbackType.Value),
+                    new CoalesceFallback(new DateTime(2000, 1, 1), FallbackType.Value)
+                });
+
+            var c = Compile(q);
+
+            Assert.Equal("SELECT COALESCE((SELECT TOP (1) [DateUTC] FROM [userlogins] WHERE [id] = [userlogins].[userid] ORDER BY [DateUTC] DESC), [CreatedDateUTC], 'NotSet', '2000-01-01T00:00:00.0000000') AS [LastLoginUTC] FROM [users]", c[0]);
+            Assert.Equal("SELECT COALESCE((SELECT `DateUTC` FROM `userlogins` WHERE `id` = `userlogins`.`userid` ORDER BY `DateUTC` DESC LIMIT 1), `CreatedDateUTC`, 'NotSet', '2000-01-01T00:00:00.0000000') AS `LastLoginUTC` FROM `users`", c[1]);
+            Assert.Equal("SELECT COALESCE((SELECT \"DateUTC\" FROM \"userlogins\" WHERE \"id\" = \"userlogins\".\"userid\" ORDER BY \"DateUTC\" DESC LIMIT 1), \"CreatedDateUTC\", \'NotSet\', \'2000-01-01T00:00:00.0000000\') AS \"LastLoginUTC\" FROM \"users\"", c[2]);
+        }
+
 
         [Fact]
         public void Limit()
@@ -107,7 +158,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
         }
 
-        public void DeepJoin()
+        private void DeepJoin()
         {
             var q = new Query().From("streets").DeepJoin("cities.countries");
             var c = Compile(q);
@@ -119,7 +170,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"streets\".\"countryId\" = \"countries\".\"Id\"", c[1]);
         }
 
-        public void CteAndBindings()
+        private void CteAndBindings()
         {
             var query = new Query("Races")
                         .For("mysql", s =>

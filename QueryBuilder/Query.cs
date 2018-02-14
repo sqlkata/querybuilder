@@ -10,6 +10,7 @@ namespace SqlKata
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; }
+        public string Name { get; set; }
 
         protected override string[] bindingOrder
         {

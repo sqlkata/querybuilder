@@ -70,7 +70,7 @@ namespace SqlKata.Compilers
             
             // Add the row_number select, and put back the bindings here if any
             subquery.SelectRaw(
-                    $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
+                    $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapColumn(rowNumberColName)}",
                     orderClause.SelectMany(x => x.GetBindings(EngineCode))
             );
 
