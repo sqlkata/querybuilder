@@ -1,10 +1,11 @@
 language: csharp
 mono: none
 dist: trusty
-dotnet: 1.1.5
+dotnet: 2.0.0
 install:
-  - dotnet msbuild /t:Clean
-  - dotnet msbuild /t:Restore
+  - dotnet clean
+  - dotnet restore
 script:
-  - dotnet msbuild /t:Build
-  - dotnet test QueryBuilder.Tests/QueryBuilder.Tests.csproj --no-build
+  - dotnet build -f netstandard1.3 QueryBuilder/QueryBuilder.csproj
+  - dotnet build -f netstandard1.3 SqlKata.Execution/SqlKata.Execution.csproj
+  - dotnet build -f netcoreapp2.0 QueryBuilder.Tests/QueryBuilder.Tests.csproj
