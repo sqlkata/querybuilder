@@ -484,7 +484,12 @@ namespace SqlKata.Compilers
             }
 
             var conditions = query.GetComponents<AbstractCondition>("where", EngineCode);
-            var sql = CompileConditions(conditions);
+            var sql = CompileConditions(conditions).Trim();
+
+            if (string.IsNullOrEmpty(sql))
+            {
+                return null;
+            }
 
             return $"WHERE {sql}";
         }

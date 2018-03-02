@@ -336,5 +336,15 @@ namespace SqlKata.Tests
             Assert.Equal("(SELECT * FROM [Mobiles]) UNION ALL SELECT * FROM [Devices]", c[0]);
             Assert.Equal("(SELECT * FROM `Mobiles`) UNION ALL SELECT * FROM `Devices`", c[1]);
         }
+
+        [Fact]
+        public void NestedEmptyWhere()
+        {
+            var query = new Query("A").Where(q => new Query().Where(q2 => new Query().Where(q3 => new Query())));
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [A]", c[0]);
+        }
     }
 }

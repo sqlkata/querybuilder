@@ -115,6 +115,11 @@ namespace SqlKata.Compilers
             var sql = CompileConditions(x.Query.GetComponents<AbstractCondition>("where", EngineCode));
             var op = x.IsNot ? "NOT " : "";
 
+            if (string.IsNullOrEmpty(sql))
+            {
+                return "";
+            }
+
             return $"{op}({sql})";
         }
 
