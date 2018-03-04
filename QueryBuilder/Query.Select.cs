@@ -37,34 +37,6 @@ namespace SqlKata
             return this;
         }
 
-
-        public Query Select(params object[] columns)
-        {
-            foreach (var item in columns)
-            {
-                if (item is Raw)
-                {
-                    SelectRaw((item as Raw).Value, (item as Raw).Bindings);
-                }
-                else if (item is string)
-                {
-                    Select((string)item);
-                }
-                else if (item is Query)
-                {
-                    var query = item as Query;
-
-                    Select(query, query.QueryAlias);
-                }
-                else
-                {
-                    throw new ArgumentException("only `String`, `Raw` and `Query` are allowed");
-                }
-            }
-
-            return this;
-        }
-
         public Query Select(Query query, string alias)
         {
             Method = "select";

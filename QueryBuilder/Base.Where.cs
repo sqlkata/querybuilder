@@ -151,23 +151,6 @@ namespace SqlKata
         {
             var query = callback.Invoke(NewChild());
 
-            /*
-                if (Has("from") && Get("from").FirstOrDefault() is From)
-                {
-                    query.From((Get("from").FirstOrDefault() as From).Table);
-                }
-            */
-
-            if (query.HasComponent("from"))
-            {
-                return AddComponent("where", new ExistsCondition<Q>
-                {
-                    Query = query,
-                    IsNot = getNot(),
-                    IsOr = getOr(),
-                });
-            }
-
             return AddComponent("where", new NestedCondition<Q>
             {
                 Query = query,

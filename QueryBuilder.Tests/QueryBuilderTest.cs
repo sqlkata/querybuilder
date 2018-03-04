@@ -340,7 +340,18 @@ namespace SqlKata.Tests
         [Fact]
         public void NestedEmptyWhere()
         {
+            // Empty nested where should be ignored
             var query = new Query("A").Where(q => new Query().Where(q2 => new Query().Where(q3 => new Query())));
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [A]", c[0]);
+        }
+
+        [Fact]
+        public void NestedQuery()
+        {
+            var query = new Query("A").Where(q => new Query("B"));
 
             var c = Compile(query);
 
