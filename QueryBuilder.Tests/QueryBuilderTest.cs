@@ -34,9 +34,9 @@ namespace SqlKata.Tests
             var q = new Query().From("users").Select("id", "name");
             var c = Compile(q);
 
-            Assert.Equal(c[0], "SELECT [id], [name] FROM [users]");
-            Assert.Equal(c[1], "SELECT `id`, `name` FROM `users`");
-            Assert.Equal(c[2], "SELECT \"id\", \"name\" FROM \"users\"");
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`",c[1]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"",c[2]);
         }
 
         [Fact]
@@ -108,18 +108,20 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
         }
 
+        [Fact]
         public void DeepJoin()
         {
             var q = new Query().From("streets").DeepJoin("cities.countries");
             var c = Compile(q);
 
-            Assert.Equal("SELECT * FROM [streets] INNER JOIN [cities] ON [streets].[cityId] = [cities].[Id] INNER JOIN [countries] ON [streets].[countryId] = [countries].[Id]", c[0]);
+            Assert.Equal("SELECT * FROM [streets] INNER JOIN [cities] ON [streets].[cityId] = [cities].[Id] INNER JOIN [countries] ON [cities].[countryId] = [countries].[Id]", c[0]);
 
-            Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `streets`.`countryId` = `countries`.`Id`", c[1]);
+            Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `cities`.`countryId` = `countries`.`Id`", c[1]);
 
-            Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"streets\".\"countryId\" = \"countries\".\"Id\"", c[1]);
+            Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"cities\".\"countryId\" = \"countries\".\"Id\"", c[2]);
         }
 
+        [Fact]
         public void CteAndBindings()
         {
             var query = new Query("Races")
@@ -143,8 +145,8 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races]WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) WHERE [[row_num]]] BETWEEN 21 AND 45", c[0]);
-            Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) SELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = Available) AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
+            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45", c[0]);
+            Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) SELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
 
             Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) SELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
         }
