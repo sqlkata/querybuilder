@@ -108,6 +108,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
         }
 
+        [Fact]
         public void DeepJoin()
         {
             var q = new Query().From("streets").DeepJoin("cities.countries");
@@ -120,6 +121,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"streets\".\"countryId\" = \"countries\".\"Id\"", c[1]);
         }
 
+        [Fact]
         public void CteAndBindings()
         {
             var query = new Query("Races")
