@@ -34,9 +34,9 @@ namespace SqlKata.Tests
             var q = new Query().From("users").Select("id", "name");
             var c = Compile(q);
 
-            Assert.Equal(c[0], "SELECT [id], [name] FROM [users]");
-            Assert.Equal(c[1], "SELECT `id`, `name` FROM `users`");
-            Assert.Equal(c[2], "SELECT \"id\", \"name\" FROM \"users\"");
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`",c[1]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"",c[2]);
         }
 
         [Fact]
