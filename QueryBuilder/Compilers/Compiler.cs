@@ -68,6 +68,15 @@ namespace SqlKata.Compilers
             {
                 sql = CompileUpdate(query);
             }
+            else if (query.Method == "aggregate")
+            {
+                query.ClearComponent("limit")
+                .ClearComponent("select")
+                .ClearComponent("group")
+                .ClearComponent("order");
+
+                sql = CompileSelect(query);
+            }
             else
             {
                 sql = CompileSelect(query);

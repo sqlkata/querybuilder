@@ -357,5 +357,17 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [A]", c[0]);
         }
+
+        [Fact]
+        public void Count()
+        {
+            var query = new Query("A").AsCount().Limit(1);
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[0]);
+            Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[1]);
+            Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[2]);
+        }
     }
 }
