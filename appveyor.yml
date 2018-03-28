@@ -28,8 +28,9 @@ deploy:
 - provider: NuGet
   server: https://www.myget.org/F/sqlkata/api/v2/package
   on:
-    branch: master
-    branch: /v.*/
+    branch: 
+      - master
+      - /v.*/
   api_key:
     secure: /hqoLdVFa9YcKAGHHsOfe43vAfVU1hPNpUyG+Qd9PQZIAOli32cBXYTP6vq12xKq
 
