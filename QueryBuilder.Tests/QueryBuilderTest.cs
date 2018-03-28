@@ -371,5 +371,27 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[1]);
             Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[2]);
         }
+
+        [Fact]
+        public void Should_Equal_AfterMultipleCompile()
+        {
+            var query = new Query()
+				.Select("Id", "Name")
+				.From("Table")
+				.OrderBy("Name")
+				.Limit(20)
+				.Offset(1);
+
+            var first = Compile(query);
+            Assert.Equal("SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [subquery] WHERE [row_num] BETWEEN 2 AND 21", first[0]);
+            Assert.Equal("SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1", first[1]);
+            Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1", first[2]);
+
+            var second = Compile(query);
+
+            Assert.Equal(first[0],second[0]);
+            Assert.Equal(first[1],second[1]);
+            Assert.Equal(first[2],second[2]);
+        }
     }
 }
