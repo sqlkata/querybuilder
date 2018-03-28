@@ -30,13 +30,12 @@ deploy:
   on:
     branch: 
       - master
-      - /v.*/
   api_key:
     secure: /hqoLdVFa9YcKAGHHsOfe43vAfVU1hPNpUyG+Qd9PQZIAOli32cBXYTP6vq12xKq
 
 - provider: NuGet
   on:
-    branch: /v.*/  
+    branch: master
     appveyor_repo_tag: true
   api_key:
     secure: xCatS3JqFEiz6NRcXpik3IOL+UtPDrQkKOHasopX1TlgB+guW5fD71UVc4Cs767T
