@@ -209,12 +209,11 @@ namespace SqlKata.Compilers
 
             string sql;
 
-            var insert = query.GetOneComponent<AbstractInsertClause>("insert", EngineCode);
+            var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
-
-            if (insert is InsertClause)
+            if (inserts[0] is InsertClause)
             {
-                var clause = insert as InsertClause;
+                var clause = inserts[0] as InsertClause;
 
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
@@ -222,7 +221,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                var clause = insert as InsertQueryClause;
+                var clause = inserts[0] as InsertQueryClause;
 
                 var columns = "";
 
@@ -234,6 +233,15 @@ namespace SqlKata.Compilers
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " " + columns + CompileSelect(clause.Query);
             }
+
+            if (inserts.Count > 0)
+                foreach (var insert in inserts)
+                {
+                    var clause = insert as InsertClause;
+
+                    sql = sql + ",(" + string.Join(", ", Parametrize(clause.Values)) + ")";
+
+                }
 
             if (query.GetComponents("cte", EngineCode).Any())
             {

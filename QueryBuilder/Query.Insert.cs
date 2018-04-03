@@ -52,6 +52,40 @@ namespace SqlKata
         }
 
         /// <summary>
+        /// Produces insert multi records
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <param name="valuesCollection"></param>
+        /// <returns></returns>
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        {
+            if ((columns?.Count() ?? 0) == 0 || (valuesCollection?.Count() ?? 0) == 0)
+            {
+                throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
+            }
+
+            Method = "insert";
+
+            ClearComponent("insert");
+
+            foreach (var values in valuesCollection)
+            {
+                if (columns.Count() != values.Count())
+                {
+                    throw new InvalidOperationException("Columns count should be equal to each Values count");
+                }
+
+                AddComponent("insert", new InsertClause
+                {
+                    Columns = columns.ToList(),
+                    Values = values.Select(this.BackupNullValues()).ToList()
+                });
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Produces insert from subquery
         /// </summary>
         /// <param name="columns"></param>
