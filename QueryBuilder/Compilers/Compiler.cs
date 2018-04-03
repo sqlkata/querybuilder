@@ -234,8 +234,8 @@ namespace SqlKata.Compilers
                 + " " + columns + CompileSelect(clause.Query);
             }
 
-            if (inserts.Count > 0)
-                foreach (var insert in inserts)
+            if (inserts.Count > 1)
+                foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
                 {
                     var clause = insert as InsertClause;
 
