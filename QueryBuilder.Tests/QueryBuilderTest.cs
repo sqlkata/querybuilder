@@ -35,8 +35,8 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
-            Assert.Equal("SELECT `id`, `name` FROM `users`",c[1]);
-            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"",c[2]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`", c[1]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[2]);
         }
 
         [Fact]
@@ -190,6 +190,25 @@ namespace SqlKata.Tests
             Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) INSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
 
             Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) INSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+        }
+
+        [Fact]
+        public void InsertMultiRecords()
+        {
+            var query = new Query("expensive_cars")
+            .AsInsert(
+                    new[] { "name", "brand", "year" },
+                    new[]
+                    {
+                        new object[] { "Chiron", "Bugatti", null},
+                        new object[] { "Huayra", "Pagani", 2012},
+                        new object[] { "Reventon roadster", "Lamborghini", 2009}
+                    }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO [expensive_cars] ([name], [brand], [year]) VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)", c[0]);           
         }
 
         [Fact]
@@ -376,11 +395,11 @@ namespace SqlKata.Tests
         public void Should_Equal_AfterMultipleCompile()
         {
             var query = new Query()
-				.Select("Id", "Name")
-				.From("Table")
-				.OrderBy("Name")
-				.Limit(20)
-				.Offset(1);
+                .Select("Id", "Name")
+                .From("Table")
+                .OrderBy("Name")
+                .Limit(20)
+                .Offset(1);
 
             var first = Compile(query);
             Assert.Equal("SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [subquery] WHERE [row_num] BETWEEN 2 AND 21", first[0]);
@@ -389,9 +408,9 @@ namespace SqlKata.Tests
 
             var second = Compile(query);
 
-            Assert.Equal(first[0],second[0]);
-            Assert.Equal(first[1],second[1]);
-            Assert.Equal(first[2],second[2]);
+            Assert.Equal(first[0], second[0]);
+            Assert.Equal(first[1], second[1]);
+            Assert.Equal(first[2], second[2]);
         }
     }
 }
