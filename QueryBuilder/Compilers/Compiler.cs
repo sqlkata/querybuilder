@@ -239,7 +239,7 @@ namespace SqlKata.Compilers
                 {
                     var clause = insert as InsertClause;
 
-                    sql = sql + ", (" + string.Join(", ", Parametrize(clause.Values)) + ")";
+                    sql = sql + ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
 
                 }
 
