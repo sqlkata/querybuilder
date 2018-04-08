@@ -144,7 +144,7 @@ namespace SqlKata.Compilers
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 
-            var values = Parametrize(item.Values);
+            var values = Parameterize(item.Values);
 
             return Wrap(item.Column) + $" {inOperator} ({values})";
         }

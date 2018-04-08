@@ -217,7 +217,7 @@ namespace SqlKata.Compilers
 
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
-                + "VALUES (" + string.Join(", ", Parametrize(clause.Values)) + ")";
+                + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
             }
             else
             {
