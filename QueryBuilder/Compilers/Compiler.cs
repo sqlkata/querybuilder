@@ -217,7 +217,7 @@ namespace SqlKata.Compilers
 
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
-                + "VALUES (" + string.Join(", ", Parametrize(clause.Values)) + ")";
+                + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
             }
             else
             {
@@ -239,7 +239,7 @@ namespace SqlKata.Compilers
                 {
                     var clause = insert as InsertClause;
 
-                    sql = sql + ", (" + string.Join(", ", Parametrize(clause.Values)) + ")";
+                    sql = sql + ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
 
                 }
 
