@@ -13,6 +13,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query);
 
+            xQuery.Logger(compiled);
+
             return xQuery.Connection.Query<T>(compiled.Sql, compiled.Bindings);
         }
 
@@ -27,6 +29,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefault));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
+
+            xQuery.Logger(compiled);
 
             return xQuery.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
 
@@ -43,6 +47,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(First));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
+
+            xQuery.Logger(compiled);
 
             return xQuery.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
 
@@ -137,6 +143,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
 
+            xQuery.Logger(compiled);
+
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
 
         }
@@ -147,6 +155,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, valuesCollection));
+
+            xQuery.Logger(compiled);
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
 
@@ -159,6 +169,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
 
+            xQuery.Logger(compiled);
+
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
 
         }
@@ -169,6 +181,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
 
+            xQuery.Logger(compiled);
+
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
         }
 
@@ -177,6 +191,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Delete));
 
             var compiled = xQuery.Compiler.Compile(query.AsDelete());
+
+            xQuery.Logger(compiled);
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
         }

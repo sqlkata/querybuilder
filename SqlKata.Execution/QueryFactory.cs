@@ -1,3 +1,4 @@
+using System;
 using System.Data;
 using System.Linq;
 using SqlKata;
@@ -9,6 +10,7 @@ namespace SqlKata.Execution
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
+        public Action<SqlResult> Logger = result => { };
 
         public QueryFactory() { }
 
@@ -20,7 +22,11 @@ namespace SqlKata.Execution
 
         public Query Query()
         {
-            return new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(this.Connection, this.Compiler);
+
+            query.Logger = Logger;
+
+            return query;
         }
 
         public Query Query(string table)
@@ -39,6 +45,8 @@ namespace SqlKata.Execution
             xQuery.Method = query.Method;
 
             xQuery.SetEngineScope(query.EngineScope);
+
+            xQuery.Logger = Logger;
 
             return xQuery;
         }

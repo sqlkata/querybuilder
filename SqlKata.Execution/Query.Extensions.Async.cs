@@ -14,6 +14,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query);
 
+            xQuery.Logger(compiled);
+
             return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.Bindings);
         }
 
@@ -28,6 +30,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefaultAsync));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
+
+            xQuery.Logger(compiled);
 
             return await xQuery.Connection.QueryFirstOrDefaultAsync<T>(compiled.Sql, compiled.Bindings);
 
@@ -44,6 +48,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstAsync));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
+
+            xQuery.Logger(compiled);
 
             return await xQuery.Connection.QueryFirstAsync<T>(compiled.Sql, compiled.Bindings);
 
@@ -137,6 +143,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
 
+            xQuery.Logger(compiled);
+
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
         }
 
@@ -146,6 +154,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
+
+            xQuery.Logger(compiled);
 
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
 
@@ -157,6 +167,8 @@ namespace SqlKata.Execution
 
             var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
 
+            xQuery.Logger(compiled);
+
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
         }
 
@@ -165,6 +177,8 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(DeleteAsync));
 
             var compiled = xQuery.Compiler.Compile(query.AsDelete());
+
+            xQuery.Logger(compiled);
 
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
         }

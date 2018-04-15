@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Linq;
 using SqlKata.Compilers;
 
@@ -8,6 +9,7 @@ namespace SqlKata.Execution
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
+        public Action<SqlResult> Logger = result => { };
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
@@ -21,6 +23,7 @@ namespace SqlKata.Execution
             var query = new XQuery(this.Connection, this.Compiler);
 
             query.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
+            query.Logger = this.Logger;
 
             query.QueryAlias = QueryAlias;
             query.IsDistinct = IsDistinct;
