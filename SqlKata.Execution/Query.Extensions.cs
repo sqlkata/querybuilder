@@ -66,15 +66,13 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Paginate));
-
             var count = query.Clone().Count<long>();
 
-            var list = query.ForPage(page, perPage).Get<T>();
+            var list = query.Clone().ForPage(page, perPage).Get<T>();
 
             return new PaginationResult<T>
             {
-                Query = query.Clone(),
+                Query = query,
                 Page = page,
                 PerPage = perPage,
                 Count = count,
@@ -138,6 +136,17 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
+        }
+
+        public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, valuesCollection));
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
 

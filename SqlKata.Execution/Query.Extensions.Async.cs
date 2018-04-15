@@ -67,11 +67,9 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(PaginateAsync));
-
             var count = await query.Clone().CountAsync<long>();
 
-            var list = await query.ForPage(page, perPage).GetAsync<T>();
+            var list = await query.Clone().ForPage(page, perPage).GetAsync<T>();
 
             return new PaginationResult<T>
             {
@@ -84,7 +82,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task<PaginationResult<dynamic>> PaginateASync(this Query query, int page, int perPage = 25)
+        public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, int page, int perPage = 25)
         {
             return await query.PaginateAsync<dynamic>(page, perPage);
         }
