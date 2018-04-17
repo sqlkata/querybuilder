@@ -9,13 +9,7 @@ namespace SqlKata.Execution
     {
         public static IEnumerable<T> Get<T>(this Query query)
         {
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Get));
-
-            var compiled = xQuery.Compiler.Compile(query);
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Query<T>(compiled.Sql, compiled.Bindings);
+            return QueryHelper.CreateQueryFactory(query).Query<T>(query);
         }
 
         public static IEnumerable<dynamic> Get(this Query query)
@@ -25,15 +19,7 @@ namespace SqlKata.Execution
 
         public static T FirstOrDefault<T>(this Query query)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefault));
-
-            var compiled = xQuery.Compiler.Compile(query.Limit(1));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
-
+            return QueryHelper.CreateQueryFactory(query).FirstOrDefault<T>(query);
         }
 
         public static dynamic FirstOrDefault(this Query query)
@@ -43,15 +29,7 @@ namespace SqlKata.Execution
 
         public static T First<T>(this Query query)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(First));
-
-            var compiled = xQuery.Compiler.Compile(query.Limit(1));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
-
+            return QueryHelper.CreateQueryFactory(query).First<T>(query);
         }
 
         public static dynamic First(this Query query)
@@ -61,30 +39,9 @@ namespace SqlKata.Execution
 
         public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25)
         {
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            if (page < 1)
-            {
-                throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
-            }
-
-            if (perPage < 1)
-            {
-                throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
-            }
-
-            var count = query.Clone().Count<long>();
-
-            var list = query.Clone().ForPage(page, perPage).Get<T>();
-
-            return new PaginationResult<T>
-            {
-                Query = query,
-                Page = page,
-                PerPage = perPage,
-                Count = count,
-                List = list
-            };
-
+            return db.Paginate<T>(query, page, perPage);
         }
 
         public static PaginationResult<dynamic> Paginate(this Query query, int page, int perPage = 25)

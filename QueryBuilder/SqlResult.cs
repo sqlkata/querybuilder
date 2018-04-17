@@ -65,5 +65,16 @@ namespace SqlKata
             return val.ToString().All(x => char.IsDigit(x));
         }
 
+        public static SqlResult operator +(SqlResult a, SqlResult b)
+        {
+            var sql = a.RawSql + ";" + b.RawSql;
+
+            var bindings = a.RawBindings.Concat(b.RawBindings).ToList();
+
+            var result = new SqlResult(sql, bindings);
+
+            return result;
+        }
+
     }
 }

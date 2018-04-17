@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Linq;
+using Dapper;
 using SqlKata;
 using SqlKata.Compilers;
 
@@ -11,6 +12,7 @@ namespace SqlKata.Execution
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
         public Action<SqlResult> Logger = result => { };
+        public int QueryTimeout { get; set; } = 30;
 
         public QueryFactory() { }
 
@@ -34,7 +36,7 @@ namespace SqlKata.Execution
             return Query().From(table);
         }
 
-        public Query Query(Query query)
+        public Query FromQuery(Query query)
         {
             var xQuery = new XQuery(this.Connection, this.Compiler);
 
