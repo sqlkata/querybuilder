@@ -9,7 +9,7 @@ namespace SqlKata.Execution
     {
         public static IEnumerable<T> Get<T>(this Query query)
         {
-            return QueryHelper.CreateQueryFactory(query).Query<T>(query);
+            return QueryHelper.CreateQueryFactory(query).Get<T>(query);
         }
 
         public static IEnumerable<dynamic> Get(this Query query)

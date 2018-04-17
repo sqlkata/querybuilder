@@ -9,16 +9,16 @@ namespace SqlKata.Execution
     public static class QueryFactoryExtensions
     {
         #region Dapper
-        public static IEnumerable<T> Query<T>(this QueryFactory db, Query query)
+        public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
         {
             var compiled = db.Compile(query);
 
             return db.Connection.Query<T>(compiled.Sql, compiled.Bindings);
         }
 
-        public static IEnumerable<dynamic> Query(this QueryFactory db, Query query)
+        public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
         {
-            return Query<dynamic>(db, query);
+            return Get<dynamic>(db, query);
         }
 
         public static T First<T>(this QueryFactory db, Query query)
@@ -71,7 +71,7 @@ namespace SqlKata.Execution
             );
         }
 
-        public static SqlMapper.GridReader QueryMultiple<T>(
+        public static SqlMapper.GridReader GetMultiple<T>(
             this QueryFactory db,
             Query[] queries,
             IDbTransaction transaction = null,
@@ -93,7 +93,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static List<IEnumerable<T>> Query<T>(
+        public static List<IEnumerable<T>> Get<T>(
             this QueryFactory db,
             Query[] queries,
             IDbTransaction transaction = null,
@@ -103,7 +103,7 @@ namespace SqlKata.Execution
 
             var result = new List<IEnumerable<T>>();
 
-            var multi = db.QueryMultiple<T>(
+            var multi = db.GetMultiple<T>(
                 queries,
                 transaction,
                 commandType
