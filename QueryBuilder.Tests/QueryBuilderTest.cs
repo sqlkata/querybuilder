@@ -412,5 +412,17 @@ namespace SqlKata.Tests
             Assert.Equal(first[1], second[1]);
             Assert.Equal(first[2], second[2]);
         }
+
+        [Fact]
+        public void Raw_WrapIdentifiers()
+        {
+            var query = new Query("Users").SelectRaw("[Id], [Name], {Age}");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT [Id], [Name], [Age] FROM [Users]", c[0]);
+            Assert.Equal("SELECT `Id`, `Name`, `Age` FROM `Users`", c[1]);
+            Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[2]);
+        }
     }
 }

@@ -70,7 +70,7 @@ namespace SqlKata.Compilers
                 }));
             }
 
-            // If we reach here then the value does not contain an "AS" alias 
+            // If we reach here then the value does not contain an "AS" alias
             // nor dot "." expression, so wrap it as regular value.
             return WrapValue(value);
         }
@@ -128,8 +128,14 @@ namespace SqlKata.Compilers
         public string WrapIdentifiers(string input)
         {
             return input
+
+                // deprecated
                 .Replace("{", this.OpeningIdentifier())
-                .Replace("}", this.ClosingIdentifier());
+                // deprecated
+                .Replace("}", this.ClosingIdentifier())
+
+                .Replace("[", this.OpeningIdentifier())
+                .Replace("]", this.ClosingIdentifier());
         }
 
         public virtual string Singular(string value)
