@@ -247,23 +247,32 @@ namespace SqlKata
             return this;
         }
 
-        public Query OrderBy(string column, bool ascending)
+        public Query OrderBy(params string[] columns)
         {
-            return AddComponent("order", new OrderBy
+            foreach (var column in columns)
             {
-                Column = column,
-                Ascending = ascending
-            });
+                AddComponent("order", new OrderBy
+                {
+                    Column = column,
+                    Ascending = true
+                });
+            }
+
+            return this;
         }
 
-        public Query OrderBy(string column, string ordering = "asc")
+        public Query OrderByDesc(params string[] columns)
         {
-            return OrderBy(column, ordering.ToLower() == "asc");
-        }
+            foreach (var column in columns)
+            {
+                AddComponent("order", new OrderBy
+                {
+                    Column = column,
+                    Ascending = false
+                });
+            }
 
-        public Query OrderByDesc(string column)
-        {
-            return OrderBy(column, false);
+            return this;
         }
 
         public Query OrderByRaw(string expression, params object[] bindings)
