@@ -47,7 +47,7 @@ namespace SqlKata.Execution
 
         public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var compiled = db.Compile(query);
 
             return db.Connection.Execute(
                 compiled.Sql,
