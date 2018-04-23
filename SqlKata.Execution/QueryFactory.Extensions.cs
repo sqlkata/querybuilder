@@ -11,9 +11,16 @@ namespace SqlKata.Execution
         #region Dapper
         public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.Compile(query);
+            var compiled = db.compile(query);
 
             return db.Connection.Query<T>(compiled.Sql, compiled.Bindings);
+        }
+
+        public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
+        {
+            var compiled = db.compile(query);
+
+            return db.Connection.Query(compiled.Sql, compiled.Bindings) as IEnumerable<IDictionary<string, object>>;
         }
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
@@ -23,7 +30,7 @@ namespace SqlKata.Execution
 
         public static T First<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var compiled = db.compile(query.Limit(1));
 
             return db.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
         }
@@ -35,7 +42,7 @@ namespace SqlKata.Execution
 
         public static T FirstOrDefault<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var compiled = db.compile(query.Limit(1));
 
             return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
         }
@@ -47,7 +54,7 @@ namespace SqlKata.Execution
 
         public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.Compile(query);
+            var compiled = db.compile(query);
 
             return db.Connection.Execute(
                 compiled.Sql,
@@ -60,7 +67,7 @@ namespace SqlKata.Execution
 
         public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var compiled = db.compile(query.Limit(1));
 
             return db.Connection.ExecuteScalar<T>(
                 compiled.Sql,
@@ -80,7 +87,7 @@ namespace SqlKata.Execution
         {
 
             var compiled = queries
-                .Select(q => db.Compile(q))
+                .Select(q => db.compile(q))
                 .Aggregate((a, b) => a + b);
 
             return db.Connection.QueryMultiple(
@@ -93,15 +100,13 @@ namespace SqlKata.Execution
 
         }
 
-        public static List<IEnumerable<T>> Get<T>(
+        public static IEnumerable<IEnumerable<T>> Get<T>(
             this QueryFactory db,
             Query[] queries,
             IDbTransaction transaction = null,
             CommandType? commandType = null
         )
         {
-
-            var result = new List<IEnumerable<T>>();
 
             var multi = db.GetMultiple<T>(
                 queries,
@@ -113,11 +118,10 @@ namespace SqlKata.Execution
             {
                 for (var i = 0; i < queries.Count(); i++)
                 {
-                    result.Add(multi.Read<T>());
+                    yield return multi.Read<T>();
                 }
             }
 
-            return result;
         }
 
         #endregion
@@ -188,9 +192,43 @@ namespace SqlKata.Execution
             };
 
         }
+
+        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
+        {
+            var result = db.Paginate<T>(query, 1, chunkSize);
+
+            if (!func(result.List, 1))
+            {
+                return;
+            }
+
+            while (result.HasNext)
+            {
+                result = result.Next();
+                if (!func(result.List, result.Page))
+                {
+                    return;
+                }
+            }
+
+        }
+
+        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Action<IEnumerable<T>, int> action)
+        {
+            var result = db.Paginate<T>(query, 1, chunkSize);
+
+            action(result.List, 1);
+
+            while (result.HasNext)
+            {
+                result = result.Next();
+                action(result.List, result.Page);
+            }
+
+        }
         #endregion
 
-        private static SqlResult Compile(this QueryFactory db, Query query)
+        private static SqlResult compile(this QueryFactory db, Query query)
         {
             var compiled = db.Compiler.Compile(query);
 

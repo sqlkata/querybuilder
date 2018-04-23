@@ -51,22 +51,9 @@ namespace SqlKata.Execution
 
         public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
-            var result = query.Paginate<T>(1, chunkSize);
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            if (!func(result.List, 1))
-            {
-                return;
-            }
-
-            while (result.HasNext)
-            {
-                result = result.Next();
-                if (!func(result.List, result.Page))
-                {
-                    return;
-                }
-            }
-
+            db.Chunk<T>(query, chunkSize, func);
         }
 
         public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
@@ -76,15 +63,9 @@ namespace SqlKata.Execution
 
         public static void Chunk<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action)
         {
-            var result = query.Paginate<T>(1, chunkSize);
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            action(result.List, 1);
-
-            while (result.HasNext)
-            {
-                result = result.Next();
-                action(result.List, result.Page);
-            }
+            db.Chunk(query, chunkSize, action);
 
         }
 
