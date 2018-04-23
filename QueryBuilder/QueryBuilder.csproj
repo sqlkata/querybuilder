@@ -14,8 +14,10 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.6.2"/>
-    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.0"/>
     <PackageReference Include="Inflector.NetStandard" Version="1.2.2"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="NuGet.Build.Tasks.Pack" Version="4.6.2"/>
+    <PackageReference Update="SourceLink.Create.CommandLine" Version="2.8.1"/>
   </ItemGroup>
 </Project>
