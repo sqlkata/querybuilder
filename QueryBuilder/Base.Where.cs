@@ -256,6 +256,11 @@ namespace SqlKata
             });
         }
 
+        public Q WhereNotLike(string column, string value, bool caseSensitive = false)
+        {
+            return Not(true).WhereLike(column, value, caseSensitive);
+        }
+
         public Q OrWhereLike(string column, string value, bool caseSensitive = false)
         {
             return Or().WhereLike(column, value, caseSensitive);
@@ -276,6 +281,11 @@ namespace SqlKata
                 IsOr = getOr(),
                 IsNot = getNot(),
             });
+        }
+
+        public Q WhereNotStarts(string column, string value, bool caseSensitive = false)
+        {
+            return Not(true).WhereStarts(column, value, caseSensitive);
         }
 
         public Q OrWhereStarts(string column, string value, bool caseSensitive = false)
@@ -301,6 +311,11 @@ namespace SqlKata
             });
         }
 
+        public Q WhereNotEnds(string column, string value, bool caseSensitive = false)
+        {
+            return Not(true).WhereEnds(column, value, caseSensitive);
+        }
+
         public Q OrWhereEnds(string column, string value, bool caseSensitive = false)
         {
             return Or().WhereEnds(column, value, caseSensitive);
@@ -322,6 +337,11 @@ namespace SqlKata
                 IsOr = getOr(),
                 IsNot = getNot(),
             });
+        }
+
+        public Q WhereNotContains(string column, string value, bool caseSensitive = false)
+        {
+            return Not(true).WhereContains(column, value, caseSensitive);
         }
 
         public Q OrWhereContains(string column, string value, bool caseSensitive = false)
