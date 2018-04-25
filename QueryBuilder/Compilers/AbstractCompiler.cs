@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using I = Inflector;
 
 namespace SqlKata.Compilers
 {
     public abstract class AbstractCompiler
     {
         public string EngineCode;
-        public Inflector Inflector { get; protected set; }
+        public I.Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public bool IsDebug = false;
         protected string separator
