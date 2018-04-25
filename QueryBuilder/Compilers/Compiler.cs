@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using I = Inflector;
 
 namespace SqlKata.Compilers
 {
@@ -10,7 +12,7 @@ namespace SqlKata.Compilers
 
         public Compiler() : base()
         {
-            Inflector = new Inflector();
+            Inflector = new I.Inflector(new CultureInfo("en"));
         }
 
         protected override string OpeningIdentifier()

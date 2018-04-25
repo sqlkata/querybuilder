@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Implicit import of directory.build.props doesn't seem to work from the linux cli, import manually -->
   <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props"/>
-
   <PropertyGroup>
     <PackageId>SqlKata</PackageId>
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
@@ -12,13 +10,14 @@
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
     <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
   </PropertyGroup>
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0"/>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Update="NuGet.Build.Tasks.Pack" Version="4.6.1" />
-    <PackageReference Update="SourceLink.Create.CommandLine" Version="2.8.0" />
+    <PackageReference Include="Inflector.NetStandard" Version="1.2.2"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="NuGet.Build.Tasks.Pack" Version="4.6.2"/>
+    <PackageReference Update="SourceLink.Create.CommandLine" Version="2.8.1"/>
   </ItemGroup>
 </Project>
