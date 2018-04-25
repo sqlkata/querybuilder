@@ -57,6 +57,25 @@ namespace SqlKata
         }
     }
 
+    public class BasicDateCondition : BasicCondition<object>
+    {
+        public string Part { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new BasicDateCondition
+            {
+                Engine = Engine,
+                Column = Column,
+                Operator = Operator,
+                Value = Value,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Part = Part,
+                Component = Component,
+            };
+        }
+    }
+
     /// <summary>
     /// Represents a comparison between two columns.
     /// </summary>
@@ -82,7 +101,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a full "subquery". 
+    /// Represents a comparison between a column and a full "subquery".
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {

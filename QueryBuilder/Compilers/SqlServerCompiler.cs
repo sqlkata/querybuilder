@@ -67,7 +67,7 @@ namespace SqlKata.Compilers
 
             //Add an alias name to the subquery
             subquery.As("subquery");
-            
+
             // Add the row_number select, and put back the bindings here if any
             subquery.SelectRaw(
                     $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
@@ -106,7 +106,7 @@ namespace SqlKata.Compilers
 
             if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
             {
-                // Add a fake raw select to simulate the top bindings 
+                // Add a fake raw select to simulate the top bindings
                 query.Clauses.Insert(0, new RawColumn
                 {
                     Engine = EngineCode,
@@ -137,6 +137,35 @@ namespace SqlKata.Compilers
         public override string CompileRandom(string seed)
         {
             return "NEWID()";
+        }
+
+        protected override string CompileBasicDateCondition(BasicDateCondition condition)
+        {
+            var column = Wrap(condition.Column);
+
+            string left;
+
+            if (condition.Part == "time")
+            {
+                left = $"CAST({column} as time)";
+            }
+            else if (condition.Part == "date")
+            {
+                left = $"CAST({column} as date)";
+            }
+            else
+            {
+                left = $"DATEPART('{condition.Part.ToUpper()}', {column})";
+            }
+
+            var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
+
+            if (condition.IsNot)
+            {
+                return $"NOT ({sql})";
+            }
+
+            return sql;
         }
     }
 

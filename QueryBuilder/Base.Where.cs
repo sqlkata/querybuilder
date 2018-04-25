@@ -552,5 +552,122 @@ namespace SqlKata
             return Or().Not(true).WhereExists(callback);
         }
 
+        #region date
+        public Q WhereDatePart(string part, string column, string op, object value)
+        {
+            return AddComponent("where", new BasicDateCondition
+            {
+                Operator = op,
+                Column = column,
+                Value = value,
+                Part = part,
+                IsOr = getOr(),
+                IsNot = getNot(),
+            });
+        }
+        public Q WhereNotDatePart(string part, string column, string op, object value)
+        {
+            return Not(true).WhereDatePart(part, column, op, value);
+        }
+
+        public Q OrWhereDatePart(string part, string column, string op, object value)
+        {
+            return Or().WhereDatePart(part, column, op, value);
+        }
+
+        public Q OrWhereNotDatePart(string part, string column, string op, object value)
+        {
+            return Or().Not(true).WhereDatePart(part, column, op, value);
+        }
+
+        public Q WhereDate(string column, string op, object value)
+        {
+            return WhereDatePart("date", column, op, value);
+        }
+        public Q WhereNotDate(string column, string op, object value)
+        {
+            return Not(true).WhereDate(column, op, value);
+        }
+        public Q OrWhereDate(string column, string op, object value)
+        {
+            return Or().WhereDate(column, op, value);
+        }
+        public Q OrWhereNotDate(string column, string op, object value)
+        {
+            return Or().Not(true).WhereDate(column, op, value);
+        }
+
+        public Q WhereTime(string column, string op, object value)
+        {
+            return WhereDatePart("time", column, op, value);
+        }
+        public Q WhereNotTime(string column, string op, object value)
+        {
+            return Not(true).WhereTime(column, op, value);
+        }
+        public Q OrWhereTime(string column, string op, object value)
+        {
+            return Or().WhereTime(column, op, value);
+        }
+        public Q OrWhereNotTime(string column, string op, object value)
+        {
+            return Or().Not(true).WhereTime(column, op, value);
+        }
+
+        public Q WhereDatePart(string part, string column, object value)
+        {
+            return WhereDatePart(part, column, "=", value);
+        }
+        public Q WhereNotDatePart(string part, string column, object value)
+        {
+            return WhereNotDatePart(part, column, "=", value);
+        }
+
+        public Q OrWhereDatePart(string part, string column, object value)
+        {
+            return OrWhereDatePart(part, column, "=", value);
+        }
+
+        public Q OrWhereNotDatePart(string part, string column, object value)
+        {
+            return OrWhereNotDatePart(part, column, "=", value);
+        }
+
+        public Q WhereDate(string column, object value)
+        {
+            return WhereDate(column, "=", value);
+        }
+        public Q WhereNotDate(string column, object value)
+        {
+            return WhereNotDate(column, "=", value);
+        }
+        public Q OrWhereDate(string column, object value)
+        {
+            return OrWhereDate(column, "=", value);
+        }
+        public Q OrWhereNotDate(string column, object value)
+        {
+            return OrWhereNotDate(column, "=", value);
+        }
+
+        public Q WhereTime(string column, object value)
+        {
+            return WhereTime(column, "=", value);
+        }
+        public Q WhereNotTime(string column, object value)
+        {
+            return WhereNotTime(column, "=", value);
+        }
+        public Q OrWhereTime(string column, object value)
+        {
+            return OrWhereTime(column, "=", value);
+        }
+        public Q OrWhereNotTime(string column, object value)
+        {
+            return OrWhereNotTime(column, "=", value);
+        }
+
+        #endregion
+
     }
 }

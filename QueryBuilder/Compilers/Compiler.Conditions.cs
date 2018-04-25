@@ -105,6 +105,20 @@ namespace SqlKata.Compilers
             return sql;
         }
 
+        protected virtual string CompileBasicDateCondition(BasicDateCondition x)
+        {
+            var column = Wrap(x.Column);
+
+            var sql = $"{x.Part.ToUpper()}({column}) {x.Operator} {Parameter(x.Value)}";
+
+            if (x.IsNot)
+            {
+                return $"NOT ({sql})";
+            }
+
+            return sql;
+        }
+
         protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
             if (!x.Query.HasComponent("where", EngineCode))
