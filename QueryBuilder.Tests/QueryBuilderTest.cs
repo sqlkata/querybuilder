@@ -10,6 +10,7 @@ namespace SqlKata.Tests
     {
         private readonly Compiler _pg;
         private readonly MySqlCompiler _mysql;
+        private readonly SqliteCompiler _sqlite;
 
         public SqlServerCompiler _sqlsrv { get; private set; }
 
@@ -19,6 +20,7 @@ namespace SqlKata.Tests
                  _sqlsrv.Compile(q.Clone()).ToString(),
                  _mysql.Compile(q.Clone()).ToString(),
                 _pg.Compile(q.Clone()).ToString(),
+                _sqlite.Compile(q.Clone()).ToString()
             };
         }
         public QueryBuilderTest()
@@ -26,6 +28,7 @@ namespace SqlKata.Tests
             _sqlsrv = new SqlServerCompiler();
             _mysql = new MySqlCompiler();
             _pg = new PostgresCompiler();
+            _sqlite = new SqliteCompiler();
         }
 
         [Fact]
@@ -37,6 +40,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
             Assert.Equal("SELECT `id`, `name` FROM `users`", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[2]);
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[3]);
         }
 
         [Fact]
@@ -48,6 +52,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [id], [name] FROM [users] AS [u]", c[0]);
             Assert.Equal("SELECT `id`, `name` FROM `users` AS `u`", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\" AS \"u\"", c[2]);
+            Assert.Equal("SELECT [id], [name] FROM [users] AS [u]", c[3]);
         }
 
         [Fact]
@@ -60,6 +65,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT TOP (10) [id], [name] FROM [users]", c[0]);
             Assert.Equal("SELECT `id`, `name` FROM `users` LIMIT 10", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\" LIMIT 10", c[2]);
+            Assert.Equal("SELECT [id], [name] FROM [users] LIMIT 10", c[3]);
         }
 
         [Fact]
@@ -71,6 +77,8 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= 11", c[0]);
             Assert.Equal("SELECT * FROM `users` LIMIT 18446744073709551615 OFFSET 10", c[1]);
             Assert.Equal("SELECT * FROM \"users\" OFFSET 10", c[2]);
+            Assert.Equal("SELECT * FROM [users] OFFSET 10", c[3]);
+
         }
 
         [Theory()]
@@ -119,6 +127,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `cities`.`countryId` = `countries`.`Id`", c[1]);
 
             Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"cities\".\"countryId\" = \"countries\".\"Id\"", c[2]);
+            Assert.Equal("SELECT * FROM [streets] INNER JOIN [cities] ON [streets].[cityId] = [cities].[Id] INNER JOIN [countries] ON [cities].[countryId] = [countries].[Id]", c[3]);
         }
 
         [Fact]
@@ -140,6 +149,13 @@ namespace SqlKata.Tests
                         .For("postgres",
                             s => s.With("range", q => q.FromRaw("generate_series(1, 33) as d").Select("d")).Where("Name", "3778")
                         )
+                        .For("sqlite", s =>
+                            s.With("range",
+                                q => q.From("Sequence").Select("Number").Where("Number", "<", 42)
+                            )
+                           
+                        )
+
                         .Where("Id", ">", 55)
                         .WhereBetween("Value", 18, 24);
 
@@ -149,6 +165,7 @@ namespace SqlKata.Tests
             Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) SELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
 
             Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) SELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
+            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 42) SELECT * FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24", c[3]);
         }
 
         [Fact]
@@ -156,6 +173,7 @@ namespace SqlKata.Tests
         {
             var series = new Query("table")
                 .ForPostgres(q => q.WhereRaw("postgres = true"))
+                .ForSqlite(q=>q.WhereRaw("sqlite = true"))
                 .ForSqlServer(q => q.WhereRaw("sqlsrv = 1"));
             var query = new Query("series").With("series", series);
 
@@ -163,6 +181,7 @@ namespace SqlKata.Tests
 
             Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1) SELECT * FROM [series]", c[0]);
             Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) SELECT * FROM \"series\"", c[2]);
+            Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlite = true) SELECT * FROM [series]", c[3]);
         }
 
 
@@ -190,6 +209,7 @@ namespace SqlKata.Tests
             Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) INSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
 
             Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) INSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+            Assert.Equal("WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) INSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM [old_cars] WHERE [price] > 100 LIMIT 10 OFFSET 10", c[3]);
         }
 
         [Fact]
@@ -325,6 +345,7 @@ namespace SqlKata.Tests
                 .ForSqlServer(scope => scope.Except(q => q.From("Phones").WhereNot("Os", "iOS")))
                 .ForPostgres(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
                 .ForMySql(scope => scope.IntersectAll(q => q.From("Watches").Where("Os", "Android")))
+                .ForSqlite(scope=>scope.Except(q => q.From("Phones").WhereNot("Os", "Windows")))
                 .UnionAll(q => q.From("Tablets").Where("Price", "<", 100));
 
             var c = Compile(mobiles);
@@ -334,6 +355,7 @@ namespace SqlKata.Tests
             Assert.Equal("(SELECT * FROM `Phones` WHERE `Price` < 300) INTERSECT ALL (SELECT * FROM `Watches` WHERE `Os` = 'Android') UNION ALL (SELECT * FROM `Tablets` WHERE `Price` < 100)", c[1]);
 
             Assert.Equal("(SELECT * FROM \"Phones\" WHERE \"Price\" < 300) UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)", c[2]);
+            Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 300) EXCEPT (SELECT * FROM [Phones] WHERE NOT ([Os] = 'Windows')) UNION ALL (SELECT * FROM [Tablets] WHERE [Price] < 100)", c[3]);
 
         }
 
@@ -389,6 +411,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[0]);
             Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[1]);
             Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[2]);
+               Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[3]);
         }
 
         [Fact]
@@ -405,12 +428,14 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [subquery] WHERE [row_num] BETWEEN 2 AND 21", first[0]);
             Assert.Equal("SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1", first[1]);
             Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1", first[2]);
-
+            Assert.Equal("SELECT [Id], [Name] FROM [Table] ORDER BY [Name] LIMIT 20 OFFSET 1", first[3]);
             var second = Compile(query);
 
             Assert.Equal(first[0], second[0]);
             Assert.Equal(first[1], second[1]);
             Assert.Equal(first[2], second[2]);
+            Assert.Equal(first[3], second[3]);
+
         }
 
         [Fact]
@@ -423,6 +448,8 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [Id], [Name], [Age] FROM [Users]", c[0]);
             Assert.Equal("SELECT `Id`, `Name`, `Age` FROM `Users`", c[1]);
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[2]);
+            Assert.Equal("SELECT [Id], [Name], [Age] FROM [Users]", c[3]);
+
         }
     }
 }
