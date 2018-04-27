@@ -7,6 +7,7 @@ namespace SqlKata.Compilers
         public PostgresCompiler() : base()
         {
             EngineCode = "postgres";
+            SqlCommandLastInsertId = " RETURNING *"; // return registre inserted
         }
 
         protected override string OpeningIdentifier()

@@ -22,6 +22,13 @@ namespace SqlKata
                     };
                 }
 
+                if (Method == "insert_increment")
+                {
+                    return new[] {
+                        "cte", "insert_increment",
+                    };
+                }
+
                 if (Method == "update")
                 {
                     return new[] {

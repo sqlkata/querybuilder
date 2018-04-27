@@ -7,6 +7,7 @@ namespace SqlKata.Compilers
         public MySqlCompiler() : base()
         {
             EngineCode = "mysql";
+            SqlCommandLastInsertId = ";SELECT LAST_INSERT_ID();";
         }
 
         protected override string OpeningIdentifier()

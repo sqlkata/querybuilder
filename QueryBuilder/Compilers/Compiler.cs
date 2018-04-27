@@ -62,6 +62,10 @@ namespace SqlKata.Compilers
             {
                 sql = CompileInsert(query);
             }
+            else if (query.Method == "insert_increment")
+            {
+                sql = CompileInsertIncrement(query);
+            }
             else if (query.Method == "delete")
             {
                 sql = CompileDelete(query);
@@ -190,6 +194,45 @@ namespace SqlKata.Compilers
             return query;
         }
 
+        /// <summary>
+        /// Compile INSERT into statement
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        protected virtual string CompileInsertIncrement(Query query)
+        {
+            if (!query.HasComponent("from", EngineCode))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            string sql = "";
+
+            var inserts = query.GetComponents<AbstractInsertIncrementClause>("insert_increment", EngineCode);
+
+            if (inserts[0] is InsertIncrementClause clause)
+            {
+                sql = "INSERT INTO " + CompileTableExpression(from)
+                + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
+                + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")"
+                + SqlCommandLastInsertId;
+            }
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
+
+        }
         /// <summary>
         /// Compile INSERT into statement
         /// </summary>

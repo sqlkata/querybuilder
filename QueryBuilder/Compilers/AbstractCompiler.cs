@@ -11,6 +11,7 @@ namespace SqlKata.Compilers
         public I.Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public bool IsDebug = false;
+        public string SqlCommandLastInsertId { get; set; }
         protected string separator
         {
             get

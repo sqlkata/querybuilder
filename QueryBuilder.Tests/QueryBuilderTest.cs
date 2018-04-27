@@ -238,6 +238,21 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertIncrement()
+        {
+            var query = new Query("Books").AsInsertIncrement(
+                new[] { "Author", "ISBN", "Date" },
+                new object[] { "Author 1", "123456", null }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO [Books] ([Author], [ISBN], [Date]) VALUES ('Author 1', 123456, NULL);SELECT SCOPE_IDENTITY();", c[0]);
+            Assert.Equal("INSERT INTO `Books` (`Author`, `ISBN`, `Date`) VALUES ('Author 1', 123456, NULL);SELECT LAST_INSERT_ID();", c[1]);
+            Assert.Equal("INSERT INTO \"Books\" (\"Author\", \"ISBN\", \"Date\") VALUES ('Author 1', 123456, NULL) RETURNING *", c[2]);
+        }
+
+        [Fact]
         public void ShouldThrowException()
         {
             Assert.Throws<InvalidOperationException>(() =>

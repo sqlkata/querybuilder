@@ -9,6 +9,7 @@ namespace SqlKata.Compilers
         public SqlServerCompiler()
         {
             EngineCode = "sqlsrv";
+            SqlCommandLastInsertId = ";SELECT SCOPE_IDENTITY();";
         }
 
         protected override string OpeningIdentifier()
