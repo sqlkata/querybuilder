@@ -60,7 +60,7 @@ namespace SqlKata
             });
         }
 
-        private bool IsNumber(string val)
+        private static bool IsNumber(string val)
         {
             return !string.IsNullOrEmpty(val) && val.All(char.IsDigit);
         }
