@@ -26,7 +26,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = columns.ToList(),
-                Values = values.Select(this.BackupNullValues()).ToList()
+                Values = values.Select(BackupNullValues).ToList()
             });
 
             return this;
@@ -45,7 +45,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.Select(this.BackupNullValues()).ToList()
+                Values = data.Values.Select(BackupNullValues).ToList()
             });
 
             return this;
@@ -78,7 +78,7 @@ namespace SqlKata
                 AddComponent("insert", new InsertClause
                 {
                     Columns = columns.ToList(),
-                    Values = values.Select(this.BackupNullValues()).ToList()
+                    Values = values.Select(BackupNullValues).ToList()
                 });
             }
 

@@ -46,7 +46,7 @@ namespace SqlKata
                 var bindings = GetComponents(item, engine)
                     .SelectMany(clause => clause.GetBindings(engine))
                     .Where(x => x != null)
-                    .Select(this.RestoreNullValues());
+                    .Select(RestoreNullValues);
 
                 result.AddRange(bindings);
             }
@@ -232,7 +232,7 @@ namespace SqlKata
         /// <summary>
         /// Set the next "not" operator for the "where" clause.
         /// </summary>
-        /// <returns></returns>        
+        /// <returns></returns>
         protected Q Not(bool flag)
         {
             notFlag = flag;
@@ -316,30 +316,14 @@ namespace SqlKata
             return From(callback.Invoke(query), alias);
         }
 
-        protected Func<object, object> BackupNullValues()
+        protected static object BackupNullValues(object x)
         {
-            return (x) =>
-            {
-                if (x == null)
-                {
-                    return new NullValue();
-                }
-
-                return x;
-            };
+            return x == null ? (Object) new NullValue() : x;
         }
 
-        protected Func<object, object> RestoreNullValues()
+        protected static object RestoreNullValues(object x)
         {
-            return (x) =>
-            {
-                if (x is NullValue)
-                {
-                    return null;
-                }
-
-                return x;
-            };
+            return x is NullValue ? null : x;
         }
 
     }
