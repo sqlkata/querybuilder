@@ -155,7 +155,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"DATEPART('{condition.Part.ToUpper()}', {column})";
+                left = $"DATEPART({condition.Part.ToUpper()}, {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
