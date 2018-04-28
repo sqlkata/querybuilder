@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SqlKata.Compilers
 {
@@ -7,7 +8,7 @@ namespace SqlKata.Compilers
         public PostgresCompiler() : base()
         {
             EngineCode = "postgres";
-            SqlCommandLastInsertId = " RETURNING *"; // return registre inserted
+            SetConfigurationInsert();
         }
 
         protected override string OpeningIdentifier()
@@ -47,6 +48,21 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        internal override void SetConfigurationInsert()
+        {
+            ConfigurationInsert = new Dictionary<Type, ConfigurationInsert>
+            {
+                [typeof(int)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = " RETURNING \"[_id_]\""
+                },
+                [typeof(long)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = " RETURNING \"[_id_]\""
+                }
+            };
         }
     }
     public static class PostgresCompilerExtensions

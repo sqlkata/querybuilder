@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
-        public SqlServerCompiler()
+        public SqlServerCompiler(): base()
         {
             EngineCode = "sqlsrv";
-            SqlCommandLastInsertId = ";SELECT SCOPE_IDENTITY();";
+            SetConfigurationInsert();
         }
 
         protected override string OpeningIdentifier()
@@ -167,6 +166,27 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        internal override void SetConfigurationInsert()
+        {
+            ConfigurationInsert = new Dictionary<Type, ConfigurationInsert>
+            {
+                [typeof(int)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = ";SELECT SCOPE_IDENTITY();"
+                },
+                [typeof(long)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = ";SELECT SCOPE_IDENTITY();"
+                },
+                [typeof(Guid)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = " OUTPUT INSERTED.[_id_]",
+                    Local = " VALUES",
+                    InsertedCommand = true
+                }
+            };
         }
     }
 

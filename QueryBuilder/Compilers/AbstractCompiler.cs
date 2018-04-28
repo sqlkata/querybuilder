@@ -11,7 +11,8 @@ namespace SqlKata.Compilers
         public I.Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public bool IsDebug = false;
-        public string SqlCommandLastInsertId { get; set; }
+        internal IReadOnlyDictionary<Type, ConfigurationInsert> ConfigurationInsert { get; set; }
+        internal virtual void SetConfigurationInsert() { }
         protected string separator
         {
             get

@@ -62,9 +62,9 @@ namespace SqlKata.Compilers
             {
                 sql = CompileInsert(query);
             }
-            else if (query.Method == "insert_increment")
+            else if (query.Method == "insert_get_id")
             {
-                sql = CompileInsertIncrement(query);
+                sql = CompileInsertGetId(query);
             }
             else if (query.Method == "delete")
             {
@@ -193,13 +193,13 @@ namespace SqlKata.Compilers
         {
             return query;
         }
-
+                
         /// <summary>
-        /// Compile INSERT into statement
+        /// Compile INSERT into statement Get Id
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        protected virtual string CompileInsertIncrement(Query query)
+        protected virtual string CompileInsertGetId(Query query)
         {
             if (!query.HasComponent("from", EngineCode))
             {
@@ -215,14 +215,15 @@ namespace SqlKata.Compilers
 
             string sql = "";
 
-            var inserts = query.GetComponents<AbstractInsertIncrementClause>("insert_increment", EngineCode);
+            var inserts = query.GetComponents<AbstractInsertClause>("insert_get_id", EngineCode);
 
-            if (inserts[0] is InsertIncrementClause clause)
-            {
-                sql = "INSERT INTO " + CompileTableExpression(from)
-                + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
-                + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")"
-                + SqlCommandLastInsertId;
+            if (inserts[0] is InsertClause clause)
+            {                
+                var configurationInsert = ConfigurationInsert[clause.PrimaryKeyType];
+                configurationInsert.Replace("[_id_]", clause.PrimaryKeyName);
+                sql = "INSERT INTO " + CompileTableExpression(from) + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") ";                
+                sql += "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
+                sql = configurationInsert.AddSql(sql);
             }
 
             if (query.GetComponents("cte", EngineCode).Any())
@@ -231,8 +232,8 @@ namespace SqlKata.Compilers
             }
 
             return sql;
-
         }
+
         /// <summary>
         /// Compile INSERT into statement
         /// </summary>
@@ -259,6 +260,7 @@ namespace SqlKata.Compilers
             if (inserts[0] is InsertClause)
             {
                 var clause = inserts[0] as InsertClause;
+                var pkName = clause.PrimaryKeyName;
 
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
@@ -280,6 +282,7 @@ namespace SqlKata.Compilers
             }
 
             if (inserts.Count > 1)
+            {               
                 foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
                 {
                     var clause = insert as InsertClause;
@@ -287,6 +290,7 @@ namespace SqlKata.Compilers
                     sql = sql + ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
 
                 }
+            }
 
             if (query.GetComponents("cte", EngineCode).Any())
             {
@@ -296,7 +300,6 @@ namespace SqlKata.Compilers
             return sql;
 
         }
-
 
         protected virtual string CompileUpdate(Query query)
         {

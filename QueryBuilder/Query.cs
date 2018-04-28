@@ -22,10 +22,10 @@ namespace SqlKata
                     };
                 }
 
-                if (Method == "insert_increment")
+                if (Method == "insert_get_id")
                 {
                     return new[] {
-                        "cte", "insert_increment",
+                        "cte", "insert_get_id",
                     };
                 }
 
