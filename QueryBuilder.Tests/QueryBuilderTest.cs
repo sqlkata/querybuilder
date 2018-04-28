@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using Xunit;
@@ -10,8 +11,7 @@ namespace SqlKata.Tests
     {
         private readonly Compiler _pg;
         private readonly MySqlCompiler _mysql;
-
-        public SqlServerCompiler _sqlsrv { get; private set; }
+        public SqlServerCompiler _sqlsrv;
 
         private string[] Compile(Query q)
         {
@@ -235,6 +235,26 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1", c[0]);
+        }
+
+        [Fact]
+        public void InsertGetId()
+        {
+            var query0 = new Query("Books").AsInsertGetId<int>(new[] { "Author"}, new object[] { "Author 1"}, "id");
+            var query1 = new Query("Authors").AsInsertGetId<Guid>(new[] { "Name" }, new object[] { "Name 1" }, "Id");
+
+            var c0 = Compile(query0);
+            var c1 = _sqlsrv.Compile(query1.Clone()).ToString();
+
+            Assert.Equal("INSERT INTO [Books] ([Author]) VALUES ('Author 1');SELECT SCOPE_IDENTITY();", c0[0]);
+            Assert.Equal("INSERT INTO `Books` (`Author`) VALUES ('Author 1');SELECT LAST_INSERT_ID();", c0[1]);
+            Assert.Equal("INSERT INTO \"Books\" (\"Author\") VALUES ('Author 1') RETURNING \"id\"", c0[2]);
+            Assert.Equal("INSERT INTO [Authors] ([Name]) OUTPUT INSERTED.Id VALUES ('Name 1')", c1);
+
+            Debug.Print(c0[0]);
+            Debug.Print(c0[1]);
+            Debug.Print(c0[2]);
+            Debug.Print(c1);
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SqlKata.Compilers
 {
@@ -7,6 +8,7 @@ namespace SqlKata.Compilers
         public MySqlCompiler() : base()
         {
             EngineCode = "mysql";
+            SetConfigurationInsert();
         }
 
         protected override string OpeningIdentifier()
@@ -36,6 +38,21 @@ namespace SqlKata.Compilers
             }
 
             return "OFFSET ?";
+        }
+
+        internal override void SetConfigurationInsert()
+        {
+            ConfigurationInsert = new Dictionary<Type, ConfigurationInsert>
+            {
+                [typeof(int)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = ";SELECT LAST_INSERT_ID();"
+                },
+                [typeof(long)] = new ConfigurationInsert
+                {
+                    LastInsertCommand = ";SELECT LAST_INSERT_ID();"
+                }
+            };
         }
     }
 

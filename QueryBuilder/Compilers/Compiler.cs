@@ -62,6 +62,10 @@ namespace SqlKata.Compilers
             {
                 sql = CompileInsert(query);
             }
+            else if (query.Method == "insert_get_id")
+            {
+                sql = CompileInsertGetId(query);
+            }
             else if (query.Method == "delete")
             {
                 sql = CompileDelete(query);
@@ -189,6 +193,46 @@ namespace SqlKata.Compilers
         {
             return query;
         }
+                
+        /// <summary>
+        /// Compile INSERT into statement Get Id
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        protected virtual string CompileInsertGetId(Query query)
+        {
+            if (!query.HasComponent("from", EngineCode))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            string sql = "";
+
+            var inserts = query.GetComponents<AbstractInsertClause>("insert_get_id", EngineCode);
+
+            if (inserts[0] is InsertClause clause)
+            {                
+                var configurationInsert = ConfigurationInsert[clause.PrimaryKeyType];
+                configurationInsert.Replace("[_id_]", clause.PrimaryKeyName);
+                sql = "INSERT INTO " + CompileTableExpression(from) + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") ";                
+                sql += "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
+                sql = configurationInsert.AddSql(sql);
+            }
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
+        }
 
         /// <summary>
         /// Compile INSERT into statement
@@ -216,6 +260,7 @@ namespace SqlKata.Compilers
             if (inserts[0] is InsertClause)
             {
                 var clause = inserts[0] as InsertClause;
+                var pkName = clause.PrimaryKeyName;
 
                 sql = "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
@@ -237,6 +282,7 @@ namespace SqlKata.Compilers
             }
 
             if (inserts.Count > 1)
+            {               
                 foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
                 {
                     var clause = insert as InsertClause;
@@ -244,6 +290,7 @@ namespace SqlKata.Compilers
                     sql = sql + ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
 
                 }
+            }
 
             if (query.GetComponents("cte", EngineCode).Any())
             {
@@ -253,7 +300,6 @@ namespace SqlKata.Compilers
             return sql;
 
         }
-
 
         protected virtual string CompileUpdate(Query query)
         {
