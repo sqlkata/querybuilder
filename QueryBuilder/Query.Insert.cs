@@ -6,8 +6,6 @@ namespace SqlKata
 {
     public partial class Query
     {
-
-
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
 

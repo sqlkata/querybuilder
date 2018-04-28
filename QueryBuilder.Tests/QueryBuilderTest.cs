@@ -225,6 +225,21 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertGetId()
+        {
+            var query0 = new Query("Books").AsInsertGetId<int>(new[] { "Author" }, new object[] { "Author 1" }, "id");
+            var query1 = new Query("Authors").AsInsertGetId<Guid>(new[] { "Name" }, new object[] { "Name 1" }, "Id");
+
+            var c0 = Compile(query0);
+            var c1 = _sqlsrv.Compile(query1.Clone()).ToString();
+
+            Assert.Equal("INSERT INTO [Books] ([Author]) VALUES ('Author 1');SELECT SCOPE_IDENTITY();", c0[0]);
+            Assert.Equal("INSERT INTO `Books` (`Author`) VALUES ('Author 1');SELECT LAST_INSERT_ID();", c0[1]);
+            Assert.Equal("INSERT INTO \"Books\" (\"Author\") VALUES ('Author 1') RETURNING \"id\"", c0[2]);
+            Assert.Equal("INSERT INTO [Authors] ([Name]) OUTPUT INSERTED.Id VALUES ('Name 1')", c1);
+        }
+
+        [Fact]
         public void UpdateWithNullValues()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
