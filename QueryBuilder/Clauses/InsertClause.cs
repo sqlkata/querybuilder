@@ -13,6 +13,10 @@ namespace SqlKata
         public List<string> Columns { get; set; }
         public List<object> Values { get; set; }
 
+        internal ConfigurationInsert ConfigurationInsert { get; set; } = null;
+        internal string PrimaryKeyName { get; set; } = "";
+        internal Type PrimaryKeyType { get; set; } = null;
+
         public override object[] GetBindings(string engine)
         {
             return Values.ToArray();
@@ -26,6 +30,8 @@ namespace SqlKata
                 Component = Component,
                 Columns = Columns,
                 Values = Values,
+                PrimaryKeyName = PrimaryKeyName, 
+                PrimaryKeyType = PrimaryKeyType
             };
         }
     }

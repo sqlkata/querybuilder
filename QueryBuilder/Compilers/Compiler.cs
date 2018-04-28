@@ -62,6 +62,10 @@ namespace SqlKata.Compilers
             {
                 sql = CompileInsert(query);
             }
+            else if (query.Method == "insert_get_id")
+            {
+                sql = CompileInsertGetId(query);
+            }
             else if (query.Method == "delete")
             {
                 sql = CompileDelete(query);
@@ -188,6 +192,41 @@ namespace SqlKata.Compilers
         protected virtual Query OnBeforeSelect(Query query)
         {
             return query;
+        }
+
+        protected virtual string CompileInsertGetId(Query query)
+        {
+            if (!query.HasComponent("from", EngineCode))
+            {
+                throw new InvalidOperationException("No table set to insert");
+            }
+
+            var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
+
+            if (!(from is FromClause))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            string sql = "";
+
+            var inserts = query.GetComponents<AbstractInsertClause>("insert_get_id", EngineCode);
+
+            if (inserts[0] is InsertClause clause)
+            {
+                var configurationInsert = ConfigurationInsert[clause.PrimaryKeyType];
+                configurationInsert.Replace("[_id_]", clause.PrimaryKeyName);
+                sql = "INSERT INTO " + CompileTableExpression(from) + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") ";
+                sql += "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
+                sql = configurationInsert.AddSql(sql);
+            }
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + sql;
+            }
+
+            return sql;
         }
 
         /// <summary>
