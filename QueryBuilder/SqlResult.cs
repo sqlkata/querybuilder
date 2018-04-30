@@ -48,21 +48,21 @@ namespace SqlKata
                     return "NULL";
                 }
 
-                if (isNumber(value))
+                var textValue = value.ToString();
+
+                if (IsNumber(textValue))
                 {
-                    return value + "";
+                    return textValue;
                 }
 
-                return $"'{value}'";
+                return "'" + textValue + "'";
 
             });
         }
 
-        private bool isNumber(object val)
+        private static bool IsNumber(string val)
         {
-            if (val == null) return false;
-
-            return val.ToString().All(x => char.IsDigit(x));
+            return !string.IsNullOrEmpty(val) && val.All(char.IsDigit);
         }
 
         public static SqlResult operator +(SqlResult a, SqlResult b)
