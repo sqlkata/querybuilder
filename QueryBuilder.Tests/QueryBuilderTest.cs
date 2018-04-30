@@ -10,14 +10,14 @@ namespace SqlKata.Tests
     {
         private readonly Compiler _pg;
         private readonly MySqlCompiler _mysql;
-
-        public SqlServerCompiler _sqlsrv { get; private set; }
+        private readonly SqlServerCompiler _sqlsrv;
 
         private string[] Compile(Query q)
         {
-            return new[]{
-                 _sqlsrv.Compile(q.Clone()).ToString(),
-                 _mysql.Compile(q.Clone()).ToString(),
+            return new[]
+            {
+                _sqlsrv.Compile(q.Clone()).ToString(),
+                _mysql.Compile(q.Clone()).ToString(),
                 _pg.Compile(q.Clone()).ToString(),
             };
         }
@@ -37,6 +37,22 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [id], [name] FROM [users]", c[0]);
             Assert.Equal("SELECT `id`, `name` FROM `users`", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[2]);
+        }
+
+        [Fact]
+        public void BasicSelectWhereBindingIsEmptyOrNull()
+        {
+            var q = new Query()
+                .From("users")
+                .Select("id", "name")
+                .Where("author", "")
+                .OrWhere("author", null);
+
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [id], [name] FROM [users] WHERE [author] = '' OR [author] IS NULL", c[0]);
+            Assert.Equal("SELECT `id`, `name` FROM `users` WHERE `author` = '' OR `author` IS NULL", c[1]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\" WHERE \"author\" = '' OR \"author\" IS NULL", c[2]);
         }
 
         [Fact]
@@ -225,6 +241,19 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertWithEmptyString()
+        {
+            var query = new Query("Books").AsInsert(
+                new[] { "Id", "Author", "ISBN", "Description" },
+                new object[] { 1, "Author 1", "123456", "" }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', 123456, '')", c[0]);
+        }
+
+        [Fact]
         public void UpdateWithNullValues()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
@@ -235,6 +264,19 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1", c[0]);
+        }
+
+        [Fact]
+        public void UpdateWithEmptyString()
+        {
+            var query = new Query("Books").Where("Id", 1).AsUpdate(
+                new[] { "Author", "Description" },
+                new object[] { "Author 1", "" }
+            );
+
+            var c = Compile(query);
+
+            Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Description] = '' WHERE [Id] = 1", c[0]);
         }
 
         [Fact]
