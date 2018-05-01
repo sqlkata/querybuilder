@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
             name = name.Substring(0, name.IndexOf("Condition"));
 
             var methodName = "Compile" + name + "Condition";
-            return DynamicCompile(methodName, clause);
+            return dynamicCompile(methodName, clause);
         }
 
         protected virtual string CompileConditions(List<AbstractCondition> conditions)

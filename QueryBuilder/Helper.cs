@@ -61,30 +61,39 @@ namespace SqlKata
             return result;
         }
 
-        public static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
+        public static bool IsGenericType(Type type)
         {
-            while (toCheck != null && toCheck != typeof(object))
-            {
-
-                var isGeneric = toCheck
+            return type
 #if FEATURE_TYPE_INFO
             .GetTypeInfo()
 #endif
             .IsGenericType;
+        }
 
-                var cur = isGeneric ? toCheck.GetGenericTypeDefinition() : toCheck;
+        public static Type BaseType(Type type)
+        {
+            return type
+#if FEATURE_TYPE_INFO
+            .GetTypeInfo()
+#endif
+            .BaseType;
+        }
+
+        public static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
+        {
+
+            while (toCheck != null && toCheck != typeof(object))
+            {
+                var cur = IsGenericType(toCheck) ? toCheck.GetGenericTypeDefinition() : toCheck;
 
                 if (generic == cur)
                 {
                     return true;
                 }
 
-                toCheck = toCheck
-#if FEATURE_TYPE_INFO
-            .GetTypeInfo()
-#endif
-                    .BaseType;
+                toCheck = BaseType(toCheck);
             }
+
             return false;
         }
 

@@ -7,16 +7,7 @@ namespace SqlKata.Compilers
         public MySqlCompiler() : base()
         {
             EngineCode = "mysql";
-        }
-
-        protected override string OpeningIdentifier()
-        {
-            return "`";
-        }
-
-        protected override string ClosingIdentifier()
-        {
-            return "`";
+            OpeningIdentifier = ClosingIdentifier = "`";
         }
 
         public override string CompileOffset(Query query)

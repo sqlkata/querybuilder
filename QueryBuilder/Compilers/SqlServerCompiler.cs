@@ -9,16 +9,8 @@ namespace SqlKata.Compilers
         public SqlServerCompiler()
         {
             EngineCode = "sqlsrv";
-        }
-
-        protected override string OpeningIdentifier()
-        {
-            return "[";
-        }
-
-        protected override string ClosingIdentifier()
-        {
-            return "]";
+            OpeningIdentifier = "[";
+            ClosingIdentifier = "]";
         }
 
         protected override Query OnBeforeSelect(Query query)

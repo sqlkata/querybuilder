@@ -9,16 +9,6 @@ namespace SqlKata.Compilers
             EngineCode = "postgres";
         }
 
-        protected override string OpeningIdentifier()
-        {
-            return "\"";
-        }
-
-        protected override string ClosingIdentifier()
-        {
-            return "\"";
-        }
-
         protected override string CompileBasicDateCondition(BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
