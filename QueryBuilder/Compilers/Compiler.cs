@@ -237,7 +237,7 @@ namespace SqlKata.Compilers
             }
 
             if (inserts.Count > 1)
-                foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
+                foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
                 {
                     var clause = insert as InsertClause;
 
@@ -396,7 +396,7 @@ namespace SqlKata.Compilers
                 .Cast<AbstractColumn>()
                 .ToList();
 
-            var cols = columns.Select(x => CompileColumn(x));
+            var cols = columns.Select(CompileColumn);
 
             var sql = string.Join(", ", cols);
 
