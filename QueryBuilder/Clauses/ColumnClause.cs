@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
