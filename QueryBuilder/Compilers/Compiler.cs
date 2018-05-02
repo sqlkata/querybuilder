@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using I = Inflector;
 
 namespace SqlKata.Compilers
@@ -630,44 +629,6 @@ namespace SqlKata.Compilers
         private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException($"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
-        }
-
-        private string Capitalize(string str)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
-                return str;
-            }
-
-            return str.Substring(0, 1).ToUpper() + str.Substring(1).ToLower();
-        }
-
-        protected string DynamicCompile(string name, AbstractClause clause)
-        {
-
-            MethodInfo methodInfo = this.GetType()
-                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (methodInfo == null)
-            {
-                throw new Exception($"Failed to locate a compiler for {name}.");
-            }
-
-            var isGeneric = clause.GetType()
-#if FEATURE_TYPE_INFO
-            .GetTypeInfo()
-#endif
-            .IsGenericType;
-
-            if (isGeneric && methodInfo.GetGenericArguments().Any())
-            {
-                var args = clause.GetType().GetGenericArguments();
-                methodInfo = methodInfo.MakeGenericMethod(args);
-            }
-
-            var result = methodInfo.Invoke(this, new object[] { clause });
-
-            return result as string;
         }
 
         protected virtual IEnumerable<BaseJoin> TransfromDeepJoin(Query query, DeepJoin join)

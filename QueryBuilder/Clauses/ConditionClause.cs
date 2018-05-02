@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Inflector.Cultures;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -7,6 +9,8 @@ namespace SqlKata
     {
         public bool IsOr { get; set; } = false;
         public bool IsNot { get; set; } = false;
+
+        internal abstract string Compile(IConditionCompiler conditionCompiler);
     }
 
     /// <summary>
@@ -35,6 +39,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileBasicCondition(this);
+        }
     }
 
     public class BasicStringCondition : BasicCondition<string>
@@ -54,6 +63,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileBasicStringCondition(this);
+        }
     }
 
     public class BasicDateCondition : BasicCondition<object>
@@ -72,6 +86,11 @@ namespace SqlKata
                 Part = Part,
                 Component = Component,
             };
+        }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileBasicDateCondition(this);
         }
     }
 
@@ -96,6 +115,11 @@ namespace SqlKata
                 IsNot = IsNot,
                 Component = Component,
             };
+        }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileTwoColumnsCondition(this);
         }
     }
 
@@ -125,6 +149,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileQueryCondition(this);
+        }
     }
 
     /// <summary>
@@ -152,6 +181,10 @@ namespace SqlKata
             };
         }
 
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileInCondition(this);
+        }
     }
 
     /// <summary>
@@ -176,6 +209,11 @@ namespace SqlKata
                 IsNot = IsNot,
                 Component = Component,
             };
+        }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileInQueryCondition(this);
         }
     }
 
@@ -205,6 +243,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileBetweenCondition(this);
+        }
     }
 
     /// <summary>
@@ -224,6 +267,11 @@ namespace SqlKata
                 IsNot = IsNot,
                 Component = Component,
             };
+        }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileNullCondition(this);
         }
     }
 
@@ -250,6 +298,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileNestedCondition(this);
+        }
     }
 
     /// <summary>
@@ -274,6 +327,11 @@ namespace SqlKata
                 Component = Component,
             };
         }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileExistsCondition(this);
+        }
     }
 
     public class RawCondition : AbstractCondition, IRaw
@@ -297,6 +355,11 @@ namespace SqlKata
                 IsNot = IsNot,
                 Component = Component,
             };
+        }
+
+        internal override string Compile(IConditionCompiler conditionCompiler)
+        {
+            return conditionCompiler.CompileRawCondition(this);
         }
     }
 
