@@ -31,7 +31,7 @@ namespace SqlKata
         }
     }
 
-    public class RawCombine : AbstractCombine, RawInterface
+    public class RawCombine : AbstractCombine, IRaw
     {
         protected object[] _bindings;
         public string Expression { get; set; }

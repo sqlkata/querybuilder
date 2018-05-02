@@ -41,7 +41,7 @@ namespace SqlKata
         }
     }
 
-    public class RawColumn : AbstractColumn, RawInterface
+    public class RawColumn : AbstractColumn, IRaw
     {
         public string Expression { get; set; }
         protected object[] _bindings;
