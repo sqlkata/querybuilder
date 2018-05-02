@@ -58,17 +58,12 @@ namespace SqlKata.Compilers
 
             if (value.Contains("."))
             {
-                return string.Join(".", value.Split('.').Select((x, index) =>
-                {
-                    // Wrap the first segment as table
-                    if (index == 0)
-                    {
-                        return WrapTable(x);
-                    }
+                    // Wrap the first segment of value as table
+                var splittedValue = value
+                    .Split('.')
+                    .Select((x, index) => index == 0 ? WrapTable(x) : WrapValue(x));
 
-                    return WrapValue(x);
-
-                }));
+                return string.Join(".", splittedValue);
             }
 
             // If we reach here then the value does not contain an "AS" alias
