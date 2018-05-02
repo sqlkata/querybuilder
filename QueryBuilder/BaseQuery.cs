@@ -317,7 +317,7 @@ namespace SqlKata
 
         protected static object BackupNullValues(object x)
         {
-            return x == null ? (Object) new NullValue() : x;
+            return x ?? new NullValue();
         }
 
         protected static object RestoreNullValues(object x)
