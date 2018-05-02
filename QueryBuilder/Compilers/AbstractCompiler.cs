@@ -98,12 +98,8 @@ namespace SqlKata.Compilers
 
         public string Parameter<T>(T value)
         {
-            if (value is Raw)
-            {
-                return WrapIdentifiers((value as Raw).Value);
-            }
-
-            return "?";
+            var raw = value as Raw;
+            return raw != null ? WrapIdentifiers(raw.Value) : "?";
         }
 
         /// <summary>
