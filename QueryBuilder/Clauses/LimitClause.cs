@@ -9,6 +9,7 @@ namespace SqlKata
         private int _limit;
         private int _offset;
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return new[] { _limit, _offset }
@@ -70,6 +71,7 @@ namespace SqlKata
             return ClearLimit().ClearOffset();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new LimitOffset

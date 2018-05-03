@@ -6,6 +6,7 @@ namespace SqlKata
     public abstract class AbstractFrom : AbstractClause
     {
         protected string _alias;
+
         /// <summary>
         /// Try to extract the Alias for the current clause.
         /// </summary>
@@ -24,7 +25,7 @@ namespace SqlKata
         {
             get
             {
-                if (Table.ToLower().Contains(" as "))
+                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -35,6 +36,7 @@ namespace SqlKata
             }
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new FromClause
@@ -52,6 +54,8 @@ namespace SqlKata
     public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
+
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return Query.GetBindings(engine).ToArray();
@@ -65,6 +69,7 @@ namespace SqlKata
             }
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new QueryFromClause
@@ -87,6 +92,7 @@ namespace SqlKata
             return _bindings;
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawFromClause
@@ -99,5 +105,4 @@ namespace SqlKata
             };
         }
     }
-
 }
