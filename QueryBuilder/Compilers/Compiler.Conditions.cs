@@ -3,11 +3,16 @@ using System.Linq;
 
 namespace SqlKata.Compilers
 {
-    public partial class Compiler : IConditionCompiler
+    public partial class Compiler
     {
+
         protected virtual string CompileCondition(AbstractCondition clause)
         {
-            return clause.Compile(this);
+            var name = clause.GetType().Name;
+            name = name.Substring(0, name.IndexOf("Condition"));
+
+            var methodName = "Compile" + name + "Condition";
+            return DynamicCompile(methodName, clause);
         }
 
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
@@ -174,18 +179,5 @@ namespace SqlKata.Compilers
             return op + " (" + CompileQuery(item.Query) + ")";
         }
 
-        string IConditionCompiler.CompileRawCondition(RawCondition x)  => CompileRawCondition(x);
-        string IConditionCompiler.CompileQueryCondition<T>(QueryCondition<T> x) => CompileQueryCondition(x);
-        string IConditionCompiler.CompileBasicCondition<T>(BasicCondition<T> x)  => CompileBasicCondition(x);
-        string IConditionCompiler.CompileBasicStringCondition(BasicStringCondition x)  => CompileBasicStringCondition(x);
-        string IConditionCompiler.CompileBasicDateCondition(BasicDateCondition x)  => CompileBasicDateCondition(x);
-
-        string IConditionCompiler.CompileNestedCondition<Q>(NestedCondition<Q> x) => CompileNestedCondition(x);
-        string IConditionCompiler.CompileTwoColumnsCondition(TwoColumnsCondition clause)  => CompileTwoColumnsCondition(clause);
-        string IConditionCompiler.CompileBetweenCondition<T>(BetweenCondition<T> item)  => CompileBetweenCondition(item);
-        string IConditionCompiler.CompileInCondition<T>(InCondition<T> item)  => CompileInCondition(item);
-        string IConditionCompiler.CompileInQueryCondition(InQueryCondition item)  => CompileInQueryCondition(item);
-        string IConditionCompiler.CompileNullCondition(NullCondition item)  => CompileNullCondition(item);
-        string IConditionCompiler.CompileExistsCondition<T>(ExistsCondition<T> item) => CompileExistsCondition(item);
     }
 }
