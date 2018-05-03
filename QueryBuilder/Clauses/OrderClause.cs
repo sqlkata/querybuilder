@@ -12,6 +12,7 @@ namespace SqlKata
         public string Column { get; set; }
         public bool Ascending { get; set; } = true;
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new OrderBy
@@ -30,11 +31,13 @@ namespace SqlKata
         public string Expression { get; set; }
         public object[] Bindings { set => _bindings = value; }
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return _bindings;
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawOrderBy
@@ -49,6 +52,7 @@ namespace SqlKata
 
     public class OrderByRandom : AbstractOrderBy
     {
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new OrderByRandom
@@ -57,5 +61,4 @@ namespace SqlKata
             };
         }
     }
-
 }

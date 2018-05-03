@@ -12,11 +12,13 @@ namespace SqlKata
     {
         public Join Join { get; set; }
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return Join.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BaseJoin
@@ -36,6 +38,8 @@ namespace SqlKata
         public string TargetKey { get; set; }
         public Func<string, string> SourceKeyGenerator { get; set; }
         public Func<string, string> TargetKeyGenerator { get; set; }
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new DeepJoin
@@ -51,5 +55,4 @@ namespace SqlKata
             };
         }
     }
-
 }

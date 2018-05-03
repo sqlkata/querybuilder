@@ -13,11 +13,13 @@ namespace SqlKata
         public string Operation { get; set; }
         public bool All { get; set; } = false;
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return Query.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new Combine
@@ -37,11 +39,13 @@ namespace SqlKata
         public string Expression { get; set; }
         public object[] Bindings { set => _bindings = value; }
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return _bindings;
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawCombine
@@ -53,6 +57,4 @@ namespace SqlKata
             };
         }
     }
-
-
 }

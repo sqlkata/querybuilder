@@ -23,6 +23,7 @@ namespace SqlKata
             return new object[] { Value };
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BasicCondition<T>
@@ -41,6 +42,8 @@ namespace SqlKata
     public class BasicStringCondition : BasicCondition<string>
     {
         public bool CaseSensitive { get; set; } = false;
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BasicStringCondition
@@ -60,6 +63,8 @@ namespace SqlKata
     public class BasicDateCondition : BasicCondition<object>
     {
         public string Part { get; set; }
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BasicDateCondition
@@ -85,6 +90,7 @@ namespace SqlKata
         public string Operator { get; set; }
         public string Second { get; set; }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new TwoColumnsCondition
@@ -113,6 +119,7 @@ namespace SqlKata
             return Query.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new QueryCondition<T>
@@ -140,6 +147,7 @@ namespace SqlKata
             return Values.Select(x => x).Cast<object>().ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InCondition<T>
@@ -166,6 +174,8 @@ namespace SqlKata
         {
             return Query.GetBindings(engine).ToArray();
         }
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InQueryCondition
@@ -193,6 +203,7 @@ namespace SqlKata
             return new object[] { Lower, Higher };
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
@@ -215,6 +226,7 @@ namespace SqlKata
     {
         public string Column { get; set; }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new NullCondition
@@ -240,6 +252,7 @@ namespace SqlKata
             return Query.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
@@ -264,6 +277,7 @@ namespace SqlKata
             return Query.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new ExistsCondition<T>
@@ -287,6 +301,7 @@ namespace SqlKata
             return _bindings;
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawCondition
@@ -300,5 +315,4 @@ namespace SqlKata
             };
         }
     }
-
 }

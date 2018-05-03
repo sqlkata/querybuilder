@@ -13,11 +13,13 @@ namespace SqlKata
         public List<string> Columns { get; set; }
         public List<object> Values { get; set; }
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return Values.ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InsertClause
@@ -35,11 +37,13 @@ namespace SqlKata
         public List<string> Columns { get; set; }
         public Query Query { get; set; }
 
+        /// <inheritdoc />
         public override object[] GetBindings(string engine)
         {
             return Query.GetBindings(engine).ToArray();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InsertQueryClause
@@ -51,5 +55,4 @@ namespace SqlKata
             };
         }
     }
-
 }
