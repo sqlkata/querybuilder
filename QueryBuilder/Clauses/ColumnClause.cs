@@ -33,6 +33,10 @@ namespace SqlKata
         }
     }
 
+    /// <summary>
+    /// Represents column clause calculated using query.
+    /// </summary>
+    /// <seealso cref="SqlKata.AbstractColumn" />
     public class QueryColumn : AbstractColumn
     {
         /// <summary>
