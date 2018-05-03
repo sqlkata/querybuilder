@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-
 namespace SqlKata
 {
-    public interface RawInterface
+    public interface IRaw
     {
         string Expression { get; set; }
         object[] Bindings { set; }

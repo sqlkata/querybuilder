@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -291,7 +290,7 @@ namespace SqlKata
         }
     }
 
-    public class RawCondition : AbstractCondition, RawInterface
+    public class RawCondition : AbstractCondition, IRaw
     {
         public string Expression { get; set; }
         protected object[] _bindings;

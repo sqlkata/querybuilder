@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public abstract class AbstractCombine : AbstractClause
@@ -53,7 +51,7 @@ namespace SqlKata
         }
     }
 
-    public class RawCombine : AbstractCombine, RawInterface
+    public class RawCombine : AbstractCombine, IRaw
     {
         private object[] _bindings;
 

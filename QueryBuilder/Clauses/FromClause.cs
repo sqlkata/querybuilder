@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace SqlKata
 {
@@ -82,7 +81,7 @@ namespace SqlKata
         }
     }
 
-    public class RawFromClause : AbstractFrom, RawInterface
+    public class RawFromClause : AbstractFrom, IRaw
     {
         public string Expression { get; set; }
         protected object[] _bindings;

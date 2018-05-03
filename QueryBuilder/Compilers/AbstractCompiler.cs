@@ -58,17 +58,12 @@ namespace SqlKata.Compilers
 
             if (value.Contains("."))
             {
-                return string.Join(".", value.Split('.').Select((x, index) =>
-                {
-                    // Wrap the first segment as table
-                    if (index == 0)
-                    {
-                        return WrapTable(x);
-                    }
+                    // Wrap the first segment of value as table
+                var splittedValue = value
+                    .Split('.')
+                    .Select((x, index) => index == 0 ? WrapTable(x) : WrapValue(x));
 
-                    return WrapValue(x);
-
-                }));
+                return string.Join(".", splittedValue);
             }
 
             // If we reach here then the value does not contain an "AS" alias
@@ -98,12 +93,8 @@ namespace SqlKata.Compilers
 
         public string Parameter<T>(T value)
         {
-            if (value is Raw)
-            {
-                return WrapIdentifiers((value as Raw).Value);
-            }
-
-            return "?";
+            var raw = value as Raw;
+            return raw != null ? WrapIdentifiers(raw.Value) : "?";
         }
 
         /// <summary>
@@ -113,7 +104,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public string Parameterize<T>(IEnumerable<T> values)
         {
-            return string.Join(", ", values.Select(x => Parameter(x)));
+            return string.Join(", ", values.Select(Parameter));
         }
 
         /// <summary>

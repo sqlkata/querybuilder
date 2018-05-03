@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -65,7 +62,7 @@ namespace SqlKata
         }
     }
 
-    public class RawColumn : AbstractColumn, RawInterface
+    public class RawColumn : AbstractColumn, IRaw
     {
         private object[] _bindings;
 

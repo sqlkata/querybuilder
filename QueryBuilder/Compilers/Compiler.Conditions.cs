@@ -111,12 +111,9 @@ namespace SqlKata.Compilers
 
             var sql = $"{x.Part.ToUpper()}({column}) {x.Operator} {Parameter(x.Value)}";
 
-            if (x.IsNot)
-            {
-                return $"NOT ({sql})";
-            }
-
-            return sql;
+            return x.IsNot
+                ? $"NOT ({sql})"
+                : sql;
         }
 
         protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
@@ -129,12 +126,9 @@ namespace SqlKata.Compilers
             var sql = CompileConditions(x.Query.GetComponents<AbstractCondition>("where", EngineCode));
             var op = x.IsNot ? "NOT " : "";
 
-            if (string.IsNullOrEmpty(sql))
-            {
-                return "";
-            }
-
-            return $"{op}({sql})";
+            return string.IsNullOrEmpty(sql)
+                ? ""
+                : $"{op}({sql})";
         }
 
         protected string CompileTwoColumnsCondition(TwoColumnsCondition clause)

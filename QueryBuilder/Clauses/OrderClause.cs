@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
@@ -25,7 +23,7 @@ namespace SqlKata
         }
     }
 
-    public class RawOrderBy : AbstractOrderBy, RawInterface
+    public class RawOrderBy : AbstractOrderBy, IRaw
     {
         protected object[] _bindings;
         public string Expression { get; set; }

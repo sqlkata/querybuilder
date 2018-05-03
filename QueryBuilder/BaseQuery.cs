@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -318,7 +317,7 @@ namespace SqlKata
 
         protected static object BackupNullValues(object x)
         {
-            return x == null ? (Object) new NullValue() : x;
+            return x ?? new NullValue();
         }
 
         protected static object RestoreNullValues(object x)
