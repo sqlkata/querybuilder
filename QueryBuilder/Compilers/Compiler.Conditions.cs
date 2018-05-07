@@ -38,6 +38,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileRawCondition(RawCondition x)
         {
+            bindings.AddRange(x.Bindings);
             return WrapIdentifiers(x.Expression);
         }
 
@@ -145,8 +146,11 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileBetweenCondition<T>(BetweenCondition<T> item)
         {
+            bindings.AddRange(new object[] { item.Lower, item.Higher });
+
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
-            return Wrap(item.Column) + $" {between} {Parameter(item.Lower)} AND {Parameter(item.Higher)}";
+
+            return Wrap(item.Column) + $" {between} ? AND ?";
         }
 
         protected virtual string CompileInCondition<T>(InCondition<T> item)

@@ -9,14 +9,6 @@ namespace SqlKata
         private int _limit;
         private int _offset;
 
-        public override object[] GetBindings(string engine)
-        {
-            return new[] { _limit, _offset }
-                .Where(x => x > 0)
-                .Cast<object>()
-                .ToArray();
-        }
-
         public int Limit
         {
             get => _limit;

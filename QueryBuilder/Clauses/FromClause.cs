@@ -52,10 +52,6 @@ namespace SqlKata
     public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
 
         public override string Alias
         {
@@ -80,12 +76,7 @@ namespace SqlKata
     public class RawFromClause : AbstractFrom, RawInterface
     {
         public string Expression { get; set; }
-        protected object[] _bindings;
-        public object[] Bindings { set => _bindings = value; }
-        public override object[] GetBindings(string engine)
-        {
-            return _bindings;
-        }
+        public object[] Bindings { set; get; }
 
         public override AbstractClause Clone()
         {
@@ -94,7 +85,7 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Expression = Expression,
-                _bindings = _bindings,
+                Bindings = Bindings,
                 Component = Component,
             };
         }

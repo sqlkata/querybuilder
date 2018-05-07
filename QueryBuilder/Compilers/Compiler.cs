@@ -14,6 +14,9 @@ namespace SqlKata.Compilers
         public I.Inflector Inflector { get; protected set; }
         public string TablePrefix { get; set; } = "";
         public bool IsDebug = false;
+
+        /// The list of bindings for the current compilation
+        protected List<object> bindings = new List<object>();
         protected string separator
         {
             get
@@ -38,9 +41,10 @@ namespace SqlKata.Compilers
 
         public string CompileColumn(AbstractColumn column)
         {
-            if (column is RawColumn)
+            if (column is RawColumn raw)
             {
-                return WrapIdentifiers((column as RawColumn).Expression);
+                bindings.AddRange(raw.Bindings);
+                return WrapIdentifiers(raw.Expression);
             }
 
             if (column is QueryColumn)
@@ -61,7 +65,6 @@ namespace SqlKata.Compilers
             query = OnBeforeCompile(query);
 
             string sql;
-            var bindings = new List<object>();
 
             if (query.Method == "insert")
             {
@@ -89,9 +92,7 @@ namespace SqlKata.Compilers
                 sql = CompileSelect(query);
             }
 
-            // filter out foreign clauses so we get the bindings
-            // just for the current engine
-            bindings = query.GetBindings(EngineCode);
+            bindings = bindings.Select(x => x is NullValue ? null : x).ToList();
 
             sql = OnAfterCompile(sql, bindings);
             return new SqlResult(sql, bindings);
@@ -120,10 +121,10 @@ namespace SqlKata.Compilers
 
             foreach (var cte in clauses)
             {
-                if (cte is RawFromClause)
+                if (cte is RawFromClause raw)
                 {
-                    RawFromClause clause = (cte as RawFromClause);
-                    sql.Add($"{WrapValue(clause.Alias)} AS ({WrapIdentifiers(clause.Expression)})");
+                    bindings.AddRange(raw.Bindings);
+                    sql.Add($"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})");
                 }
                 else if (cte is QueryFromClause)
                 {
@@ -145,15 +146,17 @@ namespace SqlKata.Compilers
                 query.Select("*");
             }
 
-            var results = CompileComponents(query);
-
-            var sql = JoinComponents(results, "select");
+            string sql = "";
 
             // Handle CTEs
             if (query.GetComponents("cte", EngineCode).Any())
             {
-                sql = CompileCte(query) + sql;
+                sql += CompileCte(query) + "\n";
             }
+
+            var results = CompileComponents(query);
+
+            sql += JoinComponents(results, "select");
 
             // Handle UNION, EXCEPT and INTERSECT
             if (query.GetComponents("combine", EngineCode).Any())
@@ -214,7 +217,12 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            string sql;
+            string sql = "";
+
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql = CompileCte(query) + "\n";
+            }
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -222,7 +230,7 @@ namespace SqlKata.Compilers
             {
                 var clause = inserts[0] as InsertClause;
 
-                sql = "INSERT INTO " + CompileTableExpression(from)
+                sql += "INSERT INTO " + CompileTableExpression(from)
                 + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
                 + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
             }
@@ -237,23 +245,21 @@ namespace SqlKata.Compilers
                     columns = $"({string.Join(", ", WrapArray(clause.Columns))}) ";
                 }
 
-                sql = "INSERT INTO " + CompileTableExpression(from)
+                sql += "INSERT INTO " + CompileTableExpression(from)
                 + " " + columns + CompileSelect(clause.Query);
             }
 
             if (inserts.Count > 1)
+            {
                 foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
                 {
                     var clause = insert as InsertClause;
 
-                    sql = sql + ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
+                    sql += ", (" + string.Join(", ", Parameterize(clause.Values)) + ")";
 
                 }
-
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql = CompileCte(query) + sql;
             }
+
 
             return sql;
 
@@ -283,6 +289,8 @@ namespace SqlKata.Compilers
             {
                 parts.Add($"{Wrap(toUpdate.Columns[i])} = ?");
             }
+
+            bindings.AddRange(toUpdate.Values);
 
             var where = CompileWheres(query);
 
@@ -415,9 +423,10 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileTableExpression(AbstractFrom from)
         {
-            if (from is RawFromClause)
+            if (from is RawFromClause raw)
             {
-                return WrapIdentifiers((from as RawFromClause).Expression);
+                bindings.AddRange(raw.Bindings);
+                return WrapIdentifiers(raw.Expression);
             }
 
             if (from is QueryFromClause)
@@ -559,9 +568,10 @@ namespace SqlKata.Compilers
             var columns = query.GetComponents<AbstractOrderBy>("order", EngineCode).Select(x =>
             {
 
-                if (x is RawOrderBy)
+                if (x is RawOrderBy raw)
                 {
-                    return WrapIdentifiers((x as RawOrderBy).Expression);
+                    bindings.AddRange(raw.Bindings);
+                    return WrapIdentifiers(raw.Expression);
                 }
 
                 var direction = (x as OrderBy).Ascending ? "" : " DESC";
@@ -607,6 +617,7 @@ namespace SqlKata.Compilers
 
             if (limitOffset != null && limitOffset.HasLimit())
             {
+                bindings.Add(limitOffset.Limit);
                 return "LIMIT ?";
             }
 
@@ -619,6 +630,7 @@ namespace SqlKata.Compilers
 
             if (limitOffset != null && limitOffset.HasOffset())
             {
+                bindings.Add(limitOffset.Offset);
                 return "OFFSET ?";
             }
 
@@ -815,9 +827,13 @@ namespace SqlKata.Compilers
         {
             if (value is Raw)
             {
-                return WrapIdentifiers((value as Raw).Value);
+                var raw = value as Raw;
+                bindings.AddRange(raw.Bindings);
+
+                return WrapIdentifiers(raw.Value);
             }
 
+            bindings.Add(value);
             return "?";
         }
 

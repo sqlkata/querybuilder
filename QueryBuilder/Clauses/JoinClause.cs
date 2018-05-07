@@ -12,11 +12,6 @@ namespace SqlKata
     {
         public Join Join { get; set; }
 
-        public override object[] GetBindings(string engine)
-        {
-            return Join.GetBindings(engine).ToArray();
-        }
-
         public override AbstractClause Clone()
         {
             return new BaseJoin

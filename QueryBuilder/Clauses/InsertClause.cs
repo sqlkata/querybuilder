@@ -13,11 +13,6 @@ namespace SqlKata
         public List<string> Columns { get; set; }
         public List<object> Values { get; set; }
 
-        public override object[] GetBindings(string engine)
-        {
-            return Values.ToArray();
-        }
-
         public override AbstractClause Clone()
         {
             return new InsertClause
@@ -34,11 +29,6 @@ namespace SqlKata
     {
         public List<string> Columns { get; set; }
         public Query Query { get; set; }
-
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
 
         public override AbstractClause Clone()
         {

@@ -26,14 +26,8 @@ namespace SqlKata
 
     public class RawOrderBy : AbstractOrderBy, RawInterface
     {
-        protected object[] _bindings;
         public string Expression { get; set; }
-        public object[] Bindings { set => _bindings = value; }
-
-        public override object[] GetBindings(string engine)
-        {
-            return _bindings;
-        }
+        public object[] Bindings { set; get; }
 
         public override AbstractClause Clone()
         {
@@ -42,7 +36,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                _bindings = _bindings
+                Bindings = Bindings,
             };
         }
     }

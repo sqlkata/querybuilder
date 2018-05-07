@@ -63,7 +63,7 @@ namespace SqlKata.Compilers
             // Add the row_number select, and put back the bindings here if any
             subquery.SelectRaw(
                     $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
-                    orderClause.SelectMany(x => x.GetBindings(EngineCode))
+                    new object[] { }
             );
 
             query.From(subquery);
@@ -98,14 +98,8 @@ namespace SqlKata.Compilers
 
             if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
             {
-                // Add a fake raw select to simulate the top bindings
-                query.Clauses.Insert(0, new RawColumn
-                {
-                    Engine = EngineCode,
-                    Component = "select",
-                    Expression = "",
-                    Bindings = new object[] { limitOffset.Limit }
-                });
+                // top bindings should be inserted first
+                bindings.Insert(0, limitOffset.Limit);
 
                 query.ClearComponent("limit");
 

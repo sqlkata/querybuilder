@@ -18,10 +18,6 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public virtual T Value { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return new object[] { Value };
-        }
 
         public override AbstractClause Clone()
         {
@@ -108,10 +104,6 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public Query Query { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
 
         public override AbstractClause Clone()
         {
@@ -135,11 +127,6 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public IEnumerable<T> Values { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Values.Select(x => x).Cast<object>().ToArray();
-        }
-
         public override AbstractClause Clone()
         {
             return new InCondition<T>
@@ -162,10 +149,6 @@ namespace SqlKata
     {
         public Query Query { get; set; }
         public string Column { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
         public override AbstractClause Clone()
         {
             return new InQueryCondition
@@ -188,11 +171,6 @@ namespace SqlKata
         public string Column { get; set; }
         public T Higher { get; set; }
         public T Lower { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return new object[] { Lower, Higher };
-        }
-
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
@@ -235,11 +213,6 @@ namespace SqlKata
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
-
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
@@ -259,10 +232,6 @@ namespace SqlKata
     public class ExistsCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
-        public override object[] GetBindings(string engine)
-        {
-            return Query.GetBindings(engine).ToArray();
-        }
 
         public override AbstractClause Clone()
         {
@@ -280,12 +249,7 @@ namespace SqlKata
     public class RawCondition : AbstractCondition, RawInterface
     {
         public string Expression { get; set; }
-        protected object[] _bindings;
-        public object[] Bindings { set => _bindings = value; }
-        public override object[] GetBindings(string engine)
-        {
-            return _bindings;
-        }
+        public object[] Bindings { set; get; }
 
         public override AbstractClause Clone()
         {
@@ -293,7 +257,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Expression = Expression,
-                _bindings = _bindings,
+                Bindings = Bindings,
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,

@@ -37,23 +37,6 @@ namespace SqlKata
             return bindingOrder.SelectMany(x => GetComponents(x, engine)).ToList();
         }
 
-        public virtual List<object> GetBindings(string engine)
-        {
-            var result = new List<object>();
-
-            foreach (var item in bindingOrder)
-            {
-                var bindings = GetComponents(item, engine)
-                    .SelectMany(clause => clause.GetBindings(engine))
-                    .Where(x => x != null)
-                    .Select(this.RestoreNullValues());
-
-                result.AddRange(bindings);
-            }
-
-            return result;
-        }
-
         public BaseQuery()
         {
         }
@@ -232,7 +215,7 @@ namespace SqlKata
         /// <summary>
         /// Set the next "not" operator for the "where" clause.
         /// </summary>
-        /// <returns></returns>        
+        /// <returns></returns>
         protected Q Not(bool flag)
         {
             notFlag = flag;
