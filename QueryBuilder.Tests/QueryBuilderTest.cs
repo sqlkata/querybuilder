@@ -8,24 +8,24 @@ namespace SqlKata.Tests
 {
     public class QueryBuilderTest
     {
-        private readonly Compiler _pg;
-        private readonly MySqlCompiler _mysql;
+        private readonly Compiler pgsql;
+        private readonly MySqlCompiler mysql;
 
-        public SqlServerCompiler _sqlsrv { get; private set; }
+        public SqlServerCompiler mssql { get; private set; }
 
         private string[] Compile(Query q)
         {
             return new[]{
-                 _sqlsrv.Compile(q.Clone()).ToString(),
-                 _mysql.Compile(q.Clone()).ToString(),
-                _pg.Compile(q.Clone()).ToString(),
+                 mssql.Compile(q.Clone()).ToString(),
+                 mysql.Compile(q.Clone()).ToString(),
+                pgsql.Compile(q.Clone()).ToString(),
             };
         }
         public QueryBuilderTest()
         {
-            _sqlsrv = new SqlServerCompiler();
-            _mysql = new MySqlCompiler();
-            _pg = new PostgresCompiler();
+            mssql = new SqlServerCompiler();
+            mysql = new MySqlCompiler();
+            pgsql = new PostgresCompiler();
         }
 
         [Fact]
@@ -73,6 +73,18 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM \"users\" OFFSET 10", c[2]);
         }
 
+        [Fact]
+        public void LimitOffset()
+        {
+            var q = new Query().From("users").Offset(10).Limit(5);
+
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] BETWEEN 11 AND 15", c[0]);
+            Assert.Equal("SELECT * FROM `users` LIMIT 5 OFFSET 10", c[1]);
+            Assert.Equal("SELECT * FROM \"users\" LIMIT 5 OFFSET 10", c[2]);
+        }
+
         [Theory()]
         [InlineData(1)]
         [InlineData(2)]
@@ -83,7 +95,7 @@ namespace SqlKata.Tests
         public void OffsetSqlServer_Should_Be_Incremented_By_One(int offset)
         {
             var q = new Query().From("users").Offset(offset);
-            var c = _sqlsrv.Compile(q);
+            var c = mssql.Compile(q);
 
             Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= " + (offset + 1), c.ToString());
         }
@@ -94,7 +106,7 @@ namespace SqlKata.Tests
         public void OffsetSqlServer_Should_Be_Ignored_If_Zero_Or_Negative(int offset)
         {
             var q = new Query().From("users").Offset(offset);
-            var c = _sqlsrv.Compile(q);
+            var c = mssql.Compile(q);
 
             Assert.Equal("SELECT * FROM [users]", c.ToString());
         }
@@ -145,10 +157,10 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45", c[0]);
-            Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) SELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
+            Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) \nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45", c[0]);
+            Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) \nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
 
-            Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) SELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
+            Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) \nSELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
         }
 
         [Fact]
@@ -161,8 +173,8 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1) SELECT * FROM [series]", c[0]);
-            Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) SELECT * FROM \"series\"", c[2]);
+            Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1) \nSELECT * FROM [series]", c[0]);
+            Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) \nSELECT * FROM \"series\"", c[2]);
         }
 
 
@@ -170,7 +182,7 @@ namespace SqlKata.Tests
         public void SqlServerTop()
         {
             var query = new Query("table").Limit(1);
-            Assert.Equal("SELECT TOP (@p0) * FROM [table]", _sqlsrv.Compile(query).Sql);
+            Assert.Equal("SELECT TOP (@p0) * FROM [table]", mssql.Compile(query).Sql);
         }
 
         [Fact]
@@ -185,11 +197,11 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) INSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [subquery] WHERE [row_num] BETWEEN 11 AND 20", c[0]);
+            Assert.Equal("WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) \nINSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [subquery] WHERE [row_num] BETWEEN 11 AND 20", c[0]);
 
-            Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) INSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
+            Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) \nINSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
 
-            Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) INSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+            Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) \nINSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
         }
 
         [Fact]
