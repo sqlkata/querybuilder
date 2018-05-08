@@ -10,7 +10,6 @@ namespace SqlKata.Tests
     {
         private readonly Compiler pgsql;
         private readonly MySqlCompiler mysql;
-
         public SqlServerCompiler mssql { get; private set; }
 
         private string[] Compile(Query q)
@@ -134,19 +133,6 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
-        }
-
-        [Fact]
-        public void DeepJoin()
-        {
-            var q = new Query().From("streets").DeepJoin("cities.countries");
-            var c = Compile(q);
-
-            Assert.Equal("SELECT * FROM [streets] INNER JOIN [cities] ON [streets].[cityId] = [cities].[Id] INNER JOIN [countries] ON [cities].[countryId] = [countries].[Id]", c[0]);
-
-            Assert.Equal("SELECT * FROM `streets` INNER JOIN `cities` ON `streets`.`cityId` = `cities`.`Id` INNER JOIN `countries` ON `cities`.`countryId` = `countries`.`Id`", c[1]);
-
-            Assert.Equal("SELECT * FROM \"streets\" INNER JOIN \"cities\" ON \"streets\".\"cityId\" = \"cities\".\"Id\" INNER JOIN \"countries\" ON \"cities\".\"countryId\" = \"countries\".\"Id\"", c[2]);
         }
 
         [Fact]

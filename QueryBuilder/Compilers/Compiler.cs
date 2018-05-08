@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using I = Inflector;
 
 namespace SqlKata.Compilers
 {
@@ -11,26 +10,15 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
         public string EngineCode;
-        public I.Inflector Inflector { get; protected set; }
-        public string TablePrefix { get; set; } = "";
-        public bool IsDebug = false;
 
         /// The list of bindings for the current compilation
         protected List<object> bindings = new List<object>();
-        protected string separator
-        {
-            get
-            {
-                return IsDebug ? "\n" : " ";
-            }
-        }
 
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
 
         public Compiler()
         {
-            Inflector = new I.Inflector(new CultureInfo("en"));
         }
 
         /// <summary>
@@ -149,11 +137,25 @@ namespace SqlKata.Compilers
                 query.Select("*");
             }
 
-            string sql = "";
+            var results = new[] {
+                    this.CompileAggregate(query),
+                    this.CompileColumns(query),
+                    this.CompileFrom(query),
+                    this.CompileJoins(query),
+                    this.CompileWheres(query),
+                    this.CompileGroups(query),
+                    this.CompileHavings(query),
+                    this.CompileOrders(query),
+                    this.CompileLimit(query),
+                    this.CompileOffset(query),
+                    this.CompileLock(query),
+                }
+               .Where(x => x != null)
+               .Select(x => x.Trim())
+               .Where(x => !string.IsNullOrEmpty(x))
+               .ToList();
 
-            var results = CompileComponents(query);
-
-            sql += JoinComponents(results, "select");
+            string sql = JoinComponents(results, "select");
 
             // Handle UNION, EXCEPT and INTERSECT
             if (query.GetComponents("combine", EngineCode).Any())
@@ -212,7 +214,7 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            string sql = "";
+            string sql;
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -252,7 +254,6 @@ namespace SqlKata.Compilers
             return sql;
 
         }
-
 
         protected virtual string CompileUpdate(Query query)
         {
@@ -321,31 +322,6 @@ namespace SqlKata.Compilers
 
             return sql;
         }
-
-        protected List<string> CompileComponents(Query query)
-        {
-            var result = new List<string>
-                {
-                    this.CompileAggregate(query),
-                    this.CompileColumns(query),
-                    this.CompileFrom(query),
-                    this.CompileJoins(query),
-                    this.CompileWheres(query),
-                    this.CompileGroups(query),
-                    this.CompileHavings(query),
-                    this.CompileOrders(query),
-                    this.CompileLimit(query),
-                    this.CompileOffset(query),
-                    this.CompileLock(query),
-                }
-                .Where(x => x != null)
-                .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
-
-            return result;
-        }
-
 
         protected virtual string CompileColumns(Query query)
         {
@@ -419,7 +395,7 @@ namespace SqlKata.Compilers
 
             if (from is FromClause fromClause)
             {
-                return WrapTable(fromClause.Table);
+                return Wrap(fromClause.Table);
             }
 
             throw InvalidClauseException("TableExpression", from);
@@ -442,22 +418,6 @@ namespace SqlKata.Compilers
             if (!query.HasComponent("join", EngineCode))
             {
                 return null;
-            }
-
-            // Transfrom deep join expressions to regular join
-
-            var deepJoins = query.GetComponents<AbstractJoin>("join", EngineCode).OfType<DeepJoin>().ToList();
-
-            foreach (var deepJoin in deepJoins)
-            {
-                var index = query.Clauses.IndexOf(deepJoin);
-
-                query.Clauses.Remove(deepJoin);
-                foreach (var join in TransfromDeepJoin(query, deepJoin))
-                {
-                    query.Clauses.Insert(index, join);
-                    index++;
-                }
             }
 
             var joins = query.GetComponents<BaseJoin>("join", EngineCode);
@@ -660,76 +620,9 @@ namespace SqlKata.Compilers
             return result as string;
         }
 
-        protected virtual IEnumerable<BaseJoin> TransfromDeepJoin(Query query, DeepJoin join)
-        {
-            var exp = join.Expression;
-
-            var tokens = exp.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (!tokens.Any())
-            {
-                yield break;
-            }
-
-
-            var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            if (from == null)
-            {
-                yield break;
-            }
-
-            string tableOrAlias = from.Alias;
-
-            if (string.IsNullOrEmpty(tableOrAlias))
-            {
-                throw new InvalidOperationException("No table or alias found for the main query, This information is needed in order to generate a Deep Join");
-            }
-
-            for (var i = 0; i < tokens.Length; i++)
-            {
-                var source = i == 0 ? tableOrAlias : tokens[i - 1];
-                var target = tokens[i];
-
-                string sourceKey;
-                string targetKey;
-
-                if (join.SourceKeyGenerator != null)
-                {
-                    // developer wants to use the lambda overloaded method then
-                    sourceKey = join.SourceKeyGenerator.Invoke(target);
-                    targetKey = join.TargetKeyGenerator?.Invoke(target) ?? "Id";
-                }
-                else
-                {
-                    sourceKey = Singular(target) + join.SourceKeySuffix;
-                    targetKey = join.TargetKey;
-                }
-
-                // yield query.Join(target, $"{source}.{sourceKey}", $"{target}.{targetKey}", "=", join.Type);
-                yield return new BaseJoin
-                {
-                    Component = "join",
-                    Join = new Join().AsType(join.Type).JoinWith(target).On
-                    ($"{source}.{sourceKey}", $"{target}.{targetKey}", "=")
-                };
-            }
-
-        }
-
         protected string JoinComponents(List<string> components, string section = null)
         {
-            return string.Join(separator, components);
-        }
-
-        /// <summary>
-        /// Wrap a table in keyword identifiers.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <returns></returns>
-        public virtual string WrapTable(string table)
-        {
-            return Wrap(this.TablePrefix + table, true);
+            return string.Join(" ", components);
         }
 
         /// <summary>
@@ -737,16 +630,11 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public virtual string Wrap(string value, bool prefixAlias = false)
+        public virtual string Wrap(string value)
         {
             if (value.ToLower().Contains(" as "))
             {
                 var segments = value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (prefixAlias)
-                {
-                    segments[2] = this.TablePrefix + segments[2];
-                }
 
                 return Wrap(segments[0]) + " AS " + WrapValue(segments[2]);
             }
@@ -755,14 +643,7 @@ namespace SqlKata.Compilers
             {
                 return string.Join(".", value.Split('.').Select((x, index) =>
                 {
-                    // Wrap the first segment as table
-                    if (index == 0)
-                    {
-                        return WrapTable(x);
-                    }
-
                     return WrapValue(x);
-
                 }));
             }
 
@@ -837,17 +718,6 @@ namespace SqlKata.Compilers
                 .Replace("[", this.OpeningIdentifier)
                 .Replace("]", this.ClosingIdentifier);
         }
-
-        public virtual string Singular(string value)
-        {
-            return Inflector.Singularize(value);
-        }
-
-        public virtual string Plural(string value)
-        {
-            return Inflector.Pluralize(value);
-        }
-
 
     }
 
