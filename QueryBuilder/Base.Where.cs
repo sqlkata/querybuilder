@@ -17,9 +17,10 @@ namespace SqlKata
                 return Not(op != "=").WhereNull(column);
             }
 
-            if (value is Query)
+            var query = value as Query;
+            if (query != null)
             {
-                return Where(column, op, value as Query);
+                return Where(column, op, query);
             }
 
             return AddComponent("where", new BasicCondition<T>

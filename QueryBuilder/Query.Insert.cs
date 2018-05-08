@@ -6,17 +6,17 @@ namespace SqlKata
 {
     public partial class Query
     {
-
-
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
+            var columnsList = columns?.ToList();
+            var valuesList = values?.Select(BackupNullValues).ToList();
 
-            if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
+            if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
             {
                 throw new InvalidOperationException("Columns and Values cannot be null or empty");
             }
 
-            if (columns.Count() != values.Count())
+            if (columnsList.Count != valuesList.Count)
             {
                 throw new InvalidOperationException("Columns count should be equal to Values count");
             }
@@ -25,8 +25,8 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = columns.ToList(),
-                Values = values.Select(this.BackupNullValues()).ToList()
+                Columns = columnsList,
+                Values = valuesList
             });
 
             return this;
@@ -34,7 +34,6 @@ namespace SqlKata
 
         public Query AsInsert(IReadOnlyDictionary<string, object> data)
         {
-
             if (data == null || data.Count == 0)
             {
                 throw new InvalidOperationException("Values dictionary cannot be null or empty");
@@ -45,7 +44,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.Select(this.BackupNullValues()).ToList()
+                Values = data.Values.Select(BackupNullValues).ToList()
             });
 
             return this;
@@ -59,7 +58,10 @@ namespace SqlKata
         /// <returns></returns>
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
-            if ((columns?.Count() ?? 0) == 0 || (valuesCollection?.Count() ?? 0) == 0)
+            var columnsList = columns?.ToList();
+            var valuesCollectionList = valuesCollection?.ToList();
+
+            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
             {
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
             }
@@ -68,17 +70,18 @@ namespace SqlKata
 
             ClearComponent("insert");
 
-            foreach (var values in valuesCollection)
+            foreach (var values in valuesCollectionList)
             {
-                if (columns.Count() != values.Count())
+                var valuesList = values.Select(BackupNullValues).ToList();
+                if (columnsList.Count != valuesList.Count)
                 {
                     throw new InvalidOperationException("Columns count should be equal to each Values count");
                 }
 
                 AddComponent("insert", new InsertClause
                 {
-                    Columns = columns.ToList(),
-                    Values = values.Select(this.BackupNullValues()).ToList()
+                    Columns = columnsList,
+                    Values = valuesList
                 });
             }
 
@@ -93,7 +96,6 @@ namespace SqlKata
         /// <returns></returns>
         public Query AsInsert(IEnumerable<string> columns, Query query)
         {
-
             Method = "insert";
 
             ClearComponent("insert").AddComponent("insert", new InsertQueryClause

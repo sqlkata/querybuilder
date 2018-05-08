@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace SqlKata
 {
@@ -31,6 +30,8 @@ namespace SqlKata
         public string TargetKey { get; set; }
         public Func<string, string> SourceKeyGenerator { get; set; }
         public Func<string, string> TargetKeyGenerator { get; set; }
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new DeepJoin
@@ -46,5 +47,4 @@ namespace SqlKata
             };
         }
     }
-
 }

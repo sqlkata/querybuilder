@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
@@ -12,6 +10,7 @@ namespace SqlKata
         public string Column { get; set; }
         public bool Ascending { get; set; } = true;
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new OrderBy
@@ -24,11 +23,12 @@ namespace SqlKata
         }
     }
 
-    public class RawOrderBy : AbstractOrderBy, RawInterface
+    public class RawOrderBy : AbstractOrderBy, IRaw
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawOrderBy
@@ -43,6 +43,7 @@ namespace SqlKata
 
     public class OrderByRandom : AbstractOrderBy
     {
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new OrderByRandom
@@ -51,5 +52,4 @@ namespace SqlKata
             };
         }
     }
-
 }

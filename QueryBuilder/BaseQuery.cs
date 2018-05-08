@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -299,30 +298,14 @@ namespace SqlKata
             return From(callback.Invoke(query), alias);
         }
 
-        protected Func<object, object> BackupNullValues()
+        protected static object BackupNullValues(object x)
         {
-            return (x) =>
-            {
-                if (x == null)
-                {
-                    return new NullValue();
-                }
-
-                return x;
-            };
+            return x ?? new NullValue();
         }
 
-        protected Func<object, object> RestoreNullValues()
+        protected static object RestoreNullValues(object x)
         {
-            return (x) =>
-            {
-                if (x is NullValue)
-                {
-                    return null;
-                }
-
-                return x;
-            };
+            return x is NullValue ? null : x;
         }
 
     }

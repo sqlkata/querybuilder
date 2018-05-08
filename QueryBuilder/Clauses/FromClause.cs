@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 
 namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {
         protected string _alias;
+
         /// <summary>
         /// Try to extract the Alias for the current clause.
         /// </summary>
@@ -24,7 +24,7 @@ namespace SqlKata
         {
             get
             {
-                if (Table.ToLower().Contains(" as "))
+                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -35,6 +35,7 @@ namespace SqlKata
             }
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new FromClause
@@ -61,6 +62,7 @@ namespace SqlKata
             }
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new QueryFromClause
@@ -73,11 +75,12 @@ namespace SqlKata
         }
     }
 
-    public class RawFromClause : AbstractFrom, RawInterface
+    public class RawFromClause : AbstractFrom, IRaw
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawFromClause
@@ -90,5 +93,4 @@ namespace SqlKata
             };
         }
     }
-
 }

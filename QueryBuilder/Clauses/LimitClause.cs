@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace SqlKata
@@ -62,6 +60,7 @@ namespace SqlKata
             return ClearLimit().ClearOffset();
         }
 
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new LimitOffset

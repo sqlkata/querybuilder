@@ -47,13 +47,11 @@ namespace SqlKata.Compilers
                 return WrapIdentifiers(raw.Expression);
             }
 
-            if (column is QueryColumn)
+            if (column is QueryColumn queryColumn)
             {
-                var clause = (column as QueryColumn);
+                var alias = string.IsNullOrWhiteSpace(queryColumn.Query.QueryAlias) ? "" : $" AS {WrapValue(queryColumn.Query.QueryAlias)}";
 
-                var alias = string.IsNullOrWhiteSpace(clause.Query.QueryAlias) ? "" : $" AS {WrapValue(clause.Query.QueryAlias)}";
-
-                return "(" + CompileSelect(clause.Query) + $"){alias}";
+                return "(" + CompileSelect(queryColumn.Query) + $"){alias}";
             }
 
             return Wrap((column as Column).Name);
@@ -87,9 +85,9 @@ namespace SqlKata.Compilers
             else if (query.Method == "aggregate")
             {
                 query.ClearComponent("limit")
-                .ClearComponent("select")
-                .ClearComponent("group")
-                .ClearComponent("order");
+                    .ClearComponent("select")
+                    .ClearComponent("group")
+                    .ClearComponent("order");
 
                 sql += CompileSelect(query);
             }
@@ -132,10 +130,9 @@ namespace SqlKata.Compilers
                     bindings.AddRange(raw.Bindings);
                     sql.Add($"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})");
                 }
-                else if (cte is QueryFromClause)
+                else if (cte is QueryFromClause queryFromClause)
                 {
-                    QueryFromClause clause = (cte as QueryFromClause);
-                    sql.Add($"{WrapValue(clause.Alias)} AS ({CompileSelect(clause.Query)})");
+                    sql.Add($"{WrapValue(queryFromClause.Alias)} AS ({CompileSelect(queryFromClause.Query)})");
                 }
             }
 
@@ -169,10 +166,8 @@ namespace SqlKata.Compilers
 
                 foreach (var clause in clauses)
                 {
-                    if (clause is Combine)
+                    if (clause is Combine combineClause)
                     {
-                        var combineClause = clause as Combine;
-
                         var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
 
                         var compiled = CompileSelect(combineClause.Query);
@@ -221,13 +216,11 @@ namespace SqlKata.Compilers
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
-            if (inserts[0] is InsertClause)
+            if (inserts[0] is InsertClause insertClause)
             {
-                var clause = inserts[0] as InsertClause;
-
-                sql += "INSERT INTO " + CompileTableExpression(from)
-                + " (" + string.Join(", ", WrapArray(clause.Columns)) + ") "
-                + "VALUES (" + string.Join(", ", Parameterize(clause.Values)) + ")";
+                sql = "INSERT INTO " + CompileTableExpression(from)
+                    + " (" + string.Join(", ", WrapArray(insertClause.Columns)) + ") "
+                    + "VALUES (" + string.Join(", ", Parameterize(insertClause.Values)) + ")";
             }
             else
             {
@@ -240,13 +233,13 @@ namespace SqlKata.Compilers
                     columns = $"({string.Join(", ", WrapArray(clause.Columns))}) ";
                 }
 
-                sql += "INSERT INTO " + CompileTableExpression(from)
-                + " " + columns + CompileSelect(clause.Query);
+                sql = "INSERT INTO " + CompileTableExpression(from)
+                    + " " + columns + CompileSelect(clause.Query);
             }
 
             if (inserts.Count > 1)
             {
-                foreach (var insert in inserts.GetRange(1, inserts.Count() - 1))
+                foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
                 {
                     var clause = insert as InsertClause;
 
@@ -331,25 +324,24 @@ namespace SqlKata.Compilers
 
         protected List<string> CompileComponents(Query query)
         {
-            var result = (new List<string>
-            {
-                this.CompileAggregate(query),
-                this.CompileColumns(query),
-                this.CompileFrom(query),
-                this.CompileJoins(query),
-                this.CompileWheres(query),
-                this.CompileGroups(query),
-                this.CompileHavings(query),
-                this.CompileOrders(query),
-                this.CompileLimit(query),
-                this.CompileOffset(query),
-                this.CompileLock(query),
-            })
-            .ToList()
-            .Where(x => x != null)
-            .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrEmpty(x))
-            .ToList();
+            var result = new List<string>
+                {
+                    this.CompileAggregate(query),
+                    this.CompileColumns(query),
+                    this.CompileFrom(query),
+                    this.CompileJoins(query),
+                    this.CompileWheres(query),
+                    this.CompileGroups(query),
+                    this.CompileHavings(query),
+                    this.CompileOrders(query),
+                    this.CompileLimit(query),
+                    this.CompileOffset(query),
+                    this.CompileLock(query),
+                }
+                .Where(x => x != null)
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToList();
 
             return result;
         }
@@ -394,7 +386,7 @@ namespace SqlKata.Compilers
                 .Cast<AbstractColumn>()
                 .ToList();
 
-            var cols = columns.Select(x => CompileColumn(x));
+            var cols = columns.Select(CompileColumn);
 
             var sql = string.Join(", ", cols);
 
@@ -414,9 +406,9 @@ namespace SqlKata.Compilers
                 return WrapIdentifiers(raw.Expression);
             }
 
-            if (from is QueryFromClause)
+            if (from is QueryFromClause queryFromClause)
             {
-                var fromQuery = (from as QueryFromClause).Query;
+                var fromQuery = queryFromClause.Query;
 
                 var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
 
@@ -425,9 +417,9 @@ namespace SqlKata.Compilers
                 return "(" + compiled + ")" + alias;
             }
 
-            if (from is FromClause)
+            if (from is FromClause fromClause)
             {
-                return WrapTable((from as FromClause).Table);
+                return WrapTable(fromClause.Table);
             }
 
             throw InvalidClauseException("TableExpression", from);
@@ -504,12 +496,7 @@ namespace SqlKata.Compilers
             var conditions = query.GetComponents<AbstractCondition>("where", EngineCode);
             var sql = CompileConditions(conditions).Trim();
 
-            if (string.IsNullOrEmpty(sql))
-            {
-                return null;
-            }
-
-            return $"WHERE {sql}";
+            return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
 
         protected string CompileQuery<T>(
@@ -598,9 +585,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileLimit(Query query)
         {
-            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
-
-            if (limitOffset != null && limitOffset.HasLimit())
+            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit())
             {
                 bindings.Add(limitOffset.Limit);
                 return "LIMIT ?";
@@ -611,9 +596,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileOffset(Query query)
         {
-            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
-
-            if (limitOffset != null && limitOffset.HasOffset())
+            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasOffset())
             {
                 bindings.Add(limitOffset.Offset);
                 return "OFFSET ?";
