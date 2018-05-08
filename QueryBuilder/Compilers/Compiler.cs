@@ -64,19 +64,25 @@ namespace SqlKata.Compilers
         {
             query = OnBeforeCompile(query);
 
-            string sql;
+            string sql = "";
+
+            // Handle CTEs
+            if (query.GetComponents("cte", EngineCode).Any())
+            {
+                sql += CompileCte(query) + "\n";
+            }
 
             if (query.Method == "insert")
             {
-                sql = CompileInsert(query);
+                sql += CompileInsert(query);
             }
             else if (query.Method == "delete")
             {
-                sql = CompileDelete(query);
+                sql += CompileDelete(query);
             }
             else if (query.Method == "update")
             {
-                sql = CompileUpdate(query);
+                sql += CompileUpdate(query);
             }
             else if (query.Method == "aggregate")
             {
@@ -85,11 +91,11 @@ namespace SqlKata.Compilers
                 .ClearComponent("group")
                 .ClearComponent("order");
 
-                sql = CompileSelect(query);
+                sql += CompileSelect(query);
             }
             else
             {
-                sql = CompileSelect(query);
+                sql += CompileSelect(query);
             }
 
             bindings = bindings.Select(x => x is NullValue ? null : x).ToList();
@@ -147,12 +153,6 @@ namespace SqlKata.Compilers
             }
 
             string sql = "";
-
-            // Handle CTEs
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql += CompileCte(query) + "\n";
-            }
 
             var results = CompileComponents(query);
 
@@ -218,11 +218,6 @@ namespace SqlKata.Compilers
             }
 
             string sql = "";
-
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql = CompileCte(query) + "\n";
-            }
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -303,11 +298,6 @@ namespace SqlKata.Compilers
                 + " SET " + string.Join(", ", parts)
                 + where;
 
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql = CompileCte(query) + sql;
-            }
-
             return sql;
         }
 
@@ -335,11 +325,6 @@ namespace SqlKata.Compilers
             }
 
             sql = "DELETE FROM " + CompileTableExpression(from) + where;
-
-            if (query.GetComponents("cte", EngineCode).Any())
-            {
-                sql = CompileCte(query) + sql;
-            }
 
             return sql;
         }

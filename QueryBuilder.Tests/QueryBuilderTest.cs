@@ -164,6 +164,24 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void UpdateWithCte()
+        {
+
+            var now = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+            var query = new Query("Books")
+                .With("OldBooks", q => q.From("Books").Where("Date", "<", now))
+                .Where("Price", ">", 100)
+                .AsUpdate(new Dictionary<string, object> {
+                    {"Price", "150"}
+                });
+
+            var c = Compile(query);
+
+            Assert.Equal($"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}') \nUPDATE [Books] SET [Price] = 150 WHERE [Price] > 100", c[0]);
+        }
+
+        [Fact]
         public void InnerScopeEngineWithinCTE()
         {
             var series = new Query("table")
