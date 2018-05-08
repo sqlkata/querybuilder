@@ -27,7 +27,7 @@ namespace SqlKata.Compilers
         /// <param name="columns"></param>
         /// <returns></returns>
 
-        public string CompileColumn(AbstractColumn column)
+        public virtual string CompileColumn(AbstractColumn column)
         {
             if (column is RawColumn raw)
             {
@@ -46,7 +46,7 @@ namespace SqlKata.Compilers
 
         }
 
-        public SqlResult Compile(Query query)
+        public virtual SqlResult Compile(Query query)
         {
             query = OnBeforeCompile(query);
 
@@ -347,7 +347,7 @@ namespace SqlKata.Compilers
             return select + (cols.Any() ? string.Join(", ", cols) : "*");
         }
 
-        protected virtual string CompileAggregate(Query query)
+        public virtual string CompileAggregate(Query query)
         {
 
             if (!query.HasComponent("aggregate", EngineCode))
@@ -374,7 +374,7 @@ namespace SqlKata.Compilers
             return "SELECT " + ag.Type.ToUpper() + "(" + sql + ") AS " + WrapValue(ag.Type);
         }
 
-        protected virtual string CompileTableExpression(AbstractFrom from)
+        public virtual string CompileTableExpression(AbstractFrom from)
         {
             if (from is RawFromClause raw)
             {
@@ -401,7 +401,7 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        protected virtual string CompileFrom(Query query)
+        public virtual string CompileFrom(Query query)
         {
             if (!query.HasComponent("from", EngineCode))
             {
@@ -413,7 +413,7 @@ namespace SqlKata.Compilers
             return "FROM " + CompileTableExpression(from);
         }
 
-        protected virtual string CompileJoins(Query query)
+        public virtual string CompileJoins(Query query)
         {
             if (!query.HasComponent("join", EngineCode))
             {
@@ -432,7 +432,7 @@ namespace SqlKata.Compilers
             return JoinComponents(sql, "join");
         }
 
-        protected virtual string CompileJoin(Join join, bool isNested = false)
+        public virtual string CompileJoin(Join join, bool isNested = false)
         {
 
             var from = join.GetOneComponent<AbstractFrom>("from", EngineCode);
@@ -446,7 +446,7 @@ namespace SqlKata.Compilers
             return $"{join.Type} JOIN {joinTable}{onClause}";
         }
 
-        protected virtual string CompileWheres(Query query)
+        public virtual string CompileWheres(Query query)
         {
             if (!query.HasComponent("from", EngineCode) || !query.HasComponent("where", EngineCode))
             {
@@ -459,7 +459,7 @@ namespace SqlKata.Compilers
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
 
-        protected string CompileQuery<T>(
+        public string CompileQuery<T>(
                 BaseQuery<T> query,
                 string joinType = "",
                 bool isNested = false
@@ -478,7 +478,7 @@ namespace SqlKata.Compilers
             return "";
         }
 
-        protected virtual string CompileGroups(Query query)
+        public virtual string CompileGroups(Query query)
         {
             if (!query.HasComponent("group", EngineCode))
             {
@@ -490,7 +490,7 @@ namespace SqlKata.Compilers
             return "GROUP BY " + string.Join(", ", columns);
         }
 
-        protected virtual string CompileOrders(Query query)
+        public virtual string CompileOrders(Query query)
         {
             if (!query.HasComponent("order", EngineCode))
             {
@@ -565,7 +565,7 @@ namespace SqlKata.Compilers
             return "";
         }
 
-        protected virtual string CompileLock(Query query)
+        public virtual string CompileLock(Query query)
         {
             // throw new NotImplementedException();
             return null;
@@ -596,7 +596,7 @@ namespace SqlKata.Compilers
             return new InvalidCastException($"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
 
-        protected string dynamicCompile(string name, AbstractClause clause)
+        protected virtual string dynamicCompile(string name, AbstractClause clause)
         {
 
             MethodInfo methodInfo = this.GetType()
@@ -620,7 +620,7 @@ namespace SqlKata.Compilers
             return result as string;
         }
 
-        protected string JoinComponents(List<string> components, string section = null)
+        public virtual string JoinComponents(List<string> components, string section = null)
         {
             return string.Join(" ", components);
         }
@@ -672,7 +672,7 @@ namespace SqlKata.Compilers
             return opening + value.Replace(closing, closing + closing) + closing;
         }
 
-        public string Parameter<T>(T value)
+        public virtual string Parameter<T>(T value)
         {
             if (value is Raw)
             {
@@ -691,7 +691,7 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public string Parameterize<T>(IEnumerable<T> values)
+        public virtual string Parameterize<T>(IEnumerable<T> values)
         {
             return string.Join(", ", values.Select(x => Parameter(x)));
         }
@@ -701,18 +701,17 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public List<string> WrapArray(List<string> values)
+        public virtual List<string> WrapArray(List<string> values)
         {
             return values.Select(x => Wrap(x)).ToList();
         }
 
-        public string WrapIdentifiers(string input)
+        public virtual string WrapIdentifiers(string input)
         {
             return input
 
                 // deprecated
                 .Replace("{", this.OpeningIdentifier)
-                // deprecated
                 .Replace("}", this.ClosingIdentifier)
 
                 .Replace("[", this.OpeningIdentifier)
