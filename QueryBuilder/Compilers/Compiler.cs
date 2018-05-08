@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
 
     public partial class Compiler
@@ -652,11 +652,6 @@ namespace SqlKata.Compilers
             return WrapValue(value);
         }
 
-        public virtual string Wrap(Raw value)
-        {
-            return WrapIdentifiers(value.Value);
-        }
-
         /// <summary>
         /// Wrap a single string in keyword identifiers.
         /// </summary>
@@ -674,14 +669,6 @@ namespace SqlKata.Compilers
 
         public virtual string Parameter<T>(T value)
         {
-            if (value is Raw)
-            {
-                var raw = value as Raw;
-                bindings.AddRange(raw.Bindings);
-
-                return WrapIdentifiers(raw.Value);
-            }
-
             bindings.Add(value);
             return "?";
         }

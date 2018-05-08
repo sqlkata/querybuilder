@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public abstract class AbstractQuery
     {
@@ -282,11 +282,6 @@ namespace SqlKata
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
             });
-        }
-
-        public Q From(Raw expression)
-        {
-            return FromRaw(expression.Value, expression.Bindings);
         }
 
         public Q From(Func<Query, Query> callback, string alias = null)

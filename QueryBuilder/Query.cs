@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public partial class Query : BaseQuery<Query>
     {
@@ -57,11 +57,6 @@ namespace SqlKata
             "~", "~*", "!~", "!~*", "similar to",
             "not similar to", "not ilike", "~~*", "!~~*",
         };
-
-        public static Raw Raw(string value)
-        {
-            return new Raw(value);
-        }
 
         public Query() : base()
         {
@@ -309,11 +304,6 @@ namespace SqlKata
             });
 
             return this;
-        }
-
-        public Query GroupBy(Raw expression)
-        {
-            return GroupByRaw(expression.Value, expression.Bindings);
         }
 
         public override Query NewQuery()

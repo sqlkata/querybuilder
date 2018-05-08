@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace SqlKata.Compilers
+namespace SqlKata.QueryBuilder.Compilers
 {
     public class SqlServerCompiler : Compiler
     {

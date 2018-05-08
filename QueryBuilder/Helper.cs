@@ -4,14 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public static class Helper
     {
-        public static Raw Raw(string value)
-        {
-            return new Raw(value);
-        }
         public static bool IsNumber(object value)
         {
             return value is sbyte

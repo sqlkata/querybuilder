@@ -1,6 +1,6 @@
 using System;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     public class Join : BaseQuery<Join>
     {
@@ -55,8 +55,6 @@ namespace SqlKata
         public Join JoinWith(string table) => From(table);
         public Join JoinWith(Query query) => From(query);
         public Join JoinWith(Func<Query, Query> callback) => From(callback);
-        public Join JoinWith(Raw expression) => From(expression);
-
 
         public Join AsInner() => AsType("inner");
         public Join AsOuter() => AsType("outer");

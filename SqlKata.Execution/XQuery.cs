@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
-using SqlKata.Compilers;
+using SqlKata.QueryBuilder;
+using SqlKata.QueryBuilder.Compilers;
 
 namespace SqlKata.Execution
 {

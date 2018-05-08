@@ -1,4 +1,5 @@
 using System;
+using SqlKata.QueryBuilder;
 
 namespace SqlKata.Execution
 {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SqlKata
+namespace SqlKata.QueryBuilder
 {
     /// <summary>
     /// Represents aggregate clause like "COUNT", "MAX" or etc.

@@ -3,7 +3,8 @@ using System.Data;
 using System.Linq;
 using Dapper;
 using SqlKata;
-using SqlKata.Compilers;
+using SqlKata.QueryBuilder;
+using SqlKata.QueryBuilder.Compilers;
 
 namespace SqlKata.Execution
 {
