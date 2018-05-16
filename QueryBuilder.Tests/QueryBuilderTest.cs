@@ -159,6 +159,7 @@ public class QueryBuilderTest
         var c = Compile(query);
 
         Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) \nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45", c[0]);
+
         Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) \nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
 
         Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) \nSELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
@@ -194,6 +195,20 @@ public class QueryBuilderTest
 
         Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1) \nSELECT * FROM [series]", c[0]);
         Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) \nSELECT * FROM \"series\"", c[2]);
+    }
+
+    [Fact]
+    public void InnerScopeEngineWithinSubQuery()
+    {
+        var series = new Query("table")
+            .ForPostgres(q => q.WhereRaw("postgres = true"))
+            .ForSqlServer(q => q.WhereRaw("sqlsrv = 1"));
+        var query = new Query("series").From(series.As("series"));
+
+        var c = Compile(query);
+
+        Assert.Equal("SELECT * FROM (SELECT * FROM [table] WHERE sqlsrv = 1) AS [series]", c[0]);
+        Assert.Equal("SELECT * FROM (SELECT * FROM \"table\" WHERE postgres = true) AS \"series\"", c[2]);
     }
 
 
