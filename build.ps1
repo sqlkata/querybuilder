@@ -37,12 +37,12 @@ function Die ($message) {
     Exit 1
 }
 
-function isValidColor($color) 
+function isValidColor($color)
 {
     return $msgColor.Values -contains $color
 }
 
-function Msg ($message, $color = $msgColor.Default, $newLine=$true) 
+function Msg ($message, $color = $msgColor.Default, $newLine=$true)
 {
     $valid = isValidColor($color)
     if(!$valid) { $color = $msgColor.Default }
@@ -51,13 +51,13 @@ function Msg ($message, $color = $msgColor.Default, $newLine=$true)
     {
         Write-Host $message -ForegroundColor $color
     }
-    else 
+    else
     {
         Write-Host $message -ForegroundColor $color -NoNewline
     }
 }
 
-function Done() 
+function Done()
 {
     Msg "`n>>> Success! :D`n" $msgColor.Success
     Exit 0
@@ -67,8 +67,8 @@ function Invoke-ExpressionEx($expression) {
     try
     {
         if($DebugBuild -eq $false) { Invoke-Expression $expression | Out-Null }
-        else 
-        { 
+        else
+        {
             Msg "`tInvoking Expression: $expression" $msgColor.Default
             Invoke-Expression $expression
         }
@@ -82,14 +82,15 @@ function Invoke-ExpressionEx($expression) {
 }
 
 Msg "`n>>> SqlKata QueryBuilder Build Script`n" $msgColor.Heading
-if($DebugBuild) 
-{ 
-    Msg "`tDEBUG BUILD" $msgColor.Attention 
+if($DebugBuild)
+{
+    Msg "`tDEBUG BUILD" $msgColor.Attention
     $BuildConfiguration = 'Debug'
 }
 if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0) { Die "Build Number or Pull Request Number must be supplied" }
 if(!(Test-Path "version.props")) { Die "Unable to locate required file: version.props" }
 $outputPath = "$PSScriptRoot\.nupkgs"
+$queryBuilderPath = "$PSScriptRoot\QueryBuilder\QueryBuilder.csproj"
 $stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:q /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
@@ -146,7 +147,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack /nologo /verbosity:q --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack $queryBuilderPath /nologo /verbosity:q --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
