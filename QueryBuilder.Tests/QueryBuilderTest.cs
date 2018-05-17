@@ -496,4 +496,16 @@ public class QueryBuilderTest
         Assert.Equal("SELECT `Id`, `Name`, `Age` FROM `Users`", c[1]);
         Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[2]);
     }
+
+    [Fact]
+    public void NestedEmptyWhereAtFirstCondition()
+    {
+        var query = new Query("table")
+            .Where(q => new Query())
+            .Where("id", 1);
+
+        var c = Compile(query);
+
+        Assert.Equal("SELECT * FROM [table] WHERE [id] = 1", c[0]);
+    }
 }

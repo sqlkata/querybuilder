@@ -17,21 +17,15 @@ namespace SqlKata.QueryBuilder.Compilers
 
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
         {
-            var sql = new List<string>();
-
-            for (var i = 0; i < conditions.Count; i++)
-            {
-                var compiled = CompileCondition(conditions[i]);
-
-                if (string.IsNullOrEmpty(compiled))
+            var sql = conditions
+                .Select(x => CompileCondition(x))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToList()
+                .Select((x, i) =>
                 {
-                    continue;
-                }
-
-                var boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
-
-                sql.Add(boolOperator + compiled);
-            }
+                    var boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
+                    return boolOperator + x;
+                }).ToList();
 
             return JoinComponents(sql, "conditions");
         }
