@@ -78,6 +78,7 @@ namespace SqlKata.QueryBuilder
         /// </summary>
         /// <param name="component"></param>
         /// <param name="clause"></param>
+        /// <param name="engineCode"></param>
         /// <returns></returns>
         public Q AddComponent(string component, AbstractClause clause, string engineCode = null)
         {
@@ -116,6 +117,7 @@ namespace SqlKata.QueryBuilder
         /// Get the list of clauses for a component.
         /// </summary>
         /// <param name="component"></param>
+        /// <param name="engineCode"></param>
         /// <returns></returns>
         public List<AbstractClause> GetComponents(string component, string engineCode = null)
         {
@@ -146,6 +148,7 @@ namespace SqlKata.QueryBuilder
         /// Get a single component clause from the query.
         /// </summary>
         /// <param name="component"></param>
+        /// <param name="engineCode"></param>
         /// <returns></returns>
         public AbstractClause GetOneComponent(string component, string engineCode = null)
         {
@@ -161,6 +164,7 @@ namespace SqlKata.QueryBuilder
         /// Return wether the query has clauses for a component.
         /// </summary>
         /// <param name="component"></param>
+        /// <param name="engineCode"></param>
         /// <returns></returns>
         public bool HasComponent(string component, string engineCode = null)
         {
@@ -176,6 +180,7 @@ namespace SqlKata.QueryBuilder
         /// Remove all clauses for a component.
         /// </summary>
         /// <param name="component"></param>
+        /// <param name="engineCode"></param>
         /// <returns></returns>
         public Q ClearComponent(string component, string engineCode = null)
         {
