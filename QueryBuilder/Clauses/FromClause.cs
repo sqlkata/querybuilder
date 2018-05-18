@@ -1,6 +1,6 @@
 using System;
 
-namespace SqlKata.QueryBuilder
+namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {

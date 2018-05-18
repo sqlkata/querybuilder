@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SqlKata.QueryBuilder
+namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {

@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace SqlKata.QueryBuilder
+namespace SqlKata
 {
     public partial class Query
     {

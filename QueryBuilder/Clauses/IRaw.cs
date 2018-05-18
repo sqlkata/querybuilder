@@ -1,4 +1,4 @@
-namespace SqlKata.QueryBuilder
+namespace SqlKata
 {
     public interface IRaw
     {

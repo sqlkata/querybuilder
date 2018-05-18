@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SqlKata.QueryBuilder.Compilers
+namespace SqlKata.Compilers
 {
 
     public partial class Compiler

@@ -1,4 +1,4 @@
-using SqlKata.QueryBuilder;
+using SqlKata;
 using Xunit;
 
 public class HelperTest

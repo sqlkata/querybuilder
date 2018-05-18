@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Dapper;
-using SqlKata.QueryBuilder;
+using SqlKata;
 
 namespace SqlKata.Execution
 {

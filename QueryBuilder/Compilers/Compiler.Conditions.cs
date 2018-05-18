@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SqlKata.QueryBuilder.Compilers
+namespace SqlKata.Compilers
 {
     public partial class Compiler
     {

@@ -1,6 +1,6 @@
 ﻿using Xunit;
-using SqlKata.QueryBuilder;
-using SqlKata.QueryBuilder.Compilers;
+using SqlKata;
+using SqlKata.Compilers;
 
 public class NestedSelectTests
 {

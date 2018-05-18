@@ -1,6 +1,6 @@
 using System;
 
-namespace SqlKata.QueryBuilder.Compilers
+namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
