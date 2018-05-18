@@ -91,7 +91,7 @@ if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0) { Die "Build Number or Pull
 if(!(Test-Path "version.props")) { Die "Unable to locate required file: version.props" }
 $outputPath = "$PSScriptRoot\.nupkgs"
 $queryBuilderPath = "$PSScriptRoot\QueryBuilder\QueryBuilder.csproj"
-$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:q /p:BuildNumber=$BuildNumber"
+$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:diag /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
 {
@@ -147,7 +147,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack $queryBuilderPath /nologo /verbosity:q --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack $queryBuilderPath /nologo /verbosity:diag --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
