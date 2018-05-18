@@ -7,7 +7,7 @@ namespace SqlKata.QueryBuilder
     /// <summary>
     /// Represents "column" or "column as alias" clause.
     /// </summary>
-    /// <seealso cref="SqlKata.AbstractColumn" />
+    /// <seealso cref="AbstractColumn" />
     public class Column : AbstractColumn
     {
         /// <summary>
@@ -33,7 +33,7 @@ namespace SqlKata.QueryBuilder
     /// <summary>
     /// Represents column clause calculated using query.
     /// </summary>
-    /// <seealso cref="SqlKata.AbstractColumn" />
+    /// <seealso cref="AbstractColumn" />
     public class QueryColumn : AbstractColumn
     {
         /// <summary>

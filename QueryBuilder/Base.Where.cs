@@ -94,7 +94,9 @@ namespace SqlKata.QueryBuilder
         /// Apply the Where clause changes if the given "condition" is true.
         /// </summary>
         /// <param name="condition"></param>
-        /// <param name="callback"></param>
+        /// <param name="column"></param>
+        /// <param name="op"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
         public Q WhereIf<T>(bool condition, string column, string op, T value)
         {
@@ -115,7 +117,9 @@ namespace SqlKata.QueryBuilder
         /// Apply the Or Where clause changes if the given "condition" is true.
         /// </summary>
         /// <param name="condition"></param>
-        /// <param name="callback"></param>
+        /// <param name="column"></param>
+        /// <param name="op"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
         public Q OrWhereIf<T>(bool condition, string column, string op, T value)
         {

@@ -1,4 +1,3 @@
-using System;
 using SqlKata.QueryBuilder;
 using Xunit;
 

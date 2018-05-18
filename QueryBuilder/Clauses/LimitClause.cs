@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace SqlKata.QueryBuilder
 {
     public class LimitOffset : AbstractClause
