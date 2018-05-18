@@ -5,7 +5,7 @@ namespace SqlKata.QueryBuilder
     /// <summary>
     /// Represents aggregate clause like "COUNT", "MAX" or etc.
     /// </summary>
-    /// <seealso cref="SqlKata.AbstractClause" />
+    /// <seealso cref="AbstractClause" />
     public class AggregateClause : AbstractClause
     {
         /// <summary>

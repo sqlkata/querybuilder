@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -24,9 +23,8 @@ namespace SqlKata.QueryBuilder.Compilers
         /// <summary>
         /// Compile a single column clause
         /// </summary>
-        /// <param name="columns"></param>
+        /// <param name="column"></param>
         /// <returns></returns>
-
         public virtual string CompileColumn(AbstractColumn column)
         {
             if (column is RawColumn raw)
