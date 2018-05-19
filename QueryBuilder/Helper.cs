@@ -112,23 +112,10 @@ namespace SqlKata
                 return subject;
             }
 
-            var tokens = subject.Split(new[] { match }, StringSplitOptions.None).ToList();
-
-            if (tokens.Count == 1)
-            {
-                return tokens[0];
-            }
-
-            var newStr = new List<string>();
-            newStr.Add(tokens[0]);
-
-            for (var i = 1; i < tokens.Count; i++)
-            {
-                var replacement = callback.Invoke(i - 1);
-                newStr.Add(replacement + tokens[i]);
-            }
-
-            return string.Join("", newStr);
+            var index = 0;
+            return subject
+                .Split(new[] { match }, StringSplitOptions.None)
+                .Aggregate((left, right) => left + callback(index++) + right);
         }
 
     }
