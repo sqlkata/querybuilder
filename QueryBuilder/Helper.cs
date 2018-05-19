@@ -25,12 +25,7 @@ namespace SqlKata
 
         public static bool IsArray(object value)
         {
-            if (value == null)
-            {
-                return false;
-            }
-
-            if (value is string)
+            if (value == null || value is string)
             {
                 return false;
             }
@@ -95,13 +90,13 @@ namespace SqlKata
 
         public static List<int> AllIndexesOf(string str, string value)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 return new List<int>();
             }
 
-            List<int> indexes = new List<int>();
-            for (int index = 0; ; index += value.Length)
+            var indexes = new List<int>();
+            for (var index = 0; ; index += value.Length)
             {
                 index = str.IndexOf(value, index);
                 if (index == -1)
@@ -112,7 +107,7 @@ namespace SqlKata
 
         public static string ReplaceAll(string subject, string match, Func<int, string> callback)
         {
-            if (string.IsNullOrWhiteSpace(subject))
+            if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
             {
                 return subject;
             }
