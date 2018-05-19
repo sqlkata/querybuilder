@@ -25,10 +25,8 @@ namespace SqlKata
 
         public static bool IsArray(object value)
         {
-            if (value == null || value is string)
-            {
+            if (value is string)
                 return false;
-            }
 
             return value is IEnumerable;
         }
