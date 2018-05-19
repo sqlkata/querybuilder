@@ -33,23 +33,9 @@ namespace SqlKata
             return value is IEnumerable;
         }
 
-        public static List<object> Flatten(IEnumerable array)
+        public static IEnumerable<object> Flatten(IEnumerable<object> array)
         {
-            var result = new List<object>();
-
-            foreach (var item in array)
-            {
-                if (IsArray(item))
-                {
-                    result.AddRange(Flatten((IEnumerable)item));
-                }
-                else
-                {
-                    result.Add(item);
-                }
-            }
-
-            return result;
+            return array.SelectMany(o => IsArray(o) ? Flatten(o as IEnumerable<object>) : new[] {o});
         }
 
         public static bool IsGenericType(Type type)
