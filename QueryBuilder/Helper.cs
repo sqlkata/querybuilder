@@ -78,9 +78,7 @@ namespace SqlKata
                 var cur = IsGenericType(toCheck) ? toCheck.GetGenericTypeDefinition() : toCheck;
 
                 if (generic == cur)
-                {
                     return true;
-                }
 
                 toCheck = BaseType(toCheck);
             }
@@ -108,9 +106,7 @@ namespace SqlKata
         public static string ReplaceAll(string subject, string match, Func<int, string> callback)
         {
             if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
-            {
                 return subject;
-            }
 
             var index = 0;
             return subject
