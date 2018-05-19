@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using SqlKata;
 using Xunit;
 
@@ -94,5 +92,72 @@ public class HelperTest
 
         // Then
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void Flatten_ReturnFlatttenCollecitonRecursivity_IfArrayIsNested()
+    {
+        // Given
+        var objects = new object[]
+        {
+            1,
+            0.1,
+            'A',
+            new object[]
+            {
+                'A',
+                "B",
+                new object[]
+                {
+                    "C",
+                    'D'
+                }
+            }
+        };
+
+        // When
+        var flatten = Helper.Flatten(objects);
+
+        // Then
+        Assert.Equal(new object[]{1, 0.1, 'A', 'A', "B", "C", 'D'}, flatten);
+    }
+
+    [Fact]
+    public void IsArray_ReturnFalse_IfValueIsNull()
+    {
+        // Given
+        IEnumerable test = null;
+
+        // When
+        var isArray = Helper.IsArray(test);
+
+        // Then
+        Assert.False(isArray);
+    }
+
+    [Fact]
+    public void IsArray_ReturnFlase_IfTypeOfValueIsString()
+    {
+        // Given
+        var value = "string";
+
+        // When
+        var isArray = Helper.IsArray(value);
+
+        // Then
+        Assert.False(isArray);
+    }
+
+    [Fact]
+    public void IsArray_ReturnTrue_IfValueIsExactlyIEnuerable()
+    {
+        // Given
+        var value = new object[] {1, 'B', "C"};
+
+        // When
+        var isArray = Helper.IsArray(value);
+
+        // Then
+        Assert.True(isArray);
     }
 }
