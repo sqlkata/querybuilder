@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using SqlKata;
 using Xunit;
 
@@ -50,5 +53,46 @@ public class HelperTest
     {
         var output = Helper.ReplaceAll(input, "?", x => x + "");
         Assert.Equal(expected, output);
+    }
+
+    [Fact]
+    public void AllIndexesOf_ReturnIndexes_IfValueIsContainedInAString()
+    {
+        // Given
+        var input = "hello";
+
+        // When
+        var result = Helper.AllIndexesOf(input, "l");
+
+        // Then
+        Assert.Equal(new[] {2, 3}, result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AllIndexesOf_ReturnEmptyCollection_IfValueIsEmptyOrNull(string value)
+    {
+        // Given
+        var input = "hello";
+
+        // When
+        var result = Helper.AllIndexesOf(input, value);
+
+        // Then
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void AllIndexesOf_ReturnEmptyCollection_IfValueIsNotContainedInAString()
+    {
+        // Given
+        var input = "hello";
+
+        // When
+        var result = Helper.AllIndexesOf(input, "F");
+
+        // Then
+        Assert.Empty(result);
     }
 }

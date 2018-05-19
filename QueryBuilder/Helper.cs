@@ -88,21 +88,21 @@ namespace SqlKata
             return false;
         }
 
-        public static List<int> AllIndexesOf(string str, string value)
+        public static IEnumerable<int> AllIndexesOf(string str, string value)
         {
             if (string.IsNullOrEmpty(value))
-            {
-                return new List<int>();
-            }
+                yield break;
 
-            var indexes = new List<int>();
-            for (var index = 0; ; index += value.Length)
+            var index = 0;
+            do
             {
-                index = str.IndexOf(value, index);
+                index = str.IndexOf(value, index, StringComparison.Ordinal);
+
                 if (index == -1)
-                    return indexes;
-                indexes.Add(index);
-            }
+                    yield break;
+
+                yield return index;
+            } while ((index += value.Length) < str.Length);
         }
 
         public static string ReplaceAll(string subject, string match, Func<int, string> callback)
