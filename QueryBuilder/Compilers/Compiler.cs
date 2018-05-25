@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
         public string EngineCode;
 
         /// The list of bindings for the current compilation
-        protected List<object> bindings = new List<object>();
+        protected internal List<object> bindings = new List<object>();
 
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
@@ -85,7 +85,9 @@ namespace SqlKata.Compilers
             bindings = bindings.Select(x => x is NullValue ? null : x).ToList();
 
             sql = OnAfterCompile(sql, bindings);
-            return new SqlResult(sql, bindings);
+            var result = new SqlResult(sql, new List<object>(bindings));
+            bindings.Clear();
+            return result;
         }
 
         protected virtual Query OnBeforeCompile(Query query)
