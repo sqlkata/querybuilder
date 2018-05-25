@@ -3,9 +3,7 @@
 
 # Other files
 *.pfx
-config.json
 npm-debug.log
-example
 
 # User-specific files
 *.suo
@@ -274,5 +272,5 @@ __pycache__/
 # Cake - Uncomment if you are using it
 # tools/
 
-# Thumbs 
+# Thumbs
 Thumbs.db

@@ -16,6 +16,11 @@ namespace SqlKata.Compilers
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
 
+        public List<object> GetBindings()
+        {
+            return this.bindings;
+        }
+
         public Compiler()
         {
         }
