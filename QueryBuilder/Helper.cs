@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SqlKata
 {
@@ -92,11 +93,12 @@ namespace SqlKata
             if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
                 return subject;
 
-            var index = 0;
-            return subject
-                .Split(new[] { match }, StringSplitOptions.None)
-                .Aggregate((left, right) => left + callback(index++) + right);
+            var splited = subject.Split(new[] { match }, StringSplitOptions.None);
+            return splited
+                .Skip(1)
+                .Select((item, index) => callback(index) + item)
+                .Aggregate(new StringBuilder(splited.First()), (builder, item) => builder.Append(item))
+                .ToString();
         }
-
     }
 }
