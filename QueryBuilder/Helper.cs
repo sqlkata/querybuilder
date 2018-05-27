@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace SqlKata
 {
@@ -97,8 +96,7 @@ namespace SqlKata
             return splited
                 .Skip(1)
                 .Select((item, index) => callback(index) + item)
-                .Aggregate(new StringBuilder(splited.First()), (builder, item) => builder.Append(item))
-                .ToString();
+                .Aggregate(splited.First(), (left, right) => left + right);
         }
     }
 }
