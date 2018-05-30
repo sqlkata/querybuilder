@@ -25,36 +25,15 @@ namespace SqlKata
 
         public static bool IsArray(object value)
         {
-            if (value == null)
-            {
-                return false;
-            }
-
             if (value is string)
-            {
                 return false;
-            }
 
             return value is IEnumerable;
         }
 
-        public static List<object> Flatten(IEnumerable array)
+        public static IEnumerable<object> Flatten(IEnumerable<object> array)
         {
-            var result = new List<object>();
-
-            foreach (var item in array)
-            {
-                if (IsArray(item))
-                {
-                    result.AddRange(Flatten((IEnumerable)item));
-                }
-                else
-                {
-                    result.Add(item);
-                }
-            }
-
-            return result;
+            return array.SelectMany(o => IsArray(o) ? Flatten(o as IEnumerable<object>) : new[] {o});
         }
 
         public static bool IsGenericType(Type type)
@@ -83,9 +62,7 @@ namespace SqlKata
                 var cur = IsGenericType(toCheck) ? toCheck.GetGenericTypeDefinition() : toCheck;
 
                 if (generic == cur)
-                {
                     return true;
-                }
 
                 toCheck = BaseType(toCheck);
             }
@@ -93,48 +70,33 @@ namespace SqlKata
             return false;
         }
 
-        public static List<int> AllIndexesOf(string str, string value)
+        public static IEnumerable<int> AllIndexesOf(string str, string value)
         {
-            if (String.IsNullOrEmpty(value))
-            {
-                return new List<int>();
-            }
+            if (string.IsNullOrEmpty(value))
+                yield break;
 
-            List<int> indexes = new List<int>();
-            for (int index = 0; ; index += value.Length)
+            var index = 0;
+            do
             {
-                index = str.IndexOf(value, index);
+                index = str.IndexOf(value, index, StringComparison.Ordinal);
+
                 if (index == -1)
-                    return indexes;
-                indexes.Add(index);
-            }
+                    yield break;
+
+                yield return index;
+            } while ((index += value.Length) < str.Length);
         }
 
         public static string ReplaceAll(string subject, string match, Func<int, string> callback)
         {
-            if (string.IsNullOrWhiteSpace(subject))
-            {
+            if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
                 return subject;
-            }
 
-            var tokens = subject.Split(new[] { match }, StringSplitOptions.None).ToList();
-
-            if (tokens.Count == 1)
-            {
-                return tokens[0];
-            }
-
-            var newStr = new List<string>();
-            newStr.Add(tokens[0]);
-
-            for (var i = 1; i < tokens.Count; i++)
-            {
-                var replacement = callback.Invoke(i - 1);
-                newStr.Add(replacement + tokens[i]);
-            }
-
-            return string.Join("", newStr);
+            var splited = subject.Split(new[] { match }, StringSplitOptions.None);
+            return splited
+                .Skip(1)
+                .Select((item, index) => callback(index) + item)
+                .Aggregate(splited.First(), (left, right) => left + right);
         }
-
     }
 }

@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace SqlKata
 {
     public partial class Query
