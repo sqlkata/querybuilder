@@ -54,13 +54,7 @@ namespace SqlKata
     {
         public Query Query { get; set; }
 
-        public override string Alias
-        {
-            get
-            {
-                return string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
-            }
-        }
+        public override string Alias => string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
 
         /// <inheritdoc />
         public override AbstractClause Clone()

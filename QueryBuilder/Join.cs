@@ -6,16 +6,10 @@ namespace SqlKata
     {
         protected string _type = "INNER";
 
-        protected override string[] bindingOrder
-        {
-            get
-            {
-                return new[] {
-                    "from",
-                    "where",
-                };
-            }
-        }
+        protected override string[] bindingOrder => new[] {
+            "from",
+            "where",
+        };
 
         public string Type
         {
