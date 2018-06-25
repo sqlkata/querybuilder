@@ -5,16 +5,16 @@ namespace SqlKata
     }
 
     /// <summary>
-    /// Represents "column" or "column as alias" clause.
+    ///     Represents "column" or "column as alias" clause.
     /// </summary>
     /// <seealso cref="AbstractColumn" />
     public class Column : AbstractColumn
     {
         /// <summary>
-        /// Gets or sets the column name. Can be "columnName" or "columnName as columnAlias".
+        ///     Gets or sets the column name. Can be "columnName" or "columnName as columnAlias".
         /// </summary>
         /// <value>
-        /// The column name.
+        ///     The column name.
         /// </value>
         public string Name { get; set; }
 
@@ -25,31 +25,32 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Name = Name,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents column clause calculated using query.
+    ///     Represents column clause calculated using query.
     /// </summary>
     /// <seealso cref="AbstractColumn" />
     public class QueryColumn : AbstractColumn
     {
         /// <summary>
-        /// Gets or sets the query that will be used for column value calculation.
+        ///     Gets or sets the query that will be used for column value calculation.
         /// </summary>
         /// <value>
-        /// The query for column value calculation.
+        ///     The query for column value calculation.
         /// </value>
         public Query Query { get; set; }
+
         public override AbstractClause Clone()
         {
             return new QueryColumn
             {
                 Engine = Engine,
                 Query = Query.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -57,12 +58,13 @@ namespace SqlKata
     public class RawColumn : AbstractColumn, IRaw
     {
         /// <summary>
-        /// Gets or sets the RAW expression.
+        ///     Gets or sets the RAW expression.
         /// </summary>
         /// <value>
-        /// The RAW expression.
+        ///     The RAW expression.
         /// </value>
         public string Expression { get; set; }
+
         public object[] Bindings { set; get; }
 
         /// <inheritdoc />
@@ -73,7 +75,7 @@ namespace SqlKata
                 Engine = Engine,
                 Expression = Expression,
                 Bindings = Bindings,
-                Component = Component,
+                Component = Component
             };
         }
     }
