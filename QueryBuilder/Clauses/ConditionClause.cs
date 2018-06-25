@@ -35,7 +35,7 @@ namespace SqlKata
 
     public class BasicStringCondition : BasicCondition<string>
     {
-        public bool CaseSensitive { get; set; } = false;
+        public bool CaseSensitive { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
