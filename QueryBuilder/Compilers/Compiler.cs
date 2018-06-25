@@ -18,7 +18,7 @@ namespace SqlKata.Compilers
 
         public List<object> GetBindings()
         {
-            return this.bindings;
+            return bindings;
         }
 
         public Compiler()
@@ -143,17 +143,17 @@ namespace SqlKata.Compilers
             }
 
             var results = new[] {
-                    this.CompileAggregate(query),
-                    this.CompileColumns(query),
-                    this.CompileFrom(query),
-                    this.CompileJoins(query),
-                    this.CompileWheres(query),
-                    this.CompileGroups(query),
-                    this.CompileHavings(query),
-                    this.CompileOrders(query),
-                    this.CompileLimit(query),
-                    this.CompileOffset(query),
-                    this.CompileLock(query),
+                    CompileAggregate(query),
+                    CompileColumns(query),
+                    CompileFrom(query),
+                    CompileJoins(query),
+                    CompileWheres(query),
+                    CompileGroups(query),
+                    CompileHavings(query),
+                    CompileOrders(query),
+                    CompileLimit(query),
+                    CompileOffset(query),
+                    CompileLock(query),
                 }
                .Where(x => x != null)
                .Select(x => x.Trim())
@@ -604,7 +604,7 @@ namespace SqlKata.Compilers
         protected virtual string dynamicCompile(string name, AbstractClause clause)
         {
 
-            MethodInfo methodInfo = this.GetType()
+            MethodInfo methodInfo = GetType()
                 .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (methodInfo == null)
@@ -666,8 +666,8 @@ namespace SqlKata.Compilers
         {
             if (value == "*") return value;
 
-            var opening = this.OpeningIdentifier;
-            var closing = this.ClosingIdentifier;
+            var opening = OpeningIdentifier;
+            var closing = ClosingIdentifier;
 
             return opening + value.Replace(closing, closing + closing) + closing;
         }
@@ -703,11 +703,11 @@ namespace SqlKata.Compilers
             return input
 
                 // deprecated
-                .Replace("{", this.OpeningIdentifier)
-                .Replace("}", this.ClosingIdentifier)
+                .Replace("{", OpeningIdentifier)
+                .Replace("}", ClosingIdentifier)
 
-                .Replace("[", this.OpeningIdentifier)
-                .Replace("]", this.ClosingIdentifier);
+                .Replace("[", OpeningIdentifier)
+                .Replace("]", ClosingIdentifier);
         }
 
     }

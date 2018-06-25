@@ -8,7 +8,7 @@ namespace SqlKata.Execution
         public PaginationResult<T> FirstPage { get; set; }
         public PaginationResult<T> CurrentPage { get; set; }
 
-        public IEnumerator<Execution.PaginationResult<T>> GetEnumerator()
+        public IEnumerator<PaginationResult<T>> GetEnumerator()
         {
             CurrentPage = FirstPage;
 

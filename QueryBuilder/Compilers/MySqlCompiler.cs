@@ -37,7 +37,7 @@ namespace SqlKata.Compilers
         public static string ENGINE_CODE = "mysql";
         public static Query ForMySql(this Query src, Func<Query, Query> fn)
         {
-            return src.For(MySqlCompilerExtensions.ENGINE_CODE, fn);
+            return src.For(ENGINE_CODE, fn);
         }
     }
 }

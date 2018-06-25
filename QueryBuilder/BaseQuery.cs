@@ -20,7 +20,7 @@ namespace SqlKata
 
         public Q SetEngineScope(string engine)
         {
-            this.EngineScope = engine;
+            EngineScope = engine;
 
             // this.Clauses = this.Clauses.Select(x =>
             // {
@@ -48,7 +48,7 @@ namespace SqlKata
         {
             var q = NewQuery();
 
-            q.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
+            q.Clauses = Clauses.Select(x => x.Clone()).ToList();
 
             return q;
         }
@@ -60,7 +60,7 @@ namespace SqlKata
                 throw new ArgumentException("Cannot set the same query as a parent of itself");
             }
 
-            this.Parent = parent;
+            Parent = parent;
             return (Q)this;
         }
 
@@ -69,7 +69,7 @@ namespace SqlKata
         public Q NewChild()
         {
             var newQuery = NewQuery().SetParent((Q)this);
-            newQuery.EngineScope = this.EngineScope;
+            newQuery.EngineScope = EngineScope;
             return newQuery;
         }
 

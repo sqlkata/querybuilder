@@ -9,7 +9,7 @@ namespace SqlKata
 
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
+            ClearComponent("aggregate")
             .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,

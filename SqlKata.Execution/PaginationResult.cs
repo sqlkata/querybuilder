@@ -39,32 +39,32 @@ namespace SqlKata.Execution
 
         public Query NextQuery()
         {
-            return this.Query.ForPage(Page + 1, PerPage);
+            return Query.ForPage(Page + 1, PerPage);
         }
 
         public PaginationResult<T> Next()
         {
-            return this.Query.Paginate<T>(Page + 1, PerPage);
+            return Query.Paginate<T>(Page + 1, PerPage);
         }
 
         public async Task<PaginationResult<T>> NextAsync()
         {
-            return await this.Query.PaginateAsync<T>(Page + 1, PerPage);
+            return await Query.PaginateAsync<T>(Page + 1, PerPage);
         }
 
         public Query PreviousQuery()
         {
-            return this.Query.ForPage(Page - 1, PerPage);
+            return Query.ForPage(Page - 1, PerPage);
         }
 
         public PaginationResult<T> Previous()
         {
-            return this.Query.Paginate<T>(Page - 1, PerPage);
+            return Query.Paginate<T>(Page - 1, PerPage);
         }
 
         public async Task<PaginationResult<T>> PreviousAsync()
         {
-            return await this.Query.PaginateAsync<T>(Page - 1, PerPage);
+            return await Query.PaginateAsync<T>(Page - 1, PerPage);
         }
 
         public PaginationIterator<T> Each => new PaginationIterator<T>

@@ -8,7 +8,7 @@ namespace SqlKata
 
         public Query Combine(string operation, bool all, Query query)
         {
-            if (this.Method != "select" || query.Method != "select")
+            if (Method != "select" || query.Method != "select")
             {
                 throw new InvalidOperationException("Only select queries can be combined.");
             }
@@ -23,7 +23,7 @@ namespace SqlKata
 
         public Query CombineRaw(string sql, params object[] bindings)
         {
-            if (this.Method != "select")
+            if (Method != "select")
             {
                 throw new InvalidOperationException("Only select queries can be combined.");
             }

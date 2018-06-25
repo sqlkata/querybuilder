@@ -14,17 +14,17 @@ namespace SqlKata.Execution
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
-            this.Connection = connection;
-            this.Compiler = compiler;
+            Connection = connection;
+            Compiler = compiler;
         }
 
         public override Query Clone()
         {
 
-            var query = new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(Connection, Compiler);
 
-            query.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
-            query.Logger = this.Logger;
+            query.Clauses = Clauses.Select(x => x.Clone()).ToList();
+            query.Logger = Logger;
 
             query.QueryAlias = QueryAlias;
             query.IsDistinct = IsDistinct;

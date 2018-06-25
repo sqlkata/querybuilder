@@ -23,7 +23,7 @@ namespace SqlKata.Execution
 
         public Query Query()
         {
-            var query = new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(Connection, Compiler);
 
             query.Logger = Logger;
 
@@ -37,7 +37,7 @@ namespace SqlKata.Execution
 
         public Query FromQuery(Query query)
         {
-            var xQuery = new XQuery(this.Connection, this.Compiler);
+            var xQuery = new XQuery(Connection, Compiler);
 
             xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
 

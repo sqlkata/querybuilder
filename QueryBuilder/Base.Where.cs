@@ -55,7 +55,7 @@ namespace SqlKata
                     query.And();
                 }
 
-                query = this.Not(notFlag).Where(tuple.Key, tuple.Value);
+                query = Not(notFlag).Where(tuple.Key, tuple.Value);
             }
 
             return query;
@@ -84,7 +84,7 @@ namespace SqlKata
                     query.And();
                 }
 
-                query = this.Not(notFlag).Where(columns.ElementAt(i), values.ElementAt(i));
+                query = Not(notFlag).Where(columns.ElementAt(i), values.ElementAt(i));
             }
 
             return query;
@@ -194,7 +194,7 @@ namespace SqlKata
         }
         public Q OrWhereNot(string column, string op, object value)
         {
-            return this.Or().Not(true).Where(column, op, value);
+            return Or().Not(true).Where(column, op, value);
         }
         public Q OrWhereNot(string column, object value)
         {
@@ -240,7 +240,7 @@ namespace SqlKata
 
         public Q OrWhereNull(string column)
         {
-            return this.Or().WhereNull(column);
+            return Or().WhereNull(column);
         }
 
         public Q OrWhereNotNull(string column)
