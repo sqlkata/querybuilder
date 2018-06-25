@@ -1,7 +1,6 @@
 using Dapper;
 using System.Collections.Generic;
 using System;
-using SqlKata;
 
 namespace SqlKata.Execution
 {

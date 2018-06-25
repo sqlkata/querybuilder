@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using Dapper;
-using SqlKata;
 
 namespace SqlKata.Execution
 {
@@ -12,14 +11,14 @@ namespace SqlKata.Execution
         #region Dapper
         public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query);
+            var compiled = db.Compile(query);
 
             return db.Connection.Query<T>(compiled.Sql, compiled.Bindings);
         }
 
         public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query);
+            var compiled = db.Compile(query);
 
             return db.Connection.Query(compiled.Sql, compiled.Bindings) as IEnumerable<IDictionary<string, object>>;
         }
@@ -31,7 +30,7 @@ namespace SqlKata.Execution
 
         public static T First<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query.Limit(1));
+            var compiled = db.Compile(query.Limit(1));
 
             return db.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
         }
@@ -43,7 +42,7 @@ namespace SqlKata.Execution
 
         public static T FirstOrDefault<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query.Limit(1));
+            var compiled = db.Compile(query.Limit(1));
 
             return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
         }
@@ -55,7 +54,7 @@ namespace SqlKata.Execution
 
         public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.compile(query);
+            var compiled = db.Compile(query);
 
             return db.Connection.Execute(
                 compiled.Sql,
@@ -68,7 +67,7 @@ namespace SqlKata.Execution
 
         public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.compile(query.Limit(1));
+            var compiled = db.Compile(query.Limit(1));
 
             return db.Connection.ExecuteScalar<T>(
                 compiled.Sql,
@@ -88,7 +87,7 @@ namespace SqlKata.Execution
         {
 
             var compiled = queries
-                .Select(q => db.compile(q))
+                .Select(db.Compile)
                 .Aggregate((a, b) => a + b);
 
             return db.Connection.QueryMultiple(
@@ -108,7 +107,6 @@ namespace SqlKata.Execution
             CommandType? commandType = null
         )
         {
-
             var multi = db.GetMultiple<T>(
                 queries,
                 transaction,
@@ -117,17 +115,14 @@ namespace SqlKata.Execution
 
             using (multi)
             {
-                for (var i = 0; i < queries.Count(); i++)
-                {
+                for (var i = 0; i < queries.Length; i++)
                     yield return multi.Read<T>();
-                }
             }
-
         }
 
         #endregion
 
-        #region aggregate
+        #region Aggregate
         public static T Aggregate<T>(
             this QueryFactory db,
             Query query,
@@ -165,19 +160,15 @@ namespace SqlKata.Execution
 
         #endregion
 
-        #region pagination
+        #region Pagination
         public static PaginationResult<T> Paginate<T>(this QueryFactory db, Query query, int page, int perPage = 25)
         {
 
             if (page < 1)
-            {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
-            }
 
             if (perPage < 1)
-            {
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
-            }
 
             var count = query.Clone().Count<long>();
 
@@ -229,7 +220,8 @@ namespace SqlKata.Execution
         }
         #endregion
 
-        private static SqlResult compile(this QueryFactory db, Query query)
+        #region Compile
+        private static SqlResult Compile(this QueryFactory db, Query query)
         {
             var compiled = db.Compiler.Compile(query);
 
@@ -237,6 +229,6 @@ namespace SqlKata.Execution
 
             return compiled;
         }
-
+        #endregion
     }
 }

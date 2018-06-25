@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
-using SqlKata;
 using SqlKata.Compilers;
 
 namespace SqlKata.Execution
@@ -21,14 +20,14 @@ namespace SqlKata.Execution
         public override Query Clone()
         {
 
-            var query = new XQuery(Connection, Compiler);
-
-            query.Clauses = Clauses.Select(x => x.Clone()).ToList();
-            query.Logger = Logger;
-
-            query.QueryAlias = QueryAlias;
-            query.IsDistinct = IsDistinct;
-            query.Method = Method;
+            var query = new XQuery(Connection, Compiler)
+            {
+                Clauses = Clauses.Select(x => x.Clone()).ToList(),
+                Logger = Logger,
+                QueryAlias = QueryAlias,
+                IsDistinct = IsDistinct,
+                Method = Method
+            };
 
             query.SetEngineScope(EngineScope);
 

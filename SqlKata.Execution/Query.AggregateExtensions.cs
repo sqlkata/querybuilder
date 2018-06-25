@@ -1,5 +1,3 @@
-using SqlKata;
-
 namespace SqlKata.Execution
 {
     public static class QueryAggregateExtensions

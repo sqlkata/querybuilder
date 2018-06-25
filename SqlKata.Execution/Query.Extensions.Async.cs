@@ -2,7 +2,6 @@ using Dapper;
 using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
-using SqlKata;
 
 namespace SqlKata.Execution
 {

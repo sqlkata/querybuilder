@@ -6,71 +6,16 @@ namespace SqlKata.Execution
 {
     public class PaginationResult<T>
     {
-        #region Properties
         /// <summary>
-        /// The <see cref="Query"/>
+        ///     Returns a page <see cref="PaginationIterator{T}" />
         /// </summary>
-        public Query Query { get; set; }
-
-        /// <summary>
-        /// Returns the total number of pages
-        /// </summary>
-        public long Count { get; set; }
-
-        /// <summary>
-        /// Returns an <see cref="IEnumerable{T}"/> list
-        /// </summary>
-        public IEnumerable<T> List { get; set; }
-
-        /// <summary>
-        /// Returns the current page
-        /// </summary>
-        public int Page { get; set; }
-
-        /// <summary>
-        /// Returns the amount of records on each page
-        /// </summary>
-        public int PerPage { get; set; }
-
-        /// <summary>
-        /// Returns the total amount of pages
-        /// </summary>
-        public int TotalPages
+        public PaginationIterator<T> Each => new PaginationIterator<T>
         {
-            get
-            {
-                if (PerPage < 1)
-                    return 0;
-
-                var div = (float)Count / PerPage;
-
-                return (int)Math.Ceiling(div);
-            }
-        }
+            FirstPage = this
+        };
 
         /// <summary>
-        /// Returns <c>true</c> when this is the first page
-        /// </summary>
-        public bool IsFirst => Page == 1;
-
-        /// <summary>
-        /// Returns <c>true</c> when this is the last page
-        /// </summary>
-        public bool IsLast => Page == TotalPages;
-
-        /// <summary>
-        /// Returns <c>true</c> when there is a next page
-        /// </summary>
-        public bool HasNext => Page < TotalPages;
-
-        /// <summary>
-        /// Returns <c>true</c> when there is a previous page
-        /// </summary>
-        public bool HasPrevious => Page > 1;
-        #endregion
-
-        /// <summary>
-        /// Queries the database for the next page
+        ///     Queries the database for the next page
         /// </summary>
         /// <returns></returns>
         public Query NextQuery()
@@ -79,7 +24,7 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// Move to the next page
+        ///     Move to the next page
         /// </summary>
         /// <returns></returns>
         public PaginationResult<T> Next()
@@ -88,7 +33,7 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// Move the the next page async
+        ///     Move the the next page async
         /// </summary>
         /// <returns></returns>
         public async Task<PaginationResult<T>> NextAsync()
@@ -97,7 +42,7 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// Queries the database for the previous page
+        ///     Queries the database for the previous page
         /// </summary>
         /// <returns></returns>
         public Query PreviousQuery()
@@ -106,7 +51,7 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// Move the the previous page
+        ///     Move the the previous page
         /// </summary>
         /// <returns></returns>
         public PaginationResult<T> Previous()
@@ -115,7 +60,7 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// Move to the previous page async
+        ///     Move to the previous page async
         /// </summary>
         /// <returns></returns>
         public async Task<PaginationResult<T>> PreviousAsync()
@@ -123,12 +68,67 @@ namespace SqlKata.Execution
             return await Query.PaginateAsync<T>(Page - 1, PerPage);
         }
 
+        #region Properties
         /// <summary>
-        /// Returns a page <see cref="PaginationIterator{T}"/>
+        ///     The <see cref="Query" />
         /// </summary>
-        public PaginationIterator<T> Each => new PaginationIterator<T>
+        public Query Query { get; set; }
+
+        /// <summary>
+        ///     Returns the total number of pages
+        /// </summary>
+        public long Count { get; set; }
+
+        /// <summary>
+        ///     Returns an <see cref="IEnumerable{T}" /> list
+        /// </summary>
+        public IEnumerable<T> List { get; set; }
+
+        /// <summary>
+        ///     Returns the current page
+        /// </summary>
+        public int Page { get; set; }
+
+        /// <summary>
+        ///     Returns the amount of records on each page
+        /// </summary>
+        public int PerPage { get; set; }
+
+        /// <summary>
+        ///     Returns the total amount of pages
+        /// </summary>
+        public int TotalPages
         {
-            FirstPage = this
-        };
+            get
+            {
+                if (PerPage < 1)
+                    return 0;
+
+                var div = (float) Count / PerPage;
+
+                return (int) Math.Ceiling(div);
+            }
+        }
+
+        /// <summary>
+        ///     Returns <c>true</c> when this is the first page
+        /// </summary>
+        public bool IsFirst => Page == 1;
+
+        /// <summary>
+        ///     Returns <c>true</c> when this is the last page
+        /// </summary>
+        public bool IsLast => Page == TotalPages;
+
+        /// <summary>
+        ///     Returns <c>true</c> when there is a next page
+        /// </summary>
+        public bool HasNext => Page < TotalPages;
+
+        /// <summary>
+        ///     Returns <c>true</c> when there is a previous page
+        /// </summary>
+        public bool HasPrevious => Page > 1;
+        #endregion
     }
 }

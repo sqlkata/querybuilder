@@ -5,8 +5,10 @@ namespace SqlKata.Execution
 {
     public class PaginationIterator<T> : IEnumerable<PaginationResult<T>>
     {
+        #region Properties
         public PaginationResult<T> FirstPage { get; set; }
         public PaginationResult<T> CurrentPage { get; set; }
+        #endregion
 
         public IEnumerator<PaginationResult<T>> GetEnumerator()
         {
