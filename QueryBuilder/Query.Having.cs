@@ -20,8 +20,8 @@ namespace SqlKata
                 Column = column,
                 Operator = op,
                 Value = value,
-                IsOr = getOr(),
-                IsNot = getNot()
+                IsOr = GetOr(),
+                IsNot = GetNot()
             });
         }
 
@@ -45,8 +45,8 @@ namespace SqlKata
             return AddComponent("having", new NullCondition
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 

@@ -4,7 +4,14 @@ namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
+        /// <summary>
+        /// Returns <c>true</c> when this is an OR
+        /// </summary>
         public bool IsOr { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> when this is an NOT
+        /// </summary>
         public bool IsNot { get; set; }
     }
 
@@ -13,8 +20,19 @@ namespace SqlKata
     /// </summary>
     public class BasicCondition<T> : AbstractCondition
     {
+        /// <summary>
+        /// The column
+        /// </summary>
         public string Column { get; set; }
+
+        /// <summary>
+        /// The operator
+        /// </summary>
         public string Operator { get; set; }
+
+        /// <summary>
+        /// The value
+        /// </summary>
         public virtual T Value { get; set; }
 
         /// <inheritdoc />

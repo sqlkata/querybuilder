@@ -11,12 +11,16 @@ namespace SqlKata
 
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        protected virtual string[] bindingOrder { get; }
-        public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
+        #region Fields
+        private bool _orFlag;
+        private bool _notFlag;
+        public string EngineScope;
+        #endregion
 
-        private bool orFlag = false;
-        private bool notFlag = false;
-        public string EngineScope = null;
+        #region Properties
+        protected virtual string[] BindingOrder { get; }
+        public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
+        #endregion
 
         public Q SetEngineScope(string engine)
         {
@@ -28,20 +32,16 @@ namespace SqlKata
             //     return x;
             // }).ToList();
 
-            return (Q)this;
+            return (Q) this;
         }
 
         public virtual List<AbstractClause> OrderedClauses(string engine)
         {
-            return bindingOrder.SelectMany(x => GetComponents(x, engine)).ToList();
-        }
-
-        public BaseQuery()
-        {
+            return BindingOrder.SelectMany(x => GetComponents(x, engine)).ToList();
         }
 
         /// <summary>
-        /// Return a cloned copy of the current query.
+        ///     Return a cloned copy of the current query.
         /// </summary>
         /// <returns></returns>
         public virtual Q Clone()
@@ -56,25 +56,23 @@ namespace SqlKata
         public Q SetParent(AbstractQuery parent)
         {
             if (this == parent)
-            {
                 throw new ArgumentException("Cannot set the same query as a parent of itself");
-            }
 
             Parent = parent;
-            return (Q)this;
+            return (Q) this;
         }
 
         public abstract Q NewQuery();
 
         public Q NewChild()
         {
-            var newQuery = NewQuery().SetParent((Q)this);
+            var newQuery = NewQuery().SetParent((Q) this);
             newQuery.EngineScope = EngineScope;
             return newQuery;
         }
 
         /// <summary>
-        /// Add a component clause to the query.
+        ///     Add a component clause to the query.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="clause"></param>
@@ -83,27 +81,23 @@ namespace SqlKata
         public Q AddComponent(string component, AbstractClause clause, string engineCode = null)
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             clause.Engine = engineCode;
             clause.Component = component;
             Clauses.Add(clause);
 
-            return (Q)this;
+            return (Q) this;
         }
 
         /// <summary>
-        /// Get the list of clauses for a component.
+        ///     Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
         public List<C> GetComponents<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             var clauses = Clauses
                 .Where(x => x.Component == component)
@@ -114,7 +108,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Get the list of clauses for a component.
+        ///     Get the list of clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -122,30 +116,26 @@ namespace SqlKata
         public List<AbstractClause> GetComponents(string component, string engineCode = null)
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             return GetComponents<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
-        /// Get a single component clause from the query.
+        ///     Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
         public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             return GetComponents<C>(component, engineCode)
-            .FirstOrDefault();
+                .FirstOrDefault();
         }
 
         /// <summary>
-        /// Get a single component clause from the query.
+        ///     Get a single component clause from the query.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -153,15 +143,13 @@ namespace SqlKata
         public AbstractClause GetOneComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             return GetOneComponent<AbstractClause>(component, engineCode);
         }
 
         /// <summary>
-        /// Return wether the query has clauses for a component.
+        ///     Return wether the query has clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -169,15 +157,13 @@ namespace SqlKata
         public bool HasComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             return GetComponents(component, engineCode).Any();
         }
 
         /// <summary>
-        /// Remove all clauses for a component.
+        ///     Remove all clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -185,75 +171,75 @@ namespace SqlKata
         public Q ClearComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
-            {
                 engineCode = EngineScope;
-            }
 
             Clauses = Clauses
-                .Where(x => !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
+                .Where(
+                    x =>
+                        !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
-            return (Q)this;
+            return (Q) this;
         }
 
         /// <summary>
-        /// Set the next boolean operator to "and" for the "where" clause.
+        ///     Set the next boolean operator to "and" for the "where" clause.
         /// </summary>
         /// <returns></returns>
         protected Q And()
         {
-            orFlag = false;
-            return (Q)this;
+            _orFlag = false;
+            return (Q) this;
         }
 
         /// <summary>
-        /// Set the next boolean operator to "or" for the "where" clause.
+        ///     Set the next boolean operator to "or" for the "where" clause.
         /// </summary>
         /// <returns></returns>
         protected Q Or()
         {
-            orFlag = true;
-            return (Q)this;
+            _orFlag = true;
+            return (Q) this;
         }
 
         /// <summary>
-        /// Set the next "not" operator for the "where" clause.
+        ///     Set the next "not" operator for the "where" clause.
         /// </summary>
         /// <returns></returns>
         protected Q Not(bool flag)
         {
-            notFlag = flag;
-            return (Q)this;
+            _notFlag = flag;
+            return (Q) this;
         }
 
         /// <summary>
-        /// Get the boolean operator and reset it to "and"
+        ///     Get the boolean operator and reset it to "and"
         /// </summary>
         /// <returns></returns>
-        protected bool getOr()
+        protected bool GetOr()
         {
-            var ret = orFlag;
+            var ret = _orFlag;
 
             // reset the flag
-            orFlag = false;
+            _orFlag = false;
             return ret;
         }
 
         /// <summary>
-        /// Get the "not" operator and clear it
+        ///     Get the "not" operator and clear it
         /// </summary>
         /// <returns></returns>
-        protected bool getNot()
+        protected bool GetNot()
         {
-            var ret = notFlag;
+            var ret = _notFlag;
 
             // reset the flag
-            notFlag = false;
+            _notFlag = false;
             return ret;
         }
 
         /// <summary>
-        /// Add a from Clause
+        ///     Add a from Clause
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
@@ -267,12 +253,10 @@ namespace SqlKata
 
         public Q From(Query query, string alias = null)
         {
-            query.SetParent((Q)this);
+            query.SetParent((Q) this);
 
             if (alias != null)
-            {
                 query.As(alias);
-            };
 
             return ClearComponent("from").AddComponent("from", new QueryFromClause
             {
@@ -293,7 +277,7 @@ namespace SqlKata
         {
             var query = new Query();
 
-            query.SetParent((Q)this);
+            query.SetParent((Q) this);
 
             return From(callback.Invoke(query), alias);
         }
@@ -307,6 +291,5 @@ namespace SqlKata
         {
             return x is NullValue ? null : x;
         }
-
     }
 }

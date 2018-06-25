@@ -6,7 +6,7 @@ namespace SqlKata
     {
         protected string _type = "INNER";
 
-        protected override string[] bindingOrder => new[] {
+        protected override string[] BindingOrder => new[] {
             "from",
             "where",
         };
@@ -63,8 +63,8 @@ namespace SqlKata
                 First = first,
                 Second = second,
                 Operator = op,
-                IsOr = getOr(),
-                IsNot = getNot()
+                IsOr = GetOr(),
+                IsNot = GetNot()
             });
 
         }

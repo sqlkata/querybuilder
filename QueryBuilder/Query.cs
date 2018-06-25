@@ -10,7 +10,7 @@ namespace SqlKata
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
 
-        protected override string[] bindingOrder
+        protected override string[] BindingOrder
         {
             get
             {
