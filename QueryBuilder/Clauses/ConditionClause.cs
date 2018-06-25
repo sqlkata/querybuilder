@@ -4,8 +4,8 @@ namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
-        public bool IsOr { get; set; } = false;
-        public bool IsNot { get; set; } = false;
+        public bool IsOr { get; set; }
+        public bool IsNot { get; set; }
     }
 
     /// <summary>
