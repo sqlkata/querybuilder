@@ -131,8 +131,7 @@ namespace SqlKata.Compilers
 
             return "WITH " + string.Join(", ", sql) + " ";
         }
-
-
+        
         public virtual string CompileSelect(Query query)
         {
             query = OnBeforeSelect(query);
@@ -277,7 +276,6 @@ namespace SqlKata.Compilers
             var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
 
             var parts = new List<string>();
-            string sql;
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
@@ -293,9 +291,9 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            sql = "UPDATE " + CompileTableExpression(from)
-                + " SET " + string.Join(", ", parts)
-                + where;
+            var sql = "UPDATE " + CompileTableExpression(from)
+                                   + " SET " + string.Join(", ", parts)
+                                   + where;
 
             return sql;
         }
@@ -314,8 +312,6 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            string sql;
-
             var where = CompileWheres(query);
 
             if (!string.IsNullOrEmpty(where))
@@ -323,8 +319,7 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            sql = "DELETE FROM " + CompileTableExpression(from) + where;
-
+            var sql = "DELETE FROM " + CompileTableExpression(from) + where;
             return sql;
         }
 

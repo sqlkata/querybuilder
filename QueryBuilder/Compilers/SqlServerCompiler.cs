@@ -127,9 +127,11 @@ namespace SqlKata.Compilers
                 case "time":
                     left = $"CAST({column} as time)";
                     break;
+
                 case "date":
                     left = $"CAST({column} as date)";
                     break;
+
                 default:
                     left = $"DATEPART({condition.Part.ToUpper()}, {column})";
                     break;

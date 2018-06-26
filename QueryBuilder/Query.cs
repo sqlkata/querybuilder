@@ -193,6 +193,17 @@ namespace SqlKata
         }
 
         /// <summary>
+        /// Set the limit and offset for a set of rows
+        /// </summary>
+        /// <param name="startRow">The first row to select</param>
+        /// <param name="rows">The amount fo rows</param>
+        /// <returns></returns>
+        public Query ForRows(int startRow, int rows = 15)
+        {
+            return Skip(startRow).Take(rows);
+        }
+
+        /// <summary>
         /// Set the limit and offset for a given page.
         /// </summary>
         /// <param name="page"></param>
@@ -202,6 +213,7 @@ namespace SqlKata
         {
             return Skip((page - 1) * perPage).Take(perPage);
         }
+
 
         public Query Distinct()
         {

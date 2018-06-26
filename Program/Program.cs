@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
 
@@ -8,9 +9,11 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            var query = new Query("auditlogs", "nolock").SelectRaw("CONVERT(varchar(10), [CreateDate], 20) as CreateDate").Distinct()
-                .ForPage(10, 25).OrderBy("id");
-            
+            var columns = new List<string> {"Test1", "Test2"};
+
+            var query = new Query("ErrorLogs")
+                .AsDeleteRaw("TRUNCAT TABLE [ErrorLogs]");
+
             var compiler = new SqlServerCompiler();
             var sql = compiler.Compile(query);
 

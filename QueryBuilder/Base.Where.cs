@@ -548,10 +548,12 @@ namespace SqlKata
         {
             return Or().WhereExists(callback);
         }
+
         public Q OrWhereNotExists(Query query)
         {
             return Or().Not(true).WhereExists(query);
         }
+
         public Q OrWhereNotExists(Func<Query, Query> callback)
         {
             return Or().Not(true).WhereExists(callback);
