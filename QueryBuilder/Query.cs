@@ -59,11 +59,11 @@ namespace SqlKata
             "not similar to", "not ilike", "~~*", "!~~*",
         };
 
-        public Query() : base()
+        public Query()
         {
         }
 
-        public Query(string table) : base()
+        public Query(string table)
         {
             From(table);
         }

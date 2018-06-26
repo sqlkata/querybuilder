@@ -8,7 +8,7 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            var query = new Query("table")
+            var query = new Query("table", "nolock")
             .WhereLike("name", "a")
             .Limit(10).Offset(5)
             .ForPage(3, 4);
