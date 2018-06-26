@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using Dapper;
 using SqlKata;
+using System.Threading.Tasks;
 
 namespace SqlKata.Execution
 {
@@ -226,6 +227,26 @@ namespace SqlKata.Execution
                 action(result.List, result.Page);
             }
 
+        }
+        #endregion
+
+        #region free statements
+        public static IEnumerable<T> Select<T>(this QueryFactory db, string sql, object param = null)
+        {
+            return db.Connection.Query<T>(sql, param);
+        }
+        public static int Statement(this QueryFactory db, string sql, object param = null)
+        {
+            return db.Connection.Execute(sql, param);
+        }
+
+        public static async Task<IEnumerable<T>> SelectAsync<T>(this QueryFactory db, string sql, object param = null)
+        {
+            return await db.Connection.QueryAsync<T>(sql, param);
+        }
+        public static async Task<int> StatementAsync(this QueryFactory db, string sql, object param = null)
+        {
+            return await db.Connection.ExecuteAsync(sql, param);
         }
         #endregion
 
