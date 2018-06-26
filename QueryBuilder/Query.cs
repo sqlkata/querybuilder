@@ -8,7 +8,7 @@ namespace SqlKata
     {
         #region Operators
         /// <summary>
-        /// A list of sql operators
+        ///     A list of sql operators
         /// </summary>
         protected List<string> Operators = new List<string>
         {
@@ -42,12 +42,6 @@ namespace SqlKata
             "~~*",
             "!~~*"
         };
-        #endregion
-
-        #region Properties
-        public bool IsDistinct { get; set; }
-        public string QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
         #endregion
 
         #region BindingOrder
@@ -90,25 +84,6 @@ namespace SqlKata
         }
         #endregion
 
-        #region Constructors
-        /// <summary>
-        /// Constructs a new query
-        /// </summary>
-        public Query()
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new query
-        /// </summary>
-        /// <param name="table">The table to select from</param>
-        /// <param name="hints">Any hints to use on the table, e.g. nolock</param>
-        public Query(string table, params string[] hints)
-        {
-            From(table, hints);
-        }
-        #endregion
-
         #region Clone
         /// <inheritdoc />
         public override Query Clone()
@@ -123,7 +98,7 @@ namespace SqlKata
 
         #region As
         /// <summary>
-        /// Sets the alias for a <see cref="Query"/>
+        ///     Sets the alias for a <see cref="Query" />
         /// </summary>
         /// <param name="alias"></param>
         /// <returns></returns>
@@ -265,10 +240,10 @@ namespace SqlKata
 
         #region Distinct
         /// <summary>
-        /// Used to build a distinct <see cref="Select(string[])"/> query
+        ///     Used to build a distinct <see cref="Select(string[])" /> query
         /// </summary>
         /// <remarks>
-        /// The SELECT DISTINCT statement is used to return only distinct (different) values.
+        ///     The SELECT DISTINCT statement is used to return only distinct (different) values.
         /// </remarks>
         /// <example>
         ///     SELECT DISTINCT VALUE1 FROM ....
@@ -278,6 +253,42 @@ namespace SqlKata
         {
             IsDistinct = true;
             return this;
+        }
+        #endregion
+
+        #region NewQuery
+        /// <summary>
+        ///     Returns a new empty <see cref="Query" />
+        /// </summary>
+        /// <returns></returns>
+        public override Query NewQuery()
+        {
+            return new Query().SetEngineScope(EngineScope);
+        }
+        #endregion
+
+        #region Properties
+        public bool IsDistinct { get; set; }
+        public string QueryAlias { get; set; }
+        public string Method { get; set; } = "select";
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        ///     Constructs a new query
+        /// </summary>
+        public Query()
+        {
+        }
+
+        /// <summary>
+        ///     Constructs a new query
+        /// </summary>
+        /// <param name="table">The table to select from</param>
+        /// <param name="hints">Any hints to use on the table, e.g. nolock</param>
+        public Query(string table, params string[] hints)
+        {
+            From(table, hints);
         }
         #endregion
 
@@ -313,11 +324,11 @@ namespace SqlKata
 
         #region OrderBy
         /// <summary>
-        /// Sets the <paramref name="columns"/> that need to be used to order 
-        /// the output of the <see cref="Query"/>
+        ///     Sets the <paramref name="columns" /> that need to be used to order
+        ///     the output of the <see cref="Query" />
         /// </summary>
         /// <remarks>
-        /// The ORDER BY keyword is used to sort the result-set in ascending order.
+        ///     The ORDER BY keyword is used to sort the result-set in ascending order.
         /// </remarks>
         /// <param name="columns"></param>
         /// <returns></returns>
@@ -334,11 +345,11 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Sets the <paramref name="columns"/> that need to be used to order 
-        /// the output of the <see cref="Query"/> descending
+        ///     Sets the <paramref name="columns" /> that need to be used to order
+        ///     the output of the <see cref="Query" /> descending
         /// </summary>
         /// <remarks>
-        /// The ORDER BY keyword is used to sort the result-set in descending order.
+        ///     The ORDER BY keyword is used to sort the result-set in descending order.
         /// </remarks>
         /// <param name="columns"></param>
         /// <returns></returns>
@@ -355,11 +366,11 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Set the RAW order by sql code
+        ///     Set the RAW order by sql code
         /// </summary>
         /// <remarks>
-        /// Use this method when you cannot do what you want with the <see cref="OrderBy"/> 
-        /// and <see cref="OrderByDesc"/> methods
+        ///     Use this method when you cannot do what you want with the <see cref="OrderBy" />
+        ///     and <see cref="OrderByDesc" /> methods
         /// </remarks>
         /// <param name="expression"></param>
         /// <param name="bindings"></param>
@@ -374,7 +385,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Order by a random <paramref name="seed"/>
+        ///     Order by a random <paramref name="seed" />
         /// </summary>
         /// <param name="seed"></param>
         /// <returns></returns>
@@ -386,7 +397,7 @@ namespace SqlKata
 
         #region GroupBy
         /// <summary>
-        /// Group the output of the <see cref="Query"/> by the givin <paramref name="columns"/>
+        ///     Group the output of the <see cref="Query" /> by the givin <paramref name="columns" />
         /// </summary>
         /// <param name="columns"></param>
         /// <returns></returns>
@@ -402,10 +413,10 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Set the RAW group by sql code
+        ///     Set the RAW group by sql code
         /// </summary>
         /// <remarks>
-        /// Use this method when you cannot do what you want with the <see cref="GroupBy"/> method
+        ///     Use this method when you cannot do what you want with the <see cref="GroupBy" /> method
         /// </remarks>
         /// <param name="expression"></param>
         /// <param name="bindings"></param>
@@ -419,17 +430,6 @@ namespace SqlKata
             });
 
             return this;
-        }
-        #endregion
-
-        #region NewQuery
-        /// <summary>
-        /// Returns a new empty <see cref="Query"/>
-        /// </summary>
-        /// <returns></returns>
-        public override Query NewQuery()
-        {
-            return new Query().SetEngineScope(EngineScope);
         }
         #endregion
     }

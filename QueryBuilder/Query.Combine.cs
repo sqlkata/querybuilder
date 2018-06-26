@@ -5,6 +5,16 @@ namespace SqlKata
 {
     public partial class Query
     {
+        #region Combine
+        /// <summary>
+        /// Allows you to combine multiple queries using one of the following available operators 
+        /// <c>union, intersect and except</c> by providing the following methods Union, UnionAll, Intersect, IntersectAll, 
+        /// Except and ExceptAll. The method accepts either an instance of Query or a labmda expression
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="all"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public Query Combine(string operation, bool all, Query query)
         {
             if (Method != "select" || query.Method != "select")
@@ -18,6 +28,12 @@ namespace SqlKata
             });
         }
 
+        /// <summary>
+        /// Allows you to combine multiple queries using a RAW combine statement
+        /// </summary>
+        /// <param name="sql">The sql</param>
+        /// <param name="bindings">The bindings</param>
+        /// <returns></returns>
         public Query CombineRaw(string sql, params object[] bindings)
         {
             if (Method != "select")
@@ -29,7 +45,9 @@ namespace SqlKata
                 Bindings = Helper.Flatten(bindings).ToArray()
             });
         }
+        #endregion
 
+        #region Union
         public Query Union(Query query, bool all = false)
         {
             return Combine("union", all, query);
@@ -57,7 +75,9 @@ namespace SqlKata
         {
             return Combine("except", all, query);
         }
+        #endregion
 
+        #region Except
         public Query ExceptAll(Query query)
         {
             return Except(query, true);
@@ -80,7 +100,9 @@ namespace SqlKata
         {
             return Combine("intersect", all, query);
         }
+        #endregion
 
+        #region Intersec
         public Query IntersectAll(Query query)
         {
             return Intersect(query, true);
@@ -98,5 +120,6 @@ namespace SqlKata
         }
 
         public Query IntersectRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
+        #endregion
     }
 }

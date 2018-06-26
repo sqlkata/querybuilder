@@ -2,6 +2,9 @@ using System;
 
 namespace SqlKata
 {
+    /// <summary>
+    ///     Represents a "from" clause.
+    /// </summary>
     public abstract class AbstractFrom : AbstractClause
     {
         #region Properties
@@ -18,9 +21,7 @@ namespace SqlKata
         #endregion
     }
 
-    /// <summary>
-    ///     Represents a "from" clause.
-    /// </summary>
+    /// <inheritdoc />
     public class FromClause : AbstractFrom
     {
         #region Properties
@@ -57,9 +58,7 @@ namespace SqlKata
         #endregion
     }
 
-    /// <summary>
-    ///     Represents a "from subquery" clause.
-    /// </summary>
+    /// <inheritdoc />
     public class QueryFromClause : AbstractFrom
     {
         #region Properties
@@ -84,7 +83,11 @@ namespace SqlKata
         }
         #endregion
     }
-
+    
+    /// <summary>
+    ///     Represents a "from" clause in it's RAW form 
+    ///     with it's own expression and bindings
+    /// </summary>
     public class RawFromClause : AbstractFrom, IRaw
     {
         #region Properties

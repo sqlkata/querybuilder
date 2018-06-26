@@ -22,11 +22,35 @@ namespace SqlKata
         }
     }
 
+    public class OrderByRandom : AbstractOrderBy
+    {
+        #region Clone
+        /// <inheritdoc />
+        public override AbstractClause Clone()
+        {
+            return new OrderByRandom
+            {
+                Engine = Engine
+            };
+        }
+        #endregion
+    }
+
+    /// <summary>
+    ///     Represents an "order by" in it's RAW form with 
+    ///     it's own expression and bindings
+    /// </summary>
     public class RawOrderBy : AbstractOrderBy, IRaw
     {
+        #region Properties
+        /// <inheritdoc />
         public string Expression { get; internal set; }
-        public object[] Bindings { internal set; get; }
 
+        /// <inheritdoc />
+        public object[] Bindings { internal set; get; }
+        #endregion
+
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -38,17 +62,6 @@ namespace SqlKata
                 Bindings = Bindings
             };
         }
-    }
-
-    public class OrderByRandom : AbstractOrderBy
-    {
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new OrderByRandom
-            {
-                Engine = Engine
-            };
-        }
+        #endregion
     }
 }

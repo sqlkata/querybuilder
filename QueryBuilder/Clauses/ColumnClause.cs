@@ -64,17 +64,16 @@ namespace SqlKata
         #endregion
     }
 
+    /// <summary>
+    ///     Represents a RAW column with it's own expression and bindings
+    /// </summary>
     public class RawColumn : AbstractColumn, IRaw
     {
         #region Properties
-        /// <summary>
-        ///     Gets or sets the RAW expression.
-        /// </summary>
-        /// <value>
-        ///     The RAW expression.
-        /// </value>
+        /// <inheritdoc />
         public string Expression { get; internal set; }
 
+        /// <inheritdoc />
         public object[] Bindings { get; internal set; }
         #endregion
 

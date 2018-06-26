@@ -48,17 +48,17 @@ namespace SqlKata
         #endregion
     }
 
+    /// <summary>
+    ///     Represents a "combine" clause in it's RAW form 
+    ///     with it's own expression and bindings
+    /// </summary>
     public class RawCombine : AbstractCombine, IRaw
     {
         #region Properties
-        /// <summary>
-        /// Returns the expression
-        /// </summary>
+        /// <inheritdoc />
         public string Expression { get; internal set; }
 
-        /// <summary>
-        /// Returns the bindings used in the expression
-        /// </summary>
+        /// <inheritdoc />
         public object[] Bindings { get; internal set; }
         #endregion
 

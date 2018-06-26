@@ -57,6 +57,7 @@ namespace SqlKata
         #endregion
     }
 
+    /// <inheritdoc />
     public class BasicStringCondition : BasicCondition<string>
     {
         #region Properties
@@ -85,6 +86,7 @@ namespace SqlKata
         #endregion
     }
 
+    /// <inheritdoc />
     public class BasicDateCondition : BasicCondition<object>
     {
         #region Properties
@@ -327,10 +329,17 @@ namespace SqlKata
         #endregion
     }
 
+    /// <summary>
+    ///     Represents an "exists sub query" clause condition in it's
+    ///     RAW form with it's own expression and bindings
+    /// </summary>
     public class RawCondition : AbstractCondition, IRaw
     {
         #region Properties
+        /// <inheritdoc />
         public string Expression { get; internal set; }
+
+        /// <inheritdoc />
         public object[] Bindings { internal set; get; }
         #endregion
 
