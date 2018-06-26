@@ -62,8 +62,7 @@ namespace SqlKata
 
         private static bool IsNumber(string val)
         {
-            double n;
-            return !string.IsNullOrEmpty(val) && double.TryParse(val, out n);
+            return !string.IsNullOrEmpty(val) && double.TryParse(val, out double num);
         }
 
         public static SqlResult operator +(SqlResult a, SqlResult b)
