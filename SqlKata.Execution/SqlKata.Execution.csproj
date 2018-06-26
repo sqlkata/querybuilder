@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props" />
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
