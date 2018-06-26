@@ -601,30 +601,6 @@ namespace SqlKata.Compilers
             return new InvalidCastException($"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
 
-        protected virtual string dynamicCompile(string name, AbstractClause clause)
-        {
-
-            MethodInfo methodInfo = this.GetType()
-                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (methodInfo == null)
-            {
-                throw new Exception($"Failed to locate a compiler for {name}.");
-            }
-
-            var isGeneric = Helper.IsGenericType(clause.GetType());
-
-            if (isGeneric && methodInfo.GetGenericArguments().Any())
-            {
-                var args = clause.GetType().GetGenericArguments();
-                methodInfo = methodInfo.MakeGenericMethod(args);
-            }
-
-            var result = methodInfo.Invoke(this, new object[] { clause });
-
-            return result as string;
-        }
-
         public virtual string JoinComponents(List<string> components, string section = null)
         {
             return string.Join(" ", components);

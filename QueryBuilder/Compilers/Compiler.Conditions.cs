@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata.Compilers
 {
@@ -12,7 +14,23 @@ namespace SqlKata.Compilers
             name = name.Substring(0, name.IndexOf("Condition"));
 
             var methodName = "Compile" + name + "Condition";
-            return dynamicCompile(methodName, clause);
+
+            var clauseType = clause.GetType();
+            MethodInfo methodInfo = this.GetType().GetRuntimeMethods().Where(x => x.Name == methodName).FirstOrDefault();
+
+            if (methodInfo == null)
+            {
+                throw new Exception($"Failed to locate a compiler for {name}.");
+            }
+
+            if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())
+            {
+                methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
+            }
+
+            var result = methodInfo.Invoke(this, new object[] { clause });
+
+            return result as string;
         }
 
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
