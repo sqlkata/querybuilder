@@ -155,7 +155,7 @@ namespace SqlKata.Compilers
             }
 
             var hints = string.Empty;
-            if (from.Hints.Length > 0)
+            if (from.Hints?.Length > 0)
                 hints = $" WITH ({string.Join(", ", from.Hints)})";
 
             if (from is QueryFromClause queryFromClause)

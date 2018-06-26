@@ -8,12 +8,9 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            var query = new Query("table", "nolock")
-            .WhereLike("name", "a")
-            .Limit(10).Offset(5)
-            .ForPage(3, 4);
-
-
+            var query = new Query("table", "nolock").SelectRaw("DISTINCT CONVERT(varchar(10), [CreateDate], 20) as CreateDate")
+                .Where("name", "a");
+            
             var compiler = new SqlServerCompiler();
 
 
