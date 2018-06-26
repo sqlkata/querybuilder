@@ -7,6 +7,11 @@ namespace SqlKata
         protected string _alias;
 
         /// <summary>
+        /// Table hints
+        /// </summary>
+        public string[] Hints { get; set; }
+
+        /// <summary>
         /// Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
@@ -18,6 +23,9 @@ namespace SqlKata
     /// </summary>
     public class FromClause : AbstractFrom
     {
+        /// <summary>
+        /// The table name
+        /// </summary>
         public string Table { get; set; }
 
         public override string Alias

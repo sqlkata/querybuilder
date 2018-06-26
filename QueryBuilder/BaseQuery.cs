@@ -243,11 +243,12 @@ namespace SqlKata
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public Q From(string table)
+        public Q From(string table, params string[] hints)
         {
             return ClearComponent("from").AddComponent("from", new FromClause
             {
-                Table = table
+                Table = table,
+                Hints = hints
             });
         }
 

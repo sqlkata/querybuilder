@@ -11,24 +11,24 @@ namespace SqlKata.Compilers
             ClosingIdentifier = "]";
         }
 
+        /// <summary>
+        /// Called before the <see cref="Query"/> select statement is generated
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         protected override Query OnBeforeSelect(Query query)
         {
             var limitOffset = query.GetOneComponent<LimitOffset>("limit", EngineCode);
 
-            if (limitOffset == null || !limitOffset.HasOffset())
-            {
-                return query;
-            }
+            if (limitOffset == null || !limitOffset.HasOffset()) return query;
 
-
-            // Surround the original query with a parent query, then restrict the result to the offset provided, see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
-
-
+            // Surround the original query with a parent query, then restrict the result to the offset provided,
+            // see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
             var rowNumberColName = "row_num";
 
             var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
-            var orderClause = query.GetComponents("order", EngineCode);
+            //var orderClause = query.GetComponents("order", EngineCode);
 
 
             // get a clone without the limit and order
@@ -50,39 +50,30 @@ namespace SqlKata.Compilers
             // Transform the query to make it a parent query
             query.Select("*");
 
-            if (!subquery.HasComponent("select", EngineCode))
-            {
-                subquery.SelectRaw("*");
-            }
+            if (!subquery.HasComponent("select", EngineCode)) subquery.SelectRaw("*");
 
             //Add an alias name to the subquery
             subquery.As("subquery");
 
             // Add the row_number select, and put back the bindings here if any
             subquery.SelectRaw(
-                    $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
-                    new object[] { }
+                $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}"
             );
 
             query.From(subquery);
 
             if (limitOffset.HasLimit())
-            {
                 query.WhereBetween(
                     rowNumberColName,
                     limitOffset.Offset + 1,
                     limitOffset.Limit + limitOffset.Offset
                 );
-            }
             else
-            {
                 query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
-            }
 
             limitOffset.Clear();
 
             return query;
-
         }
 
         protected override string CompileColumns(Query query)
@@ -92,9 +83,8 @@ namespace SqlKata.Compilers
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
-            if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
+            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit() && !limitOffset.HasOffset())
             {
                 // top bindings should be inserted first
                 bindings.Insert(0, limitOffset.Limit);
@@ -109,15 +99,19 @@ namespace SqlKata.Compilers
 
         public override string CompileLimit(Query query)
         {
-            return "";
+            return string.Empty;
         }
 
         public override string CompileOffset(Query query)
         {
-
-            return "";
+            return string.Empty;
         }
 
+        /// <summary>
+        /// Returns a random id
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <returns></returns>
         public override string CompileRandom(string seed)
         {
             return "NEWID()";
@@ -129,33 +123,60 @@ namespace SqlKata.Compilers
 
             string left;
 
-            if (condition.Part == "time")
+            switch (condition.Part)
             {
-                left = $"CAST({column} as time)";
-            }
-            else if (condition.Part == "date")
-            {
-                left = $"CAST({column} as date)";
-            }
-            else
-            {
-                left = $"DATEPART({condition.Part.ToUpper()}, {column})";
+                case "time":
+                    left = $"CAST({column} as time)";
+                    break;
+                case "date":
+                    left = $"CAST({column} as date)";
+                    break;
+                default:
+                    left = $"DATEPART({condition.Part.ToUpper()}, {column})";
+                    break;
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
 
-            if (condition.IsNot)
+            return condition.IsNot ? $"NOT ({sql})" : sql;
+        }
+
+        /// <summary>
+        /// Returns the table expression
+        /// </summary>
+        /// <param name="from"></param>
+        /// <returns></returns>
+        public override string CompileTableExpression(AbstractFrom from)
+        {
+            if (from is RawFromClause raw)
             {
-                return $"NOT ({sql})";
+                bindings.AddRange(raw.Bindings);
+                return WrapIdentifiers(raw.Expression);
             }
 
-            return sql;
+            var hints = string.Empty;
+            if (from.Hints.Length > 0)
+                hints = $" WITH ({string.Join(", ", from.Hints)})";
+
+            if (from is QueryFromClause queryFromClause)
+            {
+                var fromQuery = queryFromClause.Query;
+                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
+                var compiled = CompileSelect(fromQuery);
+                return "(" + compiled + ")" + alias + hints;
+            }
+
+            if (from is FromClause fromClause)
+                return Wrap(fromClause.Table + hints);
+
+            throw InvalidClauseException("TableExpression", from);
         }
     }
 
     public static class SqlServerCompilerExtensions
     {
         public static string ENGINE_CODE = "sqlsrv";
+
         public static Query ForSqlServer(this Query src, Func<Query, Query> fn)
         {
             return src.For(ENGINE_CODE, fn);

@@ -63,9 +63,9 @@ namespace SqlKata
         {
         }
 
-        public Query(string table)
+        public Query(string table, params string[] hints)
         {
-            From(table);
+            From(table, hints);
         }
 
         public override Query Clone()
