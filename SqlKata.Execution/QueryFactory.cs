@@ -7,14 +7,9 @@ namespace SqlKata.Execution
 {
     public class QueryFactory
     {
-        #region Properties
-        public IDbConnection Connection { get; internal set; }
-        public Compiler Compiler { get; internal set; }
-        public Action<SqlResult> Logger = result => { };
-        public int QueryTimeout { get; internal set; } = 30;
-        #endregion
-
-        public QueryFactory() { }
+        public QueryFactory()
+        {
+        }
 
         public QueryFactory(IDbConnection connection, Compiler compiler)
         {
@@ -49,5 +44,11 @@ namespace SqlKata.Execution
             return xQuery;
         }
 
+        #region Properties
+        public IDbConnection Connection { get; internal set; }
+        public Compiler Compiler { get; internal set; }
+        public Action<SqlResult> Logger = result => { };
+        public int QueryTimeout { get; internal set; } = 30;
+        #endregion
     }
 }

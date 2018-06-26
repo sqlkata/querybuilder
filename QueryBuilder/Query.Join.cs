@@ -4,7 +4,6 @@ namespace SqlKata
 {
     public partial class Query
     {
-
         private Query Join(Func<Join, Join> callback)
         {
             var join = callback.Invoke(new Join().AsInner());
@@ -70,6 +69,5 @@ namespace SqlKata
         {
             return Join(j => j.JoinWith(table).AsCross());
         }
-
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using SqlKata;
 
 namespace SqlKata.Execution
 {

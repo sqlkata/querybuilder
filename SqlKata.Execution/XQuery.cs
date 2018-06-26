@@ -7,9 +7,9 @@ namespace SqlKata.Execution
 {
     public class XQuery : Query
     {
+        public Action<SqlResult> Logger = result => { };
         public IDbConnection Connection { get; internal set; }
         public Compiler Compiler { get; internal set; }
-        public Action<SqlResult> Logger = result => { };
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
@@ -19,7 +19,6 @@ namespace SqlKata.Execution
 
         public override Query Clone()
         {
-
             var query = new XQuery(Connection, Compiler)
             {
                 Clauses = Clauses.Select(x => x.Clone()).ToList(),
@@ -32,9 +31,6 @@ namespace SqlKata.Execution
             query.SetEngineScope(EngineScope);
 
             return query;
-
         }
-
     }
-
 }

@@ -2,7 +2,7 @@ namespace SqlKata
 {
     public interface IRaw
     {
-        string Expression { get;  }
+        string Expression { get; }
         object[] Bindings { get; }
     }
 }

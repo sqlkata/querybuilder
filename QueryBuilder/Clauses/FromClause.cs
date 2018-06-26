@@ -4,45 +4,46 @@ namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {
-        protected string _alias;
-
+        #region Properties
         /// <summary>
-        /// Table hints
+        ///     Returns the hints to use on a table
         /// </summary>
         public string[] Hints { get; internal set; }
 
         /// <summary>
-        /// Try to extract the Alias for the current clause.
+        ///     Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
-        public virtual string Alias { get => _alias; set => _alias = value; }
+        public virtual string Alias { get; set; }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "from" clause.
+    ///     Represents a "from" clause.
     /// </summary>
     public class FromClause : AbstractFrom
     {
+        #region Properties
         /// <summary>
-        /// The table name
+        ///     Returns the table name
         /// </summary>
         public string Table { get; internal set; }
 
+        /// <summary>
+        /// Returns the alias for the table
+        /// </summary>
         public override string Alias
         {
             get
             {
-                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    return segments[2];
-                }
-
-                return Table;
+                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) < 0) return Table;
+                var segments = Table.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                return segments[2];
             }
         }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -50,20 +51,26 @@ namespace SqlKata
             {
                 Alias = Alias,
                 Table = Table,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "from subquery" clause.
+    ///     Represents a "from subquery" clause.
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
+        #region Properties
+        /// <inheritdoc />
         public Query Query { get; internal set; }
 
-        public override string Alias => string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
+        /// <inheritdoc />
+        public override string Alias => string.IsNullOrEmpty(base.Alias) ? Query.QueryAlias : base.Alias;
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -72,16 +79,23 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Query = Query.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     public class RawFromClause : AbstractFrom, IRaw
     {
+        #region Properties
+        /// <inheritdoc />
         public string Expression { get; internal set; }
-        public object[] Bindings { internal set; get; }
 
+        /// <inheritdoc />
+        public object[] Bindings { internal set; get; }
+        #endregion
+
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -91,8 +105,9 @@ namespace SqlKata
                 Alias = Alias,
                 Expression = Expression,
                 Bindings = Bindings,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 }

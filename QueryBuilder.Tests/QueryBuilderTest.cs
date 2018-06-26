@@ -1,15 +1,22 @@
 using System;
 using System.Collections.Generic;
-using SqlKata.Execution;
 using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Execution;
 using Xunit;
 
 public class QueryBuilderTest
 {
-    private readonly Compiler pgsql;
     private readonly MySqlCompiler mysql;
-    public SqlServerCompiler mssql { get; internal set; }
+    private readonly Compiler pgsql;
+    public SqlServerCompiler mssql { get; }
+
+    public QueryBuilderTest()
+    {
+        mssql = new SqlServerCompiler();
+        mysql = new MySqlCompiler();
+        pgsql = new PostgresCompiler();
+    }
 
     private string[] Compile(Query q)
     {
@@ -17,14 +24,8 @@ public class QueryBuilderTest
         {
             mssql.Compile(q.Clone()).ToString(),
             mysql.Compile(q.Clone()).ToString(),
-            pgsql.Compile(q.Clone()).ToString(),
+            pgsql.Compile(q.Clone()).ToString()
         };
-    }
-    public QueryBuilderTest()
-    {
-        mssql = new SqlServerCompiler();
-        mysql = new MySqlCompiler();
-        pgsql = new PostgresCompiler();
     }
 
     [Fact]
@@ -83,7 +84,9 @@ public class QueryBuilderTest
         var q = new Query().From("users").Offset(10);
         var c = Compile(q);
 
-        Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= 11", c[0]);
+        Assert.Equal(
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= 11",
+            c[0]);
         Assert.Equal("SELECT * FROM `users` LIMIT 18446744073709551615 OFFSET 10", c[1]);
         Assert.Equal("SELECT * FROM \"users\" OFFSET 10", c[2]);
     }
@@ -95,12 +98,14 @@ public class QueryBuilderTest
 
         var c = Compile(q);
 
-        Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] BETWEEN 11 AND 15", c[0]);
+        Assert.Equal(
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] BETWEEN 11 AND 15",
+            c[0]);
         Assert.Equal("SELECT * FROM `users` LIMIT 5 OFFSET 10", c[1]);
         Assert.Equal("SELECT * FROM \"users\" LIMIT 5 OFFSET 10", c[2]);
     }
 
-    [Theory()]
+    [Theory]
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
@@ -112,10 +117,12 @@ public class QueryBuilderTest
         var q = new Query().From("users").Offset(offset);
         var c = mssql.Compile(q);
 
-        Assert.Equal("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= " + (offset + 1), c.ToString());
+        Assert.Equal(
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [subquery] WHERE [row_num] >= " +
+            (offset + 1), c.ToString());
     }
 
-    [Theory()]
+    [Theory]
     [InlineData(-100)]
     [InlineData(0)]
     public void OffsetSqlServer_Should_Be_Ignored_If_Zero_Or_Negative(int offset)
@@ -139,49 +146,57 @@ public class QueryBuilderTest
     public void CteAndBindings()
     {
         var query = new Query("Races")
-                    .For("mysql", s =>
-                        s.With("range", q => q.From("seqtbl").Select("Id").Where("Id", "<", 33))
-                        .WhereIn("RaceAuthor",
-                            q => q.From("Users").Select("Name").Where("Status", "Available")
-                        )
+            .For("mysql", s =>
+                s.With("range", q => q.From("seqtbl").Select("Id").Where("Id", "<", 33))
+                    .WhereIn("RaceAuthor",
+                        q => q.From("Users").Select("Name").Where("Status", "Available")
                     )
-                    .For("sqlsrv", s =>
-                        s.With("range",
-                            q => q.From("Sequence").Select("Number").Where("Number", "<", 78)
-                        )
-                        .Limit(25).Offset(20)
+            )
+            .For("sqlsrv", s =>
+                s.With("range",
+                        q => q.From("Sequence").Select("Number").Where("Number", "<", 78)
                     )
-                    .For("postgres",
-                        s => s.With("range", q => q.FromRaw("generate_series(1, 33) as d").Select("d")).Where("Name", "3778")
-                    )
-                    .Where("Id", ">", 55)
-                    .WhereBetween("Value", 18, 24);
+                    .Limit(25).Offset(20)
+            )
+            .For("postgres",
+                s => s.With("range", q => q.FromRaw("generate_series(1, 33) as d").Select("d")).Where("Name", "3778")
+            )
+            .Where("Id", ">", 55)
+            .WhereBetween("Value", 18, 24);
 
         var c = Compile(query);
 
-        Assert.Equal("WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) \nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45", c[0]);
+        Assert.Equal(
+            "WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78) \nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [subquery] WHERE [row_num] BETWEEN 21 AND 45",
+            c[0]);
 
-        Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) \nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
+        Assert.Equal(
+            "WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33) \nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24",
+            c[1]);
 
-        Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) \nSELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
+        Assert.Equal(
+            "WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d) \nSELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24",
+            c[2]);
     }
 
     [Fact]
     public void UpdateWithCte()
     {
-
         var now = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
         var query = new Query("Books")
             .With("OldBooks", q => q.From("Books").Where("Date", "<", now))
             .Where("Price", ">", 100)
-            .AsUpdate(new Dictionary<string, object> {
-                    {"Price", "150"}
+            .AsUpdate(new Dictionary<string, object>
+            {
+                {"Price", "150"}
             });
 
         var c = Compile(query);
 
-        Assert.Equal($"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}') \nUPDATE [Books] SET [Price] = 150 WHERE [Price] > 100", c[0]);
+        Assert.Equal(
+            $"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}') \nUPDATE [Books] SET [Price] = 150 WHERE [Price] > 100",
+            c[0]);
     }
 
     [Fact]
@@ -195,7 +210,8 @@ public class QueryBuilderTest
         var c = Compile(query);
 
         Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1) \nSELECT * FROM [series]", c[0]);
-        Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) \nSELECT * FROM \"series\"", c[2]);
+        Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true) \nSELECT * FROM \"series\"",
+            c[2]);
     }
 
     [Fact]
@@ -224,46 +240,54 @@ public class QueryBuilderTest
     public void InsertFromSubQueryWithCte()
     {
         var query = new Query("expensive_cars")
-        .With("old_cards", new Query("all_cars").Where("year", "<", 2000))
-        .AsInsert(
-                new[] { "name", "model", "year" },
+            .With("old_cards", new Query("all_cars").Where("year", "<", 2000))
+            .AsInsert(
+                new[] {"name", "model", "year"},
                 new Query("old_cars").Where("price", ">", 100).ForPage(2, 10)
-        );
+            );
 
         var c = Compile(query);
 
-        Assert.Equal("WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) \nINSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [subquery] WHERE [row_num] BETWEEN 11 AND 20", c[0]);
+        Assert.Equal(
+            "WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000) \nINSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [subquery] WHERE [row_num] BETWEEN 11 AND 20",
+            c[0]);
 
-        Assert.Equal("WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) \nINSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10", c[1]);
+        Assert.Equal(
+            "WITH `old_cards` AS (SELECT * FROM `all_cars` WHERE `year` < 2000) \nINSERT INTO `expensive_cars` (`name`, `model`, `year`) SELECT * FROM `old_cars` WHERE `price` > 100 LIMIT 10 OFFSET 10",
+            c[1]);
 
-        Assert.Equal("WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) \nINSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10", c[2]);
+        Assert.Equal(
+            "WITH \"old_cards\" AS (SELECT * FROM \"all_cars\" WHERE \"year\" < 2000) \nINSERT INTO \"expensive_cars\" (\"name\", \"model\", \"year\") SELECT * FROM \"old_cars\" WHERE \"price\" > 100 LIMIT 10 OFFSET 10",
+            c[2]);
     }
 
     [Fact]
     public void InsertMultiRecords()
     {
         var query = new Query("expensive_cars")
-        .AsInsert(
-                new[] { "name", "brand", "year" },
+            .AsInsert(
+                new[] {"name", "brand", "year"},
                 new[]
                 {
-                        new object[] { "Chiron", "Bugatti", null},
-                        new object[] { "Huayra", "Pagani", 2012},
-                        new object[] { "Reventon roadster", "Lamborghini", 2009}
+                    new object[] {"Chiron", "Bugatti", null},
+                    new object[] {"Huayra", "Pagani", 2012},
+                    new object[] {"Reventon roadster", "Lamborghini", 2009}
                 }
-        );
+            );
 
         var c = Compile(query);
 
-        Assert.Equal("INSERT INTO [expensive_cars] ([name], [brand], [year]) VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)", c[0]);
+        Assert.Equal(
+            "INSERT INTO [expensive_cars] ([name], [brand], [year]) VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)",
+            c[0]);
     }
 
     [Fact]
     public void InsertWithNullValues()
     {
         var query = new Query("Books").AsInsert(
-            new[] { "Id", "Author", "ISBN", "Date" },
-            new object[] { 1, "Author 1", "123456", null }
+            new[] {"Id", "Author", "ISBN", "Date"},
+            new object[] {1, "Author 1", "123456", null}
         );
 
         var c = Compile(query);
@@ -275,21 +299,22 @@ public class QueryBuilderTest
     public void InsertWithEmptyString()
     {
         var query = new Query("Books").AsInsert(
-            new[] { "Id", "Author", "ISBN", "Description" },
-            new object[] { 1, "Author 1", "123456", "" }
+            new[] {"Id", "Author", "ISBN", "Description"},
+            new object[] {1, "Author 1", "123456", ""}
         );
 
         var c = Compile(query);
 
-        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', 123456, '')", c[0]);
+        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', 123456, '')",
+            c[0]);
     }
 
     [Fact]
     public void UpdateWithNullValues()
     {
         var query = new Query("Books").Where("Id", 1).AsUpdate(
-            new[] { "Author", "Date", "Version" },
-            new object[] { "Author 1", null, null }
+            new[] {"Author", "Date", "Version"},
+            new object[] {"Author 1", null, null}
         );
 
         var c = Compile(query);
@@ -301,8 +326,8 @@ public class QueryBuilderTest
     public void UpdateWithEmptyString()
     {
         var query = new Query("Books").Where("Id", 1).AsUpdate(
-            new[] { "Author", "Description" },
-            new object[] { "Author 1", "" }
+            new[] {"Author", "Description"},
+            new object[] {"Author 1", ""}
         );
 
         var c = Compile(query);
@@ -313,10 +338,7 @@ public class QueryBuilderTest
     [Fact]
     public void ShouldThrowException()
     {
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            new Query("Books").Get();
-        });
+        Assert.Throws<InvalidOperationException>(() => { new Query("Books").Get(); });
     }
 
     [Fact]
@@ -328,7 +350,6 @@ public class QueryBuilderTest
         var c = Compile(mobiles);
 
         Assert.Equal("(SELECT * FROM [Phones]) UNION (SELECT * FROM [Laptops])", c[0]);
-
     }
 
     [Fact]
@@ -343,7 +364,6 @@ public class QueryBuilderTest
         var c = Compile(mobiles);
 
         Assert.Equal("(SELECT * FROM [Phones]) UNION (SELECT * FROM [Laptops]) UNION (SELECT * FROM [Tablets])", c[0]);
-
     }
 
     [Fact]
@@ -357,8 +377,9 @@ public class QueryBuilderTest
 
         var c = Compile(mobiles);
 
-        Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION (SELECT * FROM [Tablets] WHERE [Price] > 2000)", c[0]);
-
+        Assert.Equal(
+            "(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION (SELECT * FROM [Tablets] WHERE [Price] > 2000)",
+            c[0]);
     }
 
     [Fact]
@@ -372,8 +393,9 @@ public class QueryBuilderTest
 
         var c = Compile(mobiles);
 
-        Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION ALL (SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [subquery] WHERE [row_num] BETWEEN 16 AND 30)", c[0]);
-
+        Assert.Equal(
+            "(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION ALL (SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [subquery] WHERE [row_num] BETWEEN 16 AND 30)",
+            c[0]);
     }
 
     [Fact]
@@ -386,8 +408,9 @@ public class QueryBuilderTest
 
         var c = Compile(mobiles);
 
-        Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops]) UNION ALL (SELECT * FROM [Tablets])", c[0]);
-
+        Assert.Equal(
+            "(SELECT * FROM [Phones] WHERE [Price] < 3000) UNION (SELECT * FROM [Laptops]) UNION ALL (SELECT * FROM [Tablets])",
+            c[0]);
     }
 
     [Fact]
@@ -402,12 +425,17 @@ public class QueryBuilderTest
 
         var c = Compile(mobiles);
 
-        Assert.Equal("(SELECT * FROM [Phones] WHERE [Price] < 300) EXCEPT (SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS')) UNION ALL (SELECT * FROM [Tablets] WHERE [Price] < 100)", c[0]);
+        Assert.Equal(
+            "(SELECT * FROM [Phones] WHERE [Price] < 300) EXCEPT (SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS')) UNION ALL (SELECT * FROM [Tablets] WHERE [Price] < 100)",
+            c[0]);
 
-        Assert.Equal("(SELECT * FROM `Phones` WHERE `Price` < 300) INTERSECT ALL (SELECT * FROM `Watches` WHERE `Os` = 'Android') UNION ALL (SELECT * FROM `Tablets` WHERE `Price` < 100)", c[1]);
+        Assert.Equal(
+            "(SELECT * FROM `Phones` WHERE `Price` < 300) INTERSECT ALL (SELECT * FROM `Watches` WHERE `Os` = 'Android') UNION ALL (SELECT * FROM `Tablets` WHERE `Price` < 100)",
+            c[1]);
 
-        Assert.Equal("(SELECT * FROM \"Phones\" WHERE \"Price\" < 300) UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)", c[2]);
-
+        Assert.Equal(
+            "(SELECT * FROM \"Phones\" WHERE \"Price\" < 300) UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)",
+            c[2]);
     }
 
     [Fact]
@@ -475,7 +503,9 @@ public class QueryBuilderTest
             .Offset(1);
 
         var first = Compile(query);
-        Assert.Equal("SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [subquery] WHERE [row_num] BETWEEN 2 AND 21", first[0]);
+        Assert.Equal(
+            "SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [subquery] WHERE [row_num] BETWEEN 2 AND 21",
+            first[0]);
         Assert.Equal("SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1", first[1]);
         Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1", first[2]);
 

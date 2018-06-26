@@ -2,6 +2,7 @@ namespace SqlKata
 {
     public abstract class AbstractClause
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets the SQL engine.
         /// </summary>
@@ -17,11 +18,14 @@ namespace SqlKata
         ///     The component name.
         /// </value>
         public string Component { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <summary>
-        ///     An abstract method that clones this object
+        ///     Returns a clone of this object
         /// </summary>
         /// <returns></returns>
         public abstract AbstractClause Clone();
+        #endregion
     }
 }

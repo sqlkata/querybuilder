@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
-        public MySqlCompiler() : base()
+        public MySqlCompiler()
         {
             EngineCode = "mysql";
             OpeningIdentifier = ClosingIdentifier = "`";
@@ -15,18 +15,14 @@ namespace SqlKata.Compilers
             var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())
-            {
                 return string.Empty;
-            }
 
             bindings.Add(limitOffset.Offset);
 
             // MySql will not accept offset without limit
             // So we will put a large number to avoid this error
             if (!limitOffset.HasLimit())
-            {
                 return "LIMIT 18446744073709551615 OFFSET ?";
-            }
 
             return "OFFSET ?";
         }
@@ -35,6 +31,7 @@ namespace SqlKata.Compilers
     public static class MySqlCompilerExtensions
     {
         public static string ENGINE_CODE = "mysql";
+
         public static Query ForMySql(this Query src, Func<Query, Query> fn)
         {
             return src.For(ENGINE_CODE, fn);

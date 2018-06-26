@@ -6,6 +6,7 @@ namespace SqlKata
 
     public class Combine : AbstractCombine
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets the query to be combined with.
         /// </summary>
@@ -29,7 +30,10 @@ namespace SqlKata
         ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
         public bool All { get; internal set; }
+        #endregion
 
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new Combine
@@ -41,14 +45,25 @@ namespace SqlKata
                 All = All
             };
         }
+        #endregion
     }
 
     public class RawCombine : AbstractCombine, IRaw
     {
+        #region Properties
+        /// <summary>
+        /// Returns the expression
+        /// </summary>
         public string Expression { get; internal set; }
 
+        /// <summary>
+        /// Returns the bindings used in the expression
+        /// </summary>
         public object[] Bindings { get; internal set; }
+        #endregion
 
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawCombine
@@ -59,5 +74,6 @@ namespace SqlKata
                 Bindings = Bindings
             };
         }
+        #endregion
     }
 }

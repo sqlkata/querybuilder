@@ -4,37 +4,42 @@ namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
+        #region Properties
         /// <summary>
-        /// Returns <c>true</c> when this is an OR
+        ///     Returns <c>true</c> when this is an OR
         /// </summary>
         public bool IsOr { get; internal set; }
 
         /// <summary>
-        /// Returns <c>true</c> when this is an NOT
+        ///     Returns <c>true</c> when this is an NOT
         /// </summary>
         public bool IsNot { get; internal set; }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a value.
+    ///     Represents a comparison between a column and a value.
     /// </summary>
     public class BasicCondition<T> : AbstractCondition
     {
+        #region Properties
         /// <summary>
-        /// The column
+        ///     The column
         /// </summary>
         public string Column { get; internal set; }
 
         /// <summary>
-        /// The operator
+        ///     The operator
         /// </summary>
         public string Operator { get; internal set; }
 
         /// <summary>
-        /// The value
+        ///     The value
         /// </summary>
         public virtual T Value { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -46,15 +51,22 @@ namespace SqlKata
                 Value = Value,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     public class BasicStringCondition : BasicCondition<string>
     {
+        #region Properties
+        /// <summary>
+        /// Returns <c>true</c> when case-sensitive
+        /// </summary>
         public bool CaseSensitive { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -67,15 +79,19 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 CaseSensitive = CaseSensitive,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     public class BasicDateCondition : BasicCondition<object>
     {
+        #region Properties
         public string Part { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -88,20 +104,24 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Part = Part,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a comparison between two columns.
+    ///     Represents a comparison between two columns.
     /// </summary>
     public class TwoColumnsCondition : AbstractCondition
     {
+        #region Properties
         public string First { get; internal set; }
         public string Operator { get; internal set; }
         public string Second { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -113,20 +133,24 @@ namespace SqlKata
                 Second = Second,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a full "subquery".
+    ///     Represents a comparison between a column and a full "subquery".
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
+        #region Properties
         public string Column { get; internal set; }
         public string Operator { get; internal set; }
         public Query Query { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -138,18 +162,24 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "is in" condition.
+    ///     Represents a "is in" condition.
     /// </summary>
     public class InCondition<T> : AbstractCondition
     {
+        #region Properties
         public string Column { get; internal set; }
         public IEnumerable<T> Values { get; internal set; }
+        #endregion
+
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InCondition<T>
@@ -159,19 +189,24 @@ namespace SqlKata
                 Values = new List<T>(Values),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
-
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "is in subquery" condition.
+    ///     Represents a "is in subquery" condition.
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
+        #region Properties
         public Query Query { get; internal set; }
         public string Column { get; internal set; }
+        #endregion
+
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new InQueryCondition
@@ -181,19 +216,25 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "is between" condition.
+    ///     Represents a "is between" condition.
     /// </summary>
     public class BetweenCondition<T> : AbstractCondition
     {
+        #region Properties
         public string Column { get; internal set; }
         public T Higher { get; internal set; }
         public T Lower { get; internal set; }
+        #endregion
+
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
@@ -204,18 +245,22 @@ namespace SqlKata
                 Lower = Lower,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents an "is null" condition.
+    ///     Represents an "is null" condition.
     /// </summary>
     public class NullCondition : AbstractCondition
     {
+        #region Properties
         public string Column { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -225,18 +270,24 @@ namespace SqlKata
                 Column = Column,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents a "nested" clause condition.
-    /// i.e OR (myColumn = "A")
+    ///     Represents a "nested" clause condition.
+    ///     i.e OR (myColumn = "A")
     /// </summary>
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
+        #region Properties
         public T Query { get; internal set; }
+        #endregion
+
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
@@ -245,18 +296,22 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
-    /// Represents an "exists sub query" clause condition.
+    ///     Represents an "exists sub query" clause condition.
     /// </summary>
     public class ExistsCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
+        #region Properties
         public T Query { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -266,16 +321,20 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     public class RawCondition : AbstractCondition, IRaw
     {
+        #region Properties
         public string Expression { get; internal set; }
         public object[] Bindings { internal set; get; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -286,8 +345,9 @@ namespace SqlKata
                 Bindings = Bindings,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 }

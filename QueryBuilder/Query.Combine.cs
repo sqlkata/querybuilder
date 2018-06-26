@@ -5,33 +5,28 @@ namespace SqlKata
 {
     public partial class Query
     {
-
         public Query Combine(string operation, bool all, Query query)
         {
             if (Method != "select" || query.Method != "select")
-            {
                 throw new InvalidOperationException("Only select queries can be combined.");
-            }
 
             return AddComponent("combine", new Combine
             {
                 Query = query,
                 Operation = operation,
-                All = all,
+                All = all
             });
         }
 
         public Query CombineRaw(string sql, params object[] bindings)
         {
             if (Method != "select")
-            {
                 throw new InvalidOperationException("Only select queries can be combined.");
-            }
 
             return AddComponent("combine", new RawCombine
             {
                 Expression = sql,
-                Bindings = Helper.Flatten(bindings).ToArray(),
+                Bindings = Helper.Flatten(bindings).ToArray()
             });
         }
 
@@ -78,6 +73,7 @@ namespace SqlKata
         {
             return Except(callback, true);
         }
+
         public Query ExceptRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
 
         public Query Intersect(Query query, bool all = false)
@@ -100,7 +96,7 @@ namespace SqlKata
         {
             return Intersect(callback, true);
         }
-        public Query IntersectRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
 
+        public Query IntersectRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
     }
 }

@@ -8,6 +8,17 @@ namespace SqlKata.Execution
 {
     public static class QueryFactoryExtensions
     {
+        #region Compile
+        private static SqlResult Compile(this QueryFactory db, Query query)
+        {
+            var compiled = db.Compiler.Compile(query);
+
+            db.Logger(compiled);
+
+            return compiled;
+        }
+        #endregion
+
         #region Dapper
         public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
         {
@@ -52,7 +63,8 @@ namespace SqlKata.Execution
             return FirstOrDefault<dynamic>(db, query);
         }
 
-        public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
+        public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null,
+            CommandType? commandType = null)
         {
             var compiled = db.Compile(query);
 
@@ -65,7 +77,8 @@ namespace SqlKata.Execution
             );
         }
 
-        public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
+        public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null,
+            CommandType? commandType = null)
         {
             var compiled = db.Compile(query.Limit(1));
 
@@ -85,7 +98,6 @@ namespace SqlKata.Execution
             CommandType? commandType = null
         )
         {
-
             var compiled = queries
                 .Select(db.Compile)
                 .Aggregate((a, b) => a + b);
@@ -97,7 +109,6 @@ namespace SqlKata.Execution
                 db.QueryTimeout,
                 commandType
             );
-
         }
 
         public static IEnumerable<IEnumerable<T>> Get<T>(
@@ -119,7 +130,6 @@ namespace SqlKata.Execution
                     yield return multi.Read<T>();
             }
         }
-
         #endregion
 
         #region Aggregate
@@ -157,13 +167,11 @@ namespace SqlKata.Execution
         {
             return db.Aggregate<T>(query, "max", column);
         }
-
         #endregion
 
         #region Pagination
         public static PaginationResult<T> Paginate<T>(this QueryFactory db, Query query, int page, int perPage = 25)
         {
-
             if (page < 1)
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
 
@@ -182,27 +190,22 @@ namespace SqlKata.Execution
                 Count = count,
                 List = list
             };
-
         }
 
-        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
+        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize,
+            Func<IEnumerable<T>, int, bool> func)
         {
             var result = db.Paginate<T>(query, 1, chunkSize);
 
             if (!func(result.List, 1))
-            {
                 return;
-            }
 
             while (result.HasNext)
             {
                 result = result.Next();
                 if (!func(result.List, result.Page))
-                {
                     return;
-                }
             }
-
         }
 
         public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Action<IEnumerable<T>, int> action)
@@ -216,18 +219,6 @@ namespace SqlKata.Execution
                 result = result.Next();
                 action(result.List, result.Page);
             }
-
-        }
-        #endregion
-
-        #region Compile
-        private static SqlResult Compile(this QueryFactory db, Query query)
-        {
-            var compiled = db.Compiler.Compile(query);
-
-            db.Logger(compiled);
-
-            return compiled;
         }
         #endregion
     }

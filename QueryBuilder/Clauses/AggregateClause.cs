@@ -8,6 +8,7 @@ namespace SqlKata
     /// <seealso cref="AbstractClause" />
     public class AggregateClause : AbstractClause
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets columns that used in aggregate clause.
         /// </summary>
@@ -23,7 +24,9 @@ namespace SqlKata
         ///     The type of aggregate function, e.g. "MAX", "MIN", etc.
         /// </value>
         public string Type { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -35,5 +38,6 @@ namespace SqlKata
                 Component = Component
             };
         }
+        #endregion
     }
 }

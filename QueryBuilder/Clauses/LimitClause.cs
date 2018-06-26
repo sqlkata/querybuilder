@@ -7,27 +7,25 @@ namespace SqlKata
 
         public int Limit
         {
-            get => _limit;
+            get  =>
+            _limit;
 
             set
             {
                 if (value > 0)
-                {
                     _limit = value;
-                }
             }
         }
 
         public int Offset
         {
-            get => _offset;
+            get  =>
+            _offset;
 
             set
             {
                 if (value > 0)
-                {
                     _offset = value;
-                }
             }
         }
 
@@ -66,7 +64,7 @@ namespace SqlKata
                 Engine = Engine,
                 Offset = Offset,
                 Limit = Limit,
-                Component = Component,
+                Component = Component
             };
         }
     }

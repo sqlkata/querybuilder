@@ -5,7 +5,6 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-
         protected virtual string CompileCondition(AbstractCondition clause)
         {
             var name = clause.GetType().Name;
@@ -48,9 +47,7 @@ namespace SqlKata.Compilers
             var sql = Wrap(x.Column) + " " + x.Operator + " " + Parameter(x.Value);
 
             if (x.IsNot)
-            {
                 return $"NOT ({sql})";
-            }
 
             return sql;
         }
@@ -67,35 +64,24 @@ namespace SqlKata.Compilers
 
             var method = x.Operator;
 
-            if (new[] { "starts", "ends", "contains", "like" }.Contains(x.Operator))
+            if (new[] {"starts", "ends", "contains", "like"}.Contains(x.Operator))
             {
-
                 method = "LIKE";
 
                 if (x.Operator == "starts")
-                {
                     x.Value = x.Value + "%";
-                }
                 else if (x.Operator == "ends")
-                {
                     x.Value = "%" + x.Value;
-                }
                 else if (x.Operator == "contains")
-                {
                     x.Value = "%" + x.Value + "%";
-                }
                 else
-                {
                     x.Value = x.Value;
-                }
             }
 
             var sql = column + " " + method + " " + Parameter(x.Value);
 
             if (x.IsNot)
-            {
                 return $"NOT ({sql})";
-            }
 
             return sql;
         }
@@ -114,9 +100,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
             if (!x.Query.HasComponent("where", EngineCode))
-            {
                 return null;
-            }
 
             var sql = CompileConditions(x.Query.GetComponents<AbstractCondition>("where", EngineCode));
             var op = x.IsNot ? "NOT " : "";
@@ -134,7 +118,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileBetweenCondition<T>(BetweenCondition<T> item)
         {
-            bindings.AddRange(new object[] { item.Lower, item.Higher });
+            bindings.AddRange(new object[] {item.Lower, item.Higher});
 
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
 
@@ -144,9 +128,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileInCondition<T>(InCondition<T> item)
         {
             if (!item.Values.Any())
-            {
                 return item.IsNot ? "1 = 1" : "1 = 0";
-            }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 
@@ -157,7 +139,6 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileInQueryCondition(InQueryCondition item)
         {
-
             var compiled = CompileQuery(item.Query);
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
@@ -176,6 +157,5 @@ namespace SqlKata.Compilers
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
             return op + " (" + CompileQuery(item.Query) + ")";
         }
-
     }
 }

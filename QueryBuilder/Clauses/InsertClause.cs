@@ -4,7 +4,6 @@ namespace SqlKata
 {
     public abstract class AbstractInsertClause : AbstractClause
     {
-
     }
 
     public class InsertClause : AbstractInsertClause
@@ -19,7 +18,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Columns = Columns,
-                Values = Values,
+                Values = Values
             };
         }
     }
@@ -36,7 +35,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Columns = Columns,
-                Query = Query.Clone(),
+                Query = Query.Clone()
             };
         }
     }

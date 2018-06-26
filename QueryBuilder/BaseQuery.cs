@@ -11,17 +11,16 @@ namespace SqlKata
 
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        #region Fields
-        private bool _orFlag;
-        private bool _notFlag;
-        public string EngineScope;
-        #endregion
-
         #region Properties
         protected virtual string[] BindingOrder { get; }
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
         #endregion
 
+        /// <summary>
+        ///     Sets the engine to use on the <see cref="Query" />
+        /// </summary>
+        /// <param name="engine"></param>
+        /// <returns></returns>
         public Q SetEngineScope(string engine)
         {
             EngineScope = engine;
@@ -53,6 +52,11 @@ namespace SqlKata
             return q;
         }
 
+        /// <summary>
+        ///     Sets the parent of this <see cref="Query" />
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <returns></returns>
         public Q SetParent(AbstractQuery parent)
         {
             if (this == parent)
@@ -72,7 +76,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Add a component clause to the query.
+        ///     Add a component clause to the <see cref="Query" />
         /// </summary>
         /// <param name="component"></param>
         /// <param name="clause"></param>
@@ -122,7 +126,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Get a single component clause from the query.
+        ///     Get a single component clause from the <see cref="Query" />
         /// </summary>
         /// <returns></returns>
         public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
@@ -135,7 +139,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Get a single component clause from the query.
+        ///     Get a single component clause from the <see cref="Query" />
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -182,6 +186,17 @@ namespace SqlKata
             return (Q) this;
         }
 
+        protected static object BackupNullValues(object x)
+        {
+            return x ?? new NullValue();
+        }
+
+        protected static object RestoreNullValues(object x)
+        {
+            return x is NullValue ? null : x;
+        }
+
+        #region Operators
         /// <summary>
         ///     Set the next boolean operator to "and" for the "where" clause.
         /// </summary>
@@ -237,11 +252,14 @@ namespace SqlKata
             _notFlag = false;
             return ret;
         }
+        #endregion
 
+        #region From
         /// <summary>
-        ///     Add a from Clause
+        ///     Sets the from part of a <see cref="Query" />
         /// </summary>
-        /// <param name="table"></param>
+        /// <param name="table">The table to select from</param>
+        /// <param name="hints">Any hints to use on the table, e.g. nolock</param>
         /// <returns></returns>
         public Q From(string table, params string[] hints)
         {
@@ -252,6 +270,12 @@ namespace SqlKata
             });
         }
 
+        /// <summary>
+        ///     Sets a sub <see cref="Query"/> to select from
+        /// </summary>
+        /// <param name="query">The sub <see cref="Query"/> to select from</param>
+        /// <param name="alias">The alias for the sub <see cref="Query"/></param>
+        /// <returns></returns>
         public Q From(Query query, string alias = null)
         {
             query.SetParent((Q) this);
@@ -265,6 +289,12 @@ namespace SqlKata
             });
         }
 
+        /// <summary>
+        ///     Sets a RAW from part for the <see cref="Query" />
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="bindings"></param>
+        /// <returns></returns>
         public Q FromRaw(string expression, params object[] bindings)
         {
             return ClearComponent("from").AddComponent("from", new RawFromClause
@@ -274,6 +304,11 @@ namespace SqlKata
             });
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="alias"></param>
+        /// <returns></returns>
         public Q From(Func<Query, Query> callback, string alias = null)
         {
             var query = new Query();
@@ -282,15 +317,12 @@ namespace SqlKata
 
             return From(callback.Invoke(query), alias);
         }
+        #endregion
 
-        protected static object BackupNullValues(object x)
-        {
-            return x ?? new NullValue();
-        }
-
-        protected static object RestoreNullValues(object x)
-        {
-            return x is NullValue ? null : x;
-        }
+        #region Fields
+        private bool _orFlag;
+        private bool _notFlag;
+        public string EngineScope;
+        #endregion
     }
 }

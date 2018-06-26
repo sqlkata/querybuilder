@@ -5,9 +5,9 @@ namespace SqlKata.Execution
 {
     public static class QueryAggregateExtensionsAsync
     {
-        public static async Task<T> AggregateAsync<T>(this Query query, string aggregateOperation, params string[] columns)
+        public static async Task<T> AggregateAsync<T>(this Query query, string aggregateOperation,
+            params string[] columns)
         {
-
             var xQuery = QueryHelper.CastToXQuery(query, nameof(AggregateAsync));
 
             var result = xQuery.Compiler.Compile(query.AsAggregate(aggregateOperation, columns));
@@ -15,7 +15,6 @@ namespace SqlKata.Execution
             var scalar = await xQuery.Connection.ExecuteScalarAsync<T>(result.Sql, result.Bindings);
 
             return scalar;
-
         }
 
         public static async Task<T> CountAsync<T>(this Query query, params string[] columns)
@@ -52,6 +51,5 @@ namespace SqlKata.Execution
             var xQuery = QueryHelper.CastToXQuery(query, nameof(MaxAsync));
             return await query.AggregateAsync<T>("max", column);
         }
-
     }
 }

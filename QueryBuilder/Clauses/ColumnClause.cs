@@ -10,6 +10,7 @@ namespace SqlKata
     /// <seealso cref="AbstractColumn" />
     public class Column : AbstractColumn
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets the column name. Can be "columnName" or "columnName as columnAlias".
         /// </summary>
@@ -17,7 +18,9 @@ namespace SqlKata
         ///     The column name.
         /// </value>
         public string Name { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -28,6 +31,7 @@ namespace SqlKata
                 Component = Component
             };
         }
+        #endregion
     }
 
     /// <summary>
@@ -36,6 +40,7 @@ namespace SqlKata
     /// <seealso cref="AbstractColumn" />
     public class QueryColumn : AbstractColumn
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets the query that will be used for column value calculation.
         /// </summary>
@@ -43,7 +48,10 @@ namespace SqlKata
         ///     The query for column value calculation.
         /// </value>
         public Query Query { get; internal set; }
+        #endregion
 
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new QueryColumn
@@ -53,10 +61,12 @@ namespace SqlKata
                 Component = Component
             };
         }
+        #endregion
     }
 
     public class RawColumn : AbstractColumn, IRaw
     {
+        #region Properties
         /// <summary>
         ///     Gets or sets the RAW expression.
         /// </summary>
@@ -65,8 +75,10 @@ namespace SqlKata
         /// </value>
         public string Expression { get; internal set; }
 
-        public object[] Bindings { internal set; get; }
+        public object[] Bindings { get; internal set; }
+        #endregion
 
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -78,5 +90,6 @@ namespace SqlKata
                 Component = Component
             };
         }
+        #endregion
     }
 }

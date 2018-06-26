@@ -4,7 +4,6 @@ namespace SqlKata
 {
     public abstract class AbstractJoin : AbstractClause
     {
-
     }
 
     public class BaseJoin : AbstractJoin
@@ -17,7 +16,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Join = Join.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -43,7 +42,7 @@ namespace SqlKata
                 SourceKeySuffix = SourceKeySuffix,
                 TargetKey = TargetKey,
                 SourceKeyGenerator = SourceKeyGenerator,
-                TargetKeyGenerator = TargetKeyGenerator,
+                TargetKeyGenerator = TargetKeyGenerator
             };
         }
     }

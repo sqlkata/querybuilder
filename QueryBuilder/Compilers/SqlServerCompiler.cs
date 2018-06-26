@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Called before the <see cref="Query"/> select statement is generated
+        ///     Called before the <see cref="Query" /> select statement is generated
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -29,7 +29,7 @@ namespace SqlKata.Compilers
             var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
             //var orderClause = query.GetComponents("order", EngineCode);
-            
+
             // Get a clone without the limit and order
             query.ClearComponent("order");
             query.ClearComponent("limit");
@@ -83,7 +83,8 @@ namespace SqlKata.Compilers
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
 
-            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit() && !limitOffset.HasOffset())
+            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit() &&
+                !limitOffset.HasOffset())
             {
                 // top bindings should be inserted first
                 bindings.Insert(0, limitOffset.Limit);
@@ -107,7 +108,7 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Returns a random id
+        ///     Returns a random id
         /// </summary>
         /// <param name="seed"></param>
         /// <returns></returns>
@@ -143,7 +144,7 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Returns the table expression
+        ///     Returns the table expression
         /// </summary>
         /// <param name="from"></param>
         /// <returns></returns>

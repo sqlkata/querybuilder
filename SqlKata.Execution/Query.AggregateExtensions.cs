@@ -35,6 +35,5 @@ namespace SqlKata.Execution
         {
             return query.Aggregate<T>("max", column);
         }
-
     }
 }

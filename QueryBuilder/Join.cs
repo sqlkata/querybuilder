@@ -6,25 +6,16 @@ namespace SqlKata
     {
         protected string _type = "INNER";
 
-        protected override string[] BindingOrder => new[] {
+        protected override string[] BindingOrder => new[]
+        {
             "from",
-            "where",
+            "where"
         };
 
         public string Type
         {
-            get
-            {
-                return _type;
-            }
-            set
-            {
-                _type = value.ToUpper();
-            }
-        }
-
-        public Join() : base()
-        {
+            get { return _type; }
+            set { _type = value.ToUpper(); }
         }
 
         public override Join Clone()
@@ -41,12 +32,13 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for "from" operator.
-        /// Since "from" does not sound well with join clauses
+        ///     Alias for "from" operator.
+        ///     Since "from" does not sound well with join clauses
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
         public Join JoinWith(string table) => From(table);
+
         public Join JoinWith(Query query) => From(query);
         public Join JoinWith(Func<Query, Query> callback) => From(callback);
 
@@ -66,7 +58,6 @@ namespace SqlKata
                 IsOr = GetOr(),
                 IsNot = GetNot()
             });
-
         }
 
         public Join OrOn(string first, string second, string op = "=")
