@@ -9,7 +9,7 @@ namespace SqlKata
 
     public class BaseJoin : AbstractJoin
     {
-        public Join Join { get; set; }
+        public Join Join { get; internal set; }
 
         public override AbstractClause Clone()
         {
@@ -24,12 +24,12 @@ namespace SqlKata
 
     public class DeepJoin : AbstractJoin
     {
-        public string Type { get; set; }
-        public string Expression { get; set; }
-        public string SourceKeySuffix { get; set; }
-        public string TargetKey { get; set; }
-        public Func<string, string> SourceKeyGenerator { get; set; }
-        public Func<string, string> TargetKeyGenerator { get; set; }
+        public string Type { get; internal set; }
+        public string Expression { get; internal set; }
+        public string SourceKeySuffix { get; internal set; }
+        public string TargetKey { get; internal set; }
+        public Func<string, string> SourceKeyGenerator { get; internal set; }
+        public Func<string, string> TargetKeyGenerator { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

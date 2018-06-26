@@ -9,15 +9,16 @@ public class QueryBuilderTest
 {
     private readonly Compiler pgsql;
     private readonly MySqlCompiler mysql;
-    public SqlServerCompiler mssql { get; private set; }
+    public SqlServerCompiler mssql { get; internal set; }
 
     private string[] Compile(Query q)
     {
-        return new[]{
-                 mssql.Compile(q.Clone()).ToString(),
-                 mysql.Compile(q.Clone()).ToString(),
-                pgsql.Compile(q.Clone()).ToString(),
-            };
+        return new[]
+        {
+            mssql.Compile(q.Clone()).ToString(),
+            mysql.Compile(q.Clone()).ToString(),
+            pgsql.Compile(q.Clone()).ToString(),
+        };
     }
     public QueryBuilderTest()
     {

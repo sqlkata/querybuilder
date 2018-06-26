@@ -5,8 +5,8 @@ namespace SqlKata
 {
     public class SqlResult
     {
-        public string RawSql { get; set; }
-        public List<object> RawBindings { get; set; }
+        public string RawSql { get; internal set; }
+        public List<object> RawBindings { get; internal set; }
 
         public SqlResult(string sql, List<object> bindings)
         {

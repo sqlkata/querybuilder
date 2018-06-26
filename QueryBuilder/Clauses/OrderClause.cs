@@ -7,8 +7,8 @@ namespace SqlKata
 
     public class OrderBy : AbstractOrderBy
     {
-        public string Column { get; set; }
-        public bool Ascending { get; set; } = true;
+        public string Column { get; internal set; }
+        public bool Ascending { get; internal set; } = true;
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -25,8 +25,8 @@ namespace SqlKata
 
     public class RawOrderBy : AbstractOrderBy, IRaw
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public string Expression { get; internal set; }
+        public object[] Bindings { internal set; get; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

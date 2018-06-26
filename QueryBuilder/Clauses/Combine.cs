@@ -12,7 +12,7 @@ namespace SqlKata
         /// <value>
         ///     The query that will be combined.
         /// </value>
-        public Query Query { get; set; }
+        public Query Query { get; internal set; }
 
         /// <summary>
         ///     Gets or sets the combine operation, e.g. "UNION", etc.
@@ -20,7 +20,7 @@ namespace SqlKata
         /// <value>
         ///     The combine operation.
         /// </value>
-        public string Operation { get; set; }
+        public string Operation { get; internal set; }
 
         /// <summary>
         ///     Gets or sets a value indicating whether this <see cref="Combine" /> clause will combine all.
@@ -28,7 +28,7 @@ namespace SqlKata
         /// <value>
         ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; set; }
+        public bool All { get; internal set; }
 
         public override AbstractClause Clone()
         {
@@ -45,11 +45,9 @@ namespace SqlKata
 
     public class RawCombine : AbstractCombine, IRaw
     {
-        private object[] _bindings;
+        public string Expression { get; internal set; }
 
-        public string Expression { get; set; }
-
-        public object[] Bindings { set  => _bindings  = value; }
+        public object[] Bindings { get; internal set; }
 
         public override AbstractClause Clone()
         {
@@ -58,7 +56,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                _bindings = _bindings
+                Bindings = Bindings
             };
         }
     }

@@ -16,7 +16,7 @@ namespace SqlKata
         /// <value>
         ///     The column name.
         /// </value>
-        public string Name { get; set; }
+        public string Name { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -42,7 +42,7 @@ namespace SqlKata
         /// <value>
         ///     The query for column value calculation.
         /// </value>
-        public Query Query { get; set; }
+        public Query Query { get; internal set; }
 
         public override AbstractClause Clone()
         {
@@ -63,9 +63,9 @@ namespace SqlKata
         /// <value>
         ///     The RAW expression.
         /// </value>
-        public string Expression { get; set; }
+        public string Expression { get; internal set; }
 
-        public object[] Bindings { set; get; }
+        public object[] Bindings { internal set; get; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

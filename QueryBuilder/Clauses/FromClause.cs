@@ -9,7 +9,7 @@ namespace SqlKata
         /// <summary>
         /// Table hints
         /// </summary>
-        public string[] Hints { get; set; }
+        public string[] Hints { get; internal set; }
 
         /// <summary>
         /// Try to extract the Alias for the current clause.
@@ -26,7 +26,7 @@ namespace SqlKata
         /// <summary>
         /// The table name
         /// </summary>
-        public string Table { get; set; }
+        public string Table { get; internal set; }
 
         public override string Alias
         {
@@ -60,7 +60,7 @@ namespace SqlKata
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
-        public Query Query { get; set; }
+        public Query Query { get; internal set; }
 
         public override string Alias => string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
 
@@ -79,8 +79,8 @@ namespace SqlKata
 
     public class RawFromClause : AbstractFrom, IRaw
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public string Expression { get; internal set; }
+        public object[] Bindings { internal set; get; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

@@ -14,7 +14,7 @@ namespace SqlKata
         /// <value>
         ///     The columns to be aggregated.
         /// </value>
-        public List<string> Columns { get; set; }
+        public List<string> Columns { get; internal set; }
 
         /// <summary>
         ///     Gets or sets the type of aggregate function.
@@ -22,7 +22,7 @@ namespace SqlKata
         /// <value>
         ///     The type of aggregate function, e.g. "MAX", "MIN", etc.
         /// </value>
-        public string Type { get; set; }
+        public string Type { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

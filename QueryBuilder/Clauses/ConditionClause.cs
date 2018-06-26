@@ -7,12 +7,12 @@ namespace SqlKata
         /// <summary>
         /// Returns <c>true</c> when this is an OR
         /// </summary>
-        public bool IsOr { get; set; }
+        public bool IsOr { get; internal set; }
 
         /// <summary>
         /// Returns <c>true</c> when this is an NOT
         /// </summary>
-        public bool IsNot { get; set; }
+        public bool IsNot { get; internal set; }
     }
 
     /// <summary>
@@ -23,17 +23,17 @@ namespace SqlKata
         /// <summary>
         /// The column
         /// </summary>
-        public string Column { get; set; }
+        public string Column { get; internal set; }
 
         /// <summary>
         /// The operator
         /// </summary>
-        public string Operator { get; set; }
+        public string Operator { get; internal set; }
 
         /// <summary>
         /// The value
         /// </summary>
-        public virtual T Value { get; set; }
+        public virtual T Value { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -53,7 +53,7 @@ namespace SqlKata
 
     public class BasicStringCondition : BasicCondition<string>
     {
-        public bool CaseSensitive { get; set; }
+        public bool CaseSensitive { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -74,7 +74,7 @@ namespace SqlKata
 
     public class BasicDateCondition : BasicCondition<object>
     {
-        public string Part { get; set; }
+        public string Part { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -98,9 +98,9 @@ namespace SqlKata
     /// </summary>
     public class TwoColumnsCondition : AbstractCondition
     {
-        public string First { get; set; }
-        public string Operator { get; set; }
-        public string Second { get; set; }
+        public string First { get; internal set; }
+        public string Operator { get; internal set; }
+        public string Second { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -123,9 +123,9 @@ namespace SqlKata
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
-        public string Column { get; set; }
-        public string Operator { get; set; }
-        public Query Query { get; set; }
+        public string Column { get; internal set; }
+        public string Operator { get; internal set; }
+        public Query Query { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -148,8 +148,8 @@ namespace SqlKata
     /// </summary>
     public class InCondition<T> : AbstractCondition
     {
-        public string Column { get; set; }
-        public IEnumerable<T> Values { get; set; }
+        public string Column { get; internal set; }
+        public IEnumerable<T> Values { get; internal set; }
         public override AbstractClause Clone()
         {
             return new InCondition<T>
@@ -170,8 +170,8 @@ namespace SqlKata
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
-        public Query Query { get; set; }
-        public string Column { get; set; }
+        public Query Query { get; internal set; }
+        public string Column { get; internal set; }
         public override AbstractClause Clone()
         {
             return new InQueryCondition
@@ -191,9 +191,9 @@ namespace SqlKata
     /// </summary>
     public class BetweenCondition<T> : AbstractCondition
     {
-        public string Column { get; set; }
-        public T Higher { get; set; }
-        public T Lower { get; set; }
+        public string Column { get; internal set; }
+        public T Higher { get; internal set; }
+        public T Lower { get; internal set; }
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
@@ -214,7 +214,7 @@ namespace SqlKata
     /// </summary>
     public class NullCondition : AbstractCondition
     {
-        public string Column { get; set; }
+        public string Column { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -236,7 +236,7 @@ namespace SqlKata
     /// </summary>
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
-        public T Query { get; set; }
+        public T Query { get; internal set; }
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
@@ -255,7 +255,7 @@ namespace SqlKata
     /// </summary>
     public class ExistsCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
-        public T Query { get; set; }
+        public T Query { get; internal set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -273,8 +273,8 @@ namespace SqlKata
 
     public class RawCondition : AbstractCondition, IRaw
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public string Expression { get; internal set; }
+        public object[] Bindings { internal set; get; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

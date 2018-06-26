@@ -8,10 +8,10 @@ namespace SqlKata.Execution
     public class QueryFactory
     {
         #region Properties
-        public IDbConnection Connection { get; set; }
-        public Compiler Compiler { get; set; }
+        public IDbConnection Connection { get; internal set; }
+        public Compiler Compiler { get; internal set; }
         public Action<SqlResult> Logger = result => { };
-        public int QueryTimeout { get; set; } = 30;
+        public int QueryTimeout { get; internal set; } = 30;
         #endregion
 
         public QueryFactory() { }

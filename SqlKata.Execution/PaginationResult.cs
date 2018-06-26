@@ -72,27 +72,27 @@ namespace SqlKata.Execution
         /// <summary>
         ///     The <see cref="Query" />
         /// </summary>
-        public Query Query { get; set; }
+        public Query Query { get; internal set; }
 
         /// <summary>
         ///     Returns the total number of pages
         /// </summary>
-        public long Count { get; set; }
+        public long Count { get; internal set; }
 
         /// <summary>
         ///     Returns an <see cref="IEnumerable{T}" /> list
         /// </summary>
-        public IEnumerable<T> List { get; set; }
+        public IEnumerable<T> List { get; internal set; }
 
         /// <summary>
         ///     Returns the current page
         /// </summary>
-        public int Page { get; set; }
+        public int Page { get; internal set; }
 
         /// <summary>
         ///     Returns the amount of records on each page
         /// </summary>
-        public int PerPage { get; set; }
+        public int PerPage { get; internal set; }
 
         /// <summary>
         ///     Returns the total amount of pages

@@ -9,8 +9,8 @@ namespace SqlKata
 
     public class InsertClause : AbstractInsertClause
     {
-        public List<string> Columns { get; set; }
-        public List<object> Values { get; set; }
+        public List<string> Columns { get; internal set; }
+        public List<object> Values { get; internal set; }
 
         public override AbstractClause Clone()
         {
@@ -26,8 +26,8 @@ namespace SqlKata
 
     public class InsertQueryClause : AbstractInsertClause
     {
-        public List<string> Columns { get; set; }
-        public Query Query { get; set; }
+        public List<string> Columns { get; internal set; }
+        public Query Query { get; internal set; }
 
         public override AbstractClause Clone()
         {
