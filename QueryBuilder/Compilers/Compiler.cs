@@ -111,7 +111,7 @@ namespace SqlKata.Compilers
 
             if (!clauses.Any())
             {
-                return "";
+                return string.Empty;
             }
 
             var sql = new List<string>();
@@ -480,7 +480,7 @@ namespace SqlKata.Compilers
                 return CompileJoin((query as Join), isNested);
             }
 
-            return "";
+            return string.Empty;
         }
 
         public virtual string CompileGroups(Query query)
@@ -556,7 +556,7 @@ namespace SqlKata.Compilers
                 return "LIMIT ?";
             }
 
-            return "";
+            return string.Empty;
         }
 
         public virtual string CompileOffset(Query query)
@@ -567,7 +567,7 @@ namespace SqlKata.Compilers
                 return "OFFSET ?";
             }
 
-            return "";
+            return string.Empty;
         }
 
         public virtual string CompileLock(Query query)

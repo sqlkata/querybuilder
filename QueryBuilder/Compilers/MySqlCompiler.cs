@@ -16,7 +16,7 @@ namespace SqlKata.Compilers
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
-                return "";
+                return string.Empty;
             }
 
             bindings.Add(limitOffset.Offset);

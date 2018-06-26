@@ -29,9 +29,8 @@ namespace SqlKata.Compilers
             var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
 
             //var orderClause = query.GetComponents("order", EngineCode);
-
-
-            // get a clone without the limit and order
+            
+            // Get a clone without the limit and order
             query.ClearComponent("order");
             query.ClearComponent("limit");
             var subquery = query.Clone();
@@ -52,7 +51,7 @@ namespace SqlKata.Compilers
 
             if (!subquery.HasComponent("select", EngineCode)) subquery.SelectRaw("*");
 
-            //Add an alias name to the subquery
+            // Add an alias name to the subquery
             subquery.As("subquery");
 
             // Add the row_number select, and put back the bindings here if any
