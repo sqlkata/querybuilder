@@ -15,17 +15,13 @@ namespace SqlKata.Compilers
             var methodName = "Compile" + name + "Condition";
 
             var clauseType = clause.GetType();
-            MethodInfo methodInfo = this.GetType().GetRuntimeMethods().Where(x => x.Name == methodName).FirstOrDefault();
+            var methodInfo = GetType().GetRuntimeMethods().FirstOrDefault(x => x.Name == methodName);
 
             if (methodInfo == null)
-            {
                 throw new Exception($"Failed to locate a compiler for {name}.");
-            }
 
             if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())
-            {
                 methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
-            }
 
             var result = methodInfo.Invoke(this, new object[] { clause });
 
@@ -35,7 +31,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileConditions(List<AbstractCondition> conditions)
         {
             var sql = conditions
-                .Select(x => CompileCondition(x))
+                .Select(CompileCondition)
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToList()
                 .Select((x, i) =>
@@ -64,10 +60,7 @@ namespace SqlKata.Compilers
         {
             var sql = Wrap(x.Column) + " " + x.Operator + " " + Parameter(x.Value);
 
-            if (x.IsNot)
-                return $"NOT ({sql})";
-
-            return sql;
+            return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
         protected virtual string CompileBasicStringCondition(BasicStringCondition x)
@@ -98,10 +91,7 @@ namespace SqlKata.Compilers
 
             var sql = column + " " + method + " " + Parameter(x.Value);
 
-            if (x.IsNot)
-                return $"NOT ({sql})";
-
-            return sql;
+            return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
         protected virtual string CompileBasicDateCondition(BasicDateCondition x)
