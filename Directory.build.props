@@ -21,25 +21,19 @@
   </PropertyGroup>
 
   <!-- Workarounds for https://github.com/NuGet/Home/issues/4853 -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net451' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramwork)' == 'net451' ">
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
-    <Reference Include="System" Pack="false" />
-    <Reference Include="System.Core" Pack="false" />
+
+  <!-- Because of https://github.com/NuGet/Home/issues/4853 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+    <Reference Include="System"/>
+    <Reference Include="System.Core"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net451' ">
-    <DefineConstants>$(DefineConstants);ASYNC;NET45</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);ASYNC;COREFX;NETSTANDARD13;FEATURE_TYPE_INFO</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.6.0" PrivateAssets="All" />
-    <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.4.0" PrivateAssets="All" />
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.1" PrivateAssets="All" />
+    <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.6.2" PrivateAssets="All" />
   </ItemGroup>
 </Project>

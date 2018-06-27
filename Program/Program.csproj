@@ -2,6 +2,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
+    <ProjectReference Include="..\SqlKata.Execution\SqlKata.Execution.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
   </ItemGroup>
 
   <PropertyGroup>

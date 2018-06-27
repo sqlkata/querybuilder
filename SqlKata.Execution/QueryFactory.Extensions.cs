@@ -1,225 +1,139 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using Dapper;
+using System.Collections.Generic;
+using System;
+using SqlKata;
 
 namespace SqlKata.Execution
 {
-    public static class QueryFactoryExtensions
+    public static class QueryExtensions
     {
-        #region Compile
-        private static SqlResult Compile(this QueryFactory db, Query query)
+        public static IEnumerable<T> Get<T>(this Query query)
         {
-            var compiled = db.Compiler.Compile(query);
-
-            db.Logger(compiled);
-
-            return compiled;
-        }
-        #endregion
-
-        #region Dapper
-        public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
-        {
-            var compiled = db.Compile(query);
-
-            return db.Connection.Query<T>(compiled.Sql, compiled.Bindings);
+            return QueryHelper.CreateQueryFactory(query).Get<T>(query);
         }
 
-        public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
+        public static IEnumerable<dynamic> Get(this Query query)
         {
-            var compiled = db.Compile(query);
-
-            return db.Connection.Query(compiled.Sql, compiled.Bindings) as IEnumerable<IDictionary<string, object>>;
+            return query.Get<dynamic>();
         }
 
-        public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
+        public static T FirstOrDefault<T>(this Query query)
         {
-            return Get<dynamic>(db, query);
+            return QueryHelper.CreateQueryFactory(query).FirstOrDefault<T>(query);
         }
 
-        public static T First<T>(this QueryFactory db, Query query)
+        public static dynamic FirstOrDefault(this Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
-
-            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
+            return FirstOrDefault<dynamic>(query);
         }
 
-        public static dynamic First(this QueryFactory db, Query query)
+        public static T First<T>(this Query query)
         {
-            return First<dynamic>(db, query);
+            return QueryHelper.CreateQueryFactory(query).First<T>(query);
         }
 
-        public static T FirstOrDefault<T>(this QueryFactory db, Query query)
+        public static dynamic First(this Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
-
-            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
+            return First<dynamic>(query);
         }
 
-        public static dynamic FirstOrDefault(this QueryFactory db, Query query)
+        public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25)
         {
-            return FirstOrDefault<dynamic>(db, query);
+            var db = QueryHelper.CreateQueryFactory(query);
+
+            return db.Paginate<T>(query, page, perPage);
         }
 
-        public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null,
-            CommandType? commandType = null)
+        public static PaginationResult<dynamic> Paginate(this Query query, int page, int perPage = 25)
         {
-            var compiled = db.Compile(query);
-
-            return db.Connection.Execute(
-                compiled.Sql,
-                compiled.Bindings,
-                transaction,
-                db.QueryTimeout,
-                commandType
-            );
+            return query.Paginate<dynamic>(page, perPage);
         }
 
-        public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null,
-            CommandType? commandType = null)
+        public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            return db.Connection.ExecuteScalar<T>(
-                compiled.Sql,
-                compiled.Bindings,
-                transaction,
-                db.QueryTimeout,
-                commandType
-            );
+            db.Chunk<T>(query, chunkSize, func);
         }
 
-        public static SqlMapper.GridReader GetMultiple<T>(
-            this QueryFactory db,
-            Query[] queries,
-            IDbTransaction transaction = null,
-            CommandType? commandType = null
-        )
+        public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
         {
-            var compiled = queries
-                .Select(db.Compile)
-                .Aggregate((a, b) => a + b);
-
-            return db.Connection.QueryMultiple(
-                compiled.Sql,
-                compiled.Bindings,
-                transaction,
-                db.QueryTimeout,
-                commandType
-            );
+            query.Chunk<dynamic>(chunkSize, func);
         }
 
-        public static IEnumerable<IEnumerable<T>> Get<T>(
-            this QueryFactory db,
-            Query[] queries,
-            IDbTransaction transaction = null,
-            CommandType? commandType = null
-        )
+        public static void Chunk<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action)
         {
-            var multi = db.GetMultiple<T>(
-                queries,
-                transaction,
-                commandType
-            );
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            using (multi)
-            {
-                for (var i = 0; i < queries.Length; i++)
-                    yield return multi.Read<T>();
-            }
-        }
-        #endregion
+            db.Chunk(query, chunkSize, action);
 
-        #region Aggregate
-        public static T Aggregate<T>(
-            this QueryFactory db,
-            Query query,
-            string aggregateOperation,
-            params string[] columns
-        )
-        {
-            return db.ExecuteScalar<T>(query.AsAggregate(aggregateOperation, columns));
         }
 
-        public static T Count<T>(this QueryFactory db, Query query, params string[] columns)
+        public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
         {
-            return db.ExecuteScalar<T>(query.AsCount(columns));
+            query.Chunk<dynamic>(chunkSize, action);
         }
 
-        public static T Average<T>(this QueryFactory db, Query query, string column)
+        public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            return db.Aggregate<T>(query, "avg", column);
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
         }
 
-        public static T Sum<T>(this QueryFactory db, Query query, string column)
+        public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
-            return db.Aggregate<T>(query, "sum", column);
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, valuesCollection));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
         }
 
-        public static T Min<T>(this QueryFactory db, Query query, string column)
+        public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
-            return db.Aggregate<T>(query, "min", column);
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+
         }
 
-        public static T Max<T>(this QueryFactory db, Query query, string column)
+        public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            return db.Aggregate<T>(query, "max", column);
-        }
-        #endregion
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
 
-        #region Pagination
-        public static PaginationResult<T> Paginate<T>(this QueryFactory db, Query query, int page, int perPage = 25)
-        {
-            if (page < 1)
-                throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
+            var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
 
-            if (perPage < 1)
-                throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
+            xQuery.Logger(compiled);
 
-            var count = query.Clone().Count<long>();
-
-            var list = query.Clone().ForPage(page, perPage).Get<T>();
-
-            return new PaginationResult<T>
-            {
-                Query = query,
-                Page = page,
-                PerPage = perPage,
-                Count = count,
-                List = list
-            };
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
         }
 
-        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize,
-            Func<IEnumerable<T>, int, bool> func)
+        public static int Delete(this Query query)
         {
-            var result = db.Paginate<T>(query, 1, chunkSize);
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Delete));
 
-            if (!func(result.List, 1))
-                return;
+            var compiled = xQuery.Compiler.Compile(query.AsDelete());
 
-            while (result.HasNext)
-            {
-                result = result.Next();
-                if (!func(result.List, result.Page))
-                    return;
-            }
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
         }
 
-        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Action<IEnumerable<T>, int> action)
-        {
-            var result = db.Paginate<T>(query, 1, chunkSize);
-
-            action(result.List, 1);
-
-            while (result.HasNext)
-            {
-                result = result.Next();
-                action(result.List, result.Page);
-            }
-        }
-        #endregion
     }
 }

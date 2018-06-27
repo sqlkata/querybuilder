@@ -6,6 +6,6 @@ install:
   - dotnet clean
   - dotnet restore
 script:
-  - dotnet build -f netstandard1.3 QueryBuilder/QueryBuilder.csproj
+  - dotnet build -f netstandard1.0 QueryBuilder/QueryBuilder.csproj
   - dotnet build -f netstandard1.3 SqlKata.Execution/SqlKata.Execution.csproj
   - dotnet build -f netcoreapp2.0 QueryBuilder.Tests/QueryBuilder.Tests.csproj

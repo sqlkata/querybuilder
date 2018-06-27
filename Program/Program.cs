@@ -1,26 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Execution;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace Program
 {
-    internal class Program
+    class Program
     {
-        private static void Main(string[] args)
+        static void Main(string[] args)
         {
-            var columns = new List<string> {"Test1", "Test2"};
+            var query = new Query("table")
+            .WhereLike("name", "a")
+            .Limit(10).Offset(5)
+            .ForPage(3, 4);
 
-            var query = new Query().Select("1", "2", "3", "4").Combine("and", true, new Query("Test2").Select("1"));
+            // var sql = compiler.Compile(query);
+             // Console.WriteLine(sql);
+            // Console.WriteLine(string.Join(", ", compiler.GetBindings()));
 
-            //var query = new Query("ErrorLogs")
-            //    .AsDeleteRaw("TRUNCAT TABLE [ErrorLogs]");
+
 
             var compiler = new SqlServerCompiler();
-            var sql = compiler.Compile(query);
+            var connection = new SqlConnection(
+                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+            );
 
-            Console.WriteLine(sql);
-            Console.WriteLine(string.Join(", ", compiler.GetBindings()));
+            var db = new QueryFactory(connection, compiler);
+
+            var r = db.StatementAsync("UPDATE Recurring set Description = concat(Id, 2)", null).GetAwaiter().GetResult();
+            Console.WriteLine("result: " + r);
+
         }
     }
 }

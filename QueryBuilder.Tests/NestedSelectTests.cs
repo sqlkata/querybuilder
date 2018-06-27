@@ -1,9 +1,10 @@
-﻿using SqlKata;
-using SqlKata.Compilers;
 using Xunit;
+using SqlKata;
+using SqlKata.Compilers;
 
 public class NestedSelectTests
 {
+
     [Fact]
     public static void Compile_RawSql_WithLimit_ReturnsCorrectQuery()
     {
@@ -38,21 +39,19 @@ public class NestedSelectTests
         var target = new SqlServerCompiler();
 
         var actual = target.Compile(q).ToString();
-        Assert.Contains("SELECT TOP (1) [MyData], (SELECT TOP (1) [MyData] FROM [Bar]) AS [Bar] FROM [Foo] AS [src]",
-            actual);
+        Assert.Contains("SELECT TOP (1) [MyData], (SELECT TOP (1) [MyData] FROM [Bar]) AS [Bar] FROM [Foo] AS [src]", actual);
     }
 
-    [Fact]
-    public static void SqlCompile_QueryLimitAndNestedLimit_BindingValue()
-    {
-        var n = new Query().From("Bar");
-        var q = new Query().From("Foo").Select("MyData").Where("x", true).WhereNotExists(n);
+    // [Fact]
+    // public static void SqlCompile_QueryLimitAndNestedLimit_BindingValue()
+    // {
+    //     var n = new Query().From("Bar");
+    //     var q = new Query().From("Foo").Select("MyData").Where("x", true).WhereNotExists(n);
 
 
-        var target = new SqlServerCompiler();
+    //     var target = new SqlServerCompiler();
 
-        var actual = target.Compile(q).ToString();
-        Assert.Contains("SELECT [MyData] FROM [Foo] WHERE [x] = True AND NOT EXISTS (SELECT TOP (1) 1 FROM [Bar])",
-            actual);
-    }
+    //     var actual = target.Compile(q).ToString();
+    //     Assert.Contains("SELECT [MyData] FROM [Foo] WHERE [x] = True AND NOT EXISTS (SELECT TOP (1) 1 FROM [Bar])", actual);
+    // }
 }
