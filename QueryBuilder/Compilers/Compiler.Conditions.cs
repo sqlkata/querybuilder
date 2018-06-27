@@ -10,7 +10,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileCondition(AbstractCondition clause)
         {
             var name = clause.GetType().Name;
-            name = name.Substring(0, name.IndexOf("Condition"));
+            name = name.Substring(0, name.IndexOf("Condition", StringComparison.OrdinalIgnoreCase));
 
             var methodName = "Compile" + name + "Condition";
 
