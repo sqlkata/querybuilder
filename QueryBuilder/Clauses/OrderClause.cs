@@ -6,9 +6,19 @@ namespace SqlKata
 
     public class OrderBy : AbstractOrderBy
     {
+        #region Properties
+        /// <summary>
+        ///     The column to order
+        /// </summary>
         public string Column { get; internal set; }
-        public bool Ascending { get; internal set; } = true;
 
+        /// <summary>
+        ///     Returns <c>true</c> when the column needs to be orderd ascending
+        /// </summary>
+        public bool Ascending { get; internal set; } = true;
+        #endregion
+
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -20,6 +30,7 @@ namespace SqlKata
                 Ascending = Ascending
             };
         }
+        #endregion
     }
 
     public class OrderByRandom : AbstractOrderBy
@@ -37,7 +48,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents an "order by" in it's RAW form with 
+    ///     Represents an "order by" in it's RAW form with
     ///     it's own expression and bindings
     /// </summary>
     public class RawOrderBy : AbstractOrderBy, IRaw

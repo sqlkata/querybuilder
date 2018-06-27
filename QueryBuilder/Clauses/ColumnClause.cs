@@ -1,5 +1,6 @@
 namespace SqlKata
 {
+    /// <inheritdoc />
     public abstract class AbstractColumn : AbstractClause
     {
     }

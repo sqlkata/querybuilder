@@ -2,6 +2,10 @@ using System.Collections.Generic;
 
 namespace SqlKata
 {
+    /// <summary>
+    ///     Represents an abstract class as base definition for an SQL condition,
+    ///     e.g. not, and, ord, is, &lt;, &gt;, etc...
+    /// </summary>
     public abstract class AbstractCondition : AbstractClause
     {
         #region Properties

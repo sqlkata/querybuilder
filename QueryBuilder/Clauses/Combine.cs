@@ -1,5 +1,9 @@
 namespace SqlKata
 {
+    /// <summary>
+    ///     Represents an abstract class as base definition to combine
+    ///     <see cref="Query"/>'s together
+    /// </summary>
     public abstract class AbstractCombine : AbstractClause
     {
     }

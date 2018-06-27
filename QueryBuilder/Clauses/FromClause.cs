@@ -3,7 +3,7 @@ using System;
 namespace SqlKata
 {
     /// <summary>
-    ///     Represents a "from" clause.
+    ///     Represents an abstract class as base definition for an SQL from clause
     /// </summary>
     public abstract class AbstractFrom : AbstractClause
     {

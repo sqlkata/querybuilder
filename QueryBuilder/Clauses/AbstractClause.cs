@@ -1,5 +1,9 @@
 namespace SqlKata
 {
+    /// <summary>
+    ///     Represents an abstract class as base definition for an SQL clause,
+    ///     e.g. constraint, update, from, group by, having, order by, etc...
+    /// </summary>
     public abstract class AbstractClause
     {
         #region Properties
