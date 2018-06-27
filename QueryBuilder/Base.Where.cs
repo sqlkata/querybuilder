@@ -6,6 +6,7 @@ namespace SqlKata
 {
     public abstract partial class BaseQuery<Q>
     {
+        #region Where
         public Q Where<T>(string column, string op, T value)
         {
             // If the value is "null", we will just assume the developer wants to add a
@@ -54,7 +55,16 @@ namespace SqlKata
 
         public Q Where<T>(IEnumerable<string> columns, IEnumerable<T> values)
         {
-            if (columns.Count() == 0 || columns.Count() != values.Count())
+            if (columns == null)
+                throw new ArgumentNullException(nameof(columns));
+
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
+            var enumerable = columns as string[] ?? columns.ToArray();
+            var enumerable1 = values as T[] ?? values.ToArray();
+
+            if (!enumerable.Any() || enumerable.Length != enumerable1.Length)
                 throw new ArgumentException("Columns and Values count must match");
 
             var query = (Q) this;
@@ -62,14 +72,14 @@ namespace SqlKata
             var orFlag = GetOr();
             var notFlag = GetNot();
 
-            for (var i = 0; i < columns.Count(); i++)
+            for (var i = 0; i < enumerable.Length; i++)
             {
                 if (orFlag)
-                    query = query.Or();
+                    query.Or();
                 else
                     query.And();
 
-                query = Not(notFlag).Where(columns.ElementAt(i), values.ElementAt(i));
+                query = Not(notFlag).Where(enumerable.ElementAt(i), enumerable1.ElementAt(i));
             }
 
             return query;
@@ -411,8 +421,7 @@ namespace SqlKata
         {
             return Or().Not(true).WhereIn(column, values);
         }
-
-
+        
         public Q WhereIn(string column, Query query)
         {
             return AddComponent("where", new InQueryCondition
@@ -547,8 +556,9 @@ namespace SqlKata
         {
             return Or().Not(true).WhereExists(callback);
         }
+        #endregion
 
-        #region date
+        #region Date(part)
         public Q WhereDatePart(string part, string column, string op, object value)
         {
             return AddComponent("where", new BasicDateCondition
