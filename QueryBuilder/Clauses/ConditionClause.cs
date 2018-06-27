@@ -66,7 +66,7 @@ namespace SqlKata
     {
         #region Properties
         /// <summary>
-        /// Returns <c>true</c> when case-sensitive
+        ///     Returns <c>true</c> when case-sensitive
         /// </summary>
         public bool CaseSensitive { get; internal set; }
         #endregion

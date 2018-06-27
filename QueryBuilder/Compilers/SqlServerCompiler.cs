@@ -20,7 +20,10 @@ namespace SqlKata.Compilers
         {
             var limitOffset = query.GetOneComponent<LimitOffset>("limit", EngineCode);
 
-            if (limitOffset == null || !limitOffset.HasOffset()) return query;
+            if (limitOffset == null || !limitOffset.HasOffset())
+            {
+                return query;
+            }
 
             // Surround the original query with a parent query, then restrict the result to the offset provided,
             // see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
@@ -49,7 +52,10 @@ namespace SqlKata.Compilers
             // Transform the query to make it a parent query
             query.Select("*");
 
-            if (!subquery.HasComponent("select", EngineCode)) subquery.SelectRaw("*");
+            if (!subquery.HasComponent("select", EngineCode))
+            {
+                subquery.SelectRaw("*");
+            }
 
             // Add an alias name to the subquery
             subquery.As("subquery");
@@ -62,13 +68,17 @@ namespace SqlKata.Compilers
             query.From(subquery);
 
             if (limitOffset.HasLimit())
+            {
                 query.WhereBetween(
                     rowNumberColName,
                     limitOffset.Offset + 1,
                     limitOffset.Limit + limitOffset.Offset
                 );
+            }
             else
+            {
                 query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
+            }
 
             limitOffset.Clear();
 
@@ -158,7 +168,9 @@ namespace SqlKata.Compilers
 
             var hints = string.Empty;
             if (from.Hints?.Length > 0)
+            {
                 hints = $" WITH ({string.Join(", ", from.Hints)})";
+            }
 
             if (from is QueryFromClause queryFromClause)
             {
@@ -169,7 +181,9 @@ namespace SqlKata.Compilers
             }
 
             if (from is FromClause fromClause)
+            {
                 return Wrap(fromClause.Table + hints);
+            }
 
             throw InvalidClauseException("TableExpression", from);
         }

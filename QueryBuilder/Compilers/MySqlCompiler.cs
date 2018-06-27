@@ -15,14 +15,18 @@ namespace SqlKata.Compilers
             var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())
+            {
                 return string.Empty;
+            }
 
             bindings.Add(limitOffset.Offset);
 
             // MySql will not accept offset without limit
             // So we will put a large number to avoid this error
             if (!limitOffset.HasLimit())
+            {
                 return "LIMIT 18446744073709551615 OFFSET ?";
+            }
 
             return "OFFSET ?";
         }

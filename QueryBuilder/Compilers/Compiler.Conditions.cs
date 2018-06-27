@@ -18,12 +18,16 @@ namespace SqlKata.Compilers
             var methodInfo = GetType().GetRuntimeMethods().FirstOrDefault(x => x.Name == methodName);
 
             if (methodInfo == null)
+            {
                 throw new Exception($"Failed to locate a compiler for {name}.");
+            }
 
             if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())
+            {
                 methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
+            }
 
-            var result = methodInfo.Invoke(this, new object[] { clause });
+            var result = methodInfo.Invoke(this, new object[] {clause});
 
             return result as string;
         }
@@ -80,13 +84,21 @@ namespace SqlKata.Compilers
                 method = "LIKE";
 
                 if (x.Operator == "starts")
+                {
                     x.Value = x.Value + "%";
+                }
                 else if (x.Operator == "ends")
+                {
                     x.Value = "%" + x.Value;
+                }
                 else if (x.Operator == "contains")
+                {
                     x.Value = "%" + x.Value + "%";
+                }
                 else
+                {
                     x.Value = x.Value;
+                }
             }
 
             var sql = column + " " + method + " " + Parameter(x.Value);
@@ -108,7 +120,9 @@ namespace SqlKata.Compilers
         protected virtual string CompileNestedCondition<Q>(NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
             if (!x.Query.HasComponent("where", EngineCode))
+            {
                 return null;
+            }
 
             var sql = CompileConditions(x.Query.GetComponents<AbstractCondition>("where", EngineCode));
             var op = x.IsNot ? "NOT " : "";
@@ -136,7 +150,9 @@ namespace SqlKata.Compilers
         protected virtual string CompileInCondition<T>(InCondition<T> item)
         {
             if (!item.Values.Any())
+            {
                 return item.IsNot ? "1 = 1" : "1 = 0";
+            }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 

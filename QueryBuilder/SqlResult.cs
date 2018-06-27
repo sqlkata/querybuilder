@@ -39,12 +39,16 @@ namespace SqlKata
                 var value = RawBindings[i];
 
                 if (value == null)
+                {
                     return "NULL";
+                }
 
                 var textValue = value.ToString();
 
                 if (IsNumber(textValue))
+                {
                     return textValue;
+                }
 
                 return "'" + textValue + "'";
             });

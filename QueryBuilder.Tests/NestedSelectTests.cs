@@ -1,10 +1,9 @@
-using Xunit;
 using SqlKata;
 using SqlKata.Compilers;
+using Xunit;
 
 public class NestedSelectTests
 {
-
     [Fact]
     public static void Compile_RawSql_WithLimit_ReturnsCorrectQuery()
     {
@@ -39,7 +38,8 @@ public class NestedSelectTests
         var target = new SqlServerCompiler();
 
         var actual = target.Compile(q).ToString();
-        Assert.Contains("SELECT TOP (1) [MyData], (SELECT TOP (1) [MyData] FROM [Bar]) AS [Bar] FROM [Foo] AS [src]", actual);
+        Assert.Contains("SELECT TOP (1) [MyData], (SELECT TOP (1) [MyData] FROM [Bar]) AS [Bar] FROM [Foo] AS [src]",
+            actual);
     }
 
     // [Fact]

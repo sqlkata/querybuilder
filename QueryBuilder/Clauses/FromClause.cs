@@ -31,13 +31,17 @@ namespace SqlKata
         public string Table { get; internal set; }
 
         /// <summary>
-        /// Returns the alias for the table
+        ///     Returns the alias for the table
         /// </summary>
         public override string Alias
         {
             get
             {
-                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) < 0) return Table;
+                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    return Table;
+                }
+
                 var segments = Table.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
                 return segments[2];
             }
@@ -62,7 +66,9 @@ namespace SqlKata
     public class QueryFromClause : AbstractFrom
     {
         #region Properties
-        /// <inheritdoc />
+        /// <summary>
+        /// The <see cref="Query"/>
+        /// </summary>
         public Query Query { get; internal set; }
 
         /// <inheritdoc />
@@ -83,9 +89,9 @@ namespace SqlKata
         }
         #endregion
     }
-    
+
     /// <summary>
-    ///     Represents a "from" clause in it's RAW form 
+    ///     Represents a "from" clause in it's RAW form
     ///     with it's own expression and bindings
     /// </summary>
     public class RawFromClause : AbstractFrom, IRaw

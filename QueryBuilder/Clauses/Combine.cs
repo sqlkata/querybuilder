@@ -2,7 +2,7 @@ namespace SqlKata
 {
     /// <summary>
     ///     Represents an abstract class as base definition to combine
-    ///     <see cref="Query"/>'s together
+    ///     <see cref="Query" />'s together
     /// </summary>
     public abstract class AbstractCombine : AbstractClause
     {
@@ -53,7 +53,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents a "combine" clause in it's RAW form 
+    ///     Represents a "combine" clause in it's RAW form
     ///     with it's own expression and bindings
     /// </summary>
     public class RawCombine : AbstractCombine, IRaw

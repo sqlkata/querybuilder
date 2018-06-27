@@ -14,8 +14,8 @@ namespace SqlKata
 
         public string Type
         {
-            get { return _type; }
-            set { _type = value.ToUpper(); }
+            get => _type;
+            set => _type = value.ToUpper();
         }
 
         public override Join Clone()
@@ -37,16 +37,45 @@ namespace SqlKata
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public Join JoinWith(string table) => From(table);
+        public Join JoinWith(string table)
+        {
+            return From(table);
+        }
 
-        public Join JoinWith(Query query) => From(query);
-        public Join JoinWith(Func<Query, Query> callback) => From(callback);
+        public Join JoinWith(Query query)
+        {
+            return From(query);
+        }
 
-        public Join AsInner() => AsType("inner");
-        public Join AsOuter() => AsType("outer");
-        public Join AsLeft() => AsType("left");
-        public Join AsRight() => AsType("right");
-        public Join AsCross() => AsType("cross");
+        public Join JoinWith(Func<Query, Query> callback)
+        {
+            return From(callback);
+        }
+
+        public Join AsInner()
+        {
+            return AsType("inner");
+        }
+
+        public Join AsOuter()
+        {
+            return AsType("outer");
+        }
+
+        public Join AsLeft()
+        {
+            return AsType("left");
+        }
+
+        public Join AsRight()
+        {
+            return AsType("right");
+        }
+
+        public Join AsCross()
+        {
+            return AsType("cross");
+        }
 
         public Join On(string first, string second, string op = "=")
         {

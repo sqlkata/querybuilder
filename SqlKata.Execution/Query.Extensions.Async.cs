@@ -58,10 +58,14 @@ namespace SqlKata.Execution
         public static async Task<PaginationResult<T>> PaginateAsync<T>(this Query query, int page, int perPage = 25)
         {
             if (page < 1)
+            {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
+            }
 
             if (perPage < 1)
+            {
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
+            }
 
             var count = await query.Clone().CountAsync<long>();
 
@@ -87,13 +91,17 @@ namespace SqlKata.Execution
             var result = await query.PaginateAsync<T>(1, chunkSize);
 
             if (!func(result.List, 1))
+            {
                 return;
+            }
 
             while (result.HasNext)
             {
                 result = result.Next();
                 if (!func(result.List, result.Page))
+                {
                     return;
+                }
             }
         }
 

@@ -7,9 +7,9 @@ namespace SqlKata
     {
         #region Combine
         /// <summary>
-        /// Allows you to combine multiple queries using one of the following available operators 
-        /// <c>union, intersect and except</c> by providing the following methods Union, UnionAll, Intersect, IntersectAll, 
-        /// Except and ExceptAll. The method accepts either an instance of Query or a labmda expression
+        ///     Allows you to combine multiple queries using one of the following available operators
+        ///     <c>union, intersect and except</c> by providing the following methods Union, UnionAll, Intersect, IntersectAll,
+        ///     Except and ExceptAll. The method accepts either an instance of Query or a labmda expression
         /// </summary>
         /// <param name="operation"></param>
         /// <param name="all"></param>
@@ -18,7 +18,9 @@ namespace SqlKata
         public Query Combine(string operation, bool all, Query query)
         {
             if (Method != "select" || query.Method != "select")
+            {
                 throw new InvalidOperationException("Only select queries can be combined.");
+            }
 
             return AddComponent("combine", new Combine
             {
@@ -29,7 +31,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Allows you to combine multiple queries using a RAW combine statement
+        ///     Allows you to combine multiple queries using a RAW combine statement
         /// </summary>
         /// <param name="sql">The sql</param>
         /// <param name="bindings">The bindings</param>
@@ -37,7 +39,9 @@ namespace SqlKata
         public Query CombineRaw(string sql, params object[] bindings)
         {
             if (Method != "select")
+            {
                 throw new InvalidOperationException("Only select queries can be combined.");
+            }
 
             return AddComponent("combine", new RawCombine
             {
@@ -69,7 +73,10 @@ namespace SqlKata
             return Union(callback, true);
         }
 
-        public Query UnionRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
+        public Query UnionRaw(string sql, params object[] bindings)
+        {
+            return CombineRaw(sql, bindings);
+        }
 
         public Query Except(Query query, bool all = false)
         {
@@ -94,7 +101,10 @@ namespace SqlKata
             return Except(callback, true);
         }
 
-        public Query ExceptRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
+        public Query ExceptRaw(string sql, params object[] bindings)
+        {
+            return CombineRaw(sql, bindings);
+        }
 
         public Query Intersect(Query query, bool all = false)
         {
@@ -119,7 +129,10 @@ namespace SqlKata
             return Intersect(callback, true);
         }
 
-        public Query IntersectRaw(string sql, params object[] bindings) => CombineRaw(sql, bindings);
+        public Query IntersectRaw(string sql, params object[] bindings)
+        {
+            return CombineRaw(sql, bindings);
+        }
         #endregion
     }
 }

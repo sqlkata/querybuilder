@@ -50,22 +50,28 @@ namespace SqlKata
             get
             {
                 if (Method == "insert")
+                {
                     return new[]
                     {
                         "cte", "insert"
                     };
+                }
 
                 if (Method == "update")
+                {
                     return new[]
                     {
                         "cte", "update", "where"
                     };
+                }
 
                 if (Method == "delete")
+                {
                     return new[]
                     {
                         "cte", "where"
                     };
+                }
 
                 return new[]
                 {
@@ -125,7 +131,9 @@ namespace SqlKata
         {
             // Clear query alias and add it to the containing clause
             if (string.IsNullOrWhiteSpace(query.QueryAlias))
+            {
                 throw new InvalidOperationException("No Alias found for the CTE query");
+            }
 
             var alias = query.QueryAlias.Trim();
 
@@ -302,7 +310,9 @@ namespace SqlKata
         public Query When(bool condition, Func<Query, Query> callback)
         {
             if (condition)
+            {
                 return callback.Invoke(this);
+            }
 
             return this;
         }
@@ -316,7 +326,9 @@ namespace SqlKata
         public Query WhenNot(bool condition, Func<Query, Query> callback)
         {
             if (!condition)
+            {
                 return callback.Invoke(this);
+            }
 
             return this;
         }

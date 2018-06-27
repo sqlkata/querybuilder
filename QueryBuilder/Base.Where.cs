@@ -13,11 +13,15 @@ namespace SqlKata
             // where null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
             if (value == null)
+            {
                 return Not(op != "=").WhereNull(column);
+            }
 
             var query = value as Query;
             if (query != null)
+            {
                 return Where(column, op, query);
+            }
 
             return AddComponent("where", new BasicCondition<T>
             {
@@ -43,9 +47,13 @@ namespace SqlKata
             foreach (var tuple in values)
             {
                 if (orFlag)
+                {
                     query = query.Or();
+                }
                 else
+                {
                     query.And();
+                }
 
                 query = Not(notFlag).Where(tuple.Key, tuple.Value);
             }
@@ -56,16 +64,22 @@ namespace SqlKata
         public Q Where<T>(IEnumerable<string> columns, IEnumerable<T> values)
         {
             if (columns == null)
+            {
                 throw new ArgumentNullException(nameof(columns));
+            }
 
             if (values == null)
+            {
                 throw new ArgumentNullException(nameof(values));
+            }
 
             var enumerable = columns as string[] ?? columns.ToArray();
             var enumerable1 = values as T[] ?? values.ToArray();
 
             if (!enumerable.Any() || enumerable.Length != enumerable1.Length)
+            {
                 throw new ArgumentException("Columns and Values count must match");
+            }
 
             var query = (Q) this;
 
@@ -75,9 +89,13 @@ namespace SqlKata
             for (var i = 0; i < enumerable.Length; i++)
             {
                 if (orFlag)
+                {
                     query.Or();
+                }
                 else
+                {
                     query.And();
+                }
 
                 query = Not(notFlag).Where(enumerable.ElementAt(i), enumerable1.ElementAt(i));
             }
@@ -96,7 +114,9 @@ namespace SqlKata
         public Q WhereIf<T>(bool condition, string column, string op, T value)
         {
             if (condition)
+            {
                 return Where(column, op, value);
+            }
 
             return (Q) this;
         }
@@ -117,7 +137,9 @@ namespace SqlKata
         public Q OrWhereIf<T>(bool condition, string column, string op, T value)
         {
             if (condition)
+            {
                 return Or().Where(column, op, value);
+            }
 
             return (Q) this;
         }
@@ -421,7 +443,7 @@ namespace SqlKata
         {
             return Or().Not(true).WhereIn(column, values);
         }
-        
+
         public Q WhereIn(string column, Query query)
         {
             return AddComponent("where", new InQueryCondition
@@ -510,8 +532,10 @@ namespace SqlKata
         public Q WhereExists(Query query)
         {
             if (!query.HasComponent("from"))
+            {
                 throw new ArgumentException(
                     @"""FromClause"" cannot be empty if used inside of a ""WhereExists"" condition");
+            }
 
             return AddComponent("where", new ExistsCondition<Query>
             {

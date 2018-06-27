@@ -23,7 +23,9 @@ namespace SqlKata
             var cols = columns.ToList();
 
             if (!cols.Any())
+            {
                 cols.Add("*");
+            }
 
             return AsAggregate("count", cols.ToArray());
         }

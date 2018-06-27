@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
-using SqlKata.Execution;
 using Xunit;
 
 public class QueryBuilderTest

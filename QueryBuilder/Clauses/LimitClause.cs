@@ -17,7 +17,9 @@ namespace SqlKata
             set
             {
                 if (value > 0)
+                {
                     _limit = value;
+                }
             }
         }
 
@@ -32,7 +34,9 @@ namespace SqlKata
             set
             {
                 if (value > 0)
+                {
                     _offset = value;
+                }
             }
         }
 

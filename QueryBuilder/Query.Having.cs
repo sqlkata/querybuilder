@@ -10,7 +10,9 @@ namespace SqlKata
             // having null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
             if (value == null)
+            {
                 return Not(op != "=").HavingNull(column);
+            }
 
             return AddComponent("having", new BasicCondition<T>
             {

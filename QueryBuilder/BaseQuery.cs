@@ -60,7 +60,9 @@ namespace SqlKata
         public Q SetParent(AbstractQuery parent)
         {
             if (this == parent)
+            {
                 throw new ArgumentException("Cannot set the same query as a parent of itself");
+            }
 
             Parent = parent;
             return (Q) this;
@@ -85,7 +87,9 @@ namespace SqlKata
         public Q AddComponent(string component, AbstractClause clause, string engineCode = null)
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             clause.Engine = engineCode;
             clause.Component = component;
@@ -101,7 +105,9 @@ namespace SqlKata
         public List<C> GetComponents<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             var clauses = Clauses
                 .Where(x => x.Component == component)
@@ -120,7 +126,9 @@ namespace SqlKata
         public List<AbstractClause> GetComponents(string component, string engineCode = null)
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             return GetComponents<AbstractClause>(component, engineCode);
         }
@@ -132,7 +140,9 @@ namespace SqlKata
         public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             return GetComponents<C>(component, engineCode)
                 .FirstOrDefault();
@@ -147,7 +157,9 @@ namespace SqlKata
         public AbstractClause GetOneComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             return GetOneComponent<AbstractClause>(component, engineCode);
         }
@@ -161,7 +173,9 @@ namespace SqlKata
         public bool HasComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             return GetComponents(component, engineCode).Any();
         }
@@ -175,12 +189,15 @@ namespace SqlKata
         public Q ClearComponent(string component, string engineCode = null)
         {
             if (engineCode == null)
+            {
                 engineCode = EngineScope;
+            }
 
             Clauses = Clauses
                 .Where(
                     x =>
-                        !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
+                        !(x.Component == component &&
+                          (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
             return (Q) this;
@@ -271,17 +288,19 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Sets a sub <see cref="Query"/> to select from
+        ///     Sets a sub <see cref="Query" /> to select from
         /// </summary>
-        /// <param name="query">The sub <see cref="Query"/> to select from</param>
-        /// <param name="alias">The alias for the sub <see cref="Query"/></param>
+        /// <param name="query">The sub <see cref="Query" /> to select from</param>
+        /// <param name="alias">The alias for the sub <see cref="Query" /></param>
         /// <returns></returns>
         public Q From(Query query, string alias = null)
         {
             query.SetParent((Q) this);
 
             if (alias != null)
+            {
                 query.As(alias);
+            }
 
             return ClearComponent("from").AddComponent("from", new QueryFromClause
             {
