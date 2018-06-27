@@ -596,7 +596,7 @@ namespace SqlKata.Compilers
             return $"UPPER({value})";
         }
 
-        private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
+        protected InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException($"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
