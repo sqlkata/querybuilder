@@ -10,7 +10,7 @@ it's secure and framework agnostic. Inspired by the top Query Builders available
 
 SqlKata has an expressive API. it follows a clean naming convention, which is very similar to the SQL syntax.
 
-It make writing SQL queries easy and funny, with no need to read long pages of documentations.
+It makes writing SQL queries easy and funny, with no need to read long pages of documentations.
 
 It provides a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
