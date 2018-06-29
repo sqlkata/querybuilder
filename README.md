@@ -18,4 +18,4 @@ It provides a level of abstraction over the supported database engines, that all
 
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql and PostgreSql.
 
-Checkout the full documentation on [http://sqlkata.com](http://sqlkata.com)
+Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
