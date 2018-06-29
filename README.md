@@ -4,9 +4,11 @@
 
 [![SqlKata on Nuget](https://img.shields.io/nuget/vpre/SqlKata.svg)](https://www.nuget.org/packages/SqlKata)
 
+[![SqlKata on MyGet](https://img.shields.io/myget/sqlkata/v/SqlKata.svg?label=myget)](https://www.myget.org/feed/sqlkata/package/nuget/SqlKata)
+
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
 
-it's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
+It's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
 
 SqlKata has an expressive API. it follows a clean naming convention, which is very similar to the SQL syntax.
 
