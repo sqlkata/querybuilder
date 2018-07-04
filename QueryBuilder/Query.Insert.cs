@@ -9,7 +9,7 @@ namespace SqlKata
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
             var columnsList = columns?.ToList();
-            var valuesList = values?.Select(BackupNullValues).ToList();
+            var valuesList = values?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
             {
@@ -44,7 +44,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.Select(BackupNullValues).ToList()
+                Values = data.Values.ToList()
             });
 
             return this;
@@ -72,7 +72,7 @@ namespace SqlKata
 
             foreach (var values in valuesCollectionList)
             {
-                var valuesList = values.Select(BackupNullValues).ToList();
+                var valuesList = values.ToList();
                 if (columnsList.Count != valuesList.Count)
                 {
                     throw new InvalidOperationException("Columns count should be equal to each Values count");

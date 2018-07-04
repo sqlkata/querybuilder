@@ -23,7 +23,7 @@ namespace SqlKata
         }
     }
 
-    public class RawOrderBy : AbstractOrderBy, IRaw
+    public class RawOrderBy : AbstractOrderBy
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }

@@ -235,14 +235,14 @@ namespace SqlKata
     /// <summary>
     /// Represents an "exists sub query" clause condition.
     /// </summary>
-    public class ExistsCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class ExistsCondition : AbstractCondition
     {
-        public T Query { get; set; }
+        public Query Query { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new ExistsCondition<T>
+            return new ExistsCondition
             {
                 Engine = Engine,
                 Query = Query.Clone(),
@@ -253,7 +253,7 @@ namespace SqlKata
         }
     }
 
-    public class RawCondition : AbstractCondition, IRaw
+    public class RawCondition : AbstractCondition
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }

@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
             EngineCode = "postgres";
         }
 
-        protected override string CompileBasicDateCondition(BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
@@ -28,7 +28,7 @@ namespace SqlKata.Compilers
                 left = $"DATE_PART('{condition.Part.ToUpper()}', {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
             if (condition.IsNot)
             {

@@ -54,7 +54,7 @@ namespace SqlKata
         }
     }
 
-    public class RawColumn : AbstractColumn, IRaw
+    public class RawColumn : AbstractColumn
     {
         /// <summary>
         /// Gets or sets the RAW expression.

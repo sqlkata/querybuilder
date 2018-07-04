@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace SqlKata.Compilers
 {
@@ -11,13 +12,74 @@ namespace SqlKata.Compilers
             ClosingIdentifier = "]";
         }
 
-        protected override Query OnBeforeSelect(Query query)
+        protected override SqlResult CompileSelectQuery(Query query)
         {
-            var limitOffset = query.GetOneComponent<LimitOffset>("limit", EngineCode);
+            var ctx = new SqlResult
+            {
+                Query = query,
+            };
+
+            var limitOffset = ctx.Query.GetOneComponent<LimitOffset>("limit", EngineCode);
+
+            var hasOffset = limitOffset?.HasOffset() ?? false;
+            var hasLimit = limitOffset?.HasLimit() ?? false;
+
+            if (!ctx.Query.HasComponent("select", EngineCode))
+            {
+                ctx.Query.Select("*");
+            }
+
+            if (hasOffset)
+            {
+                var orderStatement = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+                ctx.Query.SelectRaw($"ROW_NUMBER() OVER ({orderStatement}) AS [row_num]");
+            }
+
+
+            var results = new[] {
+                    this.CompileColumns(ctx),
+                    this.CompileFrom(ctx),
+                    this.CompileJoins(ctx),
+                    this.CompileWheres(ctx),
+                    this.CompileGroups(ctx),
+                    this.CompileHaving(ctx),
+                    hasOffset ? null : this.CompileOrders(ctx),
+                    this.CompileUnion(ctx),
+                }
+               .Where(x => x != null)
+               .Select(x => x.Trim())
+               .Where(x => !string.IsNullOrEmpty(x))
+               .ToList();
+
+            string sql = string.Join(" ", results);
+
+            if (hasOffset)
+            {
+                if (hasLimit)
+                {
+                    sql = $"SELECT * FROM ({sql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?";
+                    ctx.Bindings.Add(limitOffset.Offset + 1);
+                    ctx.Bindings.Add(limitOffset.Limit + limitOffset.Offset);
+                }
+                else
+                {
+                    sql = $"SELECT * FROM ({sql}) AS [results_wrapper] WHERE [row_num] >= ?";
+                    ctx.Bindings.Add(limitOffset.Offset + 1);
+                }
+            }
+
+            ctx.RawSql = sql;
+
+            return ctx;
+        }
+
+        protected override SqlResult OnBeforeSelect(SqlResult ctx)
+        {
+            var limitOffset = ctx.Query.GetOneComponent<LimitOffset>("limit", EngineCode);
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
-                return query;
+                return ctx;
             }
 
 
@@ -26,33 +88,33 @@ namespace SqlKata.Compilers
 
             var rowNumberColName = "row_num";
 
-            var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
+            var orderStatement = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
 
-            var orderClause = query.GetComponents("order", EngineCode);
+            var orderClause = ctx.Query.GetComponents("order", EngineCode);
 
 
             // get a clone without the limit and order
-            query.ClearComponent("order");
-            query.ClearComponent("limit");
-            var subquery = query.Clone();
+            ctx.Query.ClearComponent("order");
+            ctx.Query.ClearComponent("limit");
+            var subquery = ctx.Query.Clone();
 
             subquery.ClearComponent("cte");
 
             // Now clear other stuff
-            query.ClearComponent("select");
-            query.ClearComponent("from");
-            query.ClearComponent("join");
-            query.ClearComponent("where");
-            query.ClearComponent("group");
-            query.ClearComponent("having");
-            query.ClearComponent("union");
+            ctx.Query.ClearComponent("select");
+            ctx.Query.ClearComponent("from");
+            ctx.Query.ClearComponent("join");
+            ctx.Query.ClearComponent("where");
+            ctx.Query.ClearComponent("group");
+            ctx.Query.ClearComponent("having");
+            ctx.Query.ClearComponent("union");
 
             // Transform the query to make it a parent query
-            query.Select("*");
+            ctx.Query.Select("*");
 
             if (!subquery.HasComponent("select", EngineCode))
             {
-                subquery.SelectRaw("*");
+                subquery.Select("*");
             }
 
             //Add an alias name to the subquery
@@ -64,11 +126,11 @@ namespace SqlKata.Compilers
                     new object[] { }
             );
 
-            query.From(subquery);
+            ctx.Query.From(subquery);
 
             if (limitOffset.HasLimit())
             {
-                query.WhereBetween(
+                ctx.Query.WhereBetween(
                     rowNumberColName,
                     limitOffset.Offset + 1,
                     limitOffset.Limit + limitOffset.Offset
@@ -76,30 +138,30 @@ namespace SqlKata.Compilers
             }
             else
             {
-                query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
+                ctx.Query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
             }
 
             limitOffset.Clear();
 
-            return query;
+            return ctx;
 
         }
 
-        protected override string CompileColumns(Query query)
+        protected override string CompileColumns(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(query);
+            var compiled = base.CompileColumns(ctx);
 
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
+            var limitOffset = ctx.Query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
             {
                 // top bindings should be inserted first
-                bindings.Insert(0, limitOffset.Limit);
+                ctx.Bindings.Insert(0, limitOffset.Limit);
 
-                query.ClearComponent("limit");
+                ctx.Query.ClearComponent("limit");
 
                 return "SELECT TOP (?)" + compiled.Substring(6);
             }
@@ -107,12 +169,12 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        public override string CompileLimit(Query query)
+        public override string CompileLimit(SqlResult ctx)
         {
             return "";
         }
 
-        public override string CompileOffset(Query query)
+        public override string CompileOffset(SqlResult ctx)
         {
 
             return "";
@@ -123,7 +185,7 @@ namespace SqlKata.Compilers
             return "NEWID()";
         }
 
-        protected override string CompileBasicDateCondition(BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
@@ -142,7 +204,7 @@ namespace SqlKata.Compilers
                 left = $"DATEPART({condition.Part.ToUpper()}, {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
             if (condition.IsNot)
             {

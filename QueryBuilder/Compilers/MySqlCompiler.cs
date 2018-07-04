@@ -10,16 +10,16 @@ namespace SqlKata.Compilers
             OpeningIdentifier = ClosingIdentifier = "`";
         }
 
-        public override string CompileOffset(Query query)
+        public override string CompileOffset(SqlResult ctx)
         {
-            var limitOffset = query.GetOneComponent("limit", EngineCode) as LimitOffset;
+            var limitOffset = ctx.Query.GetOneComponent("limit", EngineCode) as LimitOffset;
 
             if (limitOffset == null || !limitOffset.HasOffset())
             {
                 return "";
             }
 
-            bindings.Add(limitOffset.Offset);
+            ctx.Bindings.Add(limitOffset.Offset);
 
             // MySql will not accept offset without limit
             // So we will put a large number to avoid this error

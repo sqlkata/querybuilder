@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace SqlKata
 {
     public abstract class AbstractCombine : AbstractClause
@@ -44,13 +46,11 @@ namespace SqlKata
         }
     }
 
-    public class RawCombine : AbstractCombine, IRaw
+    public class RawCombine : AbstractCombine
     {
-        private object[] _bindings;
-
         public string Expression { get; set; }
 
-        public object[] Bindings { set => _bindings = value; }
+        public object[] Bindings { get; set; }
 
         public override AbstractClause Clone()
         {
@@ -59,7 +59,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                _bindings = _bindings
+                Bindings = Bindings,
             };
         }
     }

@@ -75,7 +75,7 @@ namespace SqlKata
         }
     }
 
-    public class RawFromClause : AbstractFrom, IRaw
+    public class RawFromClause : AbstractFrom
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }

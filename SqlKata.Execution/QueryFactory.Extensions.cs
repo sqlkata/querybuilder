@@ -235,6 +235,10 @@ namespace SqlKata.Execution
         {
             return db.Connection.Query<T>(sql, param);
         }
+        public static IEnumerable<dynamic> Select(this QueryFactory db, string sql, object param = null)
+        {
+            return db.Select<dynamic>(sql, param);
+        }
         public static int Statement(this QueryFactory db, string sql, object param = null)
         {
             return db.Connection.Execute(sql, param);
@@ -243,6 +247,10 @@ namespace SqlKata.Execution
         public static async Task<IEnumerable<T>> SelectAsync<T>(this QueryFactory db, string sql, object param = null)
         {
             return await db.Connection.QueryAsync<T>(sql, param);
+        }
+        public static async Task<IEnumerable<dynamic>> SelectAsync(this QueryFactory db, string sql, object param = null)
+        {
+            return await db.SelectAsync<dynamic>(sql, param);
         }
         public static async Task<int> StatementAsync(this QueryFactory db, string sql, object param = null)
         {

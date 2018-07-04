@@ -517,7 +517,7 @@ namespace SqlKata
                 throw new ArgumentException(@"""FromClause"" cannot be empty if used inside of a ""WhereExists"" condition");
             }
 
-            return AddComponent("where", new ExistsCondition<Query>
+            return AddComponent("where", new ExistsCondition
             {
                 Query = query.ClearComponent("select").SelectRaw("1").Limit(1).SetEngineScope(EngineScope),
                 IsNot = getNot(),

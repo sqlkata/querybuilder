@@ -298,15 +298,5 @@ namespace SqlKata
             return From(callback.Invoke(query), alias);
         }
 
-        protected static object BackupNullValues(object x)
-        {
-            return x ?? new NullValue();
-        }
-
-        protected static object RestoreNullValues(object x)
-        {
-            return x is NullValue ? null : x;
-        }
-
     }
 }
