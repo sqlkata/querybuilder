@@ -7,10 +7,6 @@
     <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql and PostgreSql</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard1.0</TargetFrameworks>
+    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Update="NuGet.Build.Tasks.Pack" Version="4.6.2" />
-    <PackageReference Update="SourceLink.Create.CommandLine" Version="2.8.1" />
-  </ItemGroup>
 </Project>

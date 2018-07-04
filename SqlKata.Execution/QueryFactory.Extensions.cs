@@ -15,14 +15,14 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query);
 
-            return db.Connection.Query<T>(compiled.Sql, compiled.Bindings);
+            return db.Connection.Query<T>(compiled.Sql, compiled.NamedBindings);
         }
 
         public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
         {
             var compiled = db.compile(query);
 
-            return db.Connection.Query(compiled.Sql, compiled.Bindings) as IEnumerable<IDictionary<string, object>>;
+            return db.Connection.Query(compiled.Sql, compiled.NamedBindings) as IEnumerable<IDictionary<string, object>>;
         }
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
@@ -34,7 +34,7 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query.Limit(1));
 
-            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.Bindings);
+            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings);
         }
 
         public static dynamic First(this QueryFactory db, Query query)
@@ -46,7 +46,7 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query.Limit(1));
 
-            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.Bindings);
+            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings);
         }
 
         public static dynamic FirstOrDefault(this QueryFactory db, Query query)
@@ -60,7 +60,7 @@ namespace SqlKata.Execution
 
             return db.Connection.Execute(
                 compiled.Sql,
-                compiled.Bindings,
+                compiled.NamedBindings,
                 transaction,
                 db.QueryTimeout,
                 commandType
@@ -73,7 +73,7 @@ namespace SqlKata.Execution
 
             return db.Connection.ExecuteScalar<T>(
                 compiled.Sql,
-                compiled.Bindings,
+                compiled.NamedBindings,
                 transaction,
                 db.QueryTimeout,
                 commandType
@@ -94,7 +94,7 @@ namespace SqlKata.Execution
 
             return db.Connection.QueryMultiple(
                 compiled.Sql,
-                compiled.Bindings,
+                compiled.NamedBindings,
                 transaction,
                 db.QueryTimeout,
                 commandType

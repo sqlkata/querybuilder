@@ -16,7 +16,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<IEnumerable<dynamic>> GetAsync(this Query query)
@@ -33,7 +33,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryFirstOrDefaultAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryFirstOrDefaultAsync<T>(compiled.Sql, compiled.NamedBindings);
 
         }
 
@@ -51,7 +51,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryFirstAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryFirstAsync<T>(compiled.Sql, compiled.NamedBindings);
 
         }
 
@@ -145,7 +145,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
@@ -157,7 +157,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
 
         }
 
@@ -169,7 +169,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<int> DeleteAsync(this Query query)
@@ -180,7 +180,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
     }

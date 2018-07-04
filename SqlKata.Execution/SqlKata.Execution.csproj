@@ -1,15 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props" />
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="dapper" Version="1.50.5" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="NuGet.Build.Tasks.Pack" Version="4.6.2" />
-    <PackageReference Update="SourceLink.Create.CommandLine" Version="2.8.1" />
-  </ItemGroup>
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
   </PropertyGroup>
 </Project>
