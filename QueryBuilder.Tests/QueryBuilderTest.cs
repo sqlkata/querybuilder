@@ -538,4 +538,34 @@ public class QueryBuilderTest
         Assert.Equal("SELECT * FROM [table] WHERE [id] = 1", c[0]);
     }
 
+    [Fact]
+    public void WrapWithSpace()
+    {
+        var compiler = new SqlServerCompiler();
+
+
+        Assert.Equal("[My Table] AS [Table]", compiler.Wrap("My Table as Table"));
+    }
+
+    [Fact]
+    public void WrapWithDotes()
+    {
+        var compiler = new SqlServerCompiler();
+
+
+        Assert.Equal("[My Schema].[My Table] AS [Table]", compiler.Wrap("My Schema.My Table as Table"));
+    }
+
+    [Fact]
+    public void WrapWithMultipleSpaces()
+    {
+        var compiler = new SqlServerCompiler();
+
+
+        Assert.Equal("[My Table One] AS [Table One]", compiler.Wrap("My Table One as Table One"));
+    }
+
+
+
+
 }

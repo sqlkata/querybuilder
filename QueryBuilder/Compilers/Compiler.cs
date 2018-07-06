@@ -585,9 +585,11 @@ namespace SqlKata.Compilers
         {
             if (value.ToLower().Contains(" as "))
             {
-                var segments = value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var index = value.ToLower().IndexOf(" as ");
+                var before = value.Substring(0, index);
+                var after = value.Substring(index + 4);
 
-                return Wrap(segments[0]) + " AS " + WrapValue(segments[2]);
+                return Wrap(before) + " AS " + WrapValue(after);
             }
 
             if (value.Contains("."))
