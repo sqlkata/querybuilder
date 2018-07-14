@@ -11,16 +11,16 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a column and a value.
     /// </summary>
-    public class BasicCondition<T> : AbstractCondition
+    public class BasicCondition : AbstractCondition
     {
         public string Column { get; set; }
         public string Operator { get; set; }
-        public virtual T Value { get; set; }
+        public virtual object Value { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new BasicCondition<T>
+            return new BasicCondition
             {
                 Engine = Engine,
                 Column = Column,
@@ -33,7 +33,7 @@ namespace SqlKata
         }
     }
 
-    public class BasicStringCondition : BasicCondition<string>
+    public class BasicStringCondition : BasicCondition
     {
         public bool CaseSensitive { get; set; } = false;
 
@@ -54,7 +54,7 @@ namespace SqlKata
         }
     }
 
-    public class BasicDateCondition : BasicCondition<object>
+    public class BasicDateCondition : BasicCondition
     {
         public string Part { get; set; }
 

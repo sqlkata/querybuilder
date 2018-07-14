@@ -8,25 +8,52 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
 
-        protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)
+        /// <summary>
+        /// Cache the method lookup to improve performance
+        /// </summary>
+        /// <typeparam name="string"></typeparam>
+        /// <typeparam name="MethodInfo"></typeparam>
+        /// <returns></returns>
+        protected Dictionary<string, MethodInfo> methodsCache = new Dictionary<string, MethodInfo>();
+
+        protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
         {
-            var name = clause.GetType().Name;
-            name = name.Substring(0, name.IndexOf("Condition"));
+            if (methodsCache.ContainsKey(methodName))
+            {
+                return methodsCache[methodName];
+            }
 
-            var methodName = "Compile" + name + "Condition";
-
-            var clauseType = clause.GetType();
-            MethodInfo methodInfo = this.GetType().GetRuntimeMethods().Where(x => x.Name == methodName).FirstOrDefault();
+            MethodInfo methodInfo = this.GetType()
+                .GetRuntimeMethods()
+                .Where(x => x.Name == methodName)
+                .FirstOrDefault();
 
             if (methodInfo == null)
             {
-                throw new Exception($"Failed to locate a compiler for {name}.");
+                throw new Exception($"Failed to locate a compiler for {methodName}.");
             }
 
             if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())
             {
                 methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
             }
+
+            methodsCache[methodName] = methodInfo;
+
+            return methodInfo;
+        }
+
+        protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)
+        {
+            var clauseType = clause.GetType();
+
+            var name = clauseType.Name;
+
+            name = name.Substring(0, name.IndexOf("Condition"));
+
+            var methodName = "Compile" + name + "Condition";
+
+            var methodInfo = FindCompilerMethodInfo(clauseType, methodName);
 
             try
             {
@@ -37,7 +64,6 @@ namespace SqlKata.Compilers
             {
                 throw new Exception($"Failed to invoke '{methodName}'");
             }
-
 
         }
 
@@ -71,7 +97,7 @@ namespace SqlKata.Compilers
             return Wrap(x.Column) + " " + x.Operator + " (" + subCtx.RawSql + ")";
         }
 
-        protected virtual string CompileBasicCondition<T>(SqlResult ctx, BasicCondition<T> x)
+        protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
         {
             var sql = Wrap(x.Column) + " " + x.Operator + " " + Parameter(ctx, x.Value);
 
@@ -87,9 +113,16 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(x.Column);
 
+            var value = x.Value as string;
+
+            if (value == null)
+            {
+                throw new ArgumentException("The value should be a non null value of type string");
+            }
+
             if (!x.CaseSensitive)
             {
-                x.Value = x.Value.ToLower();
+                x.Value = value;
                 column = CompileLower(column);
             }
 
