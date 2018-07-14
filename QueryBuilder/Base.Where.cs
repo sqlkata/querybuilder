@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
@@ -32,7 +33,19 @@ namespace SqlKata
             return Where(column, "=", value);
         }
 
-        public Q Where<T>(IReadOnlyDictionary<string, T> values)
+        public Q Where(object constraints)
+        {
+            var dictionary = new Dictionary<string, object>();
+
+            foreach (var item in constraints.GetType().GetRuntimeProperties())
+            {
+                dictionary.Add(item.Name, item.GetValue(constraints));
+            }
+
+            return Where(dictionary);
+        }
+
+        public Q Where(IReadOnlyDictionary<string, object> values)
         {
             var query = (Q)this;
             var orFlag = GetOr();
