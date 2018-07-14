@@ -4,7 +4,7 @@ namespace SqlKata
 {
     public class Join : BaseQuery<Join>
     {
-        protected string _type = "INNER";
+        protected string _type = "inner join";
 
         protected override string[] bindingOrder
         {
@@ -56,11 +56,11 @@ namespace SqlKata
         public Join JoinWith(Query query) => From(query);
         public Join JoinWith(Func<Query, Query> callback) => From(callback);
 
-        public Join AsInner() => AsType("inner");
-        public Join AsOuter() => AsType("outer");
-        public Join AsLeft() => AsType("left");
-        public Join AsRight() => AsType("right");
-        public Join AsCross() => AsType("cross");
+        public Join AsInner() => AsType("inner join");
+        public Join AsOuter() => AsType("outer join");
+        public Join AsLeft() => AsType("left join");
+        public Join AsRight() => AsType("right join");
+        public Join AsCross() => AsType("cross join");
 
         public Join On(string first, string second, string op = "=")
         {

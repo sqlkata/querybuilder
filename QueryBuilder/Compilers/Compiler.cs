@@ -444,7 +444,7 @@ namespace SqlKata.Compilers
 
             var onClause = conditions.Any() ? $" ON {constraints}" : "";
 
-            return $"{join.Type} JOIN {joinTable}{onClause}";
+            return $"{join.Type} {joinTable}{onClause}";
         }
 
         public virtual string CompileWheres(SqlResult ctx)
