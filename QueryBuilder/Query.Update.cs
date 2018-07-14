@@ -1,12 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
     public partial class Query
     {
 
+        public Query AsUpdate(object data)
+        {
+            var columns = new List<string>();
+            var values = new List<object>();
+
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (var item in props)
+            {
+                columns.Add(item.Name);
+                values.Add(item.GetValue(data));
+            }
+
+            return AsUpdate(columns, values);
+        }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {

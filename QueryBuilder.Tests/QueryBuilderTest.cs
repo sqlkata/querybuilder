@@ -223,6 +223,34 @@ public class QueryBuilderTest
     }
 
     [Fact]
+    public void InsertObject()
+    {
+        var query = new Query("Table").AsInsert(new
+        {
+            Name = "The User",
+            Age = new DateTime(2018, 1, 1),
+        });
+
+        var c = Compile(query);
+
+        Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01 00:00:00')", c[0]);
+    }
+
+    [Fact]
+    public void UpdateObject()
+    {
+        var query = new Query("Table").AsUpdate(new
+        {
+            Name = "The User",
+            Age = new DateTime(2018, 1, 1),
+        });
+
+        var c = Compile(query);
+
+        Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01 00:00:00'", c[0]);
+    }
+
+    [Fact]
     public void InsertFromSubQueryWithCte()
     {
         var query = new Query("expensive_cars")
