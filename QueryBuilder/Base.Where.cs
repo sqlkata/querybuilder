@@ -6,7 +6,7 @@ namespace SqlKata
 {
     public abstract partial class BaseQuery<Q>
     {
-        public Q Where<T>(string column, string op, T value)
+        public Q Where(string column, string op, object value)
         {
 
             // If the value is "null", we will just assume the developer wants to add a
@@ -17,23 +17,17 @@ namespace SqlKata
                 return Not(op != "=").WhereNull(column);
             }
 
-            var query = value as Query;
-            if (query != null)
-            {
-                return Where(column, op, query);
-            }
-
-            return AddComponent("where", new BasicCondition<T>
+            return AddComponent("where", new BasicCondition
             {
                 Column = column,
                 Operator = op,
                 Value = value,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
-        public Q Where<T>(string column, T value)
+        public Q Where(string column, object value)
         {
             return Where(column, "=", value);
         }
@@ -41,8 +35,8 @@ namespace SqlKata
         public Q Where<T>(IReadOnlyDictionary<string, T> values)
         {
             var query = (Q)this;
-            var orFlag = getOr();
-            var notFlag = getNot();
+            var orFlag = GetOr();
+            var notFlag = GetNot();
 
             foreach (var tuple in values)
             {
@@ -61,35 +55,6 @@ namespace SqlKata
             return query;
         }
 
-        public Q Where<T>(IEnumerable<string> columns, IEnumerable<T> values)
-        {
-            if (columns.Count() == 0 || columns.Count() != values.Count())
-            {
-                throw new ArgumentException("Columns and Values count must match");
-            }
-
-            var query = (Q)this;
-
-            var orFlag = getOr();
-            var notFlag = getNot();
-
-            for (var i = 0; i < columns.Count(); i++)
-            {
-                if (orFlag)
-                {
-                    query = query.Or();
-                }
-                else
-                {
-                    query.And();
-                }
-
-                query = this.Not(notFlag).Where(columns.ElementAt(i), values.ElementAt(i));
-            }
-
-            return query;
-        }
-
         /// <summary>
         /// Apply the Where clause changes if the given "condition" is true.
         /// </summary>
@@ -98,7 +63,7 @@ namespace SqlKata
         /// <param name="op"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Q WhereIf<T>(bool condition, string column, string op, T value)
+        public Q WhereIf(bool condition, string column, string op, object value)
         {
             if (condition)
             {
@@ -108,7 +73,7 @@ namespace SqlKata
             return (Q)this;
         }
 
-        public Q WhereIf<T>(bool condition, string column, T value)
+        public Q WhereIf(bool condition, string column, object value)
         {
             return WhereIf(condition, column, "=", value);
         }
@@ -142,8 +107,8 @@ namespace SqlKata
             {
                 Expression = sql,
                 Bindings = Helper.Flatten(bindings).ToArray(),
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -159,8 +124,8 @@ namespace SqlKata
             return AddComponent("where", new NestedCondition<Q>
             {
                 Query = query,
-                IsNot = getNot(),
-                IsOr = getOr(),
+                IsNot = GetNot(),
+                IsOr = GetOr(),
             });
         }
 
@@ -213,8 +178,8 @@ namespace SqlKata
                 First = first,
                 Second = second,
                 Operator = op,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -228,8 +193,8 @@ namespace SqlKata
             return AddComponent("where", new NullCondition
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -256,8 +221,8 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -283,8 +248,8 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -311,8 +276,8 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -339,8 +304,8 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -364,8 +329,8 @@ namespace SqlKata
             return AddComponent("where", new BetweenCondition<T>
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
                 Lower = lower,
                 Higher = higher
             });
@@ -395,8 +360,8 @@ namespace SqlKata
                 return AddComponent("where", new InCondition<string>
                 {
                     Column = column,
-                    IsOr = getOr(),
-                    IsNot = getNot(),
+                    IsOr = GetOr(),
+                    IsNot = GetNot(),
                     Values = new List<string> { val }
                 });
             }
@@ -404,8 +369,8 @@ namespace SqlKata
             return AddComponent("where", new InCondition<T>
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
                 Values = values.Distinct().ToList()
             });
 
@@ -433,8 +398,8 @@ namespace SqlKata
             return AddComponent("where", new InQueryCondition
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
                 Query = query.SetEngineScope(EngineScope)
             });
         }
@@ -496,8 +461,8 @@ namespace SqlKata
                 Column = column,
                 Operator = op,
                 Query = query.SetEngineScope(EngineScope),
-                IsNot = getNot(),
-                IsOr = getOr(),
+                IsNot = GetNot(),
+                IsOr = GetOr(),
             });
         }
 
@@ -520,8 +485,8 @@ namespace SqlKata
             return AddComponent("where", new ExistsCondition
             {
                 Query = query.ClearComponent("select").SelectRaw("1").Limit(1).SetEngineScope(EngineScope),
-                IsNot = getNot(),
-                IsOr = getOr(),
+                IsNot = GetNot(),
+                IsOr = GetOr(),
             });
         }
         public Q WhereExists(Func<Query, Query> callback)
@@ -566,8 +531,8 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 Part = part,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
         public Q WhereNotDatePart(string part, string column, string op, object value)

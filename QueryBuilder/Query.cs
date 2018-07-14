@@ -10,49 +10,9 @@ namespace SqlKata
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
 
-        protected override string[] bindingOrder
-        {
-            get
-            {
-                if (Method == "insert")
-                {
-                    return new[] {
-                        "cte", "insert",
-                    };
-                }
-
-                if (Method == "update")
-                {
-                    return new[] {
-                        "cte", "update", "where",
-                    };
-                }
-
-                if (Method == "delete")
-                {
-                    return new[] {
-                        "cte", "where",
-                    };
-                }
-
-                return new[] {
-                    "cte",
-                    "select",
-                    "from",
-                    "join",
-                    "where",
-                    "group",
-                    "having",
-                    "order",
-                    "limit",
-                    "combine", // union, except, intersect
-                };
-            }
-        }
-
         protected List<string> operators = new List<string> {
-            "=", "<", ">", "<=", ">=", "<>", "!=",
-            "like", "like binary", "not like", "between", "ilike",
+            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+            "like", "like binary", "not like", "ilike",
             "&", "|", "^", "<<", ">>",
             "rlike", "regexp", "not regexp",
             "~", "~*", "!~", "!~*", "similar to",

@@ -6,17 +6,6 @@ namespace SqlKata
     {
         protected string _type = "inner join";
 
-        protected override string[] bindingOrder
-        {
-            get
-            {
-                return new[] {
-                    "from",
-                    "where",
-                };
-            }
-        }
-
         public string Type
         {
             get
@@ -69,8 +58,8 @@ namespace SqlKata
                 First = first,
                 Second = second,
                 Operator = op,
-                IsOr = getOr(),
-                IsNot = getNot()
+                IsOr = GetOr(),
+                IsNot = GetNot()
             });
 
         }

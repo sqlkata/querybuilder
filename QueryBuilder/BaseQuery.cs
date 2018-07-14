@@ -11,7 +11,6 @@ namespace SqlKata
 
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        protected virtual string[] bindingOrder { get; }
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
 
         private bool orFlag = false;
@@ -22,18 +21,7 @@ namespace SqlKata
         {
             this.EngineScope = engine;
 
-            // this.Clauses = this.Clauses.Select(x =>
-            // {
-            //     x.Engine = engine;
-            //     return x;
-            // }).ToList();
-
             return (Q)this;
-        }
-
-        public virtual List<AbstractClause> OrderedClauses(string engine)
-        {
-            return bindingOrder.SelectMany(x => GetComponents(x, engine)).ToList();
         }
 
         public BaseQuery()
@@ -210,7 +198,7 @@ namespace SqlKata
         /// Set the next boolean operator to "or" for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected Q Or()
+        public Q Or()
         {
             orFlag = true;
             return (Q)this;
@@ -220,7 +208,7 @@ namespace SqlKata
         /// Set the next "not" operator for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected Q Not(bool flag)
+        public Q Not(bool flag = true)
         {
             notFlag = flag;
             return (Q)this;
@@ -230,7 +218,7 @@ namespace SqlKata
         /// Get the boolean operator and reset it to "and"
         /// </summary>
         /// <returns></returns>
-        protected bool getOr()
+        protected bool GetOr()
         {
             var ret = orFlag;
 
@@ -243,7 +231,7 @@ namespace SqlKata
         /// Get the "not" operator and clear it
         /// </summary>
         /// <returns></returns>
-        protected bool getNot()
+        protected bool GetNot()
         {
             var ret = notFlag;
 

@@ -15,13 +15,13 @@ namespace SqlKata
                 return Not(op != "=").HavingNull(column);
             }
 
-            return AddComponent("having", new BasicCondition<T>
+            return AddComponent("having", new BasicCondition
             {
                 Column = column,
                 Operator = op,
                 Value = value,
-                IsOr = getOr(),
-                IsNot = getNot()
+                IsOr = GetOr(),
+                IsNot = GetNot()
             });
         }
 
@@ -45,8 +45,8 @@ namespace SqlKata
             return AddComponent("having", new NullCondition
             {
                 Column = column,
-                IsOr = getOr(),
-                IsNot = getNot(),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
