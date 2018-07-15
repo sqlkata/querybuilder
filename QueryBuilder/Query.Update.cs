@@ -10,18 +10,16 @@ namespace SqlKata
 
         public Query AsUpdate(object data)
         {
-            var columns = new List<string>();
-            var values = new List<object>();
+            var dictionary = new Dictionary<string, object>();
 
             var props = data.GetType().GetRuntimeProperties();
 
             foreach (var item in props)
             {
-                columns.Add(item.Name);
-                values.Add(item.GetValue(data));
+                dictionary.Add(item.Name, item.GetValue(data));
             }
 
-            return AsUpdate(columns, values);
+            return AsUpdate(dictionary);
         }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)

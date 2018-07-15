@@ -28,6 +28,34 @@ namespace SqlKata
             From(table);
         }
 
+        public bool HasOffset(string engineCode = null)
+        {
+            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+
+            return limitOffset?.HasOffset() ?? false;
+        }
+
+        public bool HasLimit(string engineCode = null)
+        {
+            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+
+            return limitOffset?.HasLimit() ?? false;
+        }
+
+        internal int GetOffset(string engineCode = null)
+        {
+            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+
+            return limitOffset?.Offset ?? 0;
+        }
+
+        internal int GetLimit(string engineCode = null)
+        {
+            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+
+            return limitOffset?.Limit ?? 0;
+        }
+
         public override Query Clone()
         {
             var clone = base.Clone();
@@ -63,6 +91,8 @@ namespace SqlKata
                 throw new InvalidOperationException("No Alias found for the CTE query");
             }
 
+            query = query.Clone();
+
             var alias = query.QueryAlias.Trim();
 
             // clear the query alias
@@ -70,7 +100,7 @@ namespace SqlKata
 
             return AddComponent("cte", new QueryFromClause
             {
-                Query = query.SetEngineScope(EngineScope),
+                Query = query,
                 Alias = alias,
             });
         }
@@ -269,7 +299,7 @@ namespace SqlKata
 
         public override Query NewQuery()
         {
-            return new Query().SetEngineScope(EngineScope);
+            return new Query();
         }
 
     }

@@ -71,7 +71,7 @@ namespace SqlKata
 
         public override Join NewQuery()
         {
-            return new Join().SetEngineScope(EngineScope);
+            return new Join();
         }
     }
 }

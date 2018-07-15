@@ -9,18 +9,16 @@ namespace SqlKata
     {
         public Query AsInsert(object data)
         {
-            var columns = new List<string>();
-            var values = new List<object>();
+            var dictionary = new Dictionary<string, object>();
 
             var props = data.GetType().GetRuntimeProperties();
 
             foreach (var item in props)
             {
-                columns.Add(item.Name);
-                values.Add(item.GetValue(data));
+                dictionary.Add(item.Name, item.GetValue(data));
             }
 
-            return AsInsert(columns, values);
+            return AsInsert(dictionary);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
@@ -118,7 +116,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertQueryClause
             {
                 Columns = columns.ToList(),
-                Query = query
+                Query = query.Clone(),
             });
 
             return this;

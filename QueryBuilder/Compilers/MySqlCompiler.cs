@@ -10,25 +10,40 @@ namespace SqlKata.Compilers
             OpeningIdentifier = ClosingIdentifier = "`";
         }
 
-        public override string CompileOffset(SqlResult ctx)
+        public override string CompileLimit(SqlResult ctx)
         {
-            var limitOffset = ctx.Query.GetOneComponent("limit", EngineCode) as LimitOffset;
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
-            if (limitOffset == null || !limitOffset.HasOffset())
+
+            if (offset == 0 && limit == 0)
             {
-                return "";
+                return null;
             }
 
-            ctx.Bindings.Add(limitOffset.Offset);
-
-            // MySql will not accept offset without limit
-            // So we will put a large number to avoid this error
-            if (!limitOffset.HasLimit())
+            if (offset == 0)
             {
+                ctx.Bindings.Add(limit);
+                return "LIMIT ?";
+            }
+
+            if (limit == 0)
+            {
+
+                // MySql will not accept offset without limit, so we will put a large number
+                // to avoid this error.
+
+                ctx.Bindings.Add(offset);
                 return "LIMIT 18446744073709551615 OFFSET ?";
             }
 
-            return "OFFSET ?";
+            // We have both values
+
+            ctx.Bindings.Add(limit);
+            ctx.Bindings.Add(offset);
+
+            return "LIMIT ? OFFSET ?";
+
         }
     }
 

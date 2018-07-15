@@ -42,9 +42,11 @@ namespace SqlKata
         {
             Method = "select";
 
+            query = query.Clone();
+
             AddComponent("select", new QueryColumn
             {
-                Query = query.As(alias).SetEngineScope(EngineScope),
+                Query = query.As(alias),
             });
 
             return this;

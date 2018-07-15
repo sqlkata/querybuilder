@@ -234,6 +234,15 @@ namespace SqlKata.Compilers
             return Wrap(item.Column) + " " + op;
         }
 
+        protected virtual string CompileBooleanCondition(SqlResult ctx, BooleanCondition item)
+        {
+            var column = Wrap(item.Column);
+            var value = item.Value ? CompileTrue() : CompileFalse();
+            var op = item.IsNot ? "!=" : "=";
+
+            return $"{column} {op} {value}";
+        }
+
         protected virtual string CompileExistsCondition(SqlResult ctx, ExistsCondition item)
         {
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";

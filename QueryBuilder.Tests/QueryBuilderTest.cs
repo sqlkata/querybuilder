@@ -593,6 +593,30 @@ public class QueryBuilderTest
         Assert.Equal("[My Table One] AS [Table One]", compiler.Wrap("My Table One as Table One"));
     }
 
+    [Fact]
+    public void WhereTrue()
+    {
+        var query = new Query("Table").WhereTrue("IsActive");
+
+        var c = Compile(query);
+
+        Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(1 as bit)", c[0]);
+        Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = true", c[1]);
+        Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = true", c[2]);
+    }
+
+    [Fact]
+    public void WhereFalse()
+    {
+        var query = new Query("Table").WhereFalse("IsActive");
+
+        var c = Compile(query);
+
+        Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(0 as bit)", c[0]);
+        Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = false", c[1]);
+        Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = false", c[2]);
+    }
+
 
 
 

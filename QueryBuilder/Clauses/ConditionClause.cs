@@ -213,6 +213,29 @@ namespace SqlKata
     }
 
     /// <summary>
+    /// Represents a boolean (true/false) condition.
+    /// </summary>
+    public class BooleanCondition : AbstractCondition
+    {
+        public string Column { get; set; }
+        public bool Value { get; set; }
+
+        /// <inheritdoc />
+        public override AbstractClause Clone()
+        {
+            return new BooleanCondition
+            {
+                Engine = Engine,
+                Column = Column,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+                Value = Value,
+            };
+        }
+    }
+
+    /// <summary>
     /// Represents a "nested" clause condition.
     /// i.e OR (myColumn = "A")
     /// </summary>

@@ -61,7 +61,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult
             {
-                Query = query,
+                Query = query.Clone(),
             };
 
             var results = new[] {
@@ -73,7 +73,6 @@ namespace SqlKata.Compilers
                     this.CompileHaving(ctx),
                     this.CompileOrders(ctx),
                     this.CompileLimit(ctx),
-                    this.CompileOffset(ctx),
                     this.CompileUnion(ctx),
                 }
                .Where(x => x != null)
@@ -531,25 +530,42 @@ namespace SqlKata.Compilers
 
         public virtual string CompileLimit(SqlResult ctx)
         {
-            if (ctx.Query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit())
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
+
+            if (limit == 0 && offset == 0)
             {
-                ctx.Bindings.Add(limitOffset.Limit);
+                return null;
+            }
+
+            if (offset == 0)
+            {
+                ctx.Bindings.Add(limit);
                 return "LIMIT ?";
             }
 
-            return "";
-        }
-
-        public virtual string CompileOffset(SqlResult ctx)
-        {
-            if (ctx.Query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasOffset())
+            if (limit == 0)
             {
-                ctx.Bindings.Add(limitOffset.Offset);
+                ctx.Bindings.Add(offset);
                 return "OFFSET ?";
             }
 
-            return "";
+            ctx.Bindings.Add(limit);
+            ctx.Bindings.Add(offset);
+
+            return "LIMIT ? OFFSET ?";
         }
+
+        // public virtual string CompileOffset(SqlResult ctx)
+        // {
+        //     if (ctx.Query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasOffset())
+        //     {
+        //         ctx.Bindings.Add(limitOffset.Offset);
+        //         return "OFFSET ?";
+        //     }
+
+        //     return null;
+        // }
 
         /// <summary>
         /// Compile the random statement into SQL.
@@ -569,6 +585,16 @@ namespace SqlKata.Compilers
         public virtual string CompileUpper(string value)
         {
             return $"UPPER({value})";
+        }
+
+        public virtual string CompileTrue()
+        {
+            return "true";
+        }
+
+        public virtual string CompileFalse()
+        {
+            return "false";
         }
 
         private InvalidCastException InvalidClauseException(string section, AbstractClause clause)

@@ -11,7 +11,7 @@ namespace SqlKata
 
             return AddComponent("join", new BaseJoin
             {
-                Join = join.SetEngineScope(EngineScope)
+                Join = join
             });
         }
 

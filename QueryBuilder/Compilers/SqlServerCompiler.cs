@@ -5,6 +5,8 @@ namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
+        public bool UseLegacyPagination { get; set; } = true;
+
         public SqlServerCompiler()
         {
             EngineCode = "sqlsrv";
@@ -14,152 +16,68 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
+            if (!UseLegacyPagination || !query.HasOffset())
+            {
+                return base.CompileSelectQuery(query);
+            }
+
+            query = query.Clone();
+
             var ctx = new SqlResult
             {
                 Query = query,
             };
 
-            var limitOffset = ctx.Query.GetOneComponent<LimitOffset>("limit", EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
-            var hasOffset = limitOffset?.HasOffset() ?? false;
-            var hasLimit = limitOffset?.HasLimit() ?? false;
 
-            if (!ctx.Query.HasComponent("select", EngineCode))
+            if (!query.HasComponent("select"))
             {
-                ctx.Query.Select("*");
+                query.Select("*");
             }
+            var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings);
 
-            if (hasOffset)
+            query.ClearComponent("order");
+
+
+            var result = base.CompileSelectQuery(query);
+
+            if (limit == 0)
             {
-                var orderStatement = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
-                ctx.Query.SelectRaw($"ROW_NUMBER() OVER ({orderStatement}) AS [row_num]");
-            }
-
-
-            var results = new[] {
-                    this.CompileColumns(ctx),
-                    this.CompileFrom(ctx),
-                    this.CompileJoins(ctx),
-                    this.CompileWheres(ctx),
-                    this.CompileGroups(ctx),
-                    this.CompileHaving(ctx),
-                    hasOffset ? null : this.CompileOrders(ctx),
-                    this.CompileUnion(ctx),
-                }
-               .Where(x => x != null)
-               .Select(x => x.Trim())
-               .Where(x => !string.IsNullOrEmpty(x))
-               .ToList();
-
-            string sql = string.Join(" ", results);
-
-            if (hasOffset)
-            {
-                if (hasLimit)
-                {
-                    sql = $"SELECT * FROM ({sql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?";
-                    ctx.Bindings.Add(limitOffset.Offset + 1);
-                    ctx.Bindings.Add(limitOffset.Limit + limitOffset.Offset);
-                }
-                else
-                {
-                    sql = $"SELECT * FROM ({sql}) AS [results_wrapper] WHERE [row_num] >= ?";
-                    ctx.Bindings.Add(limitOffset.Offset + 1);
-                }
-            }
-
-            ctx.RawSql = sql;
-
-            return ctx;
-        }
-
-        protected override SqlResult OnBeforeSelect(SqlResult ctx)
-        {
-            var limitOffset = ctx.Query.GetOneComponent<LimitOffset>("limit", EngineCode);
-
-            if (limitOffset == null || !limitOffset.HasOffset())
-            {
-                return ctx;
-            }
-
-
-            // Surround the original query with a parent query, then restrict the result to the offset provided, see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
-
-
-            var rowNumberColName = "row_num";
-
-            var orderStatement = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
-
-            var orderClause = ctx.Query.GetComponents("order", EngineCode);
-
-
-            // get a clone without the limit and order
-            ctx.Query.ClearComponent("order");
-            ctx.Query.ClearComponent("limit");
-            var subquery = ctx.Query.Clone();
-
-            subquery.ClearComponent("cte");
-
-            // Now clear other stuff
-            ctx.Query.ClearComponent("select");
-            ctx.Query.ClearComponent("from");
-            ctx.Query.ClearComponent("join");
-            ctx.Query.ClearComponent("where");
-            ctx.Query.ClearComponent("group");
-            ctx.Query.ClearComponent("having");
-            ctx.Query.ClearComponent("union");
-
-            // Transform the query to make it a parent query
-            ctx.Query.Select("*");
-
-            if (!subquery.HasComponent("select", EngineCode))
-            {
-                subquery.Select("*");
-            }
-
-            //Add an alias name to the subquery
-            subquery.As("subquery");
-
-            // Add the row_number select, and put back the bindings here if any
-            subquery.SelectRaw(
-                    $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}",
-                    new object[] { }
-            );
-
-            ctx.Query.From(subquery);
-
-            if (limitOffset.HasLimit())
-            {
-                ctx.Query.WhereBetween(
-                    rowNumberColName,
-                    limitOffset.Offset + 1,
-                    limitOffset.Limit + limitOffset.Offset
-                );
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= ?";
+                result.Bindings.Add(offset + 1);
             }
             else
             {
-                ctx.Query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?";
+                result.Bindings.Add(offset + 1);
+                result.Bindings.Add(limit + offset);
             }
 
-            limitOffset.Clear();
-
-            return ctx;
-
+            return result;
         }
 
         protected override string CompileColumns(SqlResult ctx)
         {
             var compiled = base.CompileColumns(ctx);
 
+            if (!UseLegacyPagination)
+            {
+                return compiled;
+            }
+
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limitOffset = ctx.Query.GetOneComponent("limit", EngineCode) as LimitOffset;
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
-            if (limitOffset != null && limitOffset.HasLimit() && !limitOffset.HasOffset())
+            if (limit > 0 && offset == 0)
             {
                 // top bindings should be inserted first
-                ctx.Bindings.Insert(0, limitOffset.Limit);
+                ctx.Bindings.Insert(0, limit);
 
                 ctx.Query.ClearComponent("limit");
 
@@ -171,18 +89,52 @@ namespace SqlKata.Compilers
 
         public override string CompileLimit(SqlResult ctx)
         {
-            return "";
-        }
+            if (UseLegacyPagination)
+            {
+                // in legacy versions of Sql Server, limit is handled by TOP
+                // and ROW_NUMBER techniques
+                return null;
+            }
 
-        public override string CompileOffset(SqlResult ctx)
-        {
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
-            return "";
+            if (limit == 0 && offset == 0)
+            {
+                return null;
+            }
+
+            var safeOrder = "";
+            if (!ctx.Query.HasComponent("order"))
+            {
+                safeOrder = "ORDER BY (SELECT 0) ";
+            }
+
+            if (limit == 0)
+            {
+                ctx.Bindings.Add(offset);
+                return $"{safeOrder}OFFSET ? ROWS";
+            }
+
+            ctx.Bindings.Add(offset);
+            ctx.Bindings.Add(limit);
+
+            return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
 
         public override string CompileRandom(string seed)
         {
             return "NEWID()";
+        }
+
+        public override string CompileTrue()
+        {
+            return "cast(1 as bit)";
+        }
+
+        public override string CompileFalse()
+        {
+            return "cast(0 as bit)";
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
