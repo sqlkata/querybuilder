@@ -17,6 +17,7 @@ public class ParameterTypeTest
 {
     private readonly Compiler pgsql;
     private readonly MySqlCompiler mysql;
+    private readonly FirebirdCompiler fbsql;
     public SqlServerCompiler mssql { get; private set; }
 
     public ParameterTypeTest()
@@ -24,6 +25,7 @@ public class ParameterTypeTest
         mssql = new SqlServerCompiler();
         mysql = new MySqlCompiler();
         pgsql = new PostgresCompiler();
+        fbsql = new FirebirdCompiler();
     }
 
     private string[] Compile(Query q)
@@ -32,6 +34,7 @@ public class ParameterTypeTest
             mssql.Compile(q.Clone()).ToString(),
             mysql.Compile(q.Clone()).ToString(),
             pgsql.Compile(q.Clone()).ToString(),
+            fbsql.Compile(q.Clone()).ToString(),
         };
     }
     public class ParameterTypeGenerator : IEnumerable<object[]>
