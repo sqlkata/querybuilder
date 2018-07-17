@@ -122,7 +122,7 @@ namespace SqlKata.Compilers
 
             if (!x.CaseSensitive)
             {
-                x.Value = value;
+                x.Value = value.ToLower();
                 column = CompileLower(column);
             }
 
