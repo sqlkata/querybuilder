@@ -162,7 +162,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileInsertQuery(Query query)
+        protected virtual SqlResult CompileInsertQuery(Query query)
         {
             var ctx = new SqlResult
             {

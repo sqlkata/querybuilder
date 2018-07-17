@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using SqlKata.Execution;
 using SqlKata;
 using SqlKata.Compilers;
@@ -17,6 +18,7 @@ public class ParameterTypeTest
 {
     private readonly Compiler pgsql;
     private readonly MySqlCompiler mysql;
+    private readonly FirebirdCompiler fbsql;
     public SqlServerCompiler mssql { get; private set; }
 
     public ParameterTypeTest()
@@ -24,6 +26,7 @@ public class ParameterTypeTest
         mssql = new SqlServerCompiler();
         mysql = new MySqlCompiler();
         pgsql = new PostgresCompiler();
+        fbsql = new FirebirdCompiler();
     }
 
     private string[] Compile(Query q)
@@ -32,6 +35,7 @@ public class ParameterTypeTest
             mssql.Compile(q.Clone()).ToString(),
             mysql.Compile(q.Clone()).ToString(),
             pgsql.Compile(q.Clone()).ToString(),
+            fbsql.Compile(q.Clone()).ToString(),
         };
     }
     public class ParameterTypeGenerator : IEnumerable<object[]>
@@ -39,9 +43,9 @@ public class ParameterTypeTest
         private readonly List<object[]> _data = new List<object[]>
         {
             new object[] {"1", 1},
-            new object[] {"10.5", 10.5},
+            new object[] {Convert.ToSingle("10.5", CultureInfo.InvariantCulture).ToString(), 10.5},
             new object[] {"-2", -2},
-            new object[] {"-2.8", -2.8},
+            new object[] {Convert.ToSingle("-2.8", CultureInfo.InvariantCulture).ToString(), -2.8},
             new object[] {"true", true},
             new object[] {"false", false},
             new object[] {"'2018-10-28 19:22:00'", new DateTime(2018, 10, 28, 19, 22, 0)},
