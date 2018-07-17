@@ -81,6 +81,12 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("limit");
 
+                // handle distinct
+                if (compiled.IndexOf("SELECT DISTINCT") == 0)
+                {
+                    return "SELECT DISTINCT TOP (?)" + compiled.Substring(15);
+                }
+
                 return "SELECT TOP (?)" + compiled.Substring(6);
             }
 
