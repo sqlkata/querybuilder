@@ -60,9 +60,9 @@ namespace SqlKata.Compilers
                 var result = methodInfo.Invoke(this, new object[] { ctx, clause });
                 return result as string;
             }
-            catch (System.Exception)
+            catch (Exception ex)
             {
-                throw new Exception($"Failed to invoke '{methodName}'");
+                throw new Exception($"Failed to invoke '{methodName}'", ex);
             }
 
         }
