@@ -18,9 +18,12 @@ namespace SqlKata.Compilers
 
         protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
         {
-            if (methodsCache.ContainsKey(methodName))
+            // The cache key should take the type and the method name into consideration
+            var cacheKey = methodName + "::" + clauseType.FullName;
+
+            if (methodsCache.ContainsKey(cacheKey))
             {
-                return methodsCache[methodName];
+                return methodsCache[cacheKey];
             }
 
             MethodInfo methodInfo = this.GetType()
@@ -38,7 +41,7 @@ namespace SqlKata.Compilers
                 methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
             }
 
-            methodsCache[methodName] = methodInfo;
+            methodsCache[cacheKey] = methodInfo;
 
             return methodInfo;
         }

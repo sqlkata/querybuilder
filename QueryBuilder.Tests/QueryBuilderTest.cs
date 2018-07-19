@@ -4,7 +4,6 @@ using SqlKata.Execution;
 using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
-using System.Collections;
 
 public class QueryBuilderTest
 {
@@ -568,6 +567,53 @@ public class QueryBuilderTest
 
         Assert.Equal("SELECT * FROM [A]", c[0]);
     }
+
+    [Fact]
+    public void NestedQueryAfterNestedJoin()
+    {
+
+        // in this test, i am testing the compiler dynamic caching functionality
+        var query = new Query("users")
+        .Join("countries", j => j.On("countries.id", "users.country_id"))
+        .Where(q => new Query());
+
+        var c = Compile(query);
+
+        Assert.Equal("SELECT * FROM [users] INNER JOIN [countries] ON ([countries].[id] = [users].[country_id])", c[0]);
+    }
+
+    [Fact]
+    public void ItShouldCacheMethodInfoByType()
+    {
+        var compiler = new TestSqlServerCompiler();
+
+        var call1 = compiler.Call_FindCompilerMethodInfo(
+            typeof(BasicCondition), "CompileBasicCondition"
+        );
+
+        var call2 = compiler.Call_FindCompilerMethodInfo(
+            typeof(BasicCondition), "CompileBasicCondition"
+        );
+
+        Assert.Same(call1, call2);
+    }
+
+    [Fact]
+    public void Return_Different_MethodInfo_WhenSame_Method_With_Different_GenericTypes()
+    {
+        var compiler = new TestSqlServerCompiler();
+
+        var call1 = compiler.Call_FindCompilerMethodInfo(
+            typeof(NestedCondition<Query>), "CompileNestedCondition"
+        );
+
+        var call2 = compiler.Call_FindCompilerMethodInfo(
+            typeof(NestedCondition<Join>), "CompileNestedCondition"
+        );
+
+        Assert.NotSame(call1, call2);
+    }
+
 
     [Fact]
     public void Count()
