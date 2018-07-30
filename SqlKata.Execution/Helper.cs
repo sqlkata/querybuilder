@@ -27,7 +27,7 @@ namespace SqlKata.Execution
 
         internal static QueryFactory CreateQueryFactory(XQuery xQuery)
         {
-            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
+            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler, xQuery.Transaction);
 
             factory.Logger = xQuery.Logger;
 
@@ -38,7 +38,7 @@ namespace SqlKata.Execution
         {
             var xQuery = CastToXQuery(query);
 
-            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
+            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler, xQuery.Transaction);
 
             factory.Logger = xQuery.Logger;
 
