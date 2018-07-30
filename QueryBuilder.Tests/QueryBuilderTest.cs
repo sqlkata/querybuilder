@@ -349,10 +349,10 @@ public class QueryBuilderTest
 
         var c = Compile(query);
 
-        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', 123456, '')", c[0]);
+        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', '123456', '')", c[0]);
 
 
-        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DESCRIPTION\") VALUES (1, 'Author 1', 123456, '')", c[3]);
+        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DESCRIPTION\") VALUES (1, 'Author 1', '123456', '')", c[3]);
     }
 
     [Fact]
