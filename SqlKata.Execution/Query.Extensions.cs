@@ -113,6 +113,19 @@ namespace SqlKata.Execution
 
         }
 
+        public static int Insert(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(data));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
+        }
+
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
@@ -122,6 +135,19 @@ namespace SqlKata.Execution
             xQuery.Logger(compiled);
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+        }
+
+        public static int Update(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
+
+            var compiled = xQuery.Compiler.Compile(query.AsUpdate(data));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static int Delete(this Query query)

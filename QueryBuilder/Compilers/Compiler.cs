@@ -50,7 +50,7 @@ namespace SqlKata.Compilers
             {
                 var cteCtx = CompileCte(query.GetComponents<AbstractFrom>("cte", EngineCode));
                 ctx.Bindings.InsertRange(0, cteCtx.Bindings);
-                ctx.RawSql = cteCtx.RawSql + "\n" + ctx.RawSql;
+                ctx.RawSql = cteCtx.RawSql.Trim() + "\n" + ctx.RawSql;
             }
 
 
@@ -294,7 +294,7 @@ namespace SqlKata.Compilers
                 }
             }
 
-            ctx.RawSql = "WITH " + string.Join(", ", sql) + " ";
+            ctx.RawSql = "WITH " + string.Join(",\n", sql) + " ";
             return ctx;
         }
 
