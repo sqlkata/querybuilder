@@ -36,7 +36,18 @@ namespace SqlKata
                 return namedParams;
             }
         }
-
+         private static Type[] numberTypes = new Type[]
+        {
+            typeof(int),
+            typeof(long),
+            typeof(decimal),
+            typeof(double),
+            typeof(float),
+            typeof(short),
+            typeof(ushort),
+            typeof(ulong),
+        };
+        
         public override string ToString()
         {
             return Helper.ReplaceAll(RawSql, "?", i =>
@@ -52,7 +63,7 @@ namespace SqlKata
                 {
                     return "NULL";
                 }
-                else if (IsNumber(value.ToString()))
+                else if (numberTypes.Contains(value.GetType()))
                 {
                     return value.ToString();
                 }
@@ -74,12 +85,7 @@ namespace SqlKata
 
             });
         }
-
-        private static bool IsNumber(string val)
-        {
-            return !string.IsNullOrEmpty(val) && double.TryParse(val, out double num);
-        }
-
+        
         public static SqlResult operator +(SqlResult a, SqlResult b)
         {
             var sql = a.RawSql + ";" + b.RawSql;
