@@ -83,7 +83,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings, xQuery.Transaction);
 
         }
 
@@ -96,7 +96,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings, xQuery.Transaction);
 
         }
 
@@ -109,7 +109,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings, xQuery.Transaction);
 
         }
 
@@ -134,7 +134,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings, xQuery.Transaction);
         }
 
         public static int Update(this Query query, object data)
@@ -158,7 +158,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings, xQuery.Transaction);
         }
 
     }

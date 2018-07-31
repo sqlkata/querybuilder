@@ -9,21 +9,23 @@ namespace SqlKata.Execution
     public class QueryFactory
     {
         public IDbConnection Connection { get; set; }
+        public IDbTransaction Transaction { get; set; }
         public Compiler Compiler { get; set; }
         public Action<SqlResult> Logger = result => { };
         public int QueryTimeout { get; set; } = 30;
 
         public QueryFactory() { }
 
-        public QueryFactory(IDbConnection connection, Compiler compiler)
+        public QueryFactory(IDbConnection connection, Compiler compiler, IDbTransaction transaction = null)
         {
             Connection = connection;
             Compiler = compiler;
+            Transaction = transaction;
         }
 
         public Query Query()
         {
-            var query = new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(this.Connection, this.Compiler, this.Transaction);
 
             query.Logger = Logger;
 
@@ -37,7 +39,7 @@ namespace SqlKata.Execution
 
         public Query FromQuery(Query query)
         {
-            var xQuery = new XQuery(this.Connection, this.Compiler);
+            var xQuery = new XQuery(this.Connection, this.Compiler, this.Transaction);
 
             xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
 
