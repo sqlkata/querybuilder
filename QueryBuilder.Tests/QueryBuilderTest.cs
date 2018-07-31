@@ -176,9 +176,9 @@ public class QueryBuilderTest
 
         Assert.Equal("WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33)\nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24", c[1]);
 
-        Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"Races\" WHERE \"Name\" = 3778 AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
+        Assert.Equal("WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"Races\" WHERE \"Name\" = '3778' AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24", c[2]);
 
-        Assert.Equal("WITH \"RANGE\" AS (SELECT \"D\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"RACES\" WHERE \"NAME\" = 3778 AND \"ID\" > 55 AND \"VALUE\" BETWEEN 18 AND 24", c[3]);
+        Assert.Equal("WITH \"RANGE\" AS (SELECT \"D\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"RACES\" WHERE \"NAME\" = '3778' AND \"ID\" > 55 AND \"VALUE\" BETWEEN 18 AND 24", c[3]);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class QueryBuilderTest
 
         var c = Compile(query);
 
-        Assert.Equal($"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = 150 WHERE [Price] > 100", c[0]);
+        Assert.Equal($"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100", c[0]);
     }
 
     [Fact]
@@ -350,10 +350,10 @@ public class QueryBuilderTest
 
         var c = Compile(query);
 
-        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Date]) VALUES (1, 'Author 1', 123456, NULL)", c[0]);
+        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Date]) VALUES (1, 'Author 1', '123456', NULL)", c[0]);
 
 
-        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DATE\") VALUES (1, 'Author 1', 123456, NULL)", c[3]);
+        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DATE\") VALUES (1, 'Author 1', '123456', NULL)", c[3]);
     }
 
     [Fact]
@@ -366,10 +366,10 @@ public class QueryBuilderTest
 
         var c = Compile(query);
 
-        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', 123456, '')", c[0]);
+        Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', '123456', '')", c[0]);
 
 
-        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DESCRIPTION\") VALUES (1, 'Author 1', 123456, '')", c[3]);
+        Assert.Equal("INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DESCRIPTION\") VALUES (1, 'Author 1', '123456', '')", c[3]);
     }
 
     [Fact]
