@@ -11,52 +11,36 @@ namespace SqlKata
 
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
     {
-        #region Properties
-        protected virtual string[] BindingOrder { get; }
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
-        #endregion
 
-        /// <summary>
-        ///     Sets the engine to use on the <see cref="Query" />
-        /// </summary>
-        /// <param name="engine"></param>
-        /// <returns></returns>
+        private bool orFlag = false;
+        private bool notFlag = false;
+        public string EngineScope = null;
+
         public Q SetEngineScope(string engine)
         {
-            EngineScope = engine;
+            this.EngineScope = engine;
 
-            // this.Clauses = this.Clauses.Select(x =>
-            // {
-            //     x.Engine = engine;
-            //     return x;
-            // }).ToList();
-
-            return (Q) this;
+            return (Q)this;
         }
 
-        public virtual List<AbstractClause> OrderedClauses(string engine)
+        public BaseQuery()
         {
-            return BindingOrder.SelectMany(x => GetComponents(x, engine)).ToList();
         }
 
         /// <summary>
-        ///     Return a cloned copy of the current query.
+        /// Return a cloned copy of the current query.
         /// </summary>
         /// <returns></returns>
         public virtual Q Clone()
         {
             var q = NewQuery();
 
-            q.Clauses = Clauses.Select(x => x.Clone()).ToList();
+            q.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
 
             return q;
         }
 
-        /// <summary>
-        ///     Sets the parent of this <see cref="Query" />
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <returns></returns>
         public Q SetParent(AbstractQuery parent)
         {
             if (this == parent)
@@ -64,21 +48,21 @@ namespace SqlKata
                 throw new ArgumentException("Cannot set the same query as a parent of itself");
             }
 
-            Parent = parent;
-            return (Q) this;
+            this.Parent = parent;
+            return (Q)this;
         }
 
         public abstract Q NewQuery();
 
         public Q NewChild()
         {
-            var newQuery = NewQuery().SetParent((Q) this);
-            newQuery.EngineScope = EngineScope;
+            var newQuery = NewQuery().SetParent((Q)this);
+            newQuery.EngineScope = this.EngineScope;
             return newQuery;
         }
 
         /// <summary>
-        ///     Add a component clause to the <see cref="Query" />
+        /// Add a component clause to the query.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="clause"></param>
@@ -95,11 +79,11 @@ namespace SqlKata
             clause.Component = component;
             Clauses.Add(clause);
 
-            return (Q) this;
+            return (Q)this;
         }
 
         /// <summary>
-        ///     Get the list of clauses for a component.
+        /// Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
         public List<C> GetComponents<C>(string component, string engineCode = null) where C : AbstractClause
@@ -118,7 +102,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Get the list of clauses for a component.
+        /// Get the list of clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -134,7 +118,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Get a single component clause from the <see cref="Query" />
+        /// Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
         public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
@@ -145,11 +129,11 @@ namespace SqlKata
             }
 
             return GetComponents<C>(component, engineCode)
-                .FirstOrDefault();
+            .FirstOrDefault();
         }
 
         /// <summary>
-        ///     Get a single component clause from the <see cref="Query" />
+        /// Get a single component clause from the query.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -165,7 +149,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Return wether the query has clauses for a component.
+        /// Return wether the query has clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -181,7 +165,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Remove all clauses for a component.
+        /// Remove all clauses for a component.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
@@ -194,113 +178,89 @@ namespace SqlKata
             }
 
             Clauses = Clauses
-                .Where(
-                    x =>
-                        !(x.Component == component &&
-                          (engineCode == null || x.Engine == null || engineCode == x.Engine)))
+                .Where(x => !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
-            return (Q) this;
+            return (Q)this;
         }
 
-        protected static object BackupNullValues(object x)
-        {
-            return x ?? new NullValue();
-        }
-
-        protected static object RestoreNullValues(object x)
-        {
-            return x is NullValue ? null : x;
-        }
-
-        #region Operators
         /// <summary>
-        ///     Set the next boolean operator to "and" for the "where" clause.
+        /// Set the next boolean operator to "and" for the "where" clause.
         /// </summary>
         /// <returns></returns>
         protected Q And()
         {
-            _orFlag = false;
-            return (Q) this;
+            orFlag = false;
+            return (Q)this;
         }
 
         /// <summary>
-        ///     Set the next boolean operator to "or" for the "where" clause.
+        /// Set the next boolean operator to "or" for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected Q Or()
+        public Q Or()
         {
-            _orFlag = true;
-            return (Q) this;
+            orFlag = true;
+            return (Q)this;
         }
 
         /// <summary>
-        ///     Set the next "not" operator for the "where" clause.
+        /// Set the next "not" operator for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected Q Not(bool flag)
+        public Q Not(bool flag = true)
         {
-            _notFlag = flag;
-            return (Q) this;
+            notFlag = flag;
+            return (Q)this;
         }
 
         /// <summary>
-        ///     Get the boolean operator and reset it to "and"
+        /// Get the boolean operator and reset it to "and"
         /// </summary>
         /// <returns></returns>
         protected bool GetOr()
         {
-            var ret = _orFlag;
+            var ret = orFlag;
 
             // reset the flag
-            _orFlag = false;
+            orFlag = false;
             return ret;
         }
 
         /// <summary>
-        ///     Get the "not" operator and clear it
+        /// Get the "not" operator and clear it
         /// </summary>
         /// <returns></returns>
         protected bool GetNot()
         {
-            var ret = _notFlag;
+            var ret = notFlag;
 
             // reset the flag
-            _notFlag = false;
+            notFlag = false;
             return ret;
         }
-        #endregion
 
-        #region From
         /// <summary>
-        ///     Sets the from part of a <see cref="Query" />
+        /// Add a from Clause
         /// </summary>
-        /// <param name="table">The table to select from</param>
-        /// <param name="hints">Any hints to use on the table, e.g. nolock</param>
+        /// <param name="table"></param>
         /// <returns></returns>
-        public Q From(string table, params string[] hints)
+        public Q From(string table)
         {
             return ClearComponent("from").AddComponent("from", new FromClause
             {
-                Table = table,
-                Hints = hints
+                Table = table
             });
         }
 
-        /// <summary>
-        ///     Sets a sub <see cref="Query" /> to select from
-        /// </summary>
-        /// <param name="query">The sub <see cref="Query" /> to select from</param>
-        /// <param name="alias">The alias for the sub <see cref="Query" /></param>
-        /// <returns></returns>
         public Q From(Query query, string alias = null)
         {
-            query.SetParent((Q) this);
+            query.SetParent((Q)this);
 
             if (alias != null)
             {
                 query.As(alias);
-            }
+            };
 
             return ClearComponent("from").AddComponent("from", new QueryFromClause
             {
@@ -308,12 +268,6 @@ namespace SqlKata
             });
         }
 
-        /// <summary>
-        ///     Sets a RAW from part for the <see cref="Query" />
-        /// </summary>
-        /// <param name="expression"></param>
-        /// <param name="bindings"></param>
-        /// <returns></returns>
         public Q FromRaw(string expression, params object[] bindings)
         {
             return ClearComponent("from").AddComponent("from", new RawFromClause
@@ -323,25 +277,14 @@ namespace SqlKata
             });
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="alias"></param>
-        /// <returns></returns>
         public Q From(Func<Query, Query> callback, string alias = null)
         {
             var query = new Query();
 
-            query.SetParent((Q) this);
+            query.SetParent((Q)this);
 
             return From(callback.Invoke(query), alias);
         }
-        #endregion
 
-        #region Fields
-        private bool _orFlag;
-        private bool _notFlag;
-        public string EngineScope;
-        #endregion
     }
 }

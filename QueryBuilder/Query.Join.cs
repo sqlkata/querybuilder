@@ -10,7 +10,7 @@ namespace SqlKata
 
             return AddComponent("join", new BaseJoin
             {
-                Join = join.SetEngineScope(EngineScope)
+                Join = join
             });
         }
 
@@ -19,50 +19,50 @@ namespace SqlKata
             string first,
             string second,
             string op = "=",
-            string type = "inner"
+            string type = "inner join"
         )
         {
             return Join(j => j.JoinWith(table).WhereColumns(first, op, second).AsType(type));
         }
 
-        public Query Join(string table, Func<Join, Join> callback, string type = "inner")
+        public Query Join(string table, Func<Join, Join> callback, string type = "inner join")
         {
             return Join(j => j.JoinWith(table).Where(callback).AsType(type));
         }
 
-        public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner")
+        public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner join")
         {
             return Join(j => j.JoinWith(query).Where(onCallback).AsType(type));
         }
 
         public Query LeftJoin(string table, string first, string second, string op = "=")
         {
-            return Join(table, first, second, op, "left");
+            return Join(table, first, second, op, "left join");
         }
 
         public Query LeftJoin(string table, Func<Join, Join> callback)
         {
-            return Join(table, callback, "left");
+            return Join(table, callback, "left join");
         }
 
         public Query LeftJoin(Query query, Func<Join, Join> onCallback)
         {
-            return Join(query, onCallback, "left");
+            return Join(query, onCallback, "left join");
         }
 
         public Query RightJoin(string table, string first, string second, string op = "=")
         {
-            return Join(table, first, second, op, "right");
+            return Join(table, first, second, op, "right join");
         }
 
         public Query RightJoin(string table, Func<Join, Join> callback)
         {
-            return Join(table, callback, "right");
+            return Join(table, callback, "right join");
         }
 
         public Query RightJoin(Query query, Func<Join, Join> onCallback)
         {
-            return Join(query, onCallback, "right");
+            return Join(query, onCallback, "right join");
         }
 
         public Query CrossJoin(string table)

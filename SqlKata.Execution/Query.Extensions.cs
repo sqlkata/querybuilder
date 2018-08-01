@@ -1,6 +1,7 @@
-using System;
-using System.Collections.Generic;
 using Dapper;
+using System.Collections.Generic;
+using System;
+using SqlKata;
 
 namespace SqlKata.Execution
 {
@@ -52,7 +53,7 @@ namespace SqlKata.Execution
         {
             var db = QueryHelper.CreateQueryFactory(query);
 
-            db.Chunk(query, chunkSize, func);
+            db.Chunk<T>(query, chunkSize, func);
         }
 
         public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
@@ -65,6 +66,7 @@ namespace SqlKata.Execution
             var db = QueryHelper.CreateQueryFactory(query);
 
             db.Chunk(query, chunkSize, action);
+
         }
 
         public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
@@ -74,36 +76,54 @@ namespace SqlKata.Execution
 
         public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
         }
 
-        public static int Insert(this Query query, IEnumerable<string> columns,
-            IEnumerable<IEnumerable<object>> valuesCollection)
+        public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, valuesCollection));
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
+        }
+
+        public static int Insert(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(data));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
@@ -114,7 +134,20 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+        }
+
+        public static int Update(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
+
+            var compiled = xQuery.Compiler.Compile(query.AsUpdate(data));
+
+            xQuery.Logger(compiled);
+
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static int Delete(this Query query)
@@ -125,7 +158,8 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return xQuery.Connection.Execute(compiled.Sql, compiled.Bindings);
+            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
         }
+
     }
 }

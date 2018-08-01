@@ -1,43 +1,38 @@
+using System.Linq;
+
 namespace SqlKata
 {
-    /// <summary>
-    ///     Represents an abstract class as base definition to combine
-    ///     <see cref="Query" />'s together
-    /// </summary>
     public abstract class AbstractCombine : AbstractClause
     {
+
     }
 
     public class Combine : AbstractCombine
     {
-        #region Properties
         /// <summary>
-        ///     Gets or sets the query to be combined with.
+        /// Gets or sets the query to be combined with.
         /// </summary>
         /// <value>
-        ///     The query that will be combined.
+        /// The query that will be combined.
         /// </value>
-        public Query Query { get; internal set; }
+        public Query Query { get; set; }
 
         /// <summary>
-        ///     Gets or sets the combine operation, e.g. "UNION", etc.
+        /// Gets or sets the combine operation, e.g. "UNION", etc.
         /// </summary>
         /// <value>
-        ///     The combine operation.
+        /// The combine operation.
         /// </value>
-        public string Operation { get; internal set; }
+        public string Operation { get; set; }
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="Combine" /> clause will combine all.
+        /// Gets or sets a value indicating whether this <see cref="Combine"/> clause will combine all.
         /// </summary>
         /// <value>
-        ///     <c>true</c> if all; otherwise, <c>false</c>.
+        ///   <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; internal set; }
-        #endregion
+        public bool All { get; set; } = false;
 
-        #region Clone
-        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new Combine
@@ -46,28 +41,17 @@ namespace SqlKata
                 Operation = Operation,
                 Component = Component,
                 Query = Query,
-                All = All
+                All = All,
             };
         }
-        #endregion
     }
 
-    /// <summary>
-    ///     Represents a "combine" clause in it's RAW form
-    ///     with it's own expression and bindings
-    /// </summary>
-    public class RawCombine : AbstractCombine, IRaw
+    public class RawCombine : AbstractCombine
     {
-        #region Properties
-        /// <inheritdoc />
-        public string Expression { get; internal set; }
+        public string Expression { get; set; }
 
-        /// <inheritdoc />
-        public object[] Bindings { get; internal set; }
-        #endregion
+        public object[] Bindings { get; set; }
 
-        #region Clone
-        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new RawCombine
@@ -75,9 +59,8 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                Bindings = Bindings
+                Bindings = Bindings,
             };
         }
-        #endregion
     }
 }

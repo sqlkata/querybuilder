@@ -1,7 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Dapper;
+using System.Collections.Generic;
+using System;
+using System.Threading.Tasks;
+using SqlKata;
 
 namespace SqlKata.Execution
 {
@@ -15,7 +16,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<IEnumerable<dynamic>> GetAsync(this Query query)
@@ -25,13 +26,15 @@ namespace SqlKata.Execution
 
         public static async Task<T> FirstOrDefaultAsync<T>(this Query query)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefaultAsync));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryFirstOrDefaultAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryFirstOrDefaultAsync<T>(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static async Task<dynamic> FirstOrDefaultAsync(this Query query)
@@ -41,13 +44,15 @@ namespace SqlKata.Execution
 
         public static async Task<T> FirstAsync<T>(this Query query)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstAsync));
 
             var compiled = xQuery.Compiler.Compile(query.Limit(1));
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.QueryFirstAsync<T>(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.QueryFirstAsync<T>(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static async Task<dynamic> FirstAsync(this Query query)
@@ -57,6 +62,7 @@ namespace SqlKata.Execution
 
         public static async Task<PaginationResult<T>> PaginateAsync<T>(this Query query, int page, int perPage = 25)
         {
+
             if (page < 1)
             {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
@@ -79,6 +85,7 @@ namespace SqlKata.Execution
                 Count = count,
                 List = list
             };
+
         }
 
         public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, int page, int perPage = 25)
@@ -103,6 +110,7 @@ namespace SqlKata.Execution
                     return;
                 }
             }
+
         }
 
         public static async Task ChunkAsync(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
@@ -121,6 +129,7 @@ namespace SqlKata.Execution
                 result = result.Next();
                 action(result.List, result.Page);
             }
+
         }
 
         public static async Task ChunkAsync(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
@@ -136,18 +145,20 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
+
             var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
+
         }
 
         public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values)
@@ -158,7 +169,7 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
         public static async Task<int> DeleteAsync(this Query query)
@@ -169,7 +180,8 @@ namespace SqlKata.Execution
 
             xQuery.Logger(compiled);
 
-            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.Bindings);
+            return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
+
     }
 }

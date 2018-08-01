@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
 
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
+        public bool UseLegacyPagination { get; set; } = true;
+
         public SqlServerCompiler()
         {
             EngineCode = "sqlsrv";
@@ -11,95 +14,78 @@ namespace SqlKata.Compilers
             ClosingIdentifier = "]";
         }
 
-        /// <summary>
-        ///     Called before the <see cref="Query" /> select statement is generated
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        protected override Query OnBeforeSelect(Query query)
+        protected override SqlResult CompileSelectQuery(Query query)
         {
-            var limitOffset = query.GetOneComponent<LimitOffset>("limit", EngineCode);
-
-            if (limitOffset == null || !limitOffset.HasOffset())
+            if (!UseLegacyPagination || !query.HasOffset())
             {
-                return query;
+                return base.CompileSelectQuery(query);
             }
 
-            // Surround the original query with a parent query, then restrict the result to the offset provided,
-            // see more at https://docs.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql
-            var rowNumberColName = "row_num";
+            query = query.Clone();
 
-            var orderStatement = CompileOrders(query) ?? "ORDER BY (SELECT 0)";
+            var ctx = new SqlResult
+            {
+                Query = query,
+            };
 
-            //var orderClause = query.GetComponents("order", EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
-            // Get a clone without the limit and order
+
+            if (!query.HasComponent("select"))
+            {
+                query.Select("*");
+            }
+            var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings);
+
             query.ClearComponent("order");
-            query.ClearComponent("limit");
-            var subquery = query.Clone();
 
-            subquery.ClearComponent("cte");
 
-            // Now clear other stuff
-            query.ClearComponent("select");
-            query.ClearComponent("from");
-            query.ClearComponent("join");
-            query.ClearComponent("where");
-            query.ClearComponent("group");
-            query.ClearComponent("having");
-            query.ClearComponent("union");
+            var result = base.CompileSelectQuery(query);
 
-            // Transform the query to make it a parent query
-            query.Select("*");
-
-            if (!subquery.HasComponent("select", EngineCode))
+            if (limit == 0)
             {
-                subquery.SelectRaw("*");
-            }
-
-            // Add an alias name to the subquery
-            subquery.As("subquery");
-
-            // Add the row_number select, and put back the bindings here if any
-            subquery.SelectRaw(
-                $"ROW_NUMBER() OVER ({orderStatement}) AS {WrapValue(rowNumberColName)}"
-            );
-
-            query.From(subquery);
-
-            if (limitOffset.HasLimit())
-            {
-                query.WhereBetween(
-                    rowNumberColName,
-                    limitOffset.Offset + 1,
-                    limitOffset.Limit + limitOffset.Offset
-                );
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= ?";
+                result.Bindings.Add(offset + 1);
             }
             else
             {
-                query.Where(rowNumberColName, ">=", limitOffset.Offset + 1);
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?";
+                result.Bindings.Add(offset + 1);
+                result.Bindings.Add(limit + offset);
             }
 
-            limitOffset.Clear();
-
-            return query;
+            return result;
         }
 
-        protected override string CompileColumns(Query query)
+        protected override string CompileColumns(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(query);
+            var compiled = base.CompileColumns(ctx);
+
+            if (!UseLegacyPagination)
+            {
+                return compiled;
+            }
 
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
-            if (query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasLimit() &&
-                !limitOffset.HasOffset())
+            if (limit > 0 && offset == 0)
             {
                 // top bindings should be inserted first
-                bindings.Insert(0, limitOffset.Limit);
+                ctx.Bindings.Insert(0, limit);
 
-                query.ClearComponent("limit");
+                ctx.Query.ClearComponent("limit");
+
+                // handle distinct
+                if (compiled.IndexOf("SELECT DISTINCT") == 0)
+                {
+                    return "SELECT DISTINCT TOP (?)" + compiled.Substring(15);
+                }
 
                 return "SELECT TOP (?)" + compiled.Substring(6);
             }
@@ -107,95 +93,92 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        public override string CompileLimit(Query query)
+        public override string CompileLimit(SqlResult ctx)
         {
-            return string.Empty;
+            if (UseLegacyPagination)
+            {
+                // in legacy versions of Sql Server, limit is handled by TOP
+                // and ROW_NUMBER techniques
+                return null;
+            }
+
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
+
+            if (limit == 0 && offset == 0)
+            {
+                return null;
+            }
+
+            var safeOrder = "";
+            if (!ctx.Query.HasComponent("order"))
+            {
+                safeOrder = "ORDER BY (SELECT 0) ";
+            }
+
+            if (limit == 0)
+            {
+                ctx.Bindings.Add(offset);
+                return $"{safeOrder}OFFSET ? ROWS";
+            }
+
+            ctx.Bindings.Add(offset);
+            ctx.Bindings.Add(limit);
+
+            return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
 
-        public override string CompileOffset(Query query)
-        {
-            return string.Empty;
-        }
-
-        /// <summary>
-        ///     Returns a random id
-        /// </summary>
-        /// <param name="seed"></param>
-        /// <returns></returns>
         public override string CompileRandom(string seed)
         {
             return "NEWID()";
         }
 
-        protected override string CompileBasicDateCondition(BasicDateCondition condition)
+        public override string CompileTrue()
+        {
+            return "cast(1 as bit)";
+        }
+
+        public override string CompileFalse()
+        {
+            return "cast(0 as bit)";
+        }
+
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
             string left;
 
-            switch (condition.Part)
+            if (condition.Part == "time")
             {
-                case "time":
-                    left = $"CAST({column} as time)";
-                    break;
-
-                case "date":
-                    left = $"CAST({column} as date)";
-                    break;
-
-                default:
-                    left = $"DATEPART({condition.Part.ToUpper()}, {column})";
-                    break;
+                left = $"CAST({column} as time)";
+            }
+            else if (condition.Part == "date")
+            {
+                left = $"CAST({column} as date)";
+            }
+            else
+            {
+                left = $"DATEPART({condition.Part.ToUpper()}, {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
-            return condition.IsNot ? $"NOT ({sql})" : sql;
-        }
-
-        /// <summary>
-        ///     Returns the table expression
-        /// </summary>
-        /// <param name="from"></param>
-        /// <returns></returns>
-        public override string CompileTableExpression(AbstractFrom from)
-        {
-            if (from is RawFromClause raw)
+            if (condition.IsNot)
             {
-                bindings.AddRange(raw.Bindings);
-                return WrapIdentifiers(raw.Expression);
+                return $"NOT ({sql})";
             }
 
-            var hints = string.Empty;
-            if (from.Hints?.Length > 0)
-            {
-                hints = $" WITH ({string.Join(", ", from.Hints)})";
-            }
-
-            if (from is QueryFromClause queryFromClause)
-            {
-                var fromQuery = queryFromClause.Query;
-                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
-                var compiled = CompileSelect(fromQuery);
-                return "(" + compiled + ")" + alias + hints;
-            }
-
-            if (from is FromClause fromClause)
-            {
-                return Wrap(fromClause.Table + hints);
-            }
-
-            throw InvalidClauseException("TableExpression", from);
+            return sql;
         }
     }
 
     public static class SqlServerCompilerExtensions
     {
         public static string ENGINE_CODE = "sqlsrv";
-
         public static Query ForSqlServer(this Query src, Func<Query, Query> fn)
         {
-            return src.For(ENGINE_CODE, fn);
+            return src.For(SqlServerCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

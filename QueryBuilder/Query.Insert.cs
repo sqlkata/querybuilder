@@ -1,15 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
     public partial class Query
     {
+        public Query AsInsert(object data)
+        {
+            var dictionary = new Dictionary<string, object>();
+
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (var item in props)
+            {
+                dictionary.Add(item.Name, item.GetValue(data));
+            }
+
+            return AsInsert(dictionary);
+        }
+
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
             var columnsList = columns?.ToList();
-            var valuesList = values?.Select(BackupNullValues).ToList();
+            var valuesList = values?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
             {
@@ -44,7 +59,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.Select(BackupNullValues).ToList()
+                Values = data.Values.ToList()
             });
 
             return this;
@@ -72,7 +87,7 @@ namespace SqlKata
 
             foreach (var values in valuesCollectionList)
             {
-                var valuesList = values.Select(BackupNullValues).ToList();
+                var valuesList = values.ToList();
                 if (columnsList.Count != valuesList.Count)
                 {
                     throw new InvalidOperationException("Columns count should be equal to each Values count");
@@ -101,7 +116,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertQueryClause
             {
                 Columns = columns.ToList(),
-                Query = query
+                Query = query.Clone(),
             });
 
             return this;

@@ -1,17 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props" />
-  <PropertyGroup Label="Globals">
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
-  </PropertyGroup>
   <PropertyGroup>
     <PackageId>SqlKata</PackageId>
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
     <Title>SqlKata The C# Sql Query Builder</Title>
-    <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql and PostgreSql</Description>
+    <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql, PostgreSql and Firebird</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
     <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>

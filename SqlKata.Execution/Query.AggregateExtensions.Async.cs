@@ -12,7 +12,7 @@ namespace SqlKata.Execution
 
             var result = xQuery.Compiler.Compile(query.AsAggregate(aggregateOperation, columns));
 
-            var scalar = await xQuery.Connection.ExecuteScalarAsync<T>(result.Sql, result.Bindings);
+            var scalar = await xQuery.Connection.ExecuteScalarAsync<T>(result.Sql, result.NamedBindings);
 
             return scalar;
         }
@@ -23,7 +23,7 @@ namespace SqlKata.Execution
 
             var result = xQuery.Compiler.Compile(query.AsCount(columns));
 
-            var scalar = await xQuery.Connection.ExecuteScalarAsync<T>(result.Sql, result.Bindings);
+            var scalar = await xQuery.Connection.ExecuteScalarAsync<T>(result.Sql, result.NamedBindings);
 
             return scalar;
         }
