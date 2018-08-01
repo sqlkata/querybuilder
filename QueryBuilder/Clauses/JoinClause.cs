@@ -4,33 +4,45 @@ namespace SqlKata
 {
     public abstract class AbstractJoin : AbstractClause
     {
-
     }
 
     public class BaseJoin : AbstractJoin
     {
-        public Join Join { get; set; }
+        #region Properties
+        public Join Join { get; internal set; }
+        #endregion
 
+        #region Clone
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new BaseJoin
             {
                 Engine = Engine,
                 Join = Join.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
+        #endregion
     }
 
     public class DeepJoin : AbstractJoin
     {
-        public string Type { get; set; }
-        public string Expression { get; set; }
-        public string SourceKeySuffix { get; set; }
-        public string TargetKey { get; set; }
-        public Func<string, string> SourceKeyGenerator { get; set; }
-        public Func<string, string> TargetKeyGenerator { get; set; }
+        #region Properties
+        public string Type { get; internal set; }
 
+        public string Expression { get; internal set; }
+
+        public string SourceKeySuffix { get; internal set; }
+
+        public string TargetKey { get; internal set; }
+
+        public Func<string, string> SourceKeyGenerator { get; internal set; }
+
+        public Func<string, string> TargetKeyGenerator { get; internal set; }
+        #endregion
+
+        #region Clone
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -43,8 +55,9 @@ namespace SqlKata
                 SourceKeySuffix = SourceKeySuffix,
                 TargetKey = TargetKey,
                 SourceKeyGenerator = SourceKeyGenerator,
-                TargetKeyGenerator = TargetKeyGenerator,
+                TargetKeyGenerator = TargetKeyGenerator
             };
         }
+        #endregion
     }
 }

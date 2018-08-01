@@ -119,7 +119,7 @@ public class HelperTest
         var flatten = Helper.Flatten(objects);
 
         // Then
-        Assert.Equal(new object[]{1, 0.1, 'A', 'A', "B", "C", 'D'}, flatten);
+        Assert.Equal(new object[] {1, 0.1, 'A', 'A', "B", "C", 'D'}, flatten);
     }
 
     [Fact]

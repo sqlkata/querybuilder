@@ -5,10 +5,7 @@ namespace SqlKata.Execution
 {
     public class PaginationIterator<T> : IEnumerable<PaginationResult<T>>
     {
-        public PaginationResult<T> FirstPage { get; set; }
-        public PaginationResult<T> CurrentPage { get; set; }
-
-        public IEnumerator<Execution.PaginationResult<T>> GetEnumerator()
+        public IEnumerator<PaginationResult<T>> GetEnumerator()
         {
             CurrentPage = FirstPage;
 
@@ -19,12 +16,16 @@ namespace SqlKata.Execution
                 CurrentPage = CurrentPage.Next();
                 yield return CurrentPage;
             }
-
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
+
+        #region Properties
+        public PaginationResult<T> FirstPage { get; internal set; }
+        public PaginationResult<T> CurrentPage { get; internal set; }
+        #endregion
     }
 }

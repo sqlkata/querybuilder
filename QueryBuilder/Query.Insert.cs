@@ -66,7 +66,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Produces insert multi records
+        ///     Produces insert multi records
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="valuesCollection"></param>
@@ -104,7 +104,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Produces insert from subquery
+        ///     Produces insert from subquery
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="query"></param>
@@ -121,6 +121,5 @@ namespace SqlKata
 
             return this;
         }
-
     }
 }

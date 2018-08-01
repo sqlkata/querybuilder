@@ -6,15 +6,14 @@ namespace SqlKata
     {
         public Query AsAggregate(string type, params string[] columns)
         {
-
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
-            .AddComponent("aggregate", new AggregateClause
-            {
-                Type = type,
-                Columns = columns.ToList()
-            });
+            ClearComponent("aggregate")
+                .AddComponent("aggregate", new AggregateClause
+                {
+                    Type = type,
+                    Columns = columns.ToList()
+                });
 
             return this;
         }
@@ -35,6 +34,7 @@ namespace SqlKata
         {
             return AsAggregate("avg", column);
         }
+
         public Query AsAverage(string column)
         {
             return AsAvg(column);
