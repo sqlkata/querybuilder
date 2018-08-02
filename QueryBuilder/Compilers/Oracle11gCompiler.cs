@@ -49,7 +49,7 @@ namespace SqlKata.Compilers
             throw new NotSupportedException();
         }
         
-        private void ApplyLimit(SqlResult ctx)
+        internal void ApplyLimit(SqlResult ctx)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
@@ -66,14 +66,18 @@ namespace SqlKata.Compilers
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > {offset}";
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > ?";
+                ctx.Bindings.Add(offset);
             } else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {limit}";
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
+                ctx.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= {limit + offset}) WHERE {alias2} > {offset}";
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= ?) WHERE {alias2} > ?";
+                ctx.Bindings.Add(limit +  offset);
+                ctx.Bindings.Add(offset);
             }
 
             ctx.RawSql = newSql;
