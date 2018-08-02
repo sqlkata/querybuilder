@@ -16,7 +16,6 @@ namespace SqlKata.Compilers
         
         protected override SqlResult CompileSelectQuery(Query query)
         {
-            query = PrepareLimit(query);
             var ctx = new SqlResult
             {
                 Query = query.Clone(),
@@ -38,8 +37,9 @@ namespace SqlKata.Compilers
                 .ToList();
 
             var sql = string.Join(" ", results);
-
             ctx.RawSql = sql;
+
+            ApplyLimit(ctx);
 
             return ctx;
         }
@@ -48,45 +48,35 @@ namespace SqlKata.Compilers
         {
             throw new NotSupportedException();
         }
-
-        public Query PrepareLimit(Query query)
+        
+        private void ApplyLimit(SqlResult ctx)
         {
-            var limit = query.GetLimit(EngineCode);
-            var offset = query.GetOffset(EngineCode);
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
-                return query;
+                return;
             }
-
-            var innerQuery = query.Clone();
-            innerQuery.ClearComponent("limit");
-            var newQuery = new Query().From(innerQuery); 
             
+            //@todo replace with alias generator
+            var alias1 = WrapValue("SqlKata_A__");
+            var alias2 = WrapValue("SqlKata_B__"); 
+
+            string newSql;
             if (limit == 0)
             {
-                newQuery
-                    .From(q => q.Select("a.*")
-                        .SelectRaw("ROWNUM r__")
-                        .From(innerQuery.As("a"))
-                        .WhereRaw($"ROWNUM < {offset+limit}"))
-                    .WhereRaw($"r__ > {offset}");
-                return newQuery;
-            }
-            
-            if (offset == 0)
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > {offset}";
+            } else if (offset == 0)
             {
-                newQuery.From(innerQuery).WhereRaw($"ROWNUM <= {limit}");
-                return newQuery;
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {limit}";
+            }
+            else
+            {
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= {limit + offset}) WHERE {alias2} > {offset}";
             }
 
-            newQuery
-                .From(q => q.Select("a.*")
-                            .SelectRaw("ROWNUM r__")
-                            .From(innerQuery.As("a"))
-                            .WhereRaw($"ROWNUM <= {offset+limit}"))
-                .WhereRaw($"r__ > {offset}");
-            return newQuery;
+            ctx.RawSql = newSql;
         }
     }
 
