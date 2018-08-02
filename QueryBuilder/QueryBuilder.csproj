@@ -8,5 +8,6 @@
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
     <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <RootNamespace>SqlKata</RootNamespace>
   </PropertyGroup>
 </Project>

@@ -11,8 +11,6 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Cache the method lookup to improve performance
         /// </summary>
-        /// <typeparam name="string"></typeparam>
-        /// <typeparam name="MethodInfo"></typeparam>
         /// <returns></returns>
         protected Dictionary<string, MethodInfo> methodsCache = new Dictionary<string, MethodInfo>();
 
