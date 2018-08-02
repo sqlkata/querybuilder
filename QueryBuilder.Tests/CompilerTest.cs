@@ -21,13 +21,13 @@ namespace SqlKata.Tests
 
         private string[] Compile(Query q)
         {
-            return new[]{
+            return new[]
+            {
                 mssql.Compile(q.Clone()).ToString(),
                 mysql.Compile(q.Clone()).ToString(),
                 pgsql.Compile(q.Clone()).ToString(),
                 fbsql.Compile(q.Clone()).ToString(),
             };
         }
-
     }
 }
