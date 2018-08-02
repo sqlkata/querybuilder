@@ -228,6 +228,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Compile a single column clause
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="column"></param>
         /// <returns></returns>
         public virtual string CompileColumn(SqlResult ctx, AbstractColumn column)
@@ -657,6 +658,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Create query parameter place-holders for an array.
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         public virtual string Parameterize<T>(SqlResult ctx, IEnumerable<T> values)
