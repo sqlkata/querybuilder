@@ -2,6 +2,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class PostgreSqlLimitTest
 {
     private PostgresCompiler compiler = new PostgresCompiler();
@@ -50,5 +51,5 @@ public class PostgreSqlLimitTest
         Assert.Equal(20, ctx.Bindings[1]);
         Assert.Equal(2, ctx.Bindings.Count);
     }
-
+}
 }

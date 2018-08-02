@@ -2,6 +2,7 @@
 using SqlKata;
 using SqlKata.Compilers;
 
+namespace SqlKata.Tests {
 public class NestedSelectTests
 {
 
@@ -56,4 +57,5 @@ public class NestedSelectTests
         Assert.Contains("SELECT * FROM [Foo] WHERE [x] = true AND NOT EXISTS (SELECT TOP (1) 1 FROM [Bar])", actual);
         // Assert.Contains("SELECT * FROM [Foo] WHERE [C] = 'c' AND EXISTS (SELECT TOP (1) 1 FROM [Bar]) AND [A] = 'a'", actual);
     }
+}
 }

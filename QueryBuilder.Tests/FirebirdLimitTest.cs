@@ -2,6 +2,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class FirebirdLimitTest
 {
     private FirebirdCompiler compiler = new FirebirdCompiler();
@@ -44,4 +45,5 @@ public class FirebirdLimitTest
         Assert.Equal(25, ctx.Bindings[1]);
         Assert.Equal(2, ctx.Bindings.Count);
     }
+}
 }

@@ -7,6 +7,7 @@ using SqlKata.Compilers;
 using Xunit;
 using System.Collections;
 
+namespace SqlKata.Tests {
 public enum EnumExample
 {
     First,
@@ -70,4 +71,5 @@ public class ParameterTypeTest
 
         Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c[0]);
     }
+}
 }

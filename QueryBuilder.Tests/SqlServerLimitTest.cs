@@ -2,6 +2,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class SqlServerLimitTest
 {
     private SqlServerCompiler compiler = new SqlServerCompiler()
@@ -82,5 +83,5 @@ public class SqlServerLimitTest
         Assert.Contains("ORDER BY [Id]", compiler.Compile(query).ToString());
         Assert.DoesNotContain("(SELECT 0)", compiler.Compile(query).ToString());
     }
-
+}
 }

@@ -5,6 +5,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class QueryBuilderTest
 {
     private readonly Compiler pgsql;
@@ -749,8 +750,5 @@ public class QueryBuilderTest
         Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = false", c[2]);
         Assert.Equal("SELECT * FROM \"TABLE\" WHERE \"ISACTIVE\" = 0", c[3]);
     }
-
-
-
-
+}
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using SqlKata;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class HelperTest
 {
     [Theory]
@@ -160,4 +161,5 @@ public class HelperTest
         // Then
         Assert.True(isArray);
     }
+}
 }

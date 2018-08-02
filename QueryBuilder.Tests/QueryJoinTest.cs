@@ -6,6 +6,7 @@ using SqlKata.Compilers;
 using Xunit;
 using System.Collections;
 
+namespace SqlKata.Tests {
 public class QueryJoinTest
 {
     private readonly Compiler pgsql = new PostgresCompiler();
@@ -54,4 +55,5 @@ public class QueryJoinTest
 
         Assert.Equal($"SELECT * FROM \"USERS\" {output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"", c[3]);
     }
+}
 }

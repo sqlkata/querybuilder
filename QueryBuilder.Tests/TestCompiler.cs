@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using SqlKata.Compilers;
 
+namespace SqlKata.Tests {
 /// <summary>
 /// A test class to expose private methods
 /// </summary>
@@ -42,4 +43,5 @@ class TestFirebirdCompiler : FirebirdCompiler
     {
         return FindCompilerMethodInfo(clauseType, methodName);
     }
+}
 }

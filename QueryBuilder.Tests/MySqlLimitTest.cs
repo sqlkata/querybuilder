@@ -2,6 +2,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
+namespace SqlKata.Tests {
 public class MySqlLimitTest
 {
     private MySqlCompiler compiler = new MySqlCompiler();
@@ -50,5 +51,5 @@ public class MySqlLimitTest
         Assert.Equal(20, ctx.Bindings[1]);
         Assert.Equal(2, ctx.Bindings.Count);
     }
-
+}
 }

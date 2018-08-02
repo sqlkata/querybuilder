@@ -2,7 +2,7 @@
 using SqlKata.Compilers;
 using Xunit;
 
-namespace QueryBuilder.Tests
+namespace SqlKata.Tests
 {
     public class CompilerTest
     {
