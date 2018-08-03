@@ -432,7 +432,7 @@ namespace SqlKata.Compilers
                 .GetComponents<BaseJoin>("join", EngineCode)
                 .Select(x => CompileJoin(ctx, x.Join));
 
-            return string.Join("\n", joins);
+            return "\n" + string.Join("\n", joins);
         }
 
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
