@@ -659,7 +659,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT * FROM [users] INNER JOIN [countries] ON ([countries].[id] = [users].[country_id])",
+            Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON ([countries].[id] = [users].[country_id])",
                 c[0]);
         }
 

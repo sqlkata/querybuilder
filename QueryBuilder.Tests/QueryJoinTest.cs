@@ -33,9 +33,9 @@ namespace SqlKata.Tests
 
             var c = Compile(q);
 
-            Assert.Equal("SELECT * FROM [users] INNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
+            Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
                 c[0]);
-            Assert.Equal("SELECT * FROM `users` INNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`",
+            Assert.Equal("SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`",
                 c[1]);
         }
 
@@ -51,18 +51,18 @@ namespace SqlKata.Tests
 
             var c = Compile(q);
 
-            Assert.Equal($"SELECT * FROM [users] {output} [countries] ON [countries].[id] = [users].[country_id]",
+            Assert.Equal($"SELECT * FROM [users] \n{output} [countries] ON [countries].[id] = [users].[country_id]",
                 c[0]);
 
-            Assert.Equal($"SELECT * FROM `users` {output} `countries` ON `countries`.`id` = `users`.`country_id`",
+            Assert.Equal($"SELECT * FROM `users` \n{output} `countries` ON `countries`.`id` = `users`.`country_id`",
                 c[1]);
 
             Assert.Equal(
-                $"SELECT * FROM \"users\" {output} \"countries\" ON \"countries\".\"id\" = \"users\".\"country_id\"",
+                $"SELECT * FROM \"users\" \n{output} \"countries\" ON \"countries\".\"id\" = \"users\".\"country_id\"",
                 c[2]);
 
             Assert.Equal(
-                $"SELECT * FROM \"USERS\" {output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"",
+                $"SELECT * FROM \"USERS\" \n{output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"",
                 c[3]);
         }
     }
