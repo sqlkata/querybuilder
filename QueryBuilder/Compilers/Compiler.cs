@@ -78,7 +78,6 @@ namespace SqlKata.Compilers
                     this.CompileUnion(ctx),
                 }
                .Where(x => x != null)
-               .Select(x => x.Trim())
                .Where(x => !string.IsNullOrEmpty(x))
                .ToList();
 
