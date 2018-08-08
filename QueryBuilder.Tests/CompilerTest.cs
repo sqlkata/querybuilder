@@ -2,7 +2,7 @@
 using SqlKata.Compilers;
 using Xunit;
 
-namespace QueryBuilder.Tests
+namespace SqlKata.Tests
 {
     public class CompilerTest
     {
@@ -21,13 +21,13 @@ namespace QueryBuilder.Tests
 
         private string[] Compile(Query q)
         {
-            return new[]{
+            return new[]
+            {
                 mssql.Compile(q.Clone()).ToString(),
                 mysql.Compile(q.Clone()).ToString(),
                 pgsql.Compile(q.Clone()).ToString(),
                 fbsql.Compile(q.Clone()).ToString(),
             };
         }
-
     }
 }

@@ -11,6 +11,8 @@ namespace SqlKata.Compilers
         public string EngineCode;
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
+        protected string ColumnAsKeyword = "AS ";
+        protected string TableAsKeyword = "AS ";
 
         public Compiler()
         {
@@ -76,7 +78,6 @@ namespace SqlKata.Compilers
                     this.CompileUnion(ctx),
                 }
                .Where(x => x != null)
-               .Select(x => x.Trim())
                .Where(x => !string.IsNullOrEmpty(x))
                .ToList();
 
@@ -226,6 +227,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Compile a single column clause
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="column"></param>
         /// <returns></returns>
         public virtual string CompileColumn(SqlResult ctx, AbstractColumn column)
@@ -242,7 +244,7 @@ namespace SqlKata.Compilers
 
                 if (!string.IsNullOrWhiteSpace(queryColumn.Query.QueryAlias))
                 {
-                    alias = $" AS {WrapValue(queryColumn.Query.QueryAlias)}";
+                    alias = $" {ColumnAsKeyword}{WrapValue(queryColumn.Query.QueryAlias)}";
                 }
 
                 var subCtx = CompileSelectQuery(queryColumn.Query);
@@ -321,7 +323,7 @@ namespace SqlKata.Compilers
                     sql = "DISTINCT " + sql;
                 }
 
-                return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + ") AS " + WrapValue(aggregate.Type);
+                return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
             }
 
             var columns = ctx.Query
@@ -389,7 +391,7 @@ namespace SqlKata.Compilers
             {
                 var fromQuery = queryFromClause.Query;
 
-                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : " AS " + WrapValue(fromQuery.QueryAlias);
+                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : $" {TableAsKeyword}" + WrapValue(fromQuery.QueryAlias);
 
                 var subCtx = CompileSelectQuery(fromQuery);
 
@@ -429,7 +431,7 @@ namespace SqlKata.Compilers
                 .GetComponents<BaseJoin>("join", EngineCode)
                 .Select(x => CompileJoin(ctx, x.Join));
 
-            return string.Join("\n", joins);
+            return "\n" + string.Join("\n", joins);
         }
 
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
@@ -615,7 +617,7 @@ namespace SqlKata.Compilers
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
 
-                return Wrap(before) + " AS " + WrapValue(after);
+                return Wrap(before) + $" {ColumnAsKeyword}" + WrapValue(after);
             }
 
             if (value.Contains("."))
@@ -655,6 +657,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Create query parameter place-holders for an array.
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         public virtual string Parameterize<T>(SqlResult ctx, IEnumerable<T> values)
