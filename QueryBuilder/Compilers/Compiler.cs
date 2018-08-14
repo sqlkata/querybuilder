@@ -8,6 +8,8 @@ namespace SqlKata.Compilers
 
     public partial class Compiler
     {
+        private readonly CompileConditionMethods compileConditionMethodsProvider;
+
         public string EngineCode;
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
@@ -16,6 +18,7 @@ namespace SqlKata.Compilers
 
         public Compiler()
         {
+            compileConditionMethodsProvider = new CompileConditionMethods(GetType());
         }
 
         public virtual SqlResult Compile(Query query)
