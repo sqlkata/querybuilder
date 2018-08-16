@@ -10,16 +10,9 @@ namespace SqlKata
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
 
-        public SqlResult()
-        {
-        }
-
         public string Sql
         {
-            get
-            {
-                return Helper.ReplaceAll(RawSql, "?", x => "@p" + x);
-            }
+            get { return Helper.ReplaceAll(RawSql, "?", x => "@p" + x); }
         }
 
         public Dictionary<string, object> NamedBindings
@@ -36,7 +29,8 @@ namespace SqlKata
                 return namedParams;
             }
         }
-         private static Type[] numberTypes = new Type[]
+
+        private static readonly Type[] NumberTypes = new Type[]
         {
             typeof(int),
             typeof(long),
@@ -47,14 +41,15 @@ namespace SqlKata
             typeof(ushort),
             typeof(ulong),
         };
-        
+
         public override string ToString()
         {
             return Helper.ReplaceAll(RawSql, "?", i =>
             {
                 if (i >= Bindings.Count)
                 {
-                    throw new Exception($"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
+                    throw new Exception(
+                        $"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
                 }
 
                 var value = Bindings[i];
@@ -63,29 +58,32 @@ namespace SqlKata
                 {
                     return "NULL";
                 }
-                else if (numberTypes.Contains(value.GetType()))
+
+                if (NumberTypes.Contains(value.GetType()))
                 {
                     return value.ToString();
                 }
-                else if (value is DateTime date)
+
+                if (value is DateTime date)
                 {
                     return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
                 }
-                else if (value is bool vBool)
+
+                if (value is bool vBool)
                 {
                     return vBool ? "true" : "false";
                 }
-                else if (value is Enum vEnum)
+
+                if (value is Enum vEnum)
                 {
-                    return ((int)value) + $" /* {vEnum} */";
+                    return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
                 }
 
                 // fallback to string
                 return "'" + value.ToString() + "'";
-
             });
         }
-        
+
         public static SqlResult operator +(SqlResult a, SqlResult b)
         {
             var sql = a.RawSql + ";" + b.RawSql;
@@ -100,6 +98,5 @@ namespace SqlKata
 
             return result;
         }
-
     }
 }
