@@ -8,6 +8,8 @@ namespace SqlKata.Compilers
 
     public partial class Compiler
     {
+        private readonly CompileConditionMethods compileConditionMethodsProvider;
+
         public string EngineCode;
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
@@ -16,6 +18,7 @@ namespace SqlKata.Compilers
 
         public Compiler()
         {
+            compileConditionMethodsProvider = new CompileConditionMethods(GetType());
         }
 
         public virtual SqlResult Compile(Query query)
@@ -78,7 +81,6 @@ namespace SqlKata.Compilers
                     this.CompileUnion(ctx),
                 }
                .Where(x => x != null)
-               .Select(x => x.Trim())
                .Where(x => !string.IsNullOrEmpty(x))
                .ToList();
 
@@ -228,6 +230,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Compile a single column clause
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="column"></param>
         /// <returns></returns>
         public virtual string CompileColumn(SqlResult ctx, AbstractColumn column)
@@ -431,7 +434,7 @@ namespace SqlKata.Compilers
                 .GetComponents<BaseJoin>("join", EngineCode)
                 .Select(x => CompileJoin(ctx, x.Join));
 
-            return string.Join("\n", joins);
+            return "\n" + string.Join("\n", joins);
         }
 
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
@@ -657,6 +660,7 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Create query parameter place-holders for an array.
         /// </summary>
+        /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         public virtual string Parameterize<T>(SqlResult ctx, IEnumerable<T> values)
