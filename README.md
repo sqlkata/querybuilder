@@ -14,7 +14,7 @@ SqlKata has an expressive API. it follows a clean naming convention, which is ve
 
 By providing a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
-SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql and PostgreSql.
+SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql,PostgreSql and Firebird.
 
 Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
@@ -24,22 +24,30 @@ Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
 ```cs
 var connection = new SqlConnection("...");
-var compiler = new SqlCompiler();
+var compiler = new SqlCompiler(); // MySqlCompiler, PostgresCompiler, FirebirdCompiler
 var db = new QueryFactory(connection, compiler);
 ```
 
 ### Reading data
 
+### Get all records
 ```cs
 var users = db.Query("Users").Get();
+```
 
-// Filter by Active
+### Active users only
+```cs
 var users = db.Query("Users").WhereTrue("Active").Get();
+```
 
-// Recent users
+### Recent users
+```cs
 var users = db.Query("Users").OrderByDesc("CreatedAt").Limit(10).Get();
+```
 
-// Join with profiles
+### Join with profiles table
+
+```cs
 var users = db.Query("Users")
     .Join("Countries", "Countries.Id", "Users.CountryId")
     .Select(
@@ -52,12 +60,14 @@ foreach(var user in users)
 {
     Console.WriteLine($"{user.Name}: {user.CountryName}");
 }
+```
 
-// Conditional expressions
-var lang = Config.Get("Lang");
+### Conditional queries
+```cs
+var rtlLangOnly = Config.Get("rtlLangOnly");
 
 var users = db.Query("Users")
-    .When(lang == "en", q => q.Where("lang", "en"))
+    .When(rtlLangOnly, q => q.WhereIn("lang", new [] {"en", "fr", "es"}))
     .Get();
 ```
 
