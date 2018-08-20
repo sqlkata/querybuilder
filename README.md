@@ -6,6 +6,10 @@
 
 [![SqlKata on MyGet](https://img.shields.io/myget/sqlkata/v/SqlKata.svg?label=myget)](https://www.myget.org/feed/sqlkata/package/nuget/SqlKata)
 
+![SqlKata Logo](https://ahmadmoussawi.com/images/projects/sqlkata.png)
+
+![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
+
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
 
 It's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
@@ -24,61 +28,61 @@ Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
 ```cs
 var connection = new SqlConnection("...");
-var compiler = new SqlCompiler(); // MySqlCompiler, PostgresCompiler, FirebirdCompiler
+var compiler = new SqlCompiler();
 var db = new QueryFactory(connection, compiler);
 ```
 
-### Reading data
-
 ### Get all records
 ```cs
-var users = db.Query("Users").Get();
+var books = db.Query("Books").Get();
 ```
 
-### Active users only
+### Published books only
 ```cs
-var users = db.Query("Users").WhereTrue("Active").Get();
+var books = db.Query("Books").WhereTrue("IsPublished").Get();
 ```
 
-### Recent users
+### Get one book by Id
 ```cs
-var users = db.Query("Users").OrderByDesc("CreatedAt").Limit(10).Get();
+var introToSql = db.Query("Books").Where("Id", 145).Where("Lang", "en").First();
 ```
 
-### Join with profiles table
+### Recent books: last 10
+```cs
+var recent = db.Query("Books").OrderByDesc("PublishedAt").Limit(10).Get();
+```
+
+### Join with authors table
 
 ```cs
-var users = db.Query("Users")
-    .Join("Countries", "Countries.Id", "Users.CountryId")
-    .Select(
-        "Users.*",
-        "Countries.Name as CountryName"
-    )
+var books = db.Query("Books")
+    .Join("Authors", "Authors.Id", "Books.AuthorId")
+    .Select("Books.*", "Authors.Name as AuthorName")
     .Get();
 
-foreach(var user in users)
+foreach(var book in books)
 {
-    Console.WriteLine($"{user.Name}: {user.CountryName}");
+    Console.WriteLine($"{book.Title}: {book.AuthorName}");
 }
 ```
 
 ### Conditional queries
 ```cs
-var rtlLangOnly = Config.Get("rtlLangOnly");
+var isFriday = DateTime.Today.DayOfWeek == DayOfWeek.Friday;
 
-var users = db.Query("Users")
-    .When(rtlLangOnly, q => q.WhereIn("lang", new [] {"en", "fr", "es"}))
+var books = db.Query("Books")
+    .When(isFriday, q => q.WhereIn("Category", new [] {"OpenSource", "MachineLearning"}))
     .Get();
 ```
 
 ### Pagination
 
 ```cs
-var page1 = db.Query("Users").Paginate(10);
+var page1 = db.Query("Books").Paginate(10);
 
-foreach(var user in page1)
+foreach(var book in page1)
 {
-    Console.WriteLine(user.Name);
+    Console.WriteLine(book.Name);
 }
 
 ...
