@@ -8,12 +8,12 @@ namespace SqlKata.Compilers
     public abstract partial class Compiler
     {
         private readonly ISqlResultBinder _sqlResultBinder;
-        private readonly CompileConditionMethods _compileConditionMethodsProvider;
+        private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
 
         protected Compiler(ISqlResultBinder sqlResultBinder)
         {
             _sqlResultBinder = sqlResultBinder;
-            _compileConditionMethodsProvider = new CompileConditionMethods(GetType());
+            _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
         
         public abstract string EngineCode { get; }
