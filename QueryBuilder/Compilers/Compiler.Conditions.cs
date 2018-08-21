@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace SqlKata.Compilers
 {
-    public partial class Compiler
+    public abstract partial class Compiler
     {
         private class CompileConditionMethods
         {
@@ -61,7 +61,7 @@ namespace SqlKata.Compilers
 
         protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
         {
-            return compileConditionMethodsProvider.GetMethodInfo(clauseType, methodName);
+            return _compileConditionMethodsProvider.GetMethodInfo(clauseType, methodName);
         }
 
         protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)

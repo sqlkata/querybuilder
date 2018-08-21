@@ -1,27 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
-
-    public partial class Compiler
+    public abstract partial class Compiler
     {
-        private readonly CompileConditionMethods compileConditionMethodsProvider;
+        private readonly ISqlResultBinder _sqlResultBinder;
+        private readonly CompileConditionMethods _compileConditionMethodsProvider;
 
-        public string EngineCode;
+        protected Compiler(ISqlResultBinder sqlResultBinder)
+        {
+            _sqlResultBinder = sqlResultBinder;
+            _compileConditionMethodsProvider = new CompileConditionMethods(GetType());
+        }
+        
+        public abstract string EngineCode { get; }
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
         protected string ColumnAsKeyword = "AS ";
         protected string TableAsKeyword = "AS ";
 
-        public Compiler()
-        {
-            compileConditionMethodsProvider = new CompileConditionMethods(GetType());
-        }
-
-        public virtual SqlResult Compile(Query query)
+        protected virtual SqlResult CompileRaw(Query query)
         {
             SqlResult ctx;
 
@@ -39,7 +40,6 @@ namespace SqlKata.Compilers
             }
             else
             {
-
                 if (query.Method == "aggregate")
                 {
                     query.ClearComponent("limit")
@@ -58,10 +58,39 @@ namespace SqlKata.Compilers
                 ctx.RawSql = cteCtx.RawSql.Trim() + "\n" + ctx.RawSql;
             }
 
-
+            return ctx;
+        }
+        
+        public virtual SqlResult Compile(Query query)
+        {
+            var ctx = CompileRaw(query);
+            _sqlResultBinder.BindNamedParameters(ctx);
             return ctx;
         }
 
+        public virtual SqlResult Compile(IEnumerable<Query> queries)
+        {
+            var compiled = queries.Select(CompileRaw).ToArray();
+            var bindings = compiled.Select(r => r.Bindings).ToArray();
+            var totalBindingsCount = bindings.Select(b => b.Count).Aggregate((a, b) => a + b);
+            
+            var combinedBindings = new List<object>(totalBindingsCount);
+            foreach (var cb in bindings)
+            {
+                combinedBindings.AddRange(cb);
+            }
+            
+            var ctx = new SqlResult
+            {
+                RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
+                Bindings = combinedBindings
+            };
+            
+            _sqlResultBinder.BindNamedParameters(ctx);
+
+            return ctx;
+        }
+        
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult

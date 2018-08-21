@@ -1,13 +1,17 @@
 using System;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
-        public PostgresCompiler() : base()
+        public PostgresCompiler() : base(
+            new SqlResultBinder()
+            )
         {
-            EngineCode = "postgres";
         }
+
+        public override string EngineCode { get; } = "postgres";
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {

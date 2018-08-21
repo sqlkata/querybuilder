@@ -1,18 +1,20 @@
 using System;
-using System.Linq;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
-        public bool UseLegacyPagination { get; set; } = true;
-
-        public SqlServerCompiler()
+        public SqlServerCompiler() : base(
+            new SqlResultBinder()
+            )
         {
-            EngineCode = "sqlsrv";
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
         }
+
+        public override string EngineCode { get; } = "sqlsrv";
+        public bool UseLegacyPagination { get; set; } = true;
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
