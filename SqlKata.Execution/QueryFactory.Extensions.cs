@@ -15,14 +15,14 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query);
 
-            return db.Connection.Query<T>(compiled.Sql, compiled.NamedBindings);
+            return db.Connection.Query<T>(compiled.Sql, compiled.NamedBindings, db.Transaction);
         }
 
         public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
         {
             var compiled = db.compile(query);
 
-            return db.Connection.Query(compiled.Sql, compiled.NamedBindings) as IEnumerable<IDictionary<string, object>>;
+            return db.Connection.Query(compiled.Sql, compiled.NamedBindings, db.Transaction) as IEnumerable<IDictionary<string, object>>;
         }
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
@@ -34,7 +34,7 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query.Limit(1));
 
-            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings);
+            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings, db.Transaction);
         }
 
         public static dynamic First(this QueryFactory db, Query query)
@@ -46,7 +46,7 @@ namespace SqlKata.Execution
         {
             var compiled = db.compile(query.Limit(1));
 
-            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings);
+            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings, db.Transaction);
         }
 
         public static dynamic FirstOrDefault(this QueryFactory db, Query query)
@@ -61,7 +61,7 @@ namespace SqlKata.Execution
             return db.Connection.Execute(
                 compiled.Sql,
                 compiled.NamedBindings,
-                transaction,
+                transaction ?? db.Transaction,
                 db.QueryTimeout,
                 commandType
             );
@@ -74,7 +74,7 @@ namespace SqlKata.Execution
             return db.Connection.ExecuteScalar<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
-                transaction,
+                transaction ?? db.Transaction,
                 db.QueryTimeout,
                 commandType
             );
@@ -95,7 +95,7 @@ namespace SqlKata.Execution
             return db.Connection.QueryMultiple(
                 compiled.Sql,
                 compiled.NamedBindings,
-                transaction,
+                transaction ?? db.Transaction,
                 db.QueryTimeout,
                 commandType
             );
@@ -112,7 +112,7 @@ namespace SqlKata.Execution
 
             var multi = db.GetMultiple<T>(
                 queries,
-                transaction,
+                transaction ?? db.Transaction,
                 commandType
             );
 
@@ -233,7 +233,7 @@ namespace SqlKata.Execution
         #region free statements
         public static IEnumerable<T> Select<T>(this QueryFactory db, string sql, object param = null)
         {
-            return db.Connection.Query<T>(sql, param);
+            return db.Connection.Query<T>(sql, param, db.Transaction);
         }
         public static IEnumerable<dynamic> Select(this QueryFactory db, string sql, object param = null)
         {
@@ -241,12 +241,12 @@ namespace SqlKata.Execution
         }
         public static int Statement(this QueryFactory db, string sql, object param = null)
         {
-            return db.Connection.Execute(sql, param);
+            return db.Connection.Execute(sql, param, db.Transaction);
         }
 
         public static async Task<IEnumerable<T>> SelectAsync<T>(this QueryFactory db, string sql, object param = null)
         {
-            return await db.Connection.QueryAsync<T>(sql, param);
+            return await db.Connection.QueryAsync<T>(sql, param, db.Transaction);
         }
         public static async Task<IEnumerable<dynamic>> SelectAsync(this QueryFactory db, string sql, object param = null)
         {
@@ -254,7 +254,7 @@ namespace SqlKata.Execution
         }
         public static async Task<int> StatementAsync(this QueryFactory db, string sql, object param = null)
         {
-            return await db.Connection.ExecuteAsync(sql, param);
+            return await db.Connection.ExecuteAsync(sql, param, db.Transaction);
         }
         #endregion
 
