@@ -15,6 +15,7 @@ namespace SqlKata.Compilers
         protected string ClosingIdentifier = "\"";
         protected string ColumnAsKeyword = "AS ";
         protected string TableAsKeyword = "AS ";
+        protected string LastId = "";
 
         public Compiler()
         {
@@ -194,6 +195,11 @@ namespace SqlKata.Compilers
                 ctx.RawSql = $"INSERT INTO {table}"
                     + " (" + string.Join(", ", WrapArray(insertClause.Columns)) + ") "
                     + "VALUES (" + string.Join(", ", Parameterize(ctx, insertClause.Values)) + ")";
+
+                if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
+                {
+                    ctx.RawSql += ";" + LastId;
+                }
             }
             else
             {

@@ -7,11 +7,13 @@ namespace SqlKata.Compilers
     {
         public bool UseLegacyPagination { get; set; } = true;
 
+
         public SqlServerCompiler()
         {
             EngineCode = "sqlsrv";
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
+            LastId = "SELECT @@IDENTITY as Id";
         }
 
         protected override SqlResult CompileSelectQuery(Query query)

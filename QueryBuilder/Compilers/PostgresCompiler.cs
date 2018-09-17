@@ -7,6 +7,7 @@ namespace SqlKata.Compilers
         public PostgresCompiler() : base()
         {
             EngineCode = "postgres";
+            LastId = "SELECT lastval()";
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
