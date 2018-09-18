@@ -1,4 +1,5 @@
 using System;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -52,7 +53,7 @@ namespace SqlKata
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
 
         public override string Alias
         {

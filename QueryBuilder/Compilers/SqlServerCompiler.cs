@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Compilers
 {
@@ -14,7 +15,7 @@ namespace SqlKata.Compilers
             ClosingIdentifier = "]";
         }
 
-        protected override SqlResult CompileSelectQuery(Query query)
+        protected override SqlResult CompileSelectQuery(IQuery query)
         {
             if (!UseLegacyPagination || !query.HasOffset())
             {
@@ -176,7 +177,7 @@ namespace SqlKata.Compilers
     public static class SqlServerCompilerExtensions
     {
         public static string ENGINE_CODE = "sqlsrv";
-        public static Query ForSqlServer(this Query src, Func<Query, Query> fn)
+        public static IQuery ForSqlServer(this IQuery src, Func<IQuery, IQuery> fn)
         {
             return src.For(SqlServerCompilerExtensions.ENGINE_CODE, fn);
         }

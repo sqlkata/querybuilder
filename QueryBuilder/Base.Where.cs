@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -79,7 +80,7 @@ namespace SqlKata
 
         public Q Where(IReadOnlyDictionary<string, object> values)
         {
-            var query = (Q)this;
+            var query = (IBaseQuery<Q>)this;
             var orFlag = GetOr();
             var notFlag = GetNot();
 
@@ -91,13 +92,13 @@ namespace SqlKata
                 }
                 else
                 {
-                    query.And();
+                    ((BaseQuery<Q>)query).And();
                 }
 
                 query = this.Not(notFlag).Where(tuple.Key, tuple.Value);
             }
 
-            return query;
+            return (Q)query;
         }
 
         public Q WhereRaw(string sql, params object[] bindings)
@@ -128,7 +129,7 @@ namespace SqlKata
             // omit empty queries
             if (!query.Clauses.Where(x => x.Component == "where").Any())
             {
-                return (Q)this;
+                return (Q)(IBaseQuery<Q>)this;
             }
 
             return AddComponent("where", new NestedCondition<Q>
@@ -404,7 +405,7 @@ namespace SqlKata
         }
 
 
-        public Q WhereIn(string column, Query query)
+        public Q WhereIn(string column, IQuery query)
         {
             return AddComponent("where", new InQueryCondition
             {
@@ -414,38 +415,38 @@ namespace SqlKata
                 Query = query,
             });
         }
-        public Q WhereIn(string column, Func<Query, Query> callback)
+        public Q WhereIn(string column, Func<IQuery, IQuery> callback)
         {
             var query = callback.Invoke(new Query());
 
             return WhereIn(column, query);
         }
 
-        public Q OrWhereIn(string column, Query query)
+        public Q OrWhereIn(string column, IQuery query)
         {
             return Or().WhereIn(column, query);
         }
 
-        public Q OrWhereIn(string column, Func<Query, Query> callback)
+        public Q OrWhereIn(string column, Func<IQuery, IQuery> callback)
         {
             return Or().WhereIn(column, callback);
         }
-        public Q WhereNotIn(string column, Query query)
+        public Q WhereNotIn(string column, IQuery query)
         {
             return Not().WhereIn(column, query);
         }
 
-        public Q WhereNotIn(string column, Func<Query, Query> callback)
+        public Q WhereNotIn(string column, Func<IQuery, IQuery> callback)
         {
             return Not().WhereIn(column, callback);
         }
 
-        public Q OrWhereNotIn(string column, Query query)
+        public Q OrWhereNotIn(string column, IQuery query)
         {
             return Or().Not().WhereIn(column, query);
         }
 
-        public Q OrWhereNotIn(string column, Func<Query, Query> callback)
+        public Q OrWhereNotIn(string column, Func<IQuery, IQuery> callback)
         {
             return Or().Not().WhereIn(column, callback);
         }
@@ -465,9 +466,9 @@ namespace SqlKata
             return Where(column, op, query);
         }
 
-        public Q Where(string column, string op, Query query)
+        public Q Where(string column, string op, IQuery query)
         {
-            return AddComponent("where", new QueryCondition<Query>
+            return AddComponent("where", new QueryCondition<IQuery>
             {
                 Column = column,
                 Operator = op,
@@ -477,16 +478,16 @@ namespace SqlKata
             });
         }
 
-        public Q OrWhere(string column, string op, Query query)
+        public Q OrWhere(string column, string op, IQuery query)
         {
             return Or().Where(column, op, query);
         }
-        public Q OrWhere(string column, string op, Func<Query, Query> callback)
+        public Q OrWhere(string column, string op, Func<IQuery, IQuery> callback)
         {
             return Or().Where(column, op, callback);
         }
 
-        public Q WhereExists(Query query)
+        public Q WhereExists(IQuery query)
         {
             if (!query.HasComponent("from"))
             {
@@ -505,35 +506,35 @@ namespace SqlKata
                 IsOr = GetOr(),
             });
         }
-        public Q WhereExists(Func<Query, Query> callback)
+        public Q WhereExists(Func<IQuery, IQuery> callback)
         {
             var childQuery = new Query().SetParent(this);
             return WhereExists(callback.Invoke(childQuery));
         }
 
-        public Q WhereNotExists(Query query)
+        public Q WhereNotExists(IQuery query)
         {
             return Not().WhereExists(query);
         }
 
-        public Q WhereNotExists(Func<Query, Query> callback)
+        public Q WhereNotExists(Func<IQuery, IQuery> callback)
         {
             return Not().WhereExists(callback);
         }
 
-        public Q OrWhereExists(Query query)
+        public Q OrWhereExists(IQuery query)
         {
             return Or().WhereExists(query);
         }
-        public Q OrWhereExists(Func<Query, Query> callback)
+        public Q OrWhereExists(Func<IQuery, IQuery> callback)
         {
             return Or().WhereExists(callback);
         }
-        public Q OrWhereNotExists(Query query)
+        public Q OrWhereNotExists(IQuery query)
         {
             return Or().Not().WhereExists(query);
         }
-        public Q OrWhereNotExists(Func<Query, Query> callback)
+        public Q OrWhereNotExists(Func<IQuery, IQuery> callback)
         {
             return Or().Not().WhereExists(callback);
         }

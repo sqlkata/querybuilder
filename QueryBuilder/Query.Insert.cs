@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsInsert(object data)
+        public IQuery AsInsert(object data)
         {
             var dictionary = new Dictionary<string, object>();
 
@@ -21,7 +22,7 @@ namespace SqlKata
             return AsInsert(dictionary);
         }
 
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
+        public IQuery AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
             var columnsList = columns?.ToList();
             var valuesList = values?.ToList();
@@ -47,7 +48,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IReadOnlyDictionary<string, object> data)
+        public IQuery AsInsert(IReadOnlyDictionary<string, object> data)
         {
             if (data == null || data.Count == 0)
             {
@@ -71,7 +72,7 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="valuesCollection"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public IQuery AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
             var columnsList = columns?.ToList();
             var valuesCollectionList = valuesCollection?.ToList();
@@ -109,7 +110,7 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, Query query)
+        public IQuery AsInsert(IEnumerable<string> columns, IQuery query)
         {
             Method = "insert";
 

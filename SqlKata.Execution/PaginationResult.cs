@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SqlKata;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
     public class PaginationResult<T>
     {
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
         public long Count { get; set; }
         public IEnumerable<T> List { get; set; }
         public int Page { get; set; }
@@ -61,7 +62,7 @@ namespace SqlKata.Execution
             }
         }
 
-        public Query NextQuery()
+        public IQuery NextQuery()
         {
             return this.Query.ForPage(Page + 1, PerPage);
         }
@@ -76,7 +77,7 @@ namespace SqlKata.Execution
             return await this.Query.PaginateAsync<T>(Page + 1, PerPage);
         }
 
-        public Query PreviousQuery()
+        public IQuery PreviousQuery()
         {
             return this.Query.ForPage(Page - 1, PerPage);
         }

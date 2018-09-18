@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -27,7 +28,7 @@ namespace SqlKata
     public class InsertQueryClause : AbstractInsertClause
     {
         public List<string> Columns { get; set; }
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
 
         public override AbstractClause Clone()
         {

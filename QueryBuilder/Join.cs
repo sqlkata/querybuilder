@@ -1,4 +1,5 @@
 using System;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -42,8 +43,8 @@ namespace SqlKata
         /// <param name="table"></param>
         /// <returns></returns>
         public Join JoinWith(string table) => From(table);
-        public Join JoinWith(Query query) => From(query);
-        public Join JoinWith(Func<Query, Query> callback) => From(callback);
+        public Join JoinWith(IQuery query) => From(query);
+        public Join JoinWith(Func<IQuery, IQuery> callback) => From(callback);
 
         public Join AsInner() => AsType("inner join");
         public Join AsOuter() => AsType("outer join");

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -103,11 +104,11 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a column and a full "subquery".
     /// </summary>
-    public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class QueryCondition<T> : AbstractCondition where T : IBaseQuery<T>
     {
         public string Column { get; set; }
         public string Operator { get; set; }
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -152,7 +153,7 @@ namespace SqlKata
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
         public string Column { get; set; }
         public override AbstractClause Clone()
         {
@@ -239,7 +240,7 @@ namespace SqlKata
     /// Represents a "nested" clause condition.
     /// i.e OR (myColumn = "A")
     /// </summary>
-    public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class NestedCondition<T> : AbstractCondition where T : IBaseQuery<T>
     {
         public T Query { get; set; }
         public override AbstractClause Clone()
@@ -260,7 +261,7 @@ namespace SqlKata
     /// </summary>
     public class ExistsCondition : AbstractCondition
     {
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

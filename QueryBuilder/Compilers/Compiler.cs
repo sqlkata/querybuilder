@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Compilers
 {
@@ -21,7 +22,7 @@ namespace SqlKata.Compilers
             compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
-        public virtual SqlResult Compile(Query query)
+        public virtual SqlResult Compile(IQuery query)
         {
             SqlResult ctx;
 
@@ -62,7 +63,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileSelectQuery(Query query)
+        protected virtual SqlResult CompileSelectQuery(IQuery query)
         {
             var ctx = new SqlResult
             {
@@ -91,7 +92,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileDeleteQuery(Query query)
+        private SqlResult CompileDeleteQuery(IQuery query)
         {
             var ctx = new SqlResult
             {
@@ -122,7 +123,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileUpdateQuery(Query query)
+        private SqlResult CompileUpdateQuery(IQuery query)
         {
             var ctx = new SqlResult
             {
@@ -166,7 +167,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileInsertQuery(Query query)
+        protected virtual SqlResult CompileInsertQuery(IQuery query)
         {
             var ctx = new SqlResult
             {

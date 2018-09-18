@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Compilers
 {
@@ -12,7 +13,7 @@ namespace SqlKata.Compilers
             EngineCode = "firebird";
         }
 
-        protected override SqlResult CompileInsertQuery(Query query)
+        protected override SqlResult CompileInsertQuery(IQuery query)
         {
             var ctx = base.CompileInsertQuery(query);
 
@@ -158,7 +159,7 @@ namespace SqlKata.Compilers
     {
         public static string ENGINE_CODE = "firebird";
 
-        public static Query ForFirebird(this Query src, Func<Query, Query> fn)
+        public static IQuery ForFirebird(this IQuery src, Func<IQuery, IQuery> fn)
         {
             return src.For(FirebirdCompilerExtensions.ENGINE_CODE, fn);
         }

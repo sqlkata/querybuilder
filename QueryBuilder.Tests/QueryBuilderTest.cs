@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SqlKata.Execution;
 using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Interfaces;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -14,7 +15,7 @@ namespace SqlKata.Tests
         private readonly FirebirdCompiler fbsql;
         public SqlServerCompiler mssql { get; private set; }
 
-        private string[] Compile(Query q)
+        private string[] Compile(IQuery q)
         {
             return new[]
             {
@@ -685,7 +686,7 @@ namespace SqlKata.Tests
             var compiler = new TestSqlServerCompiler();
 
             var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(NestedCondition<Query>), "CompileNestedCondition"
+                typeof(NestedCondition<IQuery>), "CompileNestedCondition"
             );
 
             var call2 = compiler.Call_FindCompilerMethodInfo(

@@ -1,4 +1,5 @@
 using System;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Compilers
 {
@@ -50,7 +51,7 @@ namespace SqlKata.Compilers
     public static class MySqlCompilerExtensions
     {
         public static string ENGINE_CODE = "mysql";
-        public static Query ForMySql(this Query src, Func<Query, Query> fn)
+        public static IQuery ForMySql(this IQuery src, Func<IQuery, IQuery> fn)
         {
             return src.For(MySqlCompilerExtensions.ENGINE_CODE, fn);
         }

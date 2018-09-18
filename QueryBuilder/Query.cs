@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
-    public partial class Query : BaseQuery<Query>
+    public partial class Query: BaseQuery<IQuery>, IQuery
     {
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
@@ -42,21 +43,21 @@ namespace SqlKata
             return limitOffset?.HasLimit() ?? false;
         }
 
-        internal int GetOffset(string engineCode = null)
+        public int GetOffset(string engineCode = null)
         {
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.Offset ?? 0;
         }
 
-        internal int GetLimit(string engineCode = null)
+        public int GetLimit(string engineCode = null)
         {
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.Limit ?? 0;
         }
 
-        public override Query Clone()
+        public override IQuery Clone()
         {
             var clone = base.Clone();
             clone.QueryAlias = QueryAlias;
@@ -65,13 +66,13 @@ namespace SqlKata
             return clone;
         }
 
-        public Query As(string alias)
+        public IQuery As(string alias)
         {
             QueryAlias = alias;
             return this;
         }
 
-        public Query For(string engine, Func<Query, Query> fn)
+        public IQuery For(string engine, Func<IQuery, IQuery> fn)
         {
             EngineScope = engine;
 
@@ -83,7 +84,7 @@ namespace SqlKata
             return result;
         }
 
-        public Query With(Query query)
+        public IQuery With(IQuery query)
         {
             // Clear query alias and add it to the containing clause
             if (string.IsNullOrWhiteSpace(query.QueryAlias))
@@ -105,22 +106,22 @@ namespace SqlKata
             });
         }
 
-        public Query With(Func<Query, Query> fn)
+        public IQuery With(Func<IQuery, IQuery> fn)
         {
             return With(fn.Invoke(new Query()));
         }
 
-        public Query With(string alias, Query query)
+        public IQuery With(string alias, IQuery query)
         {
             return With(query.As(alias));
         }
 
-        public Query With(string alias, Func<Query, Query> fn)
+        public IQuery With(string alias, Func<IQuery, IQuery> fn)
         {
             return With(alias, fn.Invoke(new Query()));
         }
 
-        public Query WithRaw(string alias, string sql, params object[] bindings)
+        public IQuery WithRaw(string alias, string sql, params object[] bindings)
         {
             return AddComponent("cte", new RawFromClause
             {
@@ -130,7 +131,7 @@ namespace SqlKata
             });
         }
 
-        public Query Limit(int value)
+        public IQuery Limit(int value)
         {
             var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
 
@@ -146,7 +147,7 @@ namespace SqlKata
             });
         }
 
-        public Query Offset(int value)
+        public IQuery Offset(int value)
         {
             var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
 
@@ -167,7 +168,7 @@ namespace SqlKata
         /// </summary>
         /// <param name="limit"></param>
         /// <returns></returns>
-        public Query Take(int limit)
+        public IQuery Take(int limit)
         {
             return Limit(limit);
         }
@@ -177,7 +178,7 @@ namespace SqlKata
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public Query Skip(int offset)
+        public IQuery Skip(int offset)
         {
             return Offset(offset);
         }
@@ -188,12 +189,12 @@ namespace SqlKata
         /// <param name="page"></param>
         /// <param name="perPage"></param>
         /// <returns></returns>
-        public Query ForPage(int page, int perPage = 15)
+        public IQuery ForPage(int page, int perPage = 15)
         {
             return Skip((page - 1) * perPage).Take(perPage);
         }
 
-        public Query Distinct()
+        public IQuery Distinct()
         {
             IsDistinct = true;
             return this;
@@ -205,7 +206,7 @@ namespace SqlKata
         /// <param name="condition"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public Query When(bool condition, Func<Query, Query> callback)
+        public IQuery When(bool condition, Func<IQuery, IQuery> callback)
         {
             if (condition)
             {
@@ -221,7 +222,7 @@ namespace SqlKata
         /// <param name="condition"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public Query WhenNot(bool condition, Func<Query, Query> callback)
+        public IQuery WhenNot(bool condition, Func<IQuery, IQuery> callback)
         {
             if (!condition)
             {
@@ -231,7 +232,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query OrderBy(params string[] columns)
+        public IQuery OrderBy(params string[] columns)
         {
             foreach (var column in columns)
             {
@@ -245,7 +246,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query OrderByDesc(params string[] columns)
+        public IQuery OrderByDesc(params string[] columns)
         {
             foreach (var column in columns)
             {
@@ -259,7 +260,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query OrderByRaw(string expression, params object[] bindings)
+        public IQuery OrderByRaw(string expression, params object[] bindings)
         {
             return AddComponent("order", new RawOrderBy
             {
@@ -268,12 +269,12 @@ namespace SqlKata
             });
         }
 
-        public Query OrderByRandom(string seed)
+        public IQuery OrderByRandom(string seed)
         {
             return AddComponent("order", new OrderByRandom { });
         }
 
-        public Query GroupBy(params string[] columns)
+        public IQuery GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
@@ -286,7 +287,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query GroupByRaw(string expression, params object[] bindings)
+        public IQuery GroupByRaw(string expression, params object[] bindings)
         {
             AddComponent("group", new RawColumn
             {
@@ -297,7 +298,7 @@ namespace SqlKata
             return this;
         }
 
-        public override Query NewQuery()
+        public override IQuery NewQuery()
         {
             return new Query();
         }

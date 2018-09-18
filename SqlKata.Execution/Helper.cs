@@ -1,13 +1,15 @@
 using System;
 using SqlKata;
+using SqlKata.Execution.Interfaces;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
     internal static class QueryHelper
     {
-        internal static XQuery CastToXQuery(Query query, string method = null)
+        internal static IXQuery CastToXQuery(IQuery query, string method = null)
         {
-            var xQuery = query as XQuery;
+            var xQuery = query as IXQuery;
 
             if (xQuery is null)
             {
@@ -25,7 +27,7 @@ namespace SqlKata.Execution
 
         }
 
-        internal static QueryFactory CreateQueryFactory(XQuery xQuery)
+        internal static IQueryFactory CreateQueryFactory(IXQuery xQuery)
         {
             var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
 
@@ -34,7 +36,7 @@ namespace SqlKata.Execution
             return factory;
         }
 
-        internal static QueryFactory CreateQueryFactory(Query query)
+        internal static IQueryFactory CreateQueryFactory(IQuery query)
         {
             var xQuery = CastToXQuery(query);
 
