@@ -5,56 +5,58 @@ using System.Linq;
 using Dapper;
 using SqlKata;
 using System.Threading.Tasks;
+using SqlKata.Execution.Interfaces;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
     public static class QueryFactoryExtensions
     {
         #region Dapper
-        public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
+        public static IEnumerable<T> Get<T>(this IQueryFactory db, IQuery query)
         {
             var compiled = db.compile(query);
 
             return db.Connection.Query<T>(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
+        public static IEnumerable<IDictionary<string, object>> GetDictionary(this IQueryFactory db, IQuery query)
         {
             var compiled = db.compile(query);
 
             return db.Connection.Query(compiled.Sql, compiled.NamedBindings) as IEnumerable<IDictionary<string, object>>;
         }
 
-        public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
+        public static IEnumerable<dynamic> Get(this IQueryFactory db, IQuery query)
         {
             return Get<dynamic>(db, query);
         }
 
-        public static T First<T>(this QueryFactory db, Query query)
+        public static T First<T>(this IQueryFactory db, IQuery query)
         {
             var compiled = db.compile(query.Limit(1));
 
             return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static dynamic First(this QueryFactory db, Query query)
+        public static dynamic First(this IQueryFactory db, IQuery query)
         {
             return First<dynamic>(db, query);
         }
 
-        public static T FirstOrDefault<T>(this QueryFactory db, Query query)
+        public static T FirstOrDefault<T>(this IQueryFactory db, IQuery query)
         {
             var compiled = db.compile(query.Limit(1));
 
             return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static dynamic FirstOrDefault(this QueryFactory db, Query query)
+        public static dynamic FirstOrDefault(this IQueryFactory db, IQuery query)
         {
             return FirstOrDefault<dynamic>(db, query);
         }
 
-        public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
+        public static int Execute(this IQueryFactory db, IQuery query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
             var compiled = db.compile(query);
 
@@ -67,7 +69,7 @@ namespace SqlKata.Execution
             );
         }
 
-        public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
+        public static T ExecuteScalar<T>(this IQueryFactory db, IQuery query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
             var compiled = db.compile(query.Limit(1));
 
@@ -81,8 +83,8 @@ namespace SqlKata.Execution
         }
 
         public static SqlMapper.GridReader GetMultiple<T>(
-            this QueryFactory db,
-            Query[] queries,
+            this IQueryFactory db,
+            IQuery[] queries,
             IDbTransaction transaction = null,
             CommandType? commandType = null
         )
@@ -103,8 +105,8 @@ namespace SqlKata.Execution
         }
 
         public static IEnumerable<IEnumerable<T>> Get<T>(
-            this QueryFactory db,
-            Query[] queries,
+            this IQueryFactory db,
+            IQuery[] queries,
             IDbTransaction transaction = null,
             CommandType? commandType = null
         )
@@ -130,8 +132,8 @@ namespace SqlKata.Execution
 
         #region aggregate
         public static T Aggregate<T>(
-            this QueryFactory db,
-            Query query,
+            this IQueryFactory db,
+            IQuery query,
             string aggregateOperation,
             params string[] columns
         )
@@ -139,27 +141,27 @@ namespace SqlKata.Execution
             return db.ExecuteScalar<T>(query.AsAggregate(aggregateOperation, columns));
         }
 
-        public static T Count<T>(this QueryFactory db, Query query, params string[] columns)
+        public static T Count<T>(this IQueryFactory db, IQuery query, params string[] columns)
         {
             return db.ExecuteScalar<T>(query.AsCount(columns));
         }
 
-        public static T Average<T>(this QueryFactory db, Query query, string column)
+        public static T Average<T>(this IQueryFactory db, IQuery query, string column)
         {
             return db.Aggregate<T>(query, "avg", column);
         }
 
-        public static T Sum<T>(this QueryFactory db, Query query, string column)
+        public static T Sum<T>(this IQueryFactory db, IQuery query, string column)
         {
             return db.Aggregate<T>(query, "sum", column);
         }
 
-        public static T Min<T>(this QueryFactory db, Query query, string column)
+        public static T Min<T>(this IQueryFactory db, IQuery query, string column)
         {
             return db.Aggregate<T>(query, "min", column);
         }
 
-        public static T Max<T>(this QueryFactory db, Query query, string column)
+        public static T Max<T>(this IQueryFactory db, IQuery query, string column)
         {
             return db.Aggregate<T>(query, "max", column);
         }
@@ -167,7 +169,7 @@ namespace SqlKata.Execution
         #endregion
 
         #region pagination
-        public static PaginationResult<T> Paginate<T>(this QueryFactory db, Query query, int page, int perPage = 25)
+        public static PaginationResult<T> Paginate<T>(this IQueryFactory db, IQuery query, int page, int perPage = 25)
         {
 
             if (page < 1)
@@ -195,7 +197,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
+        public static void Chunk<T>(this IQueryFactory db, IQuery query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
             var result = db.Paginate<T>(query, 1, chunkSize);
 
@@ -215,7 +217,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static void Chunk<T>(this QueryFactory db, Query query, int chunkSize, Action<IEnumerable<T>, int> action)
+        public static void Chunk<T>(this IQueryFactory db, IQuery query, int chunkSize, Action<IEnumerable<T>, int> action)
         {
             var result = db.Paginate<T>(query, 1, chunkSize);
 
@@ -231,34 +233,34 @@ namespace SqlKata.Execution
         #endregion
 
         #region free statements
-        public static IEnumerable<T> Select<T>(this QueryFactory db, string sql, object param = null)
+        public static IEnumerable<T> Select<T>(this IQueryFactory db, string sql, object param = null)
         {
             return db.Connection.Query<T>(sql, param);
         }
-        public static IEnumerable<dynamic> Select(this QueryFactory db, string sql, object param = null)
+        public static IEnumerable<dynamic> Select(this IQueryFactory db, string sql, object param = null)
         {
             return db.Select<dynamic>(sql, param);
         }
-        public static int Statement(this QueryFactory db, string sql, object param = null)
+        public static int Statement(this IQueryFactory db, string sql, object param = null)
         {
             return db.Connection.Execute(sql, param);
         }
 
-        public static async Task<IEnumerable<T>> SelectAsync<T>(this QueryFactory db, string sql, object param = null)
+        public static async Task<IEnumerable<T>> SelectAsync<T>(this IQueryFactory db, string sql, object param = null)
         {
             return await db.Connection.QueryAsync<T>(sql, param);
         }
-        public static async Task<IEnumerable<dynamic>> SelectAsync(this QueryFactory db, string sql, object param = null)
+        public static async Task<IEnumerable<dynamic>> SelectAsync(this IQueryFactory db, string sql, object param = null)
         {
             return await db.SelectAsync<dynamic>(sql, param);
         }
-        public static async Task<int> StatementAsync(this QueryFactory db, string sql, object param = null)
+        public static async Task<int> StatementAsync(this IQueryFactory db, string sql, object param = null)
         {
             return await db.Connection.ExecuteAsync(sql, param);
         }
         #endregion
 
-        private static SqlResult compile(this QueryFactory db, Query query)
+        private static SqlResult compile(this IQueryFactory db, IQuery query)
         {
             var compiled = db.Compiler.Compile(query);
 

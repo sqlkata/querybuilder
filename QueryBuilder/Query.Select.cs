@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
     public partial class Query
     {
 
-        public Query Select(params string[] columns)
+        public IQuery Select(params string[] columns)
         {
             Method = "select";
 
@@ -25,7 +26,7 @@ namespace SqlKata
         /// Add a new "raw" select expression to the query.
         /// </summary>
         /// <returns></returns>
-        public Query SelectRaw(string expression, params object[] bindings)
+        public IQuery SelectRaw(string expression, params object[] bindings)
         {
             Method = "select";
 
@@ -38,7 +39,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Select(Query query, string alias)
+        public IQuery Select(IQuery query, string alias)
         {
             Method = "select";
 
@@ -52,7 +53,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query Select(Func<Query, Query> callback, string alias)
+        public IQuery Select(Func<IQuery, IQuery> callback, string alias)
         {
             return Select(callback.Invoke(NewChild()), alias);
         }

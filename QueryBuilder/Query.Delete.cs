@@ -1,8 +1,10 @@
+using SqlKata.Interfaces;
+
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsDelete()
+        public IQuery AsDelete()
         {
             Method = "delete";
             return this;

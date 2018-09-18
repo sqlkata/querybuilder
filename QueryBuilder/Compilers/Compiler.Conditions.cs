@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>
+        protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : IBaseQuery<T>
         {
             var subCtx = CompileSelectQuery(x.Query);
 
@@ -141,7 +141,7 @@ namespace SqlKata.Compilers
                 : sql;
         }
 
-        protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
+        protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : IBaseQuery<Q>
         {
             if (!x.Query.HasComponent("where", EngineCode))
             {

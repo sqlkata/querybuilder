@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using SqlKata;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
     public static class QueryExtensionsAsync
     {
-        public static async Task<IEnumerable<T>> GetAsync<T>(this Query query)
+        public static async Task<IEnumerable<T>> GetAsync<T>(this IQuery query)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(GetAsync));
 
@@ -19,12 +20,12 @@ namespace SqlKata.Execution
             return await xQuery.Connection.QueryAsync<T>(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static async Task<IEnumerable<dynamic>> GetAsync(this Query query)
+        public static async Task<IEnumerable<dynamic>> GetAsync(this IQuery query)
         {
             return await query.GetAsync<dynamic>();
         }
 
-        public static async Task<T> FirstOrDefaultAsync<T>(this Query query)
+        public static async Task<T> FirstOrDefaultAsync<T>(this IQuery query)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstOrDefaultAsync));
@@ -37,12 +38,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task<dynamic> FirstOrDefaultAsync(this Query query)
+        public static async Task<dynamic> FirstOrDefaultAsync(this IQuery query)
         {
             return await FirstOrDefaultAsync<dynamic>(query);
         }
 
-        public static async Task<T> FirstAsync<T>(this Query query)
+        public static async Task<T> FirstAsync<T>(this IQuery query)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(FirstAsync));
@@ -55,12 +56,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task<dynamic> FirstAsync(this Query query)
+        public static async Task<dynamic> FirstAsync(this IQuery query)
         {
             return await FirstAsync<dynamic>(query);
         }
 
-        public static async Task<PaginationResult<T>> PaginateAsync<T>(this Query query, int page, int perPage = 25)
+        public static async Task<PaginationResult<T>> PaginateAsync<T>(this IQuery query, int page, int perPage = 25)
         {
 
             if (page < 1)
@@ -88,12 +89,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, int page, int perPage = 25)
+        public static async Task<PaginationResult<dynamic>> PaginateAsync(this IQuery query, int page, int perPage = 25)
         {
             return await query.PaginateAsync<dynamic>(page, perPage);
         }
 
-        public static async Task ChunkAsync<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
+        public static async Task ChunkAsync<T>(this IQuery query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
             var result = await query.PaginateAsync<T>(1, chunkSize);
 
@@ -113,12 +114,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task ChunkAsync(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
+        public static async Task ChunkAsync(this IQuery query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
         {
             await query.ChunkAsync<dynamic>(chunkSize, func);
         }
 
-        public static async Task ChunkAsync<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action)
+        public static async Task ChunkAsync<T>(this IQuery query, int chunkSize, Action<IEnumerable<T>, int> action)
         {
             var result = await query.PaginateAsync<T>(1, chunkSize);
 
@@ -132,12 +133,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task ChunkAsync(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
+        public static async Task ChunkAsync(this IQuery query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
         {
             await query.ChunkAsync<dynamic>(chunkSize, action);
         }
 
-        public static async Task<int> InsertAsync(this Query query, IReadOnlyDictionary<string, object> values)
+        public static async Task<int> InsertAsync(this IQuery query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
 
@@ -148,7 +149,7 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static async Task<int> InsertAsync(this Query query, object data)
+        public static async Task<int> InsertAsync(this IQuery query, object data)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
 
@@ -159,7 +160,7 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
+        public static async Task<int> InsertAsync(this IQuery query, IEnumerable<string> columns, IQuery fromQuery)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertAsync));
@@ -172,7 +173,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values)
+        public static async Task<int> UpdateAsync(this IQuery query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(UpdateAsync));
 
@@ -183,7 +184,7 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static async Task<int> UpdateAsync(this Query query, object data)
+        public static async Task<int> UpdateAsync(this IQuery query, object data)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(UpdateAsync));
 
@@ -194,7 +195,7 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static async Task<int> DeleteAsync(this Query query)
+        public static async Task<int> DeleteAsync(this IQuery query)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(DeleteAsync));
 

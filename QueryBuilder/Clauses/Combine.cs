@@ -1,4 +1,5 @@
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -15,7 +16,7 @@ namespace SqlKata
         /// <value>
         /// The query that will be combined.
         /// </value>
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
 
         /// <summary>
         /// Gets or sets the combine operation, e.g. "UNION", etc.

@@ -1,5 +1,6 @@
 ﻿using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Interfaces;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -19,7 +20,7 @@ namespace SqlKata.Tests
             fbsql = new FirebirdCompiler();
         }
 
-        private string[] Compile(Query q)
+        private string[] Compile(IQuery q)
         {
             return new[]
             {

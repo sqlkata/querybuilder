@@ -1,10 +1,11 @@
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsAggregate(string type, params string[] columns)
+        public IQuery AsAggregate(string type, params string[] columns)
         {
 
             Method = "aggregate";
@@ -19,7 +20,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsCount(params string[] columns)
+        public IQuery AsCount(params string[] columns)
         {
             var cols = columns.ToList();
 
@@ -31,26 +32,26 @@ namespace SqlKata
             return AsAggregate("count", cols.ToArray());
         }
 
-        public Query AsAvg(string column)
+        public IQuery AsAvg(string column)
         {
             return AsAggregate("avg", column);
         }
-        public Query AsAverage(string column)
+        public IQuery AsAverage(string column)
         {
             return AsAvg(column);
         }
 
-        public Query AsSum(string column)
+        public IQuery AsSum(string column)
         {
             return AsAggregate("sum", column);
         }
 
-        public Query AsMax(string column)
+        public IQuery AsMax(string column)
         {
             return AsAggregate("max", column);
         }
 
-        public Query AsMin(string column)
+        public IQuery AsMin(string column)
         {
             return AsAggregate("min", column);
         }

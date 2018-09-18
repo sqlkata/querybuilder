@@ -5,6 +5,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 using System.Collections;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Tests
 {
@@ -15,7 +16,7 @@ namespace SqlKata.Tests
         private readonly FirebirdCompiler fbsql = new FirebirdCompiler();
         public SqlServerCompiler mssql = new SqlServerCompiler();
 
-        private string[] Compile(Query q)
+        private string[] Compile(IQuery q)
         {
             return new[]
             {

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
     public partial class Query
     {
 
-        public Query AsUpdate(object data)
+        public IQuery AsUpdate(object data)
         {
             var dictionary = new Dictionary<string, object>();
 
@@ -22,7 +23,7 @@ namespace SqlKata
             return AsUpdate(dictionary);
         }
 
-        public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
+        public IQuery AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
 
             if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
@@ -46,7 +47,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsUpdate(IReadOnlyDictionary<string, object> data)
+        public IQuery AsUpdate(IReadOnlyDictionary<string, object> data)
         {
 
             if (data == null || data.Count == 0)

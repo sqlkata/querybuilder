@@ -3,14 +3,16 @@ using System.Data;
 using System.Linq;
 using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Execution.Interfaces;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
-    public class XQuery : Query
+    public class XQuery: Query, IXQuery
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
-        public Action<SqlResult> Logger = result => { };
+        public Action<SqlResult> Logger { get; set; } = result => { };
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
@@ -18,7 +20,7 @@ namespace SqlKata.Execution
             this.Compiler = compiler;
         }
 
-        public override Query Clone()
+        public override IQuery Clone()
         {
 
             var query = new XQuery(this.Connection, this.Compiler);

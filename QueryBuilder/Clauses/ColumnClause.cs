@@ -1,3 +1,5 @@
+using SqlKata.Interfaces;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -42,7 +44,7 @@ namespace SqlKata
         /// <value>
         /// The query for column value calculation.
         /// </value>
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
         public override AbstractClause Clone()
         {
             return new QueryColumn

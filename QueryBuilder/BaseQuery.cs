@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
@@ -9,19 +10,19 @@ namespace SqlKata
         protected AbstractQuery Parent;
     }
 
-    public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
+    public abstract partial class BaseQuery<Q>: AbstractQuery, IBaseQuery<Q> where Q : IBaseQuery<Q>
     {
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
+        public string EngineScope { get; set; } = null;
 
         private bool orFlag = false;
         private bool notFlag = false;
-        public string EngineScope = null;
 
         public Q SetEngineScope(string engine)
         {
             this.EngineScope = engine;
 
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         public BaseQuery()
@@ -49,14 +50,14 @@ namespace SqlKata
             }
 
             this.Parent = parent;
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         public abstract Q NewQuery();
 
         public Q NewChild()
         {
-            var newQuery = NewQuery().SetParent((Q)this);
+            var newQuery = NewQuery().SetParent(this);
             newQuery.EngineScope = this.EngineScope;
             return newQuery;
         }
@@ -79,7 +80,7 @@ namespace SqlKata
             clause.Component = component;
             Clauses.Add(clause);
 
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         /// <summary>
@@ -181,7 +182,7 @@ namespace SqlKata
                 .Where(x => !(x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         /// <summary>
@@ -191,7 +192,7 @@ namespace SqlKata
         protected Q And()
         {
             orFlag = false;
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         /// <summary>
@@ -201,7 +202,7 @@ namespace SqlKata
         public Q Or()
         {
             orFlag = true;
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         /// <summary>
@@ -211,7 +212,7 @@ namespace SqlKata
         public Q Not(bool flag = true)
         {
             notFlag = flag;
-            return (Q)this;
+            return (Q)(IBaseQuery<Q>)this;
         }
 
         /// <summary>
@@ -253,9 +254,9 @@ namespace SqlKata
             });
         }
 
-        public Q From(Query query, string alias = null)
+        public Q From(IQuery query, string alias = null)
         {
-            query.SetParent((Q)this);
+            query.SetParent(this);
 
             if (alias != null)
             {
@@ -277,11 +278,11 @@ namespace SqlKata
             });
         }
 
-        public Q From(Func<Query, Query> callback, string alias = null)
+        public Q From(Func<IQuery, IQuery> callback, string alias = null)
         {
             var query = new Query();
 
-            query.SetParent((Q)this);
+            query.SetParent(this);
 
             return From(callback.Invoke(query), alias);
         }

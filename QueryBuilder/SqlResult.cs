@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Interfaces;
 
 namespace SqlKata
 {
     public class SqlResult
     {
-        public Query Query { get; set; }
+        public IQuery Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
 

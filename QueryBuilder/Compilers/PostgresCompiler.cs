@@ -1,4 +1,5 @@
 using System;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Compilers
 {
@@ -42,7 +43,7 @@ namespace SqlKata.Compilers
     {
         public static string ENGINE_CODE = "postgres";
 
-        public static Query ForPostgres(this Query src, Func<Query, Query> fn)
+        public static IQuery ForPostgres(this IQuery src, Func<IQuery, IQuery> fn)
         {
             return src.For(PostgresCompilerExtensions.ENGINE_CODE, fn);
         }

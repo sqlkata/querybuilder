@@ -2,66 +2,67 @@ using Dapper;
 using System.Collections.Generic;
 using System;
 using SqlKata;
+using SqlKata.Interfaces;
 
 namespace SqlKata.Execution
 {
     public static class QueryExtensions
     {
-        public static IEnumerable<T> Get<T>(this Query query)
+        public static IEnumerable<T> Get<T>(this IQuery query)
         {
             return QueryHelper.CreateQueryFactory(query).Get<T>(query);
         }
 
-        public static IEnumerable<dynamic> Get(this Query query)
+        public static IEnumerable<dynamic> Get(this IQuery query)
         {
             return query.Get<dynamic>();
         }
 
-        public static T FirstOrDefault<T>(this Query query)
+        public static T FirstOrDefault<T>(this IQuery query)
         {
             return QueryHelper.CreateQueryFactory(query).FirstOrDefault<T>(query);
         }
 
-        public static dynamic FirstOrDefault(this Query query)
+        public static dynamic FirstOrDefault(this IQuery query)
         {
             return FirstOrDefault<dynamic>(query);
         }
 
-        public static T First<T>(this Query query)
+        public static T First<T>(this IQuery query)
         {
             return QueryHelper.CreateQueryFactory(query).First<T>(query);
         }
 
-        public static dynamic First(this Query query)
+        public static dynamic First(this IQuery query)
         {
             return First<dynamic>(query);
         }
 
-        public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25)
+        public static PaginationResult<T> Paginate<T>(this IQuery query, int page, int perPage = 25)
         {
             var db = QueryHelper.CreateQueryFactory(query);
 
             return db.Paginate<T>(query, page, perPage);
         }
 
-        public static PaginationResult<dynamic> Paginate(this Query query, int page, int perPage = 25)
+        public static PaginationResult<dynamic> Paginate(this IQuery query, int page, int perPage = 25)
         {
             return query.Paginate<dynamic>(page, perPage);
         }
 
-        public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
+        public static void Chunk<T>(this IQuery query, int chunkSize, Func<IEnumerable<T>, int, bool> func)
         {
             var db = QueryHelper.CreateQueryFactory(query);
 
             db.Chunk<T>(query, chunkSize, func);
         }
 
-        public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
+        public static void Chunk(this IQuery query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func)
         {
             query.Chunk<dynamic>(chunkSize, func);
         }
 
-        public static void Chunk<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action)
+        public static void Chunk<T>(this IQuery query, int chunkSize, Action<IEnumerable<T>, int> action)
         {
             var db = QueryHelper.CreateQueryFactory(query);
 
@@ -69,12 +70,12 @@ namespace SqlKata.Execution
 
         }
 
-        public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
+        public static void Chunk(this IQuery query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
         {
             query.Chunk<dynamic>(chunkSize, action);
         }
 
-        public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
+        public static int Insert(this IQuery query, IReadOnlyDictionary<string, object> values)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
@@ -87,7 +88,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public static int Insert(this IQuery query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
@@ -100,7 +101,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
+        public static int Insert(this IQuery query, IEnumerable<string> columns, IQuery fromQuery)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
@@ -113,7 +114,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static int Insert(this Query query, object data)
+        public static int Insert(this IQuery query, object data)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
@@ -126,7 +127,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
+        public static int Update(this IQuery query, IReadOnlyDictionary<string, object> values)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
 
@@ -137,7 +138,7 @@ namespace SqlKata.Execution
             return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
         }
 
-        public static int Update(this Query query, object data)
+        public static int Update(this IQuery query, object data)
         {
 
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
@@ -150,7 +151,7 @@ namespace SqlKata.Execution
 
         }
 
-        public static int Delete(this Query query)
+        public static int Delete(this IQuery query)
         {
             var xQuery = QueryHelper.CastToXQuery(query, nameof(Delete));
 
