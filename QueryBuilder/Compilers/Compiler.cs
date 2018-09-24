@@ -58,7 +58,7 @@ namespace SqlKata.Compilers
                 var cteFinder = new CteFinder(query, EngineCode);
                 var cteSearchResult = cteFinder.Find();
 
-                var rawSql = new StringBuilder();
+                var rawSql = new StringBuilder("WITH ");
                 var cteBindings = new List<object>();
 
                 foreach (var cte in cteSearchResult)
@@ -67,9 +67,11 @@ namespace SqlKata.Compilers
                 
                     cteBindings.AddRange(cteCtx.Bindings);
                     rawSql.Append(cteCtx.RawSql.Trim());
-                    rawSql.Append('\n');
+                    rawSql.Append(",\n");
                 }
 
+                rawSql.Length -= 2; // remove last comma
+                rawSql.Append('\n');
                 rawSql.Append(ctx.RawSql);
 
                 ctx.Bindings.InsertRange(0, cteBindings);
@@ -305,14 +307,14 @@ namespace SqlKata.Compilers
             if (cte is RawFromClause raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
-                ctx.RawSql = $"WITH {WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)}) ";
+                ctx.RawSql = $"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})";
             }
             else if (cte is QueryFromClause queryFromClause)
             {
                 var subCtx = CompileSelectQuery(queryFromClause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
-                ctx.RawSql = $"WITH {WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql}) ";
+                ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
             }
 
             return ctx;
