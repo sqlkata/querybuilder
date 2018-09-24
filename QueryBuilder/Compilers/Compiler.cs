@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -54,11 +55,26 @@ namespace SqlKata.Compilers
             // handle CTEs
             if (query.HasComponent("cte", EngineCode))
             {
-                var cteCtx = CompileCte(query.GetComponents<AbstractFrom>("cte", EngineCode));
-                ctx.Bindings.InsertRange(0, cteCtx.Bindings);
-                ctx.RawSql = cteCtx.RawSql.Trim() + "\n" + ctx.RawSql;
-            }
+                var cteFinder = new CteFinder(query, EngineCode);
+                var cteSearchResult = cteFinder.Find();
 
+                var rawSql = new StringBuilder();
+                var cteBindings = new List<object>();
+
+                foreach (var cte in cteSearchResult)
+                {
+                    var cteCtx = CompileCte(cte);
+                
+                    cteBindings.AddRange(cteCtx.Bindings);
+                    rawSql.Append(cteCtx.RawSql.Trim());
+                    rawSql.Append('\n');
+                }
+
+                rawSql.Append(ctx.RawSql);
+
+                ctx.Bindings.InsertRange(0, cteBindings);
+                ctx.RawSql = rawSql.ToString();
+            }
 
             return ctx;
         }
@@ -277,35 +293,28 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        public virtual SqlResult CompileCte(List<AbstractFrom> cteClauses)
+        public virtual SqlResult CompileCte(AbstractFrom cte)
         {
+            var ctx = new SqlResult();
 
-            var ctx = new SqlResult { };
-
-            if (!cteClauses.Any())
+            if (null == cte)
             {
                 return ctx;
             }
 
-            var sql = new List<string>();
-
-            foreach (var cte in cteClauses)
+            if (cte is RawFromClause raw)
             {
-                if (cte is RawFromClause raw)
-                {
-                    ctx.Bindings.AddRange(raw.Bindings);
-                    sql.Add($"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})");
-                }
-                else if (cte is QueryFromClause queryFromClause)
-                {
-                    var subCtx = CompileSelectQuery(queryFromClause.Query);
-                    ctx.Bindings.AddRange(subCtx.Bindings);
+                ctx.Bindings.AddRange(raw.Bindings);
+                ctx.RawSql = $"WITH {WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)}) ";
+            }
+            else if (cte is QueryFromClause queryFromClause)
+            {
+                var subCtx = CompileSelectQuery(queryFromClause.Query);
+                ctx.Bindings.AddRange(subCtx.Bindings);
 
-                    sql.Add($"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
-                }
+                ctx.RawSql = $"WITH {WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql}) ";
             }
 
-            ctx.RawSql = "WITH " + string.Join(",\n", sql) + " ";
             return ctx;
         }
 
@@ -697,7 +706,4 @@ namespace SqlKata.Compilers
         }
 
     }
-
-
-
 }
