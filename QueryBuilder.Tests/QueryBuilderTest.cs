@@ -75,6 +75,16 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void ExpandedSelect()
+        {
+            var q = new Query().From("users").Select("users.{id,name, age}");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [users].[id], [users].[name], [users].[age] FROM [users]", c[0]);
+            Assert.Equal("SELECT `users`.`id`, `users`.`name`, `users`.`age` FROM `users`", c[1]);
+        }
+
+        [Fact]
         public void Limit()
         {
             var q = new Query().From("users").Select("id", "name").Limit(10);

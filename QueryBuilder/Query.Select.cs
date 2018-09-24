@@ -10,6 +10,12 @@ namespace SqlKata
         {
             Method = "select";
 
+            columns = columns
+                .Select(x => Helper.ExpandExpression(x))
+                .SelectMany(x => x)
+                .ToArray();
+
+
             foreach (var column in columns)
             {
                 AddComponent("select", new Column
