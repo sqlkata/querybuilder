@@ -182,7 +182,15 @@ namespace SqlKata.Execution
 
             var count = query.Clone().Count<long>();
 
-            var list = query.Clone().ForPage(page, perPage).Get<T>();
+            IEnumerable<T> list;
+            if (count > 0)
+            {
+                list = query.Clone().ForPage(page, perPage).Get<T>();
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
 
             return new PaginationResult<T>
             {
