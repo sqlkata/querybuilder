@@ -13,7 +13,7 @@ namespace SqlKata.Compilers
             EngineCode = "sqlsrv";
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
-            LastId = "SELECT @@IDENTITY as Id";
+            LastId = "SELECT scope_identity() as Id";
         }
 
         protected override SqlResult CompileSelectQuery(Query query)
