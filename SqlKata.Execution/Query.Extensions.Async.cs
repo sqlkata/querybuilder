@@ -1,8 +1,9 @@
 using Dapper;
-using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
 using SqlKata;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SqlKata.Execution
 {
@@ -75,7 +76,15 @@ namespace SqlKata.Execution
 
             var count = await query.Clone().CountAsync<long>();
 
-            var list = await query.Clone().ForPage(page, perPage).GetAsync<T>();
+            IEnumerable<T> list;
+            if (count > 0)
+            {
+                list = await query.Clone().ForPage(page, perPage).GetAsync<T>();
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
 
             return new PaginationResult<T>
             {

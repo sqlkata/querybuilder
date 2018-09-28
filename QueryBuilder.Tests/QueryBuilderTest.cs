@@ -172,6 +172,104 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[0]);
         }
 
+        // test for issue #50
+        [Fact]
+        public void CascadedCteAndBindings()
+        {
+            var cte1 = new Query("Table1");
+            cte1.Select("Column1", "Column2");
+            cte1.Where("Column2", 1);
+
+            var cte2 = new Query("Table2");
+            cte2.With("cte1", cte1);
+            cte2.Select("Column3", "Column4");
+            cte2.Join("cte1", join => join.On("Column1", "Column3"));
+            cte2.Where("Column4", 2);
+
+            var mainQuery = new Query("Table3");
+            mainQuery.With("cte2", cte2);
+            mainQuery.Select("*");
+            mainQuery.From("cte2");
+            mainQuery.Where("Column3", 5);
+
+            var sql = Compile(mainQuery);
+            
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5", sql[0]);
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5", sql[1]);
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", sql[2]);
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", sql[3]);    
+        }
+
+        // test for issue #50
+        [Fact]
+        public void CascadedAndMultiReferencedCteAndBindings()
+        {
+            var cte1 = new Query("Table1");
+            cte1.Select("Column1", "Column2");
+            cte1.Where("Column2", 1);
+
+            var cte2 = new Query("Table2");
+            cte2.With("cte1", cte1);
+            cte2.Select("Column3", "Column4");
+            cte2.Join("cte1", join => join.On("Column1", "Column3"));
+            cte2.Where("Column4", 2);
+
+            var cte3 = new Query("Table3");
+            cte3.With("cte1", cte1);
+            cte3.Select("Column3_3", "Column3_4");
+            cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
+            cte3.Where("Column3_4", 33);
+            
+            var mainQuery = new Query("Table3");
+            mainQuery.With("cte2", cte2);
+            mainQuery.With("cte3", cte3);
+            mainQuery.Select("*");
+            mainQuery.From("cte2");
+            mainQuery.Where("Column3", 5);
+
+            var sql = Compile(mainQuery);
+            
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5", sql[0]);
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5", sql[1]);
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", sql[2]);
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", sql[3]);
+        }
+        
+        // test for issue #50
+        [Fact]
+        public void MultipleCtesAndBindings()
+        {
+            var cte1 = new Query("Table1");
+            cte1.Select("Column1", "Column2");
+            cte1.Where("Column2", 1);
+
+            var cte2 = new Query("Table2");
+            cte2.Select("Column3", "Column4");
+            cte2.Join("cte1", join => join.On("Column1", "Column3"));
+            cte2.Where("Column4", 2);
+
+            var cte3 = new Query("Table3");
+            cte3.Select("Column3_3", "Column3_4");
+            cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
+            cte3.Where("Column3_4", 33);
+            
+            var mainQuery = new Query("Table3");
+            mainQuery.With("cte1", cte1);
+            mainQuery.With("cte2", cte2);
+            mainQuery.With("cte3", cte3);
+            mainQuery.Select("*");
+            mainQuery.From("cte3");
+            mainQuery.Where("Column3_4", 5);
+
+            var sql = Compile(mainQuery);
+
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5", sql[0]);
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte3` WHERE `Column3_4` = 5", sql[1]);
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5", sql[2]);
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5", sql[3]);
+        }
+        
+        
         [Fact]
         public void CteAndBindings()
         {
