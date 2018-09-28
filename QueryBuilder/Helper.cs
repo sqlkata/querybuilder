@@ -66,7 +66,7 @@ namespace SqlKata
 
         public static List<string> ExpandExpression(string expression)
         {
-            var regex = @"\w+\.{(.*)}";
+            var regex = @"^(?:\w+\.){1,2}{(.*)}";
             var match = Regex.Match(expression, regex);
 
             if (!match.Success)
@@ -75,7 +75,7 @@ namespace SqlKata
                 return new List<string> { expression };
             }
 
-            var table = expression.Substring(0, expression.IndexOf("."));
+            var table = expression.Substring(0, expression.IndexOf(".{"));
 
             var captures = match.Groups[1].Value;
 
