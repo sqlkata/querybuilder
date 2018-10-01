@@ -130,7 +130,7 @@ namespace SqlKata.Execution
         public static T InsertGetId<T>(this Query query, object data)
         {
 
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertGetId));
 
             var compiled = xQuery.Compiler.Compile(query.AsInsert(data, true));
 
