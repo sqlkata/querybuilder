@@ -168,6 +168,23 @@ namespace SqlKata.Execution
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
         }
 
+        public static async Task<T> InsertGetIdAsync<T>(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertGetIdAsync));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(data, true));
+
+            xQuery.Logger(compiled);
+
+            var row = await xQuery.Connection.QueryFirstAsync<InsertGetIdRow<T>>(
+                compiled.Sql, compiled.NamedBindings
+            );
+
+            return row.Id;
+
+        }
+
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
 
