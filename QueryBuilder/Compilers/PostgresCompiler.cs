@@ -9,6 +9,7 @@ namespace SqlKata.Compilers
             new SqlResultBinder()
             )
         {
+            LastId = "SELECT lastval()";
         }
 
         public override string EngineCode { get; } = "postgres";

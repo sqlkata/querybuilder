@@ -100,6 +100,7 @@ namespace SqlKata.Execution
 
         }
 
+
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
 
@@ -123,6 +124,23 @@ namespace SqlKata.Execution
             xQuery.Logger(compiled);
 
             return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+
+        }
+
+        public static T InsertGetId<T>(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertGetId));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(data, true));
+
+            xQuery.Logger(compiled);
+
+            var row = xQuery.Connection.QueryFirst<InsertGetIdRow<T>>(
+                compiled.Sql, compiled.NamedBindings
+            );
+
+            return row.Id;
 
         }
 

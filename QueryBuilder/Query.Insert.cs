@@ -7,7 +7,7 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsInsert(object data)
+        public Query AsInsert(object data, bool returnId = false)
         {
             var dictionary = new Dictionary<string, object>();
 
@@ -18,7 +18,7 @@ namespace SqlKata
                 dictionary.Add(item.Name, item.GetValue(data));
             }
 
-            return AsInsert(dictionary);
+            return AsInsert(dictionary, returnId);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
@@ -47,7 +47,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IReadOnlyDictionary<string, object> data)
+        public Query AsInsert(IReadOnlyDictionary<string, object> data, bool returnId = false)
         {
             if (data == null || data.Count == 0)
             {
@@ -59,7 +59,8 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.ToList()
+                Values = data.Values.ToList(),
+                ReturnId = returnId,
             });
 
             return this;
@@ -71,7 +72,7 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="valuesCollection"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, bool returnId = false)
         {
             var columnsList = columns?.ToList();
             var valuesCollectionList = valuesCollection?.ToList();
@@ -96,7 +97,8 @@ namespace SqlKata
                 AddComponent("insert", new InsertClause
                 {
                     Columns = columnsList,
-                    Values = valuesList
+                    Values = valuesList,
+                    ReturnId = returnId,
                 });
             }
 

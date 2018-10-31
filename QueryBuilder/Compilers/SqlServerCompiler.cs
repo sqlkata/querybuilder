@@ -8,9 +8,11 @@ namespace SqlKata.Compilers
         public SqlServerCompiler() : base(
             new SqlResultBinder()
             )
+
         {
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
+            LastId = "SELECT scope_identity() as Id";
         }
 
         public override string EngineCode { get; } = "sqlsrv";

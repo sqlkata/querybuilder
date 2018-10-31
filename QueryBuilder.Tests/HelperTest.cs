@@ -65,7 +65,7 @@ namespace SqlKata.Tests
             var result = Helper.AllIndexesOf(input, "l");
 
             // Then
-            Assert.Equal(new[] {2, 3}, result);
+            Assert.Equal(new[] { 2, 3 }, result);
         }
 
         [Theory]
@@ -121,7 +121,7 @@ namespace SqlKata.Tests
             var flatten = Helper.Flatten(objects);
 
             // Then
-            Assert.Equal(new object[] {1, 0.1, 'A', 'A', "B", "C", 'D'}, flatten);
+            Assert.Equal(new object[] { 1, 0.1, 'A', 'A', "B", "C", 'D' }, flatten);
         }
 
         [Fact]
@@ -154,13 +154,24 @@ namespace SqlKata.Tests
         public void IsArray_ReturnTrue_IfValueIsExactlyIEnuerable()
         {
             // Given
-            var value = new object[] {1, 'B', "C"};
+            var value = new object[] { 1, 'B', "C" };
 
             // When
             var isArray = Helper.IsArray(value);
 
             // Then
             Assert.True(isArray);
+        }
+
+        [Theory]
+        [InlineData("Users.Id", "Users.Id")]
+        [InlineData("Users.{Id", "Users.{Id")]
+        [InlineData("Users.{Id}", "Users.Id")]
+        [InlineData("Users.{Id,Name}", "Users.Id, Users.Name")]
+        [InlineData("Users.{Id,Name, Last_Name }", "Users.Id, Users.Name, Users.Last_Name")]
+        public void ExpandExpression(string input, string expected)
+        {
+            Assert.Equal(expected, string.Join(", ", Helper.ExpandExpression(input)));
         }
     }
 }
