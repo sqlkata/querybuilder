@@ -71,7 +71,7 @@ namespace SqlKata
         [Obsolete("Please use Compiler.Compile(IEnumerable<Query>)")]
         public static SqlResult operator +(SqlResult a, SqlResult b)
         {
-            var sql = a.RawSql + ";\n" + b.RawSql;
+            var sql = a.RawSql + ";" + b.RawSql;
 
             var bindings = a.Bindings.Concat(b.Bindings).ToList();
 
