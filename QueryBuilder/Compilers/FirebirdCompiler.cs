@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
-        public FirebirdCompiler() : base()
+        public FirebirdCompiler() : base(
+            new SqlResultBinder()
+            )
         {
-            EngineCode = "firebird";
         }
+
+        public override string EngineCode { get; } = "firebird";
 
         protected override SqlResult CompileInsertQuery(Query query)
         {

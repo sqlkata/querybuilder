@@ -87,10 +87,7 @@ namespace SqlKata.Execution
             CommandType? commandType = null
         )
         {
-
-            var compiled = queries
-                .Select(q => db.compile(q))
-                .Aggregate((a, b) => a + b);
+            var compiled = db.Compiler.Compile(queries);
 
             return db.Connection.QueryMultiple(
                 compiled.Sql,

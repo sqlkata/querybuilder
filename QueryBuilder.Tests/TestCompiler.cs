@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using SqlKata.Compilers;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Tests
 {
@@ -9,6 +10,12 @@ namespace SqlKata.Tests
     /// </summary>
     class TestCompiler : Compiler
     {
+        public TestCompiler() : base(new SqlResultBinder())
+        {
+        }
+
+        public override string EngineCode { get; } = "test";
+        
         public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
         {
             return FindCompilerMethodInfo(clauseType, methodName);

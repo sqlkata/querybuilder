@@ -1,15 +1,19 @@
 using System;
+using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
-        public MySqlCompiler() : base()
+        public MySqlCompiler() : base(
+            new SqlResultBinder()
+            )
         {
-            EngineCode = "mysql";
             OpeningIdentifier = ClosingIdentifier = "`";
             LastId = "SELECT last_insert_id as Id";
         }
+
+        public override string EngineCode { get; } = "mysql";
 
         public override string CompileLimit(SqlResult ctx)
         {
