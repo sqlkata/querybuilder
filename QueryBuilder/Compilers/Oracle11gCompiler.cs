@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using SqlKata.Compilers.Bindings;
 
 // ReSharper disable InconsistentNaming
 
@@ -7,13 +8,16 @@ namespace SqlKata.Compilers
 {
     public sealed class Oracle11gCompiler : Compiler
     {
-        public Oracle11gCompiler()
+        public Oracle11gCompiler() : base(
+            new OracleResultBinder()
+            )
         {
-            EngineCode = Oracle11gCompilerExtensions.ENGINE_CODE;
             ColumnAsKeyword = "";
             TableAsKeyword = "";
         }
-        
+
+        public override string EngineCode { get; } = Oracle11gCompilerExtensions.ENGINE_CODE;
+
         protected override SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult
