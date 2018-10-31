@@ -1,8 +1,9 @@
 using Dapper;
-using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
 using SqlKata;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SqlKata.Execution
 {
@@ -75,7 +76,15 @@ namespace SqlKata.Execution
 
             var count = await query.Clone().CountAsync<long>();
 
-            var list = await query.Clone().ForPage(page, perPage).GetAsync<T>();
+            IEnumerable<T> list;
+            if (count > 0)
+            {
+                list = await query.Clone().ForPage(page, perPage).GetAsync<T>();
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
 
             return new PaginationResult<T>
             {
@@ -157,6 +166,23 @@ namespace SqlKata.Execution
             xQuery.Logger(compiled);
 
             return await xQuery.Connection.ExecuteAsync(compiled.Sql, compiled.NamedBindings);
+        }
+
+        public static async Task<T> InsertGetIdAsync<T>(this Query query, object data)
+        {
+
+            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertGetIdAsync));
+
+            var compiled = xQuery.Compiler.Compile(query.AsInsert(data, true));
+
+            xQuery.Logger(compiled);
+
+            var row = await xQuery.Connection.QueryFirstAsync<InsertGetIdRow<T>>(
+                compiled.Sql, compiled.NamedBindings
+            );
+
+            return row.Id;
+
         }
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery)
