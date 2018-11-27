@@ -12,6 +12,7 @@ namespace SqlKata.Tests
         private readonly Compiler pgsql;
         private readonly MySqlCompiler mysql;
         private readonly FirebirdCompiler fbsql;
+        private readonly Oracle11gCompiler oracle;
         public SqlServerCompiler mssql { get; private set; }
 
         private string[] Compile(Query q)
@@ -22,6 +23,7 @@ namespace SqlKata.Tests
                 mysql.Compile(q.Clone()).ToString(),
                 pgsql.Compile(q.Clone()).ToString(),
                 fbsql.Compile(q.Clone()).ToString(),
+                oracle.Compile(q.Clone()).ToString(),
             };
         }
 
@@ -31,6 +33,7 @@ namespace SqlKata.Tests
             mysql = new MySqlCompiler();
             pgsql = new PostgresCompiler();
             fbsql = new FirebirdCompiler();
+            oracle = new Oracle11gCompiler();
         }
 
         [Fact]
@@ -43,6 +46,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT `id`, `name` FROM `users`", c[1]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[2]);
             Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\"", c[3]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[4]);
         }
 
         [Fact]
@@ -193,11 +197,11 @@ namespace SqlKata.Tests
             mainQuery.Where("Column3", 5);
 
             var sql = Compile(mainQuery);
-            
+
             Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5", sql[0]);
             Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5", sql[1]);
             Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", sql[2]);
-            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", sql[3]);    
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", sql[3]);
         }
 
         // test for issue #50
@@ -219,7 +223,7 @@ namespace SqlKata.Tests
             cte3.Select("Column3_3", "Column3_4");
             cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
             cte3.Where("Column3_4", 33);
-            
+
             var mainQuery = new Query("Table3");
             mainQuery.With("cte2", cte2);
             mainQuery.With("cte3", cte3);
@@ -228,13 +232,13 @@ namespace SqlKata.Tests
             mainQuery.Where("Column3", 5);
 
             var sql = Compile(mainQuery);
-            
+
             Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5", sql[0]);
             Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5", sql[1]);
             Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", sql[2]);
             Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", sql[3]);
         }
-        
+
         // test for issue #50
         [Fact]
         public void MultipleCtesAndBindings()
@@ -252,7 +256,7 @@ namespace SqlKata.Tests
             cte3.Select("Column3_3", "Column3_4");
             cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
             cte3.Where("Column3_4", 33);
-            
+
             var mainQuery = new Query("Table3");
             mainQuery.With("cte1", cte1);
             mainQuery.With("cte2", cte2);
@@ -268,8 +272,8 @@ namespace SqlKata.Tests
             Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5", sql[2]);
             Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5", sql[3]);
         }
-        
-        
+
+
         [Fact]
         public void CteAndBindings()
         {
@@ -448,7 +452,7 @@ namespace SqlKata.Tests
             var query = new Query("expensive_cars")
                 .With("old_cards", new Query("all_cars").Where("year", "<", 2000))
                 .AsInsert(
-                    new[] {"name", "model", "year"},
+                    new[] { "name", "model", "year" },
                     new Query("old_cars").Where("price", ">", 100).ForPage(2, 10)
                 );
 
@@ -472,7 +476,7 @@ namespace SqlKata.Tests
         {
             var query = new Query("expensive_cars")
                 .AsInsert(
-                    new[] {"name", "brand", "year"},
+                    new[] { "name", "brand", "year" },
                     new[]
                     {
                         new object[] {"Chiron", "Bugatti", null},
@@ -497,8 +501,8 @@ namespace SqlKata.Tests
         public void InsertWithNullValues()
         {
             var query = new Query("Books").AsInsert(
-                new[] {"Id", "Author", "ISBN", "Date"},
-                new object[] {1, "Author 1", "123456", null}
+                new[] { "Id", "Author", "ISBN", "Date" },
+                new object[] { 1, "Author 1", "123456", null }
             );
 
             var c = Compile(query);
@@ -516,8 +520,8 @@ namespace SqlKata.Tests
         public void InsertWithEmptyString()
         {
             var query = new Query("Books").AsInsert(
-                new[] {"Id", "Author", "ISBN", "Description"},
-                new object[] {1, "Author 1", "123456", ""}
+                new[] { "Id", "Author", "ISBN", "Description" },
+                new object[] { 1, "Author 1", "123456", "" }
             );
 
             var c = Compile(query);
@@ -536,8 +540,8 @@ namespace SqlKata.Tests
         public void UpdateWithNullValues()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
-                new[] {"Author", "Date", "Version"},
-                new object[] {"Author 1", null, null}
+                new[] { "Author", "Date", "Version" },
+                new object[] { "Author 1", null, null }
             );
 
             var c = Compile(query);
@@ -555,8 +559,8 @@ namespace SqlKata.Tests
         public void UpdateWithEmptyString()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
-                new[] {"Author", "Description"},
-                new object[] {"Author 1", ""}
+                new[] { "Author", "Description" },
+                new object[] { "Author 1", "" }
             );
 
             var c = Compile(query);
