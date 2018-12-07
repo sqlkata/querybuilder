@@ -173,16 +173,18 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileInCondition<T>(SqlResult ctx, InCondition<T> item)
         {
+            var column = Wrap(item.Column);
+
             if (!item.Values.Any())
             {
-                return item.IsNot ? "1 = 1" : "1 = 0";
+                return item.IsNot ? $"1 = 1 /* WhereNotIn({column}, [empty list]) */" : "1 = 0 /* WhereIn({column}, [empty list]) */";
             }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 
             var values = Parameterize(ctx, item.Values);
 
-            return Wrap(item.Column) + $" {inOperator} ({values})";
+            return column + $" {inOperator} ({values})";
         }
 
         protected virtual string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
@@ -207,6 +209,7 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(item.Column);
             var value = item.Value ? CompileTrue() : CompileFalse();
+
             var op = item.IsNot ? "!=" : "=";
 
             return $"{column} {op} {value}";
