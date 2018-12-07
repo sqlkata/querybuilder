@@ -202,6 +202,8 @@ namespace SqlKata
             {
                 Column = column,
                 Value = true,
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 
@@ -216,6 +218,8 @@ namespace SqlKata
             {
                 Column = column,
                 Value = false,
+                IsOr = GetOr(),
+                IsNot = GetNot(),
             });
         }
 

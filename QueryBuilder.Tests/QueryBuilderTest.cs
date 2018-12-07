@@ -936,5 +936,44 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = false", c[2]);
             Assert.Equal("SELECT * FROM \"TABLE\" WHERE \"ISACTIVE\" = 0", c[3]);
         }
+
+        [Fact]
+        public void OrWhereFalse()
+        {
+            var query = new Query("Table").Where("MyCol", "abc").OrWhereFalse("IsActive");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(0 as bit)", c[0]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = false", c[2]);
+
+        }
+
+        [Fact]
+        public void OrWhereTrue()
+        {
+            var query = new Query("Table").Where("MyCol", "abc").OrWhereTrue("IsActive");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(1 as bit)", c[0]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = true", c[2]);
+
+        }
+
+        [Fact]
+        public void OrWhereNull()
+        {
+            var query = new Query("Table").Where("MyCol", "abc").OrWhereNull("IsActive");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] IS NULL", c[0]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" IS NULL", c[2]);
+
+        }
     }
 }
