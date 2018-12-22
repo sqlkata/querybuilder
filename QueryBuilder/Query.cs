@@ -53,7 +53,6 @@ namespace SqlKata
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
-            clone.allowedOperators = allowedOperators;
             return clone;
         }
 

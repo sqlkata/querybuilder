@@ -17,50 +17,6 @@ namespace SqlKata
         private bool notFlag = false;
         public string EngineScope = null;
 
-        /// <summary>
-        /// A list of white-listed operators
-        /// </summary>
-        /// <value></value>
-        protected HashSet<string> allowedOperators = new HashSet<string>
-        {
-            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-            "like", "not like",
-            "ilike", "not ilike",
-            "like binary", "not like binary",
-            "rlike", "not rlike",
-            "regexp", "not regexp",
-            "similar to", "not similar to"
-        };
-
-        public Q WhitelistOperator(string op)
-        {
-            this.allowedOperators.Add(op);
-            return (Q)this;
-        }
-
-        public Q BlacklistOperator(string op)
-        {
-            this.allowedOperators.Remove(op);
-            return (Q)this;
-        }
-        public Q WhitelistOperator(IEnumerable<string> operators)
-        {
-            foreach (var op in operators)
-            {
-                WhitelistOperator(op);
-            }
-            return (Q)this;
-        }
-
-        public Q BlacklistOperator(IEnumerable<string> operators)
-        {
-            foreach (var op in operators)
-            {
-                BlacklistOperator(op);
-            }
-            return (Q)this;
-        }
-
         public Q SetEngineScope(string engine)
         {
             this.EngineScope = engine;
@@ -102,7 +58,6 @@ namespace SqlKata
         {
             var newQuery = NewQuery().SetParent((Q)this);
             newQuery.EngineScope = this.EngineScope;
-            newQuery.allowedOperators = allowedOperators;
             return newQuery;
         }
 
@@ -302,7 +257,6 @@ namespace SqlKata
         {
             query = query.Clone();
             query.SetParent((Q)this);
-            query.allowedOperators = allowedOperators;
 
             if (alias != null)
             {
@@ -331,15 +285,6 @@ namespace SqlKata
             query.SetParent((Q)this);
 
             return From(callback.Invoke(query), alias);
-        }
-
-        protected string checkOperator(string op)
-        {
-            if (!allowedOperators.Contains(op.ToLower()))
-            {
-                throw new InvalidOperationException($"The operator '{op}' cannot be used. Please consider white listing it before using it.");
-            }
-            return op;
         }
 
     }

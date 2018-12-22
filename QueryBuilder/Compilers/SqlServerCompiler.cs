@@ -7,7 +7,7 @@ namespace SqlKata.Compilers
     {
         public SqlServerCompiler() : base(
             new SqlResultBinder()
-            )
+        )
 
         {
             OpeningIdentifier = "[";

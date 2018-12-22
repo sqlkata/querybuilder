@@ -21,7 +21,7 @@ namespace SqlKata
             return AddComponent("having", new BasicCondition
             {
                 Column = column,
-                Operator = checkOperator(op),
+                Operator = op,
                 Value = value,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -154,7 +154,7 @@ namespace SqlKata
             {
                 First = first,
                 Second = second,
-                Operator = checkOperator(op),
+                Operator = op,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
@@ -464,7 +464,7 @@ namespace SqlKata
             return AddComponent("having", new QueryCondition<Query>
             {
                 Column = column,
-                Operator = checkOperator(op),
+                Operator = op,
                 Query = query,
                 IsNot = GetNot(),
                 IsOr = GetOr(),
@@ -537,7 +537,7 @@ namespace SqlKata
         {
             return AddComponent("having", new BasicDateCondition
             {
-                Operator = checkOperator(op),
+                Operator = op,
                 Column = column,
                 Value = value,
                 Part = part,
