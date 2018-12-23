@@ -1,13 +1,10 @@
 using System;
-using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
-        public MySqlCompiler() : base(
-            new SqlResultBinder()
-            )
+        public MySqlCompiler()
         {
             OpeningIdentifier = ClosingIdentifier = "`";
             LastId = "SELECT last_insert_id() as Id";

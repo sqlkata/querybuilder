@@ -1,13 +1,10 @@
 using System;
-using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
-        public SqlServerCompiler() : base(
-            new SqlResultBinder()
-        )
+        public SqlServerCompiler()
 
         {
             OpeningIdentifier = "[";
@@ -41,7 +38,7 @@ namespace SqlKata.Compilers
                 query.Select("*");
             }
             var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings);
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
             query.ClearComponent("order");
 

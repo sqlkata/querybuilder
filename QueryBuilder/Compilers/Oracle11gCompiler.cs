@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using SqlKata.Compilers.Bindings;
 
 // ReSharper disable InconsistentNaming
 
@@ -8,12 +7,11 @@ namespace SqlKata.Compilers
 {
     public sealed class Oracle11gCompiler : Compiler
     {
-        public Oracle11gCompiler() : base(
-            new OracleResultBinder()
-            )
+        public Oracle11gCompiler()
         {
             ColumnAsKeyword = "";
             TableAsKeyword = "";
+            parameterPlaceholderPrefix = ":p";
         }
 
         public override string EngineCode { get; } = Oracle11gCompilerExtensions.ENGINE_CODE;
@@ -24,7 +22,7 @@ namespace SqlKata.Compilers
             {
                 Query = query.Clone(),
             };
-            
+
             var results = new[] {
                     CompileColumns(ctx),
                     CompileFrom(ctx),
@@ -52,7 +50,7 @@ namespace SqlKata.Compilers
         {
             throw new NotSupportedException();
         }
-        
+
         internal void ApplyLimit(SqlResult ctx)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
@@ -62,17 +60,18 @@ namespace SqlKata.Compilers
             {
                 return;
             }
-            
+
             //@todo replace with alias generator
             var alias1 = WrapValue("SqlKata_A__");
-            var alias2 = WrapValue("SqlKata_B__"); 
+            var alias2 = WrapValue("SqlKata_B__");
 
             string newSql;
             if (limit == 0)
             {
                 newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > ?";
                 ctx.Bindings.Add(offset);
-            } else if (offset == 0)
+            }
+            else if (offset == 0)
             {
                 newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
                 ctx.Bindings.Add(limit);
@@ -80,7 +79,7 @@ namespace SqlKata.Compilers
             else
             {
                 newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= ?) WHERE {alias2} > ?";
-                ctx.Bindings.Add(limit +  offset);
+                ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
 

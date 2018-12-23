@@ -1,13 +1,10 @@
 using System;
-using SqlKata.Compilers.Bindings;
 
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
-        public PostgresCompiler() : base(
-            new SqlResultBinder()
-            )
+        public PostgresCompiler()
         {
             LastId = "SELECT lastval()";
         }

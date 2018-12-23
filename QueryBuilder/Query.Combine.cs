@@ -31,7 +31,7 @@ namespace SqlKata
             return AddComponent("combine", new RawCombine
             {
                 Expression = sql,
-                Bindings = Helper.Flatten(bindings).ToArray(),
+                Bindings = bindings,
             });
         }
 
