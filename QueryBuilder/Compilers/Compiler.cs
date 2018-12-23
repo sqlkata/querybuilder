@@ -16,13 +16,33 @@ namespace SqlKata.Compilers
             _sqlResultBinder = sqlResultBinder;
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
-        
+
         public abstract string EngineCode { get; }
         protected string OpeningIdentifier = "\"";
         protected string ClosingIdentifier = "\"";
         protected string ColumnAsKeyword = "AS ";
         protected string TableAsKeyword = "AS ";
         protected string LastId = "";
+
+        /// <summary>
+        /// A list of white-listed operators
+        /// </summary>
+        /// <value></value>
+        protected readonly HashSet<string> operators = new HashSet<string>
+        {
+            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+            "like", "not like",
+            "ilike", "not ilike",
+            "like binary", "not like binary",
+            "rlike", "not rlike",
+            "regexp", "not regexp",
+            "similar to", "not similar to"
+        };
+
+        protected HashSet<string> userOperators = new HashSet<string>
+        {
+
+        };
 
         protected virtual SqlResult CompileRaw(Query query)
         {
@@ -64,7 +84,7 @@ namespace SqlKata.Compilers
                 foreach (var cte in cteSearchResult)
                 {
                     var cteCtx = CompileCte(cte);
-                
+
                     cteBindings.AddRange(cteCtx.Bindings);
                     rawSql.Append(cteCtx.RawSql.Trim());
                     rawSql.Append(",\n");
@@ -79,7 +99,17 @@ namespace SqlKata.Compilers
             }
             return ctx;
         }
-        
+
+        public Compiler Whitelist(params string[] operators)
+        {
+            foreach (var op in operators)
+            {
+                this.userOperators.Add(op);
+            }
+
+            return this;
+        }
+
         public virtual SqlResult Compile(Query query)
         {
             var ctx = CompileRaw(query);
@@ -92,24 +122,24 @@ namespace SqlKata.Compilers
             var compiled = queries.Select(CompileRaw).ToArray();
             var bindings = compiled.Select(r => r.Bindings).ToArray();
             var totalBindingsCount = bindings.Select(b => b.Count).Aggregate((a, b) => a + b);
-            
+
             var combinedBindings = new List<object>(totalBindingsCount);
             foreach (var cb in bindings)
             {
                 combinedBindings.AddRange(cb);
             }
-            
+
             var ctx = new SqlResult
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings
             };
-            
+
             _sqlResultBinder.BindNamedParameters(ctx);
 
             return ctx;
         }
-        
+
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult
@@ -651,6 +681,20 @@ namespace SqlKata.Compilers
         private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException($"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
+        }
+
+        protected string checkOperator(string op)
+        {
+            op = op.ToLower();
+
+            var valid = operators.Contains(op) || userOperators.Contains(op);
+
+            if (!valid)
+            {
+                throw new InvalidOperationException($"The operator '{op}' cannot be used. Please consider white listing it before using it.");
+            }
+
+            return op;
         }
 
         /// <summary>

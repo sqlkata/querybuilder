@@ -255,6 +255,7 @@ namespace SqlKata
 
         public Q From(Query query, string alias = null)
         {
+            query = query.Clone();
             query.SetParent((Q)this);
 
             if (alias != null)

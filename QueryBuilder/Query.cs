@@ -10,15 +10,6 @@ namespace SqlKata
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
 
-        protected List<string> operators = new List<string> {
-            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-            "like", "like binary", "not like", "ilike",
-            "&", "|", "^", "<<", ">>",
-            "rlike", "regexp", "not regexp",
-            "~", "~*", "!~", "!~*", "similar to",
-            "not similar to", "not ilike", "~~*", "!~~*",
-        };
-
         public Query() : base()
         {
         }
