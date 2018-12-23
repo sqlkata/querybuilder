@@ -98,8 +98,6 @@ namespace SqlKata.Tests
 
             var query = new Query("Table");
 
-            // query.WhitelistOperator(op);
-
             compiler.Compile(query.Clone().Where("Id", op, 1));
             compiler.Compile(query.Clone().OrWhere("Id", op, 1));
             compiler.Compile(query.Clone().WhereNot("Id", op, 1));
@@ -118,7 +116,7 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void ShouldCopyTheOperatorsToNestedWhere()
+        public void ShouldAllowWhiteListedOperatorsInNestedWhere()
         {
             var compiler = new SqlServerCompiler().Whitelist("!!");
 
@@ -126,6 +124,16 @@ namespace SqlKata.Tests
                 .Where(q => q.Where("A", "!!", "value"));
 
             compiler.Compile(query);
+        }
+
+        [Fact]
+        public void ShouldNotConsiderWhereRawCondition()
+        {
+            var compiler = new SqlServerCompiler();
+
+            var query = new Query("Table")
+                .WhereRaw("Col !! value");
+
         }
 
     }
