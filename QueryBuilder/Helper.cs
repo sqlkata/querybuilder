@@ -19,9 +19,33 @@ namespace SqlKata
             return value is IEnumerable;
         }
 
+        /// <summary>
+        /// Flat IEnumerable one level down
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
         public static IEnumerable<object> Flatten(IEnumerable<object> array)
         {
-            return array.SelectMany(o => IsArray(o) ? Flatten(o as IEnumerable<object>) : new[] { o });
+            foreach (var item in array)
+            {
+                if (IsArray(item))
+                {
+                    foreach (var sub in (item as IEnumerable))
+                    {
+                        yield return sub;
+                    }
+                }
+                else
+                {
+                    yield return item;
+                }
+
+            }
+        }
+
+        public static IEnumerable<object> FlattenDeep(IEnumerable<object> array)
+        {
+            return array.SelectMany(o => IsArray(o) ? FlattenDeep(o as IEnumerable<object>) : new[] { o });
         }
 
         public static IEnumerable<int> AllIndexesOf(string str, string value)
@@ -64,6 +88,46 @@ namespace SqlKata
                 .Aggregate(splitted.First(), (left, right) => left + right);
         }
 
+        public static string JoinArray(string glue, IEnumerable array)
+        {
+            var result = new List<string>();
+
+            foreach (var item in array)
+            {
+                result.Add(item.ToString());
+            }
+
+            return string.Join(glue, result);
+        }
+
+        public static string ExpandParameters(string sql, string placeholder, object[] bindings)
+        {
+            return ReplaceAll(sql, placeholder, i =>
+            {
+                var parameter = bindings[i];
+
+                if (IsArray(parameter))
+                {
+                    var count = EnumerableCount(parameter as IEnumerable);
+                    return string.Join(",", placeholder.Repeat(count));
+                }
+
+                return placeholder.ToString();
+            });
+        }
+
+        public static int EnumerableCount(IEnumerable obj)
+        {
+            int count = 0;
+
+            foreach (var item in obj)
+            {
+                count++;
+            }
+
+            return count;
+        }
+
         public static List<string> ExpandExpression(string expression)
         {
             var regex = @"^(?:\w+\.){1,2}{(.*)}";
@@ -84,6 +148,11 @@ namespace SqlKata
                 .ToList();
 
             return cols;
+        }
+
+        public static IEnumerable<string> Repeat(this string str, int count)
+        {
+            return Enumerable.Repeat(str, count);
         }
     }
 }

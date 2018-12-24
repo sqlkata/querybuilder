@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SqlKata.Compilers.Bindings;
 using System.Text;
 
 namespace SqlKata.Compilers
 {
     public abstract partial class Compiler
     {
-        private readonly ISqlResultBinder _sqlResultBinder;
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
+        protected string parameterPlaceholder = "?";
+        protected string parameterPlaceholderPrefix = "@p";
 
-        protected Compiler(ISqlResultBinder sqlResultBinder)
+        protected Compiler()
         {
-            _sqlResultBinder = sqlResultBinder;
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
@@ -43,6 +42,19 @@ namespace SqlKata.Compilers
         {
 
         };
+
+        protected Dictionary<string, object> generateNamedBindings(object[] bindings)
+        {
+            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
+                .ToDictionary(x => parameterPlaceholderPrefix + x.i, x => x.v);
+        }
+
+        protected SqlResult PrepareResult(SqlResult ctx)
+        {
+            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPlaceholderPrefix + i);
+            return ctx;
+        }
 
         protected virtual SqlResult CompileRaw(Query query)
         {
@@ -97,6 +109,9 @@ namespace SqlKata.Compilers
                 ctx.Bindings.InsertRange(0, cteBindings);
                 ctx.RawSql = rawSql.ToString();
             }
+
+            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, "?", ctx.Bindings.ToArray());
+
             return ctx;
         }
 
@@ -113,7 +128,9 @@ namespace SqlKata.Compilers
         public virtual SqlResult Compile(Query query)
         {
             var ctx = CompileRaw(query);
-            _sqlResultBinder.BindNamedParameters(ctx);
+
+            ctx = PrepareResult(ctx);
+
             return ctx;
         }
 
@@ -132,10 +149,10 @@ namespace SqlKata.Compilers
             var ctx = new SqlResult
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
-                Bindings = combinedBindings
+                Bindings = combinedBindings,
             };
 
-            _sqlResultBinder.BindNamedParameters(ctx);
+            ctx = PrepareResult(ctx);
 
             return ctx;
         }
@@ -344,15 +361,6 @@ namespace SqlKata.Compilers
 
         }
 
-        protected virtual SqlResult OnBeforeCompile(SqlResult ctx)
-        {
-            return ctx;
-        }
-
-        public virtual string OnAfterCompile(string sql)
-        {
-            return sql;
-        }
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
@@ -636,17 +644,6 @@ namespace SqlKata.Compilers
 
             return "LIMIT ? OFFSET ?";
         }
-
-        // public virtual string CompileOffset(SqlResult ctx)
-        // {
-        //     if (ctx.Query.GetOneComponent("limit", EngineCode) is LimitOffset limitOffset && limitOffset.HasOffset())
-        //     {
-        //         ctx.Bindings.Add(limitOffset.Offset);
-        //         return "OFFSET ?";
-        //     }
-
-        //     return null;
-        // }
 
         /// <summary>
         /// Compile the random statement into SQL.

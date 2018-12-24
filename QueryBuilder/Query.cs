@@ -117,7 +117,7 @@ namespace SqlKata
             {
                 Alias = alias,
                 Expression = sql,
-                Bindings = Helper.Flatten(bindings).ToArray(),
+                Bindings = bindings,
             });
         }
 

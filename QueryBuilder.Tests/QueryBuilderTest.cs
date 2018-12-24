@@ -423,10 +423,10 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01 00:00:00')", c[0]);
+            Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')", c[0]);
 
 
-            Assert.Equal("INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01 00:00:00')", c[3]);
+            Assert.Equal("INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')", c[3]);
         }
 
         [Fact]
@@ -440,10 +440,10 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01 00:00:00'", c[0]);
+            Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'", c[0]);
 
 
-            Assert.Equal("UPDATE \"TABLE\" SET \"NAME\" = 'The User', \"AGE\" = '2018-01-01 00:00:00'", c[3]);
+            Assert.Equal("UPDATE \"TABLE\" SET \"NAME\" = 'The User', \"AGE\" = '2018-01-01'", c[3]);
         }
 
         [Fact]
@@ -974,6 +974,26 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" IS NULL", c[2]);
 
+        }
+
+        [Fact]
+        public void PassingArrayAsParameter()
+        {
+            var query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Id] in (1,2,3)", c[0]);
+        }
+
+        [Fact]
+        public void UsingJsonArray()
+        {
+            var query = new Query("Table").WhereRaw("[Json]->'address'->>'country' in (?)", new[] { 1, 2, 3, 4 });
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"Json\"->'address'->>'country' in (1,2,3,4)", c[2]);
         }
     }
 }

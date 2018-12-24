@@ -4,7 +4,7 @@
 # Other files
 *.pfx
 npm-debug.log
-Program/
+Program/node_modules
 
 # User-specific files
 *.suo

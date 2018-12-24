@@ -105,7 +105,7 @@ namespace SqlKata
             return AddComponent("where", new RawCondition
             {
                 Expression = sql,
-                Bindings = Helper.Flatten(bindings).ToArray(),
+                Bindings = bindings,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
