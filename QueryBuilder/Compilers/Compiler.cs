@@ -8,8 +8,13 @@ namespace SqlKata.Compilers
     public abstract partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
-        protected string parameterPlaceholder = "?";
-        protected string parameterPlaceholderPrefix = "@p";
+        protected virtual string parameterPlaceholder { get; set; } = "?";
+        protected virtual string parameterPlaceholderPrefix { get; set; } = "@p";
+        protected virtual string OpeningIdentifier { get; set; } = "\"";
+        protected virtual string ClosingIdentifier { get; set; } = "\"";
+        protected virtual string ColumnAsKeyword { get; set; } = "AS ";
+        protected virtual string TableAsKeyword { get; set; } = "AS ";
+        protected virtual string LastId { get; set; } = "";
 
         protected Compiler()
         {
@@ -17,11 +22,7 @@ namespace SqlKata.Compilers
         }
 
         public abstract string EngineCode { get; }
-        protected string OpeningIdentifier = "\"";
-        protected string ClosingIdentifier = "\"";
-        protected string ColumnAsKeyword = "AS ";
-        protected string TableAsKeyword = "AS ";
-        protected string LastId = "";
+
 
         /// <summary>
         /// A list of white-listed operators
@@ -588,7 +589,7 @@ namespace SqlKata.Compilers
             return "ORDER BY " + string.Join(", ", columns);
         }
 
-        public string CompileHaving(SqlResult ctx)
+        public virtual string CompileHaving(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("having", EngineCode))
             {
