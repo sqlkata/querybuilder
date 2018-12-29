@@ -186,7 +186,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileDeleteQuery(Query query)
+        protected virtual SqlResult CompileDeleteQuery(Query query)
         {
             var ctx = new SqlResult
             {

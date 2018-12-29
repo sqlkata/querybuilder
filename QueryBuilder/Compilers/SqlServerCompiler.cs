@@ -172,6 +172,65 @@ namespace SqlKata.Compilers
 
             return sql;
         }
+
+        protected override SqlResult CompileDeleteQuery(Query query)
+        {
+            var ctx = new SqlResult
+            {
+                Query = query
+            };
+
+            if (!ctx.Query.HasComponent("from", EngineCode))
+            {
+                throw new InvalidOperationException("No table set to delete");
+            }
+
+            if(!(ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode) is FromClause from))
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            var joins = CompileJoins(ctx);
+            var hasJoins = !string.IsNullOrEmpty(joins);
+            if (hasJoins)
+            {
+                joins = " " + joins;
+            }
+
+            var where = CompileWheres(ctx);
+
+            if (!string.IsNullOrEmpty(where))
+            {
+                where = " " + where;
+            }
+
+            ctx.RawSql = GetDeleteFromStatement(from, hasJoins) + CompileTableExpression(ctx, from) + joins + where;
+
+            return ctx;
+        }
+
+        private string GetDeleteFromStatement(FromClause fromClause, bool hasJoins)
+        {
+            if (!hasJoins)
+            {
+                return "DELETE FROM ";
+            }
+
+            var arg = fromClause.Table;
+            if (arg.Equals(fromClause.Alias))
+            {
+                arg = Wrap(arg);
+                if (arg.Contains("."))
+                {
+                    arg = arg.Substring(arg.LastIndexOf('['));
+                }
+
+                return $"DELETE {arg} FROM ";
+            }
+
+            var alias = Wrap(fromClause.Alias);
+            return $"DELETE {alias} FROM ";
+        }
     }
 
     public static class SqlServerCompilerExtensions
