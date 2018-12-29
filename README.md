@@ -125,3 +125,21 @@ int affected = db.Query("Users").Where("Id", 1).Update(new {
 ```cs
 int affected = db.Query("Users").Where("Id", 1).Delete();
 ```
+
+### Create Query With Generic
+
+```cs
+var query = new Query<Entity>();
+```
+
+### Where Query With Generic
+
+```cs
+var query = new Query<Entity>().WhereColumns(x => x.Id == 1).WhereColumns(y => y.Name == "Name");
+```
+
+### Orderby Query With Generic
+
+```cs
+var query = new Query<Entity>().OrderBy(x => x.Id, x => x.Name);
+```
