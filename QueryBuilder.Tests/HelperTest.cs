@@ -225,5 +225,11 @@ namespace SqlKata.Tests
 
             Assert.Equal("where id = ? or id in (?,?) or id in ()", expanded);
         }
+
+        [Fact]
+        public void SplitOn_Should_Return_Empty_List()
+        {
+            Assert.Empty(Helper.SplitOn("", "::"));
+        }
     }
 }

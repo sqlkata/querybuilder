@@ -154,5 +154,26 @@ namespace SqlKata
         {
             return Enumerable.Repeat(str, count);
         }
+
+        public static IEnumerable<string> SplitOn(this string str, string separator)
+        {
+            if (string.IsNullOrEmpty(str)) yield break;
+
+            var index = str.IndexOf(separator);
+
+            if (index < -1)
+            {
+                yield return str;
+            }
+
+            while (index > 0)
+            {
+                yield return str.Substring(0, index);
+
+                str = str.Substring(index);
+
+                index = str.IndexOf(separator);
+            }
+        }
     }
 }
