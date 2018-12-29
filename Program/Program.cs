@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using Npgsql;
 using System.Data;
 using Dapper;
+using System.Data.SQLite;
+using Sqlkata.Compilers;
 
 namespace Program
 {
@@ -36,19 +38,17 @@ namespace Program
                 "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
             );
 
-            var db = new QueryFactory(connection, new SqlServerCompiler
-            {
-                UseLegacyPagination = true
-            });
+            // SQLiteConnection.CreateFile("Demo.db");
+
+            connection = new SQLiteConnection("Data Source=Demo.db");
+
+            var db = new QueryFactory(connection, new SqliteCompiler());
+
+            // db.Statement("create table accounts(id integer primary key,name text,currency_id text);");
 
             db.Logger = q => Console.WriteLine(q.ToString());
 
-            var accounts = db.Query("Accounts")
-                .ForPage(2, 10)
-                .WhereRaw("[CurrencyId] in (?)", new object[] { 11 })
-                .WhereRaw("[CurrencyId] in (?)", new[] { 1, 2, 3 })
-                .WhereRaw("[CurrencyId] in (?)", new[] { "100", "200" })
-                .Get();
+            var accounts = db.Query("Accounts").OrderByDesc("Id").Offset(10).Get();
 
             Console.WriteLine(JsonConvert.SerializeObject(accounts));
 
