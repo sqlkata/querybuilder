@@ -10,4 +10,10 @@
     <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
     <RootNamespace>SqlKata</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Generics\GenericQuery.Select.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Generics\GenericQuery.Select.cs" />
+  </ItemGroup>
 </Project>
