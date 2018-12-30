@@ -31,35 +31,25 @@ namespace Program
 
         static void Main(string[] args)
         {
-            var q1 = new Query<Entity>().WhereColumns(x => x.Id == 5).WhereColumns(y => y.Name == "as");
-            var q2 = new Query<Entity>().OrderBy(x => x.Id, x => x.Name);
+            IDbConnection connection = new SqlConnection(
+                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+            );
 
+            var db = new QueryFactory(connection, new SqlServerCompiler
+            {
+                UseLegacyPagination = true
+            });
 
-            var queryResult = new SqlServerCompiler().Compile(q1).RawSql;
+            db.Logger = q => Console.WriteLine(q.ToString());
 
-            Console.WriteLine(queryResult);
+            var accounts = db.Query("Accounts")
+                .ForPage(2, 10)
+                .WhereRaw("[CurrencyId] in (?)", new object[] { 11 })
+                .WhereRaw("[CurrencyId] in (?)", new[] { 1, 2, 3 })
+                .WhereRaw("[CurrencyId] in (?)", new[] { "100", "200" })
+                .Get();
 
-            Console.Read();
-
-            //IDbConnection connection = new SqlConnection(
-            //    "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-            //);
-
-            //var db = new QueryFactory(connection, new SqlServerCompiler
-            //{
-            //    UseLegacyPagination = true
-            //});
-
-            //db.Logger = q => Console.WriteLine(q.ToString());
-
-            //var accounts = db.Query("Accounts")
-            //    .ForPage(2, 10)
-            //    .WhereRaw("[CurrencyId] in (?)", new object[] { 11 })
-            //    .WhereRaw("[CurrencyId] in (?)", new[] { 1, 2, 3 })
-            //    .WhereRaw("[CurrencyId] in (?)", new[] { "100", "200" })
-            //    .Get();
-
-            //Console.WriteLine(JsonConvert.SerializeObject(accounts));
+            Console.WriteLine(JsonConvert.SerializeObject(accounts));
 
         }
 

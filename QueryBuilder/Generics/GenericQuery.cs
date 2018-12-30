@@ -1,5 +1,4 @@
-﻿using SqlKata.Compilers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -11,32 +10,9 @@ namespace SqlKata
         {
         }
 
-        public Query<T> WhereColumns(Expression<Func<T, object>> expression)
+        public new Query<T> From(string table)
         {
-            var exp = expression.GetMemberName().Split();
-
-            WhereColumns(exp[0], exp[1], exp[2]);
-
-            return this;
-        }
-
-        public Query<T> WhereFalse(Expression<Func<T, object>> expression)
-        {
-            WhereFalse(expression.GetMemberName());
-
-            return this;
-        }
-
-        public Query<T> WhereNull(Expression<Func<T, object>> expression)
-        {
-            WhereNull(expression.GetMemberName());
-
-            return this;
-        }
-
-        public Query<T> OrWhereNull(Expression<Func<T, object>> expression)
-        {
-            OrWhereNull(expression.GetMemberName());
+            base.From(table);
 
             return this;
         }
@@ -67,3 +43,4 @@ namespace SqlKata
         }
     }
 }
+            
