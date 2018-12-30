@@ -32,7 +32,7 @@ namespace Program
         static void Main(string[] args)
         {
             IDbConnection connection = new SqlConnection(
-                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd" 
             );
 
             var db = new QueryFactory(connection, new SqlServerCompiler
