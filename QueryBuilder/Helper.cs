@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -154,128 +153,6 @@ namespace SqlKata
         public static IEnumerable<string> Repeat(this string str, int count)
         {
             return Enumerable.Repeat(str, count);
-        }
-
-        public static string[] GetMemberNames<T>(this Expression<Func<T, object>> expression)
-        {
-            if (expression.Body is NewExpression newExpression)
-            {
-                return newExpression.Members.Select(x => x.Name).ToArray();
-            }
-            else
-            {
-                throw new ArgumentException("Unexpected expression type.");
-            }
-        }
-
-        public static string[] GetMemberNames<T, T1>(this Expression<Func<T, T1, object>> expression)
-        {
-            if (expression.Body is NewExpression newExpression)
-            {
-                return newExpression.Members.Select(x => x.Name).ToArray();
-            }
-
-            if (expression.Body is UnaryExpression unaryExpression)
-            {
-                if (unaryExpression.Operand is BinaryExpression binaryExpression)
-                {
-                    var left = binaryExpression.Left as MemberExpression;
-                    var right = binaryExpression.Right as MemberExpression;
-
-                    return new string[] { left.Member.Name, right.Member.Name };
-                }
-
-                throw new ArgumentException("Unexpected expression type.");
-            }
-            else
-            {
-                throw new ArgumentException("Unexpected expression type.");
-            }
-        }
-
-        public static string GetMemberName<T>(this Expression<Func<T, object>> expression)
-        {
-            return GetMemberName(expression.Body);
-        }
-
-        private static string GetMemberName(Expression expression)
-        {
-            if (expression == null)
-            {
-                throw new ArgumentException("The expression cannot be null.");
-            }
-
-            if (expression is MemberExpression memberExpression)
-            {
-                return memberExpression.Member.Name;
-            }
-
-            if (expression is MethodCallExpression methodCallExpression)
-            {
-                return methodCallExpression.Method.Name;
-            }
-
-            if (expression is UnaryExpression unaryExpression)
-            {
-                if (unaryExpression.Operand is MethodCallExpression methodCallExp)
-                {
-                    return methodCallExp.Method.Name;
-                }
-                else if (unaryExpression.Operand is BinaryExpression binaryExpression)
-                {
-                    var left = binaryExpression.Left as MemberExpression;
-                    var right = binaryExpression.Right as ConstantExpression;
-                    return $"{left.Member.Name} {binaryExpression.NodeType.ToMethod()} {right.Value}";
-                }
-
-                return ((MemberExpression)unaryExpression.Operand).Member.Name;
-            }
-
-            throw new ArgumentException("Invalid expression");
-        }
-
-        public static string ToMethod(this ExpressionType nodeType, bool rightIsNull = false)
-        {
-            switch (nodeType)
-            {
-                case ExpressionType.Add:
-                    return "+";
-                case ExpressionType.And:
-                    return "&";
-                case ExpressionType.AndAlso:
-                    return "AND";
-                case ExpressionType.Divide:
-                    return "/";
-                case ExpressionType.Equal:
-                    return rightIsNull ? "IS" : "=";
-                case ExpressionType.ExclusiveOr:
-                    return "^";
-                case ExpressionType.GreaterThan:
-                    return ">";
-                case ExpressionType.GreaterThanOrEqual:
-                    return ">=";
-                case ExpressionType.LessThan:
-                    return "<";
-                case ExpressionType.LessThanOrEqual:
-                    return "<=";
-                case ExpressionType.Modulo:
-                    return "%";
-                case ExpressionType.Multiply:
-                    return "*";
-                case ExpressionType.Negate:
-                    return "-";
-                case ExpressionType.Not:
-                    return "NOT";
-                case ExpressionType.NotEqual:
-                    return "<>";
-                case ExpressionType.Or:
-                    return "|";
-                case ExpressionType.OrElse:
-                    return "OR";
-                case ExpressionType.Subtract:
-                    return "-";
-            }
-            throw new Exception($"Unsupported node type: {nodeType}");
         }
     }
 }
