@@ -6,9 +6,10 @@
 
 [![SqlKata on MyGet](https://img.shields.io/myget/sqlkata/v/SqlKata.svg?label=myget)](https://www.myget.org/feed/sqlkata/package/nuget/SqlKata)
 
-![SqlKata Logo](https://ahmadmoussawi.com/images/projects/sqlkata.png)
+<a href="https://twitter.com/ahmadmuzavi?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="false">Follow @ahmadmuzavi</a> for the latest updates about SqlKata.
 
 ![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
+
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
 
@@ -21,6 +22,7 @@ By providing a level of abstraction over the supported database engines, that al
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql, PostgreSql and Firebird.
 
 Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
+
 ## Installation
 
 using dotnet cli
@@ -92,7 +94,7 @@ var books = db.Query("Books")
 ```cs
 var page1 = db.Query("Books").Paginate(10);
 
-foreach(var book in page1)
+foreach(var book in page1.List)
 {
     Console.WriteLine(book.Name);
 }
