@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace SqlKata
@@ -8,14 +7,19 @@ namespace SqlKata
     {
         public Query() : base(typeof(T).Name)
         {
+            TableName = typeof(T).Name;
         }
 
         public new Query<T> From(string table)
         {
+            TableName = table;
+
             base.From(table);
 
             return this;
         }
+
+        public string TableName { get; private set; } = "";
 
         public Query<T> OrderBy(Expression<Func<T, object>> columns)
         {

@@ -14,16 +14,14 @@ namespace SqlKata
 
         public Query<T> Join<JTable>(string tableName, Expression<Func<T, JTable, object>> expression) where JTable : class
         {
+            if (tableName == null || tableName.Length <= 0)
+            {
+                tableName = typeof(JTable).Name;
+            }
+
             var joinColumns = expression.GetMemberNames();
 
-            if (tableName != null && tableName.Length > 0)
-            {
-                Join(tableName, joinColumns[0], joinColumns[1]);
-            }
-            else
-            {
-                Join(typeof(JTable).Name, joinColumns[0], joinColumns[1]);
-            }
+            Join(tableName, $"{TableName}.{joinColumns[0]}", $"{tableName}.{joinColumns[1]}");
 
             return this;
         }
@@ -37,16 +35,14 @@ namespace SqlKata
 
         public Query<T> LeftJoin<JTable>(string tableName, Expression<Func<T, JTable, object>> expression) where JTable : class
         {
+            if (tableName == null || tableName.Length <= 0)
+            {
+                tableName = typeof(JTable).Name;
+            }
+
             var joinColumns = expression.GetMemberNames();
 
-            if (tableName != null && tableName.Length > 0)
-            {
-                LeftJoin(tableName, joinColumns[0], joinColumns[1]);
-            }
-            else
-            {
-                LeftJoin(typeof(JTable).Name, joinColumns[0], joinColumns[1]);
-            }
+            LeftJoin(tableName, $"{TableName}.{joinColumns[0]}", $"{tableName}.{joinColumns[1]}");
 
             return this;
         }
@@ -60,16 +56,15 @@ namespace SqlKata
 
         public Query<T> RightJoin<JTable>(string tableName, Expression<Func<T, JTable, object>> expression) where JTable : class
         {
+
+            if (tableName == null || tableName.Length <= 0)
+            {
+                tableName = typeof(JTable).Name;
+            }
+
             var joinColumns = expression.GetMemberNames();
 
-            if (tableName != null && tableName.Length > 0)
-            {
-                RightJoin(tableName, joinColumns[0], joinColumns[1]);
-            }
-            else
-            {
-                RightJoin(typeof(JTable).Name, joinColumns[0], joinColumns[1]);
-            }
+            RightJoin(tableName, $"{TableName}.{joinColumns[0]}", $"{tableName}.{joinColumns[1]}");
 
             return this;
         }
@@ -83,14 +78,12 @@ namespace SqlKata
 
         public Query<T> CrossJoin<JTable>(string tableName) where JTable : class
         {
-            if (tableName != null && tableName.Length > 0)
+            if (tableName == null || tableName.Length <= 0)
             {
-                CrossJoin(tableName);
+                tableName = typeof(JTable).Name;
             }
-            else
-            {
-                CrossJoin(typeof(JTable).Name);
-            }
+
+            CrossJoin($"{tableName}");
 
             return this;
         }

@@ -91,7 +91,7 @@ namespace SqlKata.Tests
             var actual = mssqlCompiler.Compile(q).RawSql;
             var actual2 = mssqlCompiler.Compile(q2).RawSql;
 
-            var expected = $"SELECT * FROM [Entity] \nINNER JOIN [JoinEntity] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entity] \nINNER JOIN [JoinEntity] ON [Entity].[Id] = [JoinEntity].[EntityId]";
 
             Assert.Equal(expected, actual);
 
@@ -105,7 +105,7 @@ namespace SqlKata.Tests
 
             var actual = mssqlCompiler.Compile(q).RawSql;
 
-            var expected = $"SELECT * FROM [Entities] \nINNER JOIN [JoinEntities] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entities] \nINNER JOIN [JoinEntities] ON [Entities].[Id] = [JoinEntities].[EntityId]";
 
             Assert.Equal(expected, actual);
         }
@@ -119,7 +119,7 @@ namespace SqlKata.Tests
             var actual = mssqlCompiler.Compile(q).RawSql;
             var actual2 = mssqlCompiler.Compile(q2).RawSql;
 
-            var expected = $"SELECT * FROM [Entity] \nLEFT JOIN [JoinEntity] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entity] \nLEFT JOIN [JoinEntity] ON [Entity].[Id] = [JoinEntity].[EntityId]";
 
             Assert.Equal(expected, actual);
 
@@ -134,7 +134,7 @@ namespace SqlKata.Tests
 
             var actual = mssqlCompiler.Compile(q).RawSql;
 
-            var expected = $"SELECT * FROM [Entities] \nLEFT JOIN [JoinEntities] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entities] \nLEFT JOIN [JoinEntities] ON [Entities].[Id] = [JoinEntities].[EntityId]";
 
             Assert.Equal(expected, actual);
         }
@@ -148,7 +148,7 @@ namespace SqlKata.Tests
             var actual = mssqlCompiler.Compile(q).RawSql;
             var actual2 = mssqlCompiler.Compile(q2).RawSql;
 
-            var expected = $"SELECT * FROM [Entity] \nRIGHT JOIN [JoinEntity] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entity] \nRIGHT JOIN [JoinEntity] ON [Entity].[Id] = [JoinEntity].[EntityId]";
 
             Assert.Equal(expected, actual);
 
@@ -162,7 +162,7 @@ namespace SqlKata.Tests
 
             var actual = mssqlCompiler.Compile(q).RawSql;
 
-            var expected = $"SELECT * FROM [Entities] \nRIGHT JOIN [JoinEntities] ON [Id] = [EntityId]";
+            var expected = $"SELECT * FROM [Entities] \nRIGHT JOIN [JoinEntities] ON [Entities].[Id] = [JoinEntities].[EntityId]";
 
             Assert.Equal(expected, actual);
         }
