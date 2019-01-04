@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SqlKata.Compilers
 {
-    public abstract partial class Compiler
+    public partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
@@ -21,7 +21,7 @@ namespace SqlKata.Compilers
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
-        public abstract string EngineCode { get; }
+        public virtual string EngineCode { get; }
 
 
         /// <summary>

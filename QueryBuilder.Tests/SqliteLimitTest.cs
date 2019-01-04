@@ -1,4 +1,4 @@
-using Sqlkata.Compilers;
+using SqlKata.Compilers;
 using SqlKata;
 using Xunit;
 

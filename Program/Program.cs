@@ -11,7 +11,6 @@ using Npgsql;
 using System.Data;
 using Dapper;
 using System.Data.SQLite;
-using Sqlkata.Compilers;
 
 namespace Program
 {

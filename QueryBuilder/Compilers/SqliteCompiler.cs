@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
 
-namespace Sqlkata.Compilers
+namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {

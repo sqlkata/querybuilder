@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace SqlKata.Compilers
 {
-    public abstract partial class Compiler
+    public partial class Compiler
     {
         protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
         {

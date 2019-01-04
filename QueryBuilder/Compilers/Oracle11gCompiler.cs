@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-// ReSharper disable InconsistentNaming
-
 namespace SqlKata.Compilers
 {
     public sealed class Oracle11gCompiler : Compiler
