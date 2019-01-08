@@ -155,7 +155,7 @@ namespace SqlKata.Compilers
 
             if (part == "TIME" || part == "DATE")
             {
-                left = $"CAST({column} AS ${part.ToUpper()})";
+                left = $"CAST({column} AS {part.ToUpper()})";
             }
             else
             {
