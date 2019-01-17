@@ -65,6 +65,7 @@ namespace SqlKata.Compilers
             if (query.IsDistinct)
             {
                 query.ClearComponent("aggregate", EngineCode);
+                query.ClearComponent("select", EngineCode);
                 query.Select(clause.Columns.ToArray());
             }
             else
