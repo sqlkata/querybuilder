@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class QueryBuilderTest
+    public partial class QueryBuilderTest
     {
         private readonly Compiler pgsql;
         private readonly MySqlCompiler mysql;
@@ -815,20 +815,6 @@ namespace SqlKata.Tests
             );
 
             Assert.NotSame(call1, call2);
-        }
-
-
-        [Fact]
-        public void Count()
-        {
-            var query = new Query("A").AsCount().Limit(1);
-
-            var c = Compile(query);
-
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[0]);
-            Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[1]);
-            Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[2]);
-            Assert.Equal("SELECT COUNT(*) AS \"COUNT\" FROM \"A\"", c[3]);
         }
 
         [Fact]

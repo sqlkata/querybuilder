@@ -57,6 +57,35 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        private Query TransformAggregateQuery(Query query)
+        {
+            var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
+
+            if (query.IsDistinct)
+            {
+                query.ClearComponent("aggregate", EngineCode);
+                query.Select(clause.Columns.ToArray());
+            }
+            else
+            {
+                foreach (var column in clause.Columns)
+                {
+                    query.WhereNotNull(column);
+                }
+            }
+
+            var outerClause = new AggregateClause()
+            {
+                Columns = new List<string> {"*"},
+                Type = clause.Type
+            };
+
+            return new Query()
+                .AddComponent("aggregate", outerClause)
+                .From(query, $"{clause.Type}Query");
+        }
+
         protected virtual SqlResult CompileRaw(Query query)
         {
             SqlResult ctx;
@@ -80,6 +109,8 @@ namespace SqlKata.Compilers
                     query.ClearComponent("limit")
                         .ClearComponent("order")
                         .ClearComponent("group");
+
+                    query = TransformAggregateQuery(query);
                 }
 
                 ctx = CompileSelectQuery(query);
@@ -395,7 +426,6 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileColumns(SqlResult ctx)
         {
-
             if (ctx.Query.HasComponent("aggregate", EngineCode))
             {
                 var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
@@ -404,14 +434,21 @@ namespace SqlKata.Compilers
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
                     .ToList();
 
-                var sql = string.Join(", ", aggregateColumns);
+                string sql = string.Empty;
 
-                if (ctx.Query.IsDistinct)
+                if (aggregateColumns.Count == 1)
                 {
-                    sql = "DISTINCT " + sql;
+                    sql = string.Join(", ", aggregateColumns);
+
+                    if (ctx.Query.IsDistinct)
+                    {
+                        sql = "DISTINCT " + sql;
+                    }
+
+                    return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
                 }
 
-                return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
+                return "SELECT 1";
             }
 
             var columns = ctx.Query
