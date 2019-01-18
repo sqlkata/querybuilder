@@ -4,7 +4,7 @@ using SqlKata.Compilers.Extensions;
 
 namespace SqlKata.Compilers
 {
-    public sealed class OracleCompiler : Compiler
+    public class OracleCompiler : Compiler
     {
         public OracleCompiler()
         {
