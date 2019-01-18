@@ -1,6 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
+using SqlKata.Compilers.Extensions;
 
 namespace SqlKata.Compilers
 {
@@ -13,7 +13,7 @@ namespace SqlKata.Compilers
             parameterPlaceholderPrefix = ":p";
         }
 
-        public override string EngineCode { get; } = "oracle";
+        public override string EngineCode { get; } = OracleCompilerExtensions.ENGINE_CODE;
         public bool UseLegacyPagination { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -23,23 +23,11 @@ namespace SqlKata.Compilers
                 return base.CompileSelectQuery(query);
             }
 
-            query = query.Clone();
-
-            var limit = query.GetLimit(EngineCode);
-            var offset = query.GetOffset(EngineCode);
-
-            query.ClearComponent("limit");
-
-            var ctx = new SqlResult
-            {
-                Query = query,
-            };
-
             var result = base.CompileSelectQuery(query);
 
-            ApplyLegacyLimit(result, limit, offset);
+            ApplyLegacyLimit(result);
 
-            return ctx;
+            return result;
         }
 
         public override string CompileLimit(SqlResult ctx)
@@ -76,8 +64,10 @@ namespace SqlKata.Compilers
             return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
 
-        internal void ApplyLegacyLimit(SqlResult ctx, int limit, int offset)
+        internal void ApplyLegacyLimit(SqlResult ctx)
         {
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
@@ -85,13 +75,13 @@ namespace SqlKata.Compilers
             }
 
             //@todo replace with alias generator
-            var subQueryAlias = WrapValue("subquery");
-            var rowNumAlias = WrapValue("row_num");
+            var alias1 = WrapValue("SqlKata_A__");
+            var alias2 = WrapValue("SqlKata_B__");
 
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT {subQueryAlias}.*, ROWNUM {rowNumAlias} FROM ({ctx.RawSql}) {subQueryAlias}) WHERE {rowNumAlias} > ?";
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > ?";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
@@ -101,22 +91,12 @@ namespace SqlKata.Compilers
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT {subQueryAlias}.*, ROWNUM {rowNumAlias} FROM ({ctx.RawSql}) {subQueryAlias} WHERE ROWNUM <= ?) WHERE {rowNumAlias} > ?";
+                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= ?) WHERE {alias2} > ?";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
 
             ctx.RawSql = newSql;
-        }
-    }
-
-    public static class OracleCompilerExtensions
-    {
-        public static string ENGINE_CODE = "oracle";
-
-        public static Query ForOracle(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(ENGINE_CODE, fn);
         }
     }
 }
