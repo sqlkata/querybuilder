@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using SqlKata.Compilers.Extensions;
 
 namespace SqlKata.Compilers
 {
@@ -82,16 +83,6 @@ namespace SqlKata.Compilers
             }
 
             ctx.RawSql = newSql;
-        }
-    }
-
-    public static class Oracle11gCompilerExtensions
-    {
-        public static string ENGINE_CODE = "oracle11g";
-
-        public static Query ForOracle11g(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(ENGINE_CODE, fn);
         }
     }
 }

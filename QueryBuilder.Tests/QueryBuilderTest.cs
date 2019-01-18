@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SqlKata.Execution;
 using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Compilers.Extensions;
 using Xunit;
 
 namespace SqlKata.Tests

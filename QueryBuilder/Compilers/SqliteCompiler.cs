@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
@@ -68,13 +67,5 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-    }
-    public static class SqliteCompilerExtensions
-    {
-        public static string ENGINE_CODE = "sqlite";
-        public static Query ForSqlite(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(SqliteCompilerExtensions.ENGINE_CODE, fn);
-        }
     }
 }

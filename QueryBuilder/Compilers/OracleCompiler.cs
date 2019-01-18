@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -107,16 +106,6 @@ namespace SqlKata.Compilers
             }
 
             ctx.RawSql = newSql;
-        }
-    }
-
-    public static class OracleCompilerExtensions
-    {
-        public static string ENGINE_CODE = "oracle";
-
-        public static Query ForOracle(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(ENGINE_CODE, fn);
         }
     }
 }
