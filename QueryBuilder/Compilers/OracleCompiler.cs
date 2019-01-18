@@ -74,14 +74,10 @@ namespace SqlKata.Compilers
                 return;
             }
 
-            //@todo replace with alias generator
-            var alias1 = WrapValue("SqlKata_A__");
-            var alias2 = WrapValue("SqlKata_B__");
-
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1}) WHERE {alias2} > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
@@ -91,7 +87,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT {alias1}.*, ROWNUM {alias2} FROM ({ctx.RawSql}) {alias1} WHERE ROWNUM <= ?) WHERE {alias2} > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
