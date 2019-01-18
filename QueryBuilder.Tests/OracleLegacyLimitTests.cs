@@ -5,25 +5,15 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class Oracle11gLimitTests
+    public class OracleLegacyLimitTests
     {
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private Oracle11gCompiler compiler = new Oracle11gCompiler();
-
-        [Fact]
-        public void CompileLimitThrowsException()
+        private OracleCompiler compiler = new OracleCompiler()
         {
-            // Arrange:
-            var query = new Query(TableName);
-            var ctx = new SqlResult { Query = query };
-
-            // Act:
-            Assert.Throws<NotSupportedException>(() => compiler.CompileLimit(ctx));
-
-            // Assert: Assertion is handled by Throws
-        }
+            UseLegacyPagination = true
+        };
 
         [Fact]
         public void WithNoLimitNorOffset()
@@ -33,7 +23,7 @@ namespace SqlKata.Tests
             var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
 
             // Act:
-            compiler.ApplyLimit(ctx);
+            compiler.ApplyLegacyLimit(ctx);
 
             // Assert:
             Assert.Equal(SqlPlaceholder, ctx.RawSql);
@@ -47,7 +37,7 @@ namespace SqlKata.Tests
             var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
 
             // Act:
-            compiler.ApplyLimit(ctx);
+            compiler.ApplyLegacyLimit(ctx);
 
             // Assert:
             Assert.Matches($"SELECT \\* FROM \\({SqlPlaceholder}\\) WHERE ROWNUM <= ?", ctx.RawSql);
@@ -63,10 +53,10 @@ namespace SqlKata.Tests
             var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
 
             // Act:
-            compiler.ApplyLimit(ctx);
+            compiler.ApplyLegacyLimit(ctx);
 
             // Assert:
-            Assert.Matches($"SELECT \\* FROM \\(SELECT \"(SqlKata_.*__)\"\\.\\*, ROWNUM \"(SqlKata_.*__)\" FROM \\({SqlPlaceholder}\\) \"(SqlKata_.*__)\"\\) WHERE \"(SqlKata_.*__)\" > \\?", ctx.RawSql);
+            Assert.Equal("SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM (GENERATED_SQL) \"results_wrapper\") WHERE \"row_num\" > ?", ctx.RawSql);
             Assert.Equal(20, ctx.Bindings[0]);
             Assert.Single(ctx.Bindings);
         }
@@ -79,10 +69,10 @@ namespace SqlKata.Tests
             var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
 
             // Act:
-            compiler.ApplyLimit(ctx);
+            compiler.ApplyLegacyLimit(ctx);
 
             // Assert:
-            Assert.Matches($"SELECT \\* FROM \\(SELECT \"(SqlKata_.*__)\"\\.\\*, ROWNUM \"(SqlKata_.*__)\" FROM \\({SqlPlaceholder}\\) \"(SqlKata_.*__)\" WHERE ROWNUM <= \\?\\) WHERE \"(SqlKata_.*__)\" > \\?", ctx.RawSql);
+            Assert.Equal("SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM (GENERATED_SQL) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?", ctx.RawSql);
             Assert.Equal(25, ctx.Bindings[0]);
             Assert.Equal(20, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);

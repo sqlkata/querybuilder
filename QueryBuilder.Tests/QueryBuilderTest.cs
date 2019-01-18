@@ -13,7 +13,7 @@ namespace SqlKata.Tests
         private readonly Compiler pgsql;
         private readonly MySqlCompiler mysql;
         private readonly FirebirdCompiler fbsql;
-        private readonly Oracle11gCompiler oracle;
+        private readonly OracleCompiler oracle;
         public SqlServerCompiler mssql { get; private set; }
 
         private string[] Compile(Query q)
@@ -24,7 +24,7 @@ namespace SqlKata.Tests
                 mysql.Compile(q.Clone()).ToString(),
                 pgsql.Compile(q.Clone()).ToString(),
                 fbsql.Compile(q.Clone()).ToString(),
-                oracle.Compile(q.Clone()).ToString(),
+                oracle.Compile(q.Clone()).ToString()
             };
         }
 
@@ -34,7 +34,7 @@ namespace SqlKata.Tests
             mysql = new MySqlCompiler();
             pgsql = new PostgresCompiler();
             fbsql = new FirebirdCompiler();
-            oracle = new Oracle11gCompiler();
+            oracle = new OracleCompiler();
         }
 
         [Fact]
