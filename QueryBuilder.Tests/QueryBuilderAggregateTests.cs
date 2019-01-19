@@ -1,9 +1,10 @@
 ﻿using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public partial class QueryBuilderTests
+    public class QueryBuilderAggregateTests : TestSupport
     {
         [Fact]
         public void Count()

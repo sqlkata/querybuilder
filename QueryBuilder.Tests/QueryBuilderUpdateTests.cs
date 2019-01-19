@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public partial class QueryBuilderTests
+    public class QueryBuilderUpdateTests : TestSupport
     {
         [Fact]
         public void InsertObject()

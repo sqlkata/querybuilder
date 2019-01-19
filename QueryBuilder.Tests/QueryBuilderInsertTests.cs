@@ -1,9 +1,10 @@
 ﻿using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public partial class QueryBuilderTests
+    public class QueryBuilderInsertTests : TestSupport
     {
         [Fact]
         public void InsertFromSubQueryWithCte()
