@@ -1,15 +1,18 @@
-using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.SqlServer
 {
-    public class SqlServerLegacyLimitTest
+    public class SqlServerLimitTests : TestSupport
     {
-        private SqlServerCompiler compiler = new SqlServerCompiler()
+        private readonly SqlServerCompiler compiler;
+
+        public SqlServerLimitTests()
         {
-            UseLegacyPagination = true
-        };
+            compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
+            compiler.UseLegacyPagination = false;
+        }
 
         [Fact]
         public void NoLimitNorOffset()
@@ -26,7 +29,10 @@ namespace SqlKata.Tests
             var query = new Query("Table").Limit(10);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+            Assert.Equal(2, ctx.Bindings.Count);
+            Assert.Equal(0, ctx.Bindings[0]);
+            Assert.Equal(10, ctx.Bindings[1]);
         }
 
         [Fact]
@@ -35,7 +41,10 @@ namespace SqlKata.Tests
             var query = new Query("Table").Offset(20);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
+
+            Assert.Single(ctx.Bindings);
+            Assert.Equal(20, ctx.Bindings[0]);
         }
 
         [Fact]
@@ -44,7 +53,11 @@ namespace SqlKata.Tests
             var query = new Query("Table").Limit(5).Offset(20);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+
+            Assert.Equal(2, ctx.Bindings.Count);
+            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(5, ctx.Bindings[1]);
         }
 
         [Fact]

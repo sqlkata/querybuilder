@@ -1,15 +1,20 @@
-using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.Firebird
 {
-    public class PostgreSqlLimitTest
+    public class FirebirdLimitTests : TestSupport
     {
-        private PostgresCompiler compiler = new PostgresCompiler();
+        private readonly FirebirdCompiler compiler;
+
+        public FirebirdLimitTests()
+        {
+            compiler = Compilers.Get<FirebirdCompiler>(EngineCodes.Firebird);
+        }
 
         [Fact]
-        public void WithNoLimitNorOffset()
+        public void NoLimitNorOffset()
         {
             var query = new Query("Table");
             var ctx = new SqlResult {Query = query};
@@ -18,35 +23,32 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void WithNoOffset()
+        public void LimitOnly()
         {
             var query = new Query("Table").Limit(10);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Equal("LIMIT ?", compiler.CompileLimit(ctx));
-            Assert.Equal(10, ctx.Bindings[0]);
+            Assert.Null(compiler.CompileLimit(ctx));
         }
 
         [Fact]
-        public void WithNoLimit()
+        public void OffsetOnly()
         {
             var query = new Query("Table").Offset(20);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Equal("OFFSET ?", compiler.CompileLimit(ctx));
-            Assert.Equal(20, ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Null(compiler.CompileLimit(ctx));
         }
 
         [Fact]
-        public void WithLimitAndOffset()
+        public void LimitAndOffset()
         {
             var query = new Query("Table").Limit(5).Offset(20);
             var ctx = new SqlResult {Query = query};
 
-            Assert.Equal("LIMIT ? OFFSET ?", compiler.CompileLimit(ctx));
-            Assert.Equal(5, ctx.Bindings[0]);
-            Assert.Equal(20, ctx.Bindings[1]);
+            Assert.Equal("ROWS ? TO ?", compiler.CompileLimit(ctx));
+            Assert.Equal(21, ctx.Bindings[0]);
+            Assert.Equal(25, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);
         }
     }

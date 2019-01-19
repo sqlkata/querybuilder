@@ -1,19 +1,20 @@
-﻿using System;
-using SqlKata;
-using SqlKata.Compilers;
+﻿using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.Oracle
 {
-    public class OracleLegacyLimitTests
+    public class OracleLegacyLimitTests : TestSupport
     {
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
+        private readonly OracleCompiler compiler;
 
-        private OracleCompiler compiler = new OracleCompiler()
+        public OracleLegacyLimitTests()
         {
-            UseLegacyPagination = true
-        };
+            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+            compiler.UseLegacyPagination = true;
+        }
 
         [Fact]
         public void WithNoLimitNorOffset()

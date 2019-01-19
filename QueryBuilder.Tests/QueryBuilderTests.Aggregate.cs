@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SqlKata.Compilers;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public partial class QueryBuilderTest
+    public partial class QueryBuilderTests
     {
         [Fact]
         public void Count()
@@ -14,10 +12,10 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[0]);
-            Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[1]);
-            Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[2]);
-            Assert.Equal("SELECT COUNT(*) AS \"COUNT\" FROM \"A\"", c[3]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT COUNT(*) AS \"COUNT\" FROM \"A\"", c[EngineCodes.Firebird]);
         }
 
         [Fact]
@@ -27,7 +25,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [countQuery]", c[0]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -37,7 +35,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT * FROM [A]) AS [countQuery]", c[0]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT * FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -47,7 +45,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [countQuery]", c[0]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -57,7 +55,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT AVG([TTL]) AS [avg] FROM [A]", c[0]);
+            Assert.Equal("SELECT AVG([TTL]) AS [avg] FROM [A]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -67,7 +65,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT SUM([PacketsDropped]) AS [sum] FROM [A]", c[0]);
+            Assert.Equal("SELECT SUM([PacketsDropped]) AS [sum] FROM [A]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -77,7 +75,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT MAX([LatencyMs]) AS [max] FROM [A]", c[0]);
+            Assert.Equal("SELECT MAX([LatencyMs]) AS [max] FROM [A]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -87,7 +85,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT MIN([LatencyMs]) AS [min] FROM [A]", c[0]);
+            Assert.Equal("SELECT MIN([LatencyMs]) AS [min] FROM [A]", c[EngineCodes.SqlServer]);
         }
     }
 }

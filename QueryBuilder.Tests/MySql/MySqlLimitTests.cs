@@ -1,12 +1,17 @@
-using SqlKata;
 using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.MySql
 {
-    public class MySqlLimitTest
+    public class MySqlLimitTests : TestSupport
     {
-        private MySqlCompiler compiler = new MySqlCompiler();
+        private readonly MySqlCompiler compiler;
+
+        public MySqlLimitTests()
+        {
+            compiler = Compilers.Get<MySqlCompiler>(EngineCodes.MySql);
+        }
 
         [Fact]
         public void WithNoLimitNorOffset()

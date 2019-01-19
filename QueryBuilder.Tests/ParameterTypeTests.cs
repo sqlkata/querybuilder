@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using SqlKata.Execution;
-using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 using System.Collections;
+using SqlKata.Tests.Infrastructure;
 
 namespace SqlKata.Tests
 {
@@ -16,31 +15,9 @@ namespace SqlKata.Tests
         Third,
     }
 
-    public class ParameterTypeTest
+    public class ParameterTypeTests : TestSupport
     {
-        private readonly Compiler pgsql;
-        private readonly MySqlCompiler mysql;
-        private readonly FirebirdCompiler fbsql;
-        public SqlServerCompiler mssql { get; private set; }
 
-        public ParameterTypeTest()
-        {
-            mssql = new SqlServerCompiler();
-            mysql = new MySqlCompiler();
-            pgsql = new PostgresCompiler();
-            fbsql = new FirebirdCompiler();
-        }
-
-        private string[] Compile(Query q)
-        {
-            return new[]
-            {
-                mssql.Compile(q.Clone()).ToString(),
-                mysql.Compile(q.Clone()).ToString(),
-                pgsql.Compile(q.Clone()).ToString(),
-                fbsql.Compile(q.Clone()).ToString(),
-            };
-        }
 
         public class ParameterTypeGenerator : IEnumerable<object[]>
         {
@@ -71,7 +48,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c[0]);
+            Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c[EngineCodes.SqlServer]);
         }
     }
 }

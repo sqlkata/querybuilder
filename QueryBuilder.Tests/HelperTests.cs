@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Linq;
-using SqlKata;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class HelperTest
+    public class HelperTests
     {
         [Theory]
         [InlineData("")]

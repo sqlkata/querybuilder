@@ -1,31 +1,11 @@
-using System;
-using System.Collections.Generic;
-using SqlKata.Execution;
-using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
-using System.Collections;
 
 namespace SqlKata.Tests
 {
-    public class QueryJoinTest
+    public partial class QueryBuilderTests
     {
-        private readonly Compiler pgsql = new PostgresCompiler();
-        private readonly MySqlCompiler mysql = new MySqlCompiler();
-        private readonly FirebirdCompiler fbsql = new FirebirdCompiler();
-        public SqlServerCompiler mssql = new SqlServerCompiler();
-
-        private string[] Compile(Query q)
-        {
-            return new[]
-            {
-                mssql.Compile(q.Clone()).ToString(),
-                mysql.Compile(q.Clone()).ToString(),
-                pgsql.Compile(q.Clone()).ToString(),
-                fbsql.Compile(q.Clone()).ToString(),
-            };
-        }
-
+       
         [Fact]
         public void BasicJoin()
         {
@@ -34,9 +14,9 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
-                c[0]);
+                c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`",
-                c[1]);
+                c[EngineCodes.MySql]);
         }
 
         [Theory]
@@ -52,18 +32,18 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             Assert.Equal($"SELECT * FROM [users] \n{output} [countries] ON [countries].[id] = [users].[country_id]",
-                c[0]);
+                c[EngineCodes.SqlServer]);
 
             Assert.Equal($"SELECT * FROM `users` \n{output} `countries` ON `countries`.`id` = `users`.`country_id`",
-                c[1]);
+                c[EngineCodes.MySql]);
 
             Assert.Equal(
                 $"SELECT * FROM \"users\" \n{output} \"countries\" ON \"countries\".\"id\" = \"users\".\"country_id\"",
-                c[2]);
+                c[EngineCodes.PostgreSql]);
 
             Assert.Equal(
                 $"SELECT * FROM \"USERS\" \n{output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"",
-                c[3]);
+                c[EngineCodes.Firebird]);
         }
     }
 }
