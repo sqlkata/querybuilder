@@ -17,6 +17,11 @@ namespace SqlKata.Tests.Infrastructure
             [EngineCodes.SqlServer] = new SqlServerCompiler()
         };
 
+        public IEnumerable<string> KnownEngineCodes
+        {
+            get { return Compilers.Select(s => s.Key); }
+        }
+
         /// <summary>
         /// Returns the compiler instance for the given <param name="engineCode"></param>
         /// </summary>
@@ -56,8 +61,25 @@ namespace SqlKata.Tests.Infrastructure
             return compiler.Compile(query);
         }
 
+        public TestSqlResultContainer Compile(IEnumerable<string> engineCodes, Query query)
+        {
+            var codes = engineCodes.ToList();
+
+            var results = Compilers
+                .Where(w => codes.Contains(w.Key))
+                .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
+
+            if (results.Count != codes.Count)
+            {
+                var missingCodes = codes.Where(w => Compilers.All(a => a.Key != w));
+                throw new InvalidOperationException($"Invalid engine codes supplied '{string.Join(", ", missingCodes)}'");
+            }
+
+            return new TestSqlResultContainer(results);
+        }
+
         /// <summary>
-        /// Compiles the query with all enabled compilers.
+        /// Compiles the query for all known compilers
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
