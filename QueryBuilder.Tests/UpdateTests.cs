@@ -6,7 +6,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class QueryBuilderUpdateTests : TestSupport
+    public class UpdateTests : TestSupport
     {
         [Fact]
         public void InsertObject()

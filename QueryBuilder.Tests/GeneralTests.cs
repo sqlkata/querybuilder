@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SqlKata.Execution;
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
@@ -9,7 +5,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public partial class QueryBuilderTests : TestSupport
+    public class GeneralTests : TestSupport
     {
        [Fact]
         public void ColumnsEscaping()

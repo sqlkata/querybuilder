@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class QueryBuilderInsertTests : TestSupport
+    public class InsertTests : TestSupport
     {
         [Fact]
         public void InsertFromSubQueryWithCte()

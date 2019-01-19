@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class QueryBuilderAggregateTests : TestSupport
+    public class AggregateTests : TestSupport
     {
         [Fact]
         public void Count()

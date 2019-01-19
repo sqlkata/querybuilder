@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class QueryBuilderSelectTests : TestSupport
+    public class SelectTests : TestSupport
     {
         [Fact]
         public void BasicSelect()
