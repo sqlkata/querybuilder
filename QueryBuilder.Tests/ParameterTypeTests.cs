@@ -8,16 +8,14 @@ using SqlKata.Tests.Infrastructure;
 
 namespace SqlKata.Tests
 {
-    public enum EnumExample
-    {
-        First,
-        Second,
-        Third,
-    }
-
     public class ParameterTypeTests : TestSupport
     {
-
+        public enum EnumExample
+        {
+            First,
+            Second,
+            Third,
+        }
 
         public class ParameterTypeGenerator : IEnumerable<object[]>
         {
