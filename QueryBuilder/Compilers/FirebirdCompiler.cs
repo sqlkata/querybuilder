@@ -10,7 +10,7 @@ namespace SqlKata.Compilers
         {
         }
 
-        public override string EngineCode { get; } = "firebird";
+        public override string EngineCode { get; } = EngineCodes.Firebird;
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
