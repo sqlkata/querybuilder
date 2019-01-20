@@ -1,4 +1,5 @@
-﻿using SqlKata.Compilers;
+﻿using System;
+using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -6,6 +7,23 @@ namespace SqlKata.Tests
 {
     public class InsertTests : TestSupport
     {
+        [Fact]
+        public void InsertObject()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            });
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')", c[EngineCodes.SqlServer]);
+
+
+            Assert.Equal("INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')", c[EngineCodes.Firebird]);
+        }
+
         [Fact]
         public void InsertFromSubQueryWithCte()
         {
