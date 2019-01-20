@@ -3,7 +3,7 @@ using SqlKata.Compilers;
 
 namespace SqlKata.Extensions
 {
-    public static class QueryCompilerExtensions
+    public static class QueryForExtensions
     {
         public static Query ForFirebird(this Query src, Func<Query, Query> fn)
         {
