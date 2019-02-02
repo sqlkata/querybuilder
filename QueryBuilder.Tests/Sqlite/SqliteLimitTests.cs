@@ -1,12 +1,17 @@
 using SqlKata.Compilers;
-using SqlKata;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.Sqlite
 {
-    public class SqliteLimitTest
+    public class SqliteLimitTests : TestSupport
     {
-        private SqliteCompiler compiler = new SqliteCompiler();
+        private readonly SqliteCompiler compiler;
+
+        public SqliteLimitTests()
+        {
+            compiler = Compilers.Get<SqliteCompiler>(EngineCodes.Sqlite);
+        }
 
         [Fact]
         public void WithNoLimitNorOffset()

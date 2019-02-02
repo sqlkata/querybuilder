@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Linq;
-using SqlKata.Compilers.Extensions;
 
 namespace SqlKata.Compilers
 {
@@ -13,7 +12,7 @@ namespace SqlKata.Compilers
             parameterPlaceholderPrefix = ":p";
         }
 
-        public override string EngineCode { get; } = OracleCompilerExtensions.ENGINE_CODE;
+        public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)

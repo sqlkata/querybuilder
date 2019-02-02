@@ -6,7 +6,7 @@ namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
-        public override string EngineCode => "sqlite";
+        public override string EngineCode { get; } = EngineCodes.Sqlite;
         protected override string parameterPlaceholder { get; set; } = "?";
         protected override string parameterPlaceholderPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
