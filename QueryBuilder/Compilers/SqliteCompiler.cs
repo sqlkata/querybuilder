@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
         protected override string parameterPlaceholderPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
-        protected override string LastId { get; set; } = "last_insert_rowid()";
+        protected override string LastId { get; set; } = "select last_insert_rowid()";
 
         public override string CompileTrue()
         {
