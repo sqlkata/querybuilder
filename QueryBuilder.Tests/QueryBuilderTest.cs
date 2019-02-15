@@ -585,7 +585,7 @@ namespace SqlKata.Tests
 
             var c = Compile(mobiles);
 
-            Assert.Equal("SELECT * FROM [Phones] UNION (SELECT * FROM [Laptops])", c[0]);
+            Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops]", c[0]);
 
 
             Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\"", c[3]);
@@ -600,8 +600,8 @@ namespace SqlKata.Tests
 
             var c = Compile(mobiles);
 
-            Assert.Equal("SELECT * FROM [Phones] UNION (SELECT * FROM [Laptops] WHERE [Type] = 'A')", c[0]);
-            Assert.Equal("SELECT * FROM `Phones` UNION (SELECT * FROM `Laptops` WHERE `Type` = 'A')", c[1]);
+            Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'", c[0]);
+            Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'", c[1]);
 
             Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" WHERE \"TYPE\" = 'A'", c[3]);
         }
@@ -609,12 +609,12 @@ namespace SqlKata.Tests
         [Fact]
         public void RawUnionWithBindings()
         {
-            var mobiles = new Query("Phones").UnionRaw("UNION (SELECT * FROM [Laptops] WHERE [Type] = ?)", "A");
+            var mobiles = new Query("Phones").UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A");
 
             var c = Compile(mobiles);
 
-            Assert.Equal("SELECT * FROM [Phones] UNION (SELECT * FROM [Laptops] WHERE [Type] = 'A')", c[0]);
-            Assert.Equal("SELECT * FROM `Phones` UNION (SELECT * FROM `Laptops` WHERE `Type` = 'A')", c[1]);
+            Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'", c[0]);
+            Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'", c[1]);
         }
 
         [Fact]
@@ -627,7 +627,7 @@ namespace SqlKata.Tests
 
             var c = Compile(mobiles);
 
-            Assert.Equal("SELECT * FROM [Phones] UNION (SELECT * FROM [Laptops]) UNION (SELECT * FROM [Tablets])",
+            Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] UNION SELECT * FROM [Tablets]",
                 c[0]);
 
 
@@ -646,7 +646,7 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal(
-                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION (SELECT * FROM [Tablets] WHERE [Price] > 2000)",
+                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION SELECT * FROM [Tablets] WHERE [Price] > 2000",
                 c[0]);
 
 
@@ -667,7 +667,7 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal(
-                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION (SELECT * FROM [Laptops] WHERE [Price] > 1000) UNION ALL (SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30)",
+                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION ALL SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30",
                 c[0]);
 
 
@@ -687,7 +687,7 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal(
-                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION (SELECT * FROM [Laptops]) UNION ALL (SELECT * FROM [Tablets])",
+                "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] UNION ALL SELECT * FROM [Tablets]",
                 c[0]);
 
 
@@ -710,15 +710,15 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal(
-                "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT (SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS')) UNION ALL (SELECT * FROM [Tablets] WHERE [Price] < 100)",
+                "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS') UNION ALL SELECT * FROM [Tablets] WHERE [Price] < 100",
                 c[0]);
 
             Assert.Equal(
-                "SELECT * FROM `Phones` WHERE `Price` < 300 INTERSECT ALL (SELECT * FROM `Watches` WHERE `Os` = 'Android') UNION ALL (SELECT * FROM `Tablets` WHERE `Price` < 100)",
+                "SELECT * FROM `Phones` WHERE `Price` < 300 INTERSECT ALL SELECT * FROM `Watches` WHERE `Os` = 'Android' UNION ALL SELECT * FROM `Tablets` WHERE `Price` < 100",
                 c[1]);
 
             Assert.Equal(
-                "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION (SELECT * FROM \"Laptops\" WHERE \"Price\" < 800) UNION ALL (SELECT * FROM \"Tablets\" WHERE \"Price\" < 100)",
+                "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION SELECT * FROM \"Laptops\" WHERE \"Price\" < 800 UNION ALL SELECT * FROM \"Tablets\" WHERE \"Price\" < 100",
                 c[2]);
 
             Assert.Equal(

@@ -450,7 +450,7 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
-                    combinedQueries.Add($"{combineOperator}({subCtx.RawSql})");
+                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
                 }
                 else
                 {
