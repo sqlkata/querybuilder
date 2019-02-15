@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
@@ -7,12 +6,12 @@ namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
-        public override string EngineCode => "sqlite";
+        public override string EngineCode { get; } = EngineCodes.Sqlite;
         protected override string parameterPlaceholder { get; set; } = "?";
         protected override string parameterPlaceholderPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
-        protected override string LastId { get; set; } = "last_insert_rowid()";
+        protected override string LastId { get; set; } = "select last_insert_rowid()";
 
         public override string CompileTrue()
         {
@@ -68,13 +67,5 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-    }
-    public static class SqliteCompilerExtensions
-    {
-        public static string ENGINE_CODE = "sqlite";
-        public static Query ForSqlite(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(SqliteCompilerExtensions.ENGINE_CODE, fn);
-        }
     }
 }

@@ -1,14 +1,13 @@
 ﻿using System;
-using SqlKata;
 using SqlKata.Compilers;
 using Xunit;
 
 namespace SqlKata.Tests
 {
-    public class WhiteListingOperators
+    public class OperatorWhitelistTests
     {
 
-        public WhiteListingOperators()
+        public OperatorWhitelistTests()
         {
 
         }

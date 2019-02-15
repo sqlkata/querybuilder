@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,7 +10,7 @@ namespace SqlKata.Compilers
         {
         }
 
-        public override string EngineCode { get; } = "firebird";
+        public override string EngineCode { get; } = EngineCodes.Firebird;
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
@@ -152,16 +151,6 @@ namespace SqlKata.Compilers
         public override string CompileFalse()
         {
             return "0";
-        }
-    }
-
-    public static class FirebirdCompilerExtensions
-    {
-        public static string ENGINE_CODE = "firebird";
-
-        public static Query ForFirebird(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(FirebirdCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

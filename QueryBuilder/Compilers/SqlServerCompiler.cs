@@ -1,18 +1,15 @@
-using System;
-
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
         public SqlServerCompiler()
-
         {
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
             LastId = "SELECT scope_identity() as Id";
         }
 
-        public override string EngineCode { get; } = "sqlsrv";
+        public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = true;
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -170,15 +167,6 @@ namespace SqlKata.Compilers
             }
 
             return sql;
-        }
-    }
-
-    public static class SqlServerCompilerExtensions
-    {
-        public static string ENGINE_CODE = "sqlsrv";
-        public static Query ForSqlServer(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(SqlServerCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }
