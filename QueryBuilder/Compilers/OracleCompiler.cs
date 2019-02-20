@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -92,6 +93,21 @@ namespace SqlKata.Compilers
             }
 
             ctx.RawSql = newSql;
+        }
+
+        protected override void CompileInsertMultiple(string table, List<InsertClause> clauses, SqlResult ctx)
+        {
+            var exemplarColumns = clauses.First().Columns;
+            ctx.RawSql = $"INSERT INTO {table} ({string.Join(", ", WrapArray(exemplarColumns))}) ";
+            for (var clauseIndex = 0; clauseIndex < clauses.Count; clauseIndex++)
+            {
+                var clause = clauses[clauseIndex];
+                ctx.RawSql += $"SELECT {string.Join(", ", Parameterize(ctx, clause.Values))} FROM dual";
+                if (clauseIndex < clauses.Count - 1)
+                {
+                    ctx.RawSql += " UNION ";
+                }
+            }
         }
     }
 }
