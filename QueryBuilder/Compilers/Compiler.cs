@@ -316,48 +316,71 @@ namespace SqlKata.Compilers
             var table = Wrap(fromClause.Table);
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
-
-            if (inserts[0] is InsertClause insertClause)
+            if (inserts.Count > 1)
             {
-                ctx.RawSql = $"INSERT INTO {table}"
-                    + " (" + string.Join(", ", WrapArray(insertClause.Columns)) + ") "
-                    + "VALUES (" + string.Join(", ", Parameterize(ctx, insertClause.Values)) + ")";
-
-                if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
+                var clauses = inserts.Select(s => s as InsertClause).ToList();
+                if (clauses.Any(a => a == null)) throw new InvalidOperationException("Invalid insert clause type for multiple insert query"); //todo: better message
+                if (clauses.Select(s => s.Columns.Count).Distinct().Count() > 1)
                 {
-                    ctx.RawSql += ";" + LastId;
+                    throw new InvalidOperationException("Invalid multiple insert query, all insert clauses must have the same column count"); //todo: better check and message
                 }
+                CompileInsertMultiple(table, clauses, ctx);
             }
             else
             {
-                var clause = inserts[0] as InsertQueryClause;
-
-                var columns = "";
-
-                if (clause.Columns.Any())
+                switch (inserts[0])
                 {
-                    columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
+                    case InsertClause insertClause:
+                        CompileInsertClause(table, insertClause, ctx);
+                        break;
+
+                    case InsertQueryClause insertQueryClause:
+                        CompileInsertQueryClause(table, insertQueryClause, ctx);
+                        break;
+
+                    default:
+                        throw InvalidClauseException("insert", inserts[0]);
                 }
-
-                var subCtx = CompileSelectQuery(clause.Query);
-                ctx.Bindings.AddRange(subCtx.Bindings);
-
-                ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
-            }
-
-            if (inserts.Count > 1)
-            {
-                foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
-                {
-                    var clause = insert as InsertClause;
-
-                    ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
-
-                }
-            }
-
+            }           
 
             return ctx;
+        }
+
+        protected virtual void CompileInsertMultiple(string table, List<InsertClause> clauses, SqlResult ctx)
+        {
+            CompileInsertClause(table, clauses[0], ctx);
+            foreach (var insert in clauses.GetRange(1, clauses.Count - 1))
+            {
+                var clause = insert;
+                ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
+            }
+        }
+
+        protected virtual void CompileInsertClause(string table, InsertClause insertClause, SqlResult ctx)
+        {
+            ctx.RawSql = $"INSERT INTO {table}"
+                         + " (" + string.Join(", ", WrapArray(insertClause.Columns)) + ") "
+                         + "VALUES (" + string.Join(", ", Parameterize(ctx, insertClause.Values)) + ")";
+
+            if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
+            {
+                ctx.RawSql += ";" + LastId;
+            }
+        }
+
+        protected virtual void CompileInsertQueryClause(string table, InsertQueryClause clause, SqlResult ctx)
+        {
+            var columns = "";
+
+            if (clause.Columns.Any())
+            {
+                columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
+            }
+
+            var subCtx = CompileSelectQuery(clause.Query);
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
         }
 
         /// <summary>
