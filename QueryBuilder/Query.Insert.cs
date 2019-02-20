@@ -72,7 +72,7 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="valuesCollection"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, bool returnId = false)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
             var columnsList = columns?.ToList();
             var valuesCollectionList = valuesCollection?.ToList();
@@ -97,8 +97,7 @@ namespace SqlKata
                 AddComponent("insert", new InsertClause
                 {
                     Columns = columnsList,
-                    Values = valuesList,
-                    ReturnId = returnId,
+                    Values = valuesList
                 });
             }
 
