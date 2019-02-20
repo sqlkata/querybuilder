@@ -32,7 +32,7 @@ namespace SqlKata.Tests.Oracle
             var result = Compiler.Compile(query);
 
             Assert.Equal(
-                "INSERT INTO \"TBL\" (\"one\", \"two\") SELECT 3348, 1 FROM dual UNION SELECT 3348, 2 FROM dual UNION SELECT 3348, 3 FROM dual",
+                "INSERT INTO \"TBL\" (\"one\", \"two\") SELECT 3348, 1 FROM dual UNION ALL SELECT 3348, 2 FROM dual UNION ALL SELECT 3348, 3 FROM dual",
                 result.ToString());
         }
     }
