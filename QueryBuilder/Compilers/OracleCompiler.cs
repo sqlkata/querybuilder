@@ -105,7 +105,7 @@ namespace SqlKata.Compilers
                 ctx.RawSql += $"SELECT {string.Join(", ", Parameterize(ctx, clause.Values))} FROM dual";
                 if (clauseIndex < clauses.Count - 1)
                 {
-                    ctx.RawSql += " UNION ";
+                    ctx.RawSql += " UNION ALL ";
                 }
             }
         }
