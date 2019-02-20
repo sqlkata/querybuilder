@@ -176,8 +176,7 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops]", c[EngineCodes.SqlServer]);
-
-
+            Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\"", c[EngineCodes.Sqlite]);
             Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\"", c[EngineCodes.Firebird]);
         }
 
@@ -191,8 +190,8 @@ namespace SqlKata.Tests
             var c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'", c[EngineCodes.Sqlite]);
             Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'", c[EngineCodes.MySql]);
-
             Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" WHERE \"TYPE\" = 'A'", c[EngineCodes.Firebird]);
         }
 
