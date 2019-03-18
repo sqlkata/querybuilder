@@ -158,5 +158,15 @@ namespace SqlKata
         {
             return Enumerable.Repeat(str, count);
         }
+        
+        public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
+        {
+            var nonEscapedRegex = new Regex($@"(?<!\{escapeCharacter}){identifier}");
+            if (nonEscapedRegex.IsMatch(identifier))
+            {
+                return nonEscapedRegex.Replace(input, newIdentifier);
+            }
+            return input.Replace(escapeCharacter + identifier, newIdentifier);
+        }
     }
 }
