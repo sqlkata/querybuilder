@@ -161,7 +161,7 @@ namespace SqlKata
         
         public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
         {
-            var nonEscapedRegex = new Regex($@"(?<!\{escapeCharacter}){identifier}");
+            var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
             if (nonEscapedRegex.IsMatch(identifier))
             {
                 return nonEscapedRegex.Replace(input, newIdentifier);
