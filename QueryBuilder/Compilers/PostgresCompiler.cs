@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
     {
         public PostgresCompiler()
         {
-            LastId = "SELECT lastval()";
+            LastId = "SELECT lastval() AS id";
         }
 
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
