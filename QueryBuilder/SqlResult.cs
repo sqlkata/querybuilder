@@ -28,8 +28,7 @@ namespace SqlKata
         public override string ToString()
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
-
-            return Helper.ReplaceAll(RawSql, "?", i =>
+            var sql = Helper.ReplaceAll(RawSql, "?", i =>
             {
                 if (i >= deepParameters.Count)
                 {
@@ -38,45 +37,57 @@ namespace SqlKata
                 }
 
                 var value = deepParameters[i];
-
-                if (value == null)
-                {
-                    return "NULL";
-                }
-
-                if (Helper.IsArray(value))
-                {
-                    return Helper.JoinArray(",", value as IEnumerable);
-                }
-
-                if (NumberTypes.Contains(value.GetType()))
-                {
-                    return value.ToString();
-                }
-
-                if (value is DateTime date)
-                {
-                    if (date.Date == date)
-                    {
-                        return "'" + date.ToString("yyyy-MM-dd") + "'";
-                    }
-
-                    return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
-                }
-
-                if (value is bool vBool)
-                {
-                    return vBool ? "true" : "false";
-                }
-
-                if (value is Enum vEnum)
-                {
-                    return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
-                }
-
-                // fallback to string
-                return "'" + value.ToString() + "'";
+                return HandleValue(value);
             });
+            foreach (var item in Query.VarMap)
+            {
+                var value = HandleValue(item.Value, wrapArray: true);
+                sql = Helper.ReplaceAll(RawSql, "@"+item.Key, t=> value);
+            }
+            return sql;
+        }
+
+        private static string HandleValue(object value, bool wrapArray=false)
+        {
+            if (value == null)
+            {
+                return "NULL";
+            }
+
+            if (Helper.IsArray(value))
+            {
+                if(wrapArray)
+                    return $"({Helper.JoinArray(",", value as IEnumerable)})";
+                return Helper.JoinArray(",", value as IEnumerable);
+            }
+
+            if (NumberTypes.Contains(value.GetType()))
+            {
+                return value.ToString();
+            }
+
+            if (value is DateTime date)
+            {
+                if (date.Date == date)
+                {
+                    return "'" + date.ToString("yyyy-MM-dd") + "'";
+                }
+
+                return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+            }
+
+            if (value is bool vBool)
+            {
+                return vBool ? "true" : "false";
+            }
+
+            if (value is Enum vEnum)
+            {
+                return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
+            }
+
+            // fallback to string
+            return "'" + value.ToString() + "'";
         }
     }
 }

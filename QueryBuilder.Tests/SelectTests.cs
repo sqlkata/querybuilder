@@ -158,6 +158,36 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void PassingArrayAsParameterWithVar()
+        {
+            var query = new Query("Table").WithVar("Id", new object[] { 1, 2, 3 }).WhereRaw("[Id] in @Id");
+
+            var c = Compile(query);
+            var compilers = new TestCompilersContainer();
+            var results = compilers.Compile(query);
+            var result = results[EngineCodes.SqlServer].NamedBindings["Id"] as object[];
+
+            Assert.True(result.Length == 3 && ((int)result[0]) == 1 && ((int)result[1]) == 2 && ((int)result[2]) == 3);
+            Assert.Equal("SELECT * FROM [Table] WHERE [Id] in (1,2,3)", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM [Table] WHERE [Id] in @Id", results[EngineCodes.SqlServer].RawSql);
+        }
+
+        [Fact]
+        public void PassingParameterWithVar()
+        {
+            var query = new Query("Table").WithVar("Id", 1).WhereRaw("[Id] = @Id");
+
+            var c = Compile(query);
+            var compilers = new TestCompilersContainer();
+            var results = compilers.Compile(query);
+            var result = (int)results[EngineCodes.SqlServer].NamedBindings["Id"];
+
+            Assert.True(result == 1);
+            Assert.Equal("SELECT * FROM [Table] WHERE [Id] = 1", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM [Table] WHERE [Id] = @Id", results[EngineCodes.SqlServer].RawSql);
+        }
+
+        [Fact]
         public void UsingJsonArray()
         {
             var query = new Query("Table").WhereRaw("[Json]->'address'->>'country' in (?)", new[] { 1, 2, 3, 4 });

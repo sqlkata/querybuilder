@@ -10,6 +10,8 @@ namespace SqlKata
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
 
+        public Dictionary<string, object> VarMap { get; set; } = new Dictionary<string, object>();
+
         public Query() : base()
         {
         }
@@ -17,6 +19,12 @@ namespace SqlKata
         public Query(string table) : base()
         {
             From(table);
+        }
+
+        public Query WithVar(string key,object value)
+        {
+            VarMap.Add(key, value);
+            return this;
         }
 
         public bool HasOffset(string engineCode = null)
@@ -53,6 +61,7 @@ namespace SqlKata
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
+            clone.VarMap = VarMap;
             return clone;
         }
 

@@ -163,7 +163,10 @@ namespace SqlKata.Compilers
             var ctx = CompileRaw(query);
 
             ctx = PrepareResult(ctx);
-
+            foreach (var item in query.VarMap)
+            {
+                ctx.NamedBindings.Add(item.Key, item.Value);
+            }
             return ctx;
         }
 
