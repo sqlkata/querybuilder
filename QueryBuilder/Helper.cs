@@ -161,12 +161,13 @@ namespace SqlKata
         
         public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
         {
+            //Replace standard, non-escaped identifiers first
             var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
-            if (nonEscapedRegex.IsMatch(identifier))
-            {
-                return nonEscapedRegex.Replace(input, newIdentifier);
-            }
-            return input.Replace(escapeCharacter + identifier, newIdentifier);
+            var nonEscapedReplace = nonEscapedRegex.Replace(input, newIdentifier);
+            
+            //Then replace escaped identifiers, by just removing the escape character
+            var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
+            return escapedRegex.Replace(nonEscapedReplace, identifier);
         }
     }
 }

@@ -226,9 +226,9 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(@"ANY('\{1,2,3,4,5\}')", @"\", "{", "[", @"ANY('\{1,2,3,4,5\}')")]
-        [InlineData(@"ANY('{1,2,3,4,5}')", @"\", "{", "[", @"ANY('[1,2,3,4,5}')")]
-        public void ReplaceIdentifierUnlessEscaped(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
+        [InlineData(@"\{ text {", @"\", "{", "[", "{ text [")]
+        [InlineData(@"{ text {", @"\", "{", "[", "[ text [")]
+        public void WrapIdentifiers(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
         {
             var result = input.ReplaceIdentifierUnlessEscaped(escapeCharacter, identifier, newIdentifier);
             Assert.Equal(expected, result);

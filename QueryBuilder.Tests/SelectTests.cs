@@ -619,5 +619,15 @@ namespace SqlKata.Tests
                 $"SELECT * FROM \"USERS\" \n{output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"",
                 c[EngineCodes.Firebird]);
         }
+        
+        [Fact]
+        public void OrWhereRawEscaped()
+        {
+            var query = new Query("Table").WhereRaw("[MyCol] = ANY(?::int\\[\\])", "{1,2,3}");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
+        }
     }
 }
