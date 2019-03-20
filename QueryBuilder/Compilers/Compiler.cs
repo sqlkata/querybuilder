@@ -15,6 +15,7 @@ namespace SqlKata.Compilers
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
+        protected virtual string EscapeCharacter { get; set; } = "\\";
 
         protected Compiler()
         {
@@ -809,12 +810,11 @@ namespace SqlKata.Compilers
             return input
 
                 // deprecated
-                .Replace("{", this.OpeningIdentifier)
-                .Replace("}", this.ClosingIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"{", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"}", this.ClosingIdentifier)
 
-                .Replace("[", this.OpeningIdentifier)
-                .Replace("]", this.ClosingIdentifier);
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"[", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"]", this.ClosingIdentifier);
         }
-
     }
 }

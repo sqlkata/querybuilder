@@ -123,6 +123,16 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"USERS\"", c[EngineCodes.Firebird]);
         }
+        
+        [Fact]
+        public void Raw_WrapIdentifiers_Escaped()
+        {
+            var query = new Query("Users").SelectRaw("'\\{1,2,3\\}'::int\\[\\]");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT '{1,2,3}'::int[] FROM \"Users\"", c[EngineCodes.PostgreSql]);
+        }
 
         [Fact]
         public void WrapWithSpace()
