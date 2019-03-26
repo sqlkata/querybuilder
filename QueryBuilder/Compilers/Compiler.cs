@@ -447,7 +447,7 @@ namespace SqlKata.Compilers
                         sql = "DISTINCT " + sql;
                     }
 
-                    return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
+                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
                 }
 
                 return "SELECT 1";
@@ -483,7 +483,7 @@ namespace SqlKata.Compilers
             {
                 if (clause is Combine combineClause)
                 {
-                    var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
+                    var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
 
                     var subCtx = CompileSelectQuery(combineClause.Query);
 

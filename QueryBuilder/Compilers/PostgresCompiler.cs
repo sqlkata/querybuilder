@@ -25,7 +25,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"DATE_PART('{condition.Part.ToUpper()}', {column})";
+                left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
