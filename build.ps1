@@ -100,7 +100,7 @@ if($SourceLinkEnable)
 
 $versionProps = [xml](Get-Content "version.props")
 
-if($Env:APPVEYOR_REPRO_TAG)
+if(-not $Env:APPVEYOR_REPRO_TAG)
 {
     if([string]::IsNullOrWhiteSpace($versionProps.Project.PropertyGroup.VersionSuffix))
     {
