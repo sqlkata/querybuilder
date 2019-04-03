@@ -1,7 +1,5 @@
-using Dapper;
 using System.Collections.Generic;
 using System;
-using SqlKata;
 
 namespace SqlKata.Execution
 {
@@ -66,7 +64,6 @@ namespace SqlKata.Execution
             var db = QueryHelper.CreateQueryFactory(query);
 
             db.Chunk(query, chunkSize, action);
-
         }
 
         public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action)
@@ -76,107 +73,50 @@ namespace SqlKata.Execution
 
         public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
-
-            var compiled = xQuery.Compiler.Compile(query.AsInsert(values));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
-
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(values));
         }
 
-        public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public static int Insert(
+            this Query query,
+            IEnumerable<string> columns,
+            IEnumerable<IEnumerable<object>> valuesCollection
+        )
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
-
-            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, valuesCollection));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
-
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(columns, valuesCollection));
         }
-
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
-
-            var compiled = xQuery.Compiler.Compile(query.AsInsert(columns, fromQuery));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
-
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(columns, fromQuery));
         }
 
         public static int Insert(this Query query, object data)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Insert));
-
-            var compiled = xQuery.Compiler.Compile(query.AsInsert(data));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
-
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(data));
         }
 
         public static T InsertGetId<T>(this Query query, object data)
         {
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(InsertGetId));
-
-            var compiled = xQuery.Compiler.Compile(query.AsInsert(data, true));
-
-            xQuery.Logger(compiled);
-
-            var row = xQuery.Connection.QueryFirst<InsertGetIdRow<T>>(
-                compiled.Sql, compiled.NamedBindings
-            );
+            var row = db.First<InsertGetIdRow<T>>(query.AsInsert(data, true));
 
             return row.Id;
-
         }
 
         public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
         {
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
-
-            var compiled = xQuery.Compiler.Compile(query.AsUpdate(values));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(values));
         }
 
         public static int Update(this Query query, object data)
         {
-
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Update));
-
-            var compiled = xQuery.Compiler.Compile(query.AsUpdate(data));
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
-
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(data));
         }
 
         public static int Delete(this Query query)
         {
-            var xQuery = QueryHelper.CastToXQuery(query, nameof(Delete));
-
-            var compiled = xQuery.Compiler.Compile(query.AsDelete());
-
-            xQuery.Logger(compiled);
-
-            return xQuery.Connection.Execute(compiled.Sql, compiled.NamedBindings);
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsDelete());
         }
 
     }
