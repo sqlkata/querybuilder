@@ -9,15 +9,18 @@ namespace SqlKata
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
+        public string QueryComment { get; set; }
 
         public Query() : base()
         {
         }
 
-        public Query(string table) : base()
+        public Query(string table, string comment = null) : base()
         {
             From(table);
+            Comment(comment);
         }
+
 
         public bool HasOffset(string engineCode = null)
         {
@@ -59,6 +62,12 @@ namespace SqlKata
         public Query As(string alias)
         {
             QueryAlias = alias;
+            return this;
+        }
+
+        public Query Comment(string comment)
+        {
+            QueryComment = comment;
             return this;
         }
 
