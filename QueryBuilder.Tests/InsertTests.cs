@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
@@ -112,6 +113,26 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "INSERT INTO \"BOOKS\" (\"ID\", \"AUTHOR\", \"ISBN\", \"DESCRIPTION\") VALUES (1, 'Author 1', '123456', '')",
                 c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void InsertWithByteArray()
+        {
+            var fauxImagebytes = new byte[] {0x1, 0x3, 0x3, 0x7};
+            var query = new Query("Books")
+                .AsInsert(new[]{"Id", "CoverImageBytes"},
+                    new object[]
+                    {
+                        1,
+                        fauxImagebytes
+                    });
+
+            var c = Compilers.Compile(query);
+            Assert.All(c.Values, a => Assert.Equal(2, a.NamedBindings.Count));
+
+            var exemplar = c[EngineCodes.SqlServer];
+            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (?, ?)", exemplar.RawSql);
+            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (@p0, @p1)", exemplar.Sql);
         }
     }
 }

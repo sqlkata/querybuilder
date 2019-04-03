@@ -134,7 +134,7 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(x.Column);
 
-            var sql = $"{x.Part.ToUpper()}({column}) {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
+            var sql = $"{x.Part.ToUpperInvariant()}({column}) {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
 
             return x.IsNot
                 ? $"NOT ({sql})"

@@ -224,5 +224,14 @@ namespace SqlKata.Tests
 
             Assert.Equal("where id = ? or id in (?,?) or id in ()", expanded);
         }
+
+        [Theory]
+        [InlineData(@"\{ text {", @"\", "{", "[", "{ text [")]
+        [InlineData(@"{ text {", @"\", "{", "[", "[ text [")]
+        public void WrapIdentifiers(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
+        {
+            var result = input.ReplaceIdentifierUnlessEscaped(escapeCharacter, identifier, newIdentifier);
+            Assert.Equal(expected, result);
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
     {
         public PostgresCompiler()
         {
-            LastId = "SELECT lastval()";
+            LastId = "SELECT lastval() AS id";
         }
 
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
@@ -25,7 +25,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"DATE_PART('{condition.Part.ToUpper()}', {column})";
+                left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";

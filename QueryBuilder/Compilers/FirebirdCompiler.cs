@@ -60,7 +60,7 @@ namespace SqlKata.Compilers
             {
                 if (clause is Combine combineClause)
                 {
-                    var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
+                    var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
 
                     var subCtx = CompileSelectQuery(combineClause.Query);
 
@@ -125,7 +125,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"EXTRACT({condition.Part.ToUpper()} FROM {column})";
+                left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
@@ -140,7 +140,7 @@ namespace SqlKata.Compilers
 
         public override string WrapValue(string value)
         {
-            return base.WrapValue(value).ToUpper();
+            return base.WrapValue(value).ToUpperInvariant();
         }
 
         public override string CompileTrue()

@@ -31,6 +31,7 @@ param(
 $ErrorActionPreference = "Stop"
 $msgColor = @{Default="White"; Heading="Cyan"; Danger="Red"; Success="Green"; Attention="Yellow"}
 $BuildConfiguration = 'Release'
+$DefaultCIBuildSuffix = 'ci'
 
 function Die ($message) {
     Write-Host ">>> ERROR:`t$message`n" -ForegroundColor $msgColor.Danger
@@ -90,7 +91,6 @@ if($DebugBuild)
 if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0) { Die "Build Number or Pull Request Number must be supplied" }
 if(!(Test-Path "version.props")) { Die "Unable to locate required file: version.props" }
 $outputPath = "$PSScriptRoot\.nupkgs"
-$queryBuilderPath = "$PSScriptRoot\QueryBuilder\QueryBuilder.csproj"
 $stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:d /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
@@ -99,6 +99,16 @@ if($SourceLinkEnable)
 }
 
 $versionProps = [xml](Get-Content "version.props")
+
+if(-not $Env:APPVEYOR_REPRO_TAG)
+{
+    if([string]::IsNullOrWhiteSpace($versionProps.Project.PropertyGroup.VersionSuffix))
+    {
+        $versionProps.Project.PropertyGroup.VersionSuffix=$DefaultCIBuildSuffix
+        $versionProps.Save("$PSScriptRoot\version.props")
+    }
+}
+
 $versionPrefix = $versionProps.Project.PropertyGroup.VersionPrefix
 $versionSuffix = $versionProps.Project.PropertyGroup.VersionSuffix
 

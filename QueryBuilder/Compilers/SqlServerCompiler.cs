@@ -146,17 +146,17 @@ namespace SqlKata.Compilers
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
-            var part = condition.Part.ToUpper();
+            var part = condition.Part.ToUpperInvariant();
 
             string left;
 
             if (part == "TIME" || part == "DATE")
             {
-                left = $"CAST({column} AS {part.ToUpper()})";
+                left = $"CAST({column} AS {part.ToUpperInvariant()})";
             }
             else
             {
-                left = $"DATEPART({part.ToUpper()}, {column})";
+                left = $"DATEPART({part.ToUpperInvariant()}, {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";

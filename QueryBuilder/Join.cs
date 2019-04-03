@@ -14,7 +14,7 @@ namespace SqlKata
             }
             set
             {
-                _type = value.ToUpper();
+                _type = value.ToUpperInvariant();
             }
         }
 

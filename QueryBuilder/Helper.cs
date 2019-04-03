@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace SqlKata
@@ -11,7 +10,12 @@ namespace SqlKata
     {
         public static bool IsArray(object value)
         {
-            if (value is string)
+            if(value is string)
+            {
+                return false;
+            }
+
+            if (value is byte[])
             {
                 return false;
             }
@@ -153,6 +157,17 @@ namespace SqlKata
         public static IEnumerable<string> Repeat(this string str, int count)
         {
             return Enumerable.Repeat(str, count);
+        }
+        
+        public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
+        {
+            //Replace standard, non-escaped identifiers first
+            var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
+            var nonEscapedReplace = nonEscapedRegex.Replace(input, newIdentifier);
+            
+            //Then replace escaped identifiers, by just removing the escape character
+            var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
+            return escapedRegex.Replace(nonEscapedReplace, identifier);
         }
     }
 }

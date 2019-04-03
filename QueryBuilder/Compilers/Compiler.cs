@@ -15,6 +15,7 @@ namespace SqlKata.Compilers
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
+        protected virtual string EscapeCharacter { get; set; } = "\\";
 
         protected Compiler()
         {
@@ -446,7 +447,7 @@ namespace SqlKata.Compilers
                         sql = "DISTINCT " + sql;
                     }
 
-                    return "SELECT " + aggregate.Type.ToUpper() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
+                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
                 }
 
                 return "SELECT 1";
@@ -482,7 +483,7 @@ namespace SqlKata.Compilers
             {
                 if (clause is Combine combineClause)
                 {
-                    var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
+                    var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
 
                     var subCtx = CompileSelectQuery(combineClause.Query);
 
@@ -809,12 +810,11 @@ namespace SqlKata.Compilers
             return input
 
                 // deprecated
-                .Replace("{", this.OpeningIdentifier)
-                .Replace("}", this.ClosingIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"{", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"}", this.ClosingIdentifier)
 
-                .Replace("[", this.OpeningIdentifier)
-                .Replace("]", this.ClosingIdentifier);
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"[", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"]", this.ClosingIdentifier);
         }
-
     }
 }
