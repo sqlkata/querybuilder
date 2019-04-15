@@ -52,6 +52,7 @@ namespace SqlKata.Execution
             xQuery.QueryAlias = query.QueryAlias;
             xQuery.IsDistinct = query.IsDistinct;
             xQuery.Method = query.Method;
+            xQuery.Includes = query.Includes;
 
             xQuery.SetEngineScope(query.EngineScope);
 

@@ -10,6 +10,7 @@ namespace SqlKata
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
         public string QueryComment { get; set; }
+        public List<Include> Includes = new List<Include>();
 
         public Query() : base()
         {
@@ -56,6 +57,7 @@ namespace SqlKata
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
+            clone.Includes = Includes;
             return clone;
         }
 
@@ -306,6 +308,24 @@ namespace SqlKata
         public override Query NewQuery()
         {
             return new Query();
+        }
+
+        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id")
+        {
+            if (foreignKey == null)
+            {
+                foreignKey = relationName + "Id";
+            }
+
+            Includes.Add(new Include
+            {
+                Name = relationName,
+                LocalKey = localKey,
+                ForeignKey = foreignKey,
+                Query = query,
+            });
+
+            return this;
         }
 
     }
