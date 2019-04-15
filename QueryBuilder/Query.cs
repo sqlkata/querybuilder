@@ -310,12 +310,8 @@ namespace SqlKata
             return new Query();
         }
 
-        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id")
+        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id", bool isMany = false)
         {
-            if (foreignKey == null)
-            {
-                foreignKey = relationName + "Id";
-            }
 
             Includes.Add(new Include
             {
@@ -323,9 +319,15 @@ namespace SqlKata
                 LocalKey = localKey,
                 ForeignKey = foreignKey,
                 Query = query,
+                IsMany = isMany,
             });
 
             return this;
+        }
+
+        public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
+        {
+            return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
 
     }

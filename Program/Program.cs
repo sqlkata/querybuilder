@@ -48,6 +48,7 @@ namespace Program
                 Console.WriteLine(result.ToString());
             };
 
+            /*
             var accounts = db.Query("Accounts")
                 .WhereNotNull("BankId")
                 .Include("bank",
@@ -56,8 +57,19 @@ namespace Program
                 )
                 .Select("Id", "Name", "BankId")
                 .OrderByDesc("Id").Limit(10).Get();
+            */
 
-            Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+            var includedAccountsQuery = db.Query("Accounts").Limit(2)
+                .IncludeMany("Transactions", db.Query("Transactions"))
+                .Include("Company", db.Query("Companies"));
+
+            var bank = db.Query("Banks as Icon")
+                .IncludeMany("Accounts", includedAccountsQuery, "BankId")
+                .WhereExists(q => q.From("Accounts").WhereColumns("Accounts.BankId", "=", "Icon.Id"))
+                .Limit(1)
+                .Get();
+
+            Console.WriteLine(JsonConvert.SerializeObject(bank, Formatting.Indented));
 
         }
 

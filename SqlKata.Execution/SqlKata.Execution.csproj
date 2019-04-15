@@ -4,6 +4,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="dapper" Version="1.50.5" />
+    <PackageReference Include="Humanizer.Core" Version="2.6.2" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
