@@ -39,17 +39,25 @@ namespace Program
 
             // SQLiteConnection.CreateFile("Demo.db");
 
-            connection = new SQLiteConnection("Data Source=Demo.db");
+            // connection = new SQLiteConnection("Data Source=Demo.db");
 
-            var db = new QueryFactory(connection, new SqliteCompiler());
+            var db = new QueryFactory(connection, new SqlServerCompiler());
 
-            // db.Statement("create table accounts(id integer primary key,name text,currency_id text);");
+            db.Logger = result =>
+            {
+                Console.WriteLine(result.ToString());
+            };
 
-            db.Logger = q => Console.WriteLine(q.ToString());
+            var accounts = db.Query("Accounts")
+                .WhereNotNull("BankId")
+                .Include("bank",
+                    db.Query("Banks").Include("Country", db.Query("Countries"))
+                        .Select("Id", "Name", "CountryId")
+                )
+                .Select("Id", "Name", "BankId")
+                .OrderByDesc("Id").Limit(10).Get();
 
-            var accounts = db.Query("Accounts").OrderByDesc("Id").Offset(10).Get();
-
-            Console.WriteLine(JsonConvert.SerializeObject(accounts));
+            Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
         }
 

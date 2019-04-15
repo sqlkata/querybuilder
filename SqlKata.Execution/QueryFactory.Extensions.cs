@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using Dapper;
 
@@ -14,11 +15,52 @@ namespace SqlKata.Execution
         {
             var compiled = db.Compile(query);
 
-            return db.Connection.Query<T>(
+            var result = db.Connection.Query<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
                 commandTimeout: db.QueryTimeout
-            );
+            ).ToList();
+
+            if (!result.Any())
+            {
+                return result;
+            }
+
+            if (result[0] is IDynamicMetaObjectProvider)
+            {
+                var dynamicResult = result
+                    .Cast<IDictionary<string, object>>()
+                    .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var include in query.Includes)
+                {
+                    var ids = dynamicResult.Where(x => x[include.ForeignKey] != null)
+                        .Select(x => x[include.ForeignKey].ToString())
+                        .ToList();
+
+                    if (!ids.Any())
+                    {
+                        continue;
+                    }
+
+                    var related = include.Query.WhereIn(include.LocalKey, ids).Get()
+                        .Cast<IDictionary<string, object>>()
+                        .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                        .ToDictionary(x => x[include.LocalKey].ToString());
+
+                    foreach (var item in dynamicResult)
+                    {
+                        var foreignValue = item[include.ForeignKey].ToString();
+                        item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    }
+                }
+
+                return dynamicResult.Cast<T>();
+
+            }
+
+            return result;
         }
 
         public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
@@ -30,7 +72,7 @@ namespace SqlKata.Execution
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
         {
-            return Get<dynamic>(db, query);
+            return Get<dynamic>(db, query).Cast<IDictionary<string, object>>().ToList();
         }
 
         public static T First<T>(this QueryFactory db, Query query)
@@ -42,7 +84,14 @@ namespace SqlKata.Execution
 
         public static dynamic First(this QueryFactory db, Query query)
         {
-            return First<dynamic>(db, query);
+            var list = Get<dynamic>(db, query);
+
+            if (!list.Any())
+            {
+                throw new InvalidOperationException("The sequence contains no elements");
+            }
+
+            return list.ElementAt(0);
         }
 
         public static T FirstOrDefault<T>(this QueryFactory db, Query query)
@@ -54,7 +103,9 @@ namespace SqlKata.Execution
 
         public static dynamic FirstOrDefault(this QueryFactory db, Query query)
         {
-            return FirstOrDefault<dynamic>(db, query);
+            var list = Get<dynamic>(db, query);
+
+            return list.Any() ? list.ElementAt(0) : null;
         }
 
         public static int Execute(
