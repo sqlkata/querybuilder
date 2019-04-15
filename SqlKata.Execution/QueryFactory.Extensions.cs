@@ -72,41 +72,38 @@ namespace SqlKata.Execution
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
         {
-            return Get<dynamic>(db, query).Cast<IDictionary<string, object>>().ToList();
-        }
-
-        public static T First<T>(this QueryFactory db, Query query)
-        {
-            var compiled = db.Compile(query.Limit(1));
-
-            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings, commandTimeout: db.QueryTimeout);
-        }
-
-        public static dynamic First(this QueryFactory db, Query query)
-        {
-            var list = Get<dynamic>(db, query);
-
-            if (!list.Any())
-            {
-                throw new InvalidOperationException("The sequence contains no elements");
-            }
-
-            return list.ElementAt(0);
+            return Get<dynamic>(db, query);
         }
 
         public static T FirstOrDefault<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var list = Get<T>(db, query.Limit(1));
 
-            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings, commandTimeout: db.QueryTimeout);
+            return list.ElementAtOrDefault(0);
         }
 
         public static dynamic FirstOrDefault(this QueryFactory db, Query query)
         {
-            var list = Get<dynamic>(db, query);
-
-            return list.Any() ? list.ElementAt(0) : null;
+            return FirstOrDefault<dynamic>(db, query);
         }
+
+        public static T First<T>(this QueryFactory db, Query query)
+        {
+            var item = FirstOrDefault(db, query);
+
+            if (item == null)
+            {
+                throw new InvalidOperationException("The sequence contains no elements");
+            }
+
+            return item;
+        }
+
+        public static dynamic First(this QueryFactory db, Query query)
+        {
+            return First<dynamic>(db, query);
+        }
+
 
         public static int Execute(
             this QueryFactory db,

@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using Dapper;
 using System.Threading.Tasks;
+using System.Dynamic;
 
 namespace SqlKata.Execution
 {
@@ -15,11 +16,52 @@ namespace SqlKata.Execution
         {
             var compiled = db.Compile(query);
 
-            return await db.Connection.QueryAsync<T>(
+            var result = (await db.Connection.QueryAsync<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
                 commandTimeout: db.QueryTimeout
-            );
+            )).ToList();
+
+            if (!result.Any())
+            {
+                return result;
+            }
+
+            if (result[0] is IDynamicMetaObjectProvider)
+            {
+                var dynamicResult = result
+                    .Cast<IDictionary<string, object>>()
+                    .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var include in query.Includes)
+                {
+                    var ids = dynamicResult.Where(x => x[include.ForeignKey] != null)
+                        .Select(x => x[include.ForeignKey].ToString())
+                        .ToList();
+
+                    if (!ids.Any())
+                    {
+                        continue;
+                    }
+
+                    var related = (await include.Query.WhereIn(include.LocalKey, ids).GetAsync())
+                        .Cast<IDictionary<string, object>>()
+                        .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                        .ToDictionary(x => x[include.LocalKey].ToString());
+
+                    foreach (var item in dynamicResult)
+                    {
+                        var foreignValue = item[include.ForeignKey].ToString();
+                        item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    }
+                }
+
+                return dynamicResult.Cast<T>();
+
+            }
+
+            return result;
         }
 
         public static async Task<IEnumerable<IDictionary<string, object>>> GetDictionaryAsync(this QueryFactory db, Query query)
@@ -40,36 +82,33 @@ namespace SqlKata.Execution
             return await GetAsync<dynamic>(db, query);
         }
 
-        public static async Task<T> FirstAsync<T>(this QueryFactory db, Query query)
-        {
-            var compiled = db.Compile(query.Limit(1));
-
-            return await db.Connection.QueryFirstAsync<T>(
-                compiled.Sql,
-                compiled.NamedBindings,
-                commandTimeout: db.QueryTimeout
-            );
-        }
-
-        public static async Task<dynamic> FirstAsync(this QueryFactory db, Query query)
-        {
-            return await FirstAsync<dynamic>(db, query);
-        }
-
         public static async Task<T> FirstOrDefaultAsync<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.Compile(query.Limit(1));
+            var list = await GetAsync(db, query.Limit(1));
 
-            return await db.Connection.QueryFirstOrDefaultAsync<T>(
-                compiled.Sql,
-                compiled.NamedBindings,
-                commandTimeout: db.QueryTimeout
-            );
+            return list.ElementAtOrDefault(0);
         }
 
         public static async Task<dynamic> FirstOrDefaultAsync(this QueryFactory db, Query query)
         {
             return await FirstOrDefaultAsync<dynamic>(db, query);
+        }
+
+        public static async Task<T> FirstAsync<T>(this QueryFactory db, Query query)
+        {
+            var item = await FirstOrDefaultAsync<T>(db, query);
+
+            if (item == null)
+            {
+                throw new InvalidOperationException("The sequence contains no elements");
+            }
+
+            return item;
+        }
+
+        public static async Task<dynamic> FirstAsync(this QueryFactory db, Query query)
+        {
+            return await FirstAsync<dynamic>(db, query);
         }
 
         public static async Task<int> ExecuteAsync(
