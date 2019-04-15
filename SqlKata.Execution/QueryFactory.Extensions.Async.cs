@@ -84,7 +84,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> FirstOrDefaultAsync<T>(this QueryFactory db, Query query)
         {
-            var list = await GetAsync(db, query.Limit(1));
+            var list = await GetAsync<T>(db, query.Limit(1));
 
             return list.ElementAtOrDefault(0);
         }

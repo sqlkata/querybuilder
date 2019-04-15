@@ -89,7 +89,7 @@ namespace SqlKata.Execution
 
         public static T First<T>(this QueryFactory db, Query query)
         {
-            var item = FirstOrDefault(db, query);
+            var item = FirstOrDefault<T>(db, query);
 
             if (item == null)
             {
