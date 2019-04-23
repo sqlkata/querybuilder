@@ -134,5 +134,40 @@ namespace SqlKata.Tests
             Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (?, ?)", exemplar.RawSql);
             Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (@p0, @p1)", exemplar.Sql);
         }
+
+
+        private class Account
+        {
+            public Account(string name, string currency = null, string created_at = null, string color = null)
+            {
+                this.name = name ?? throw new ArgumentNullException("name must be provided");
+                this.Currency = currency;
+                this.color = color;
+            }
+
+            public string name { get; set; }
+            [Column("currency_id")]
+            public string Currency { get; set; }
+            [Ignore]
+            public string color { get; set; }
+        }
+
+        [Fact]
+        public void InsertWithIgnoreAndColumnProperties()
+        {
+            var account = new Account(name: $"popular", color: $"blue", currency: "US");
+            var query = new Query("Account").AsInsert(account);
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO [Account] ([name], [currency_id]) VALUES ('popular', 'US')",
+                c[EngineCodes.SqlServer]);
+
+            Assert.Equal(
+                "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\") VALUES ('popular', 'US')",
+                 c[EngineCodes.Firebird]);
+        }
+
     }
 }

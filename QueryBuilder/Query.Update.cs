@@ -12,11 +12,20 @@ namespace SqlKata
         {
             var dictionary = new Dictionary<string, object>();
 
-            var props = data.GetType().GetRuntimeProperties();
+            var props = data.GetType().GetRuntimeProperties()
+                .Where(_ => _.GetCustomAttribute(typeof(IgnoreAttribute)) == null);
 
             foreach (var item in props)
             {
-                dictionary.Add(item.Name, item.GetValue(data));
+                var attr = item.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                if (attr != null)
+                {
+                    dictionary.Add(attr.Name, item.GetValue(data));
+                }
+                else
+                {
+                    dictionary.Add(item.Name, item.GetValue(data));
+                }
             }
 
             return AsUpdate(dictionary);
