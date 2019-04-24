@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace SqlKata.Execution
@@ -84,7 +85,7 @@ namespace SqlKata.Execution
                 .ExecuteAsync(query.AsInsert(data));
         }
 
-        public static async Task<T> InsertGetIdAsync<T>(this Query query, object data)
+        public static async Task<T> InsertGetIdAsync<T>(this Query query, object data, IDbTransaction transaction = null)
         {
             var row = await QueryHelper.CreateQueryFactory(query)
                 .FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true));

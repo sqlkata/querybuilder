@@ -13,14 +13,15 @@ namespace SqlKata.Execution
     {
         #region Dapper
 
-        public static async Task<IEnumerable<T>> GetAsync<T>(this QueryFactory db, Query query)
+        public static async Task<IEnumerable<T>> GetAsync<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
             var compiled = db.Compile(query);
 
             var result = (await db.Connection.QueryAsync<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
-                commandTimeout: db.QueryTimeout
+                commandTimeout: db.QueryTimeout,
+                transaction: transaction
             )).ToList();
 
             result = (await handleIncludesAsync(query, result)).ToList();
@@ -46,9 +47,9 @@ namespace SqlKata.Execution
             return await GetAsync<dynamic>(db, query);
         }
 
-        public static async Task<T> FirstOrDefaultAsync<T>(this QueryFactory db, Query query)
+        public static async Task<T> FirstOrDefaultAsync<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
-            var list = await GetAsync<T>(db, query.Limit(1));
+            var list = await GetAsync<T>(db, query.Limit(1), transaction);
 
             return list.ElementAtOrDefault(0);
         }
@@ -58,9 +59,9 @@ namespace SqlKata.Execution
             return await FirstOrDefaultAsync<dynamic>(db, query);
         }
 
-        public static async Task<T> FirstAsync<T>(this QueryFactory db, Query query)
+        public static async Task<T> FirstAsync<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
-            var item = await FirstOrDefaultAsync<T>(db, query);
+            var item = await FirstOrDefaultAsync<T>(db, query, transaction);
 
             if (item == null)
             {

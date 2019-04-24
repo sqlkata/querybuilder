@@ -12,14 +12,15 @@ namespace SqlKata.Execution
     {
         #region Dapper
 
-        public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
+        public static IEnumerable<T> Get<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
             var compiled = db.Compile(query);
 
             var result = db.Connection.Query<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
-                commandTimeout: db.QueryTimeout
+                commandTimeout: db.QueryTimeout,
+                transaction: transaction
             ).ToList();
 
             result = handleIncludes<T>(query, result).ToList();
@@ -39,9 +40,9 @@ namespace SqlKata.Execution
             return Get<dynamic>(db, query);
         }
 
-        public static T FirstOrDefault<T>(this QueryFactory db, Query query)
+        public static T FirstOrDefault<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
-            var list = Get<T>(db, query.Limit(1));
+            var list = Get<T>(db, query.Limit(1), transaction);
 
             return list.ElementAtOrDefault(0);
         }
@@ -51,9 +52,9 @@ namespace SqlKata.Execution
             return FirstOrDefault<dynamic>(db, query);
         }
 
-        public static T First<T>(this QueryFactory db, Query query)
+        public static T First<T>(this QueryFactory db, Query query, IDbTransaction transaction = null)
         {
-            var item = FirstOrDefault<T>(db, query);
+            var item = FirstOrDefault<T>(db, query, transaction);
 
             if (item == null)
             {

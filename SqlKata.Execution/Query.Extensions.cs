@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using System.Data;
 
 namespace SqlKata.Execution
 {
@@ -95,11 +96,11 @@ namespace SqlKata.Execution
             return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(data));
         }
 
-        public static T InsertGetId<T>(this Query query, object data)
+        public static T InsertGetId<T>(this Query query, object data, IDbTransaction transaction = null)
         {
             var db = QueryHelper.CreateQueryFactory(query);
 
-            var row = db.First<InsertGetIdRow<T>>(query.AsInsert(data, true));
+            var row = db.First<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction);
 
             return row.Id;
         }
