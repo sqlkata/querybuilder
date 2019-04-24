@@ -576,6 +576,23 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void FromWithDifferentEngine()
+        {
+            var query = new Query()
+                .ForSqlServer(q => q.From("mssql"))
+                .ForPostgres(q => q.From("pgsql"))
+                .ForMySql(q => q.From("mysql"))
+                .ForFirebird(q => q.From("fbsql"));
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [mssql]", c[0]);
+            Assert.Equal("SELECT * FROM `mysql`", c[1]);
+            Assert.Equal("SELECT * FROM \"pgsql\"", c[2]);
+            Assert.Equal("SELECT * FROM \"FBSQL\"", c[3]);
+        }
+
+        [Fact]
         public void UnionWithDifferentEngine()
         {
             var mobiles = new Query("Phones")

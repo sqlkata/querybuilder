@@ -43,6 +43,7 @@ namespace SqlKata
                 Alias = Alias,
                 Table = Table,
                 Component = Component,
+                Engine = Engine,
             };
         }
     }
