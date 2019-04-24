@@ -79,5 +79,44 @@ namespace SqlKata.Tests
                 $"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100",
                 c[EngineCodes.SqlServer]);
         }
+
+
+        private class Book
+        {
+            public Book(string name, string author, decimal price = 1.0m, string color = null)
+            {
+                this.Name = name ?? throw new ArgumentNullException("name must be provided");
+                this.BookPrice = price;
+                this.color = color;
+                this.BookAuthor = author;
+            }
+
+            public string Name { get; set; }
+            [Column("Author")]
+            public string BookAuthor { get; set; }
+            [Column("Price")]
+            public decimal BookPrice { get; set; }
+            [Ignore]
+            public string color { get; set; }
+        }
+
+        [Fact]
+        public void UpdateWithIgnoreAndColumnProperties()
+        {
+            var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
+            var query = new Query("Book").AsUpdate(book);
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100",
+                c[EngineCodes.SqlServer]);
+
+
+            Assert.Equal(
+                "UPDATE \"BOOK\" SET \"NAME\" = 'SqlKataBook', \"AUTHOR\" = 'Kata', \"PRICE\" = 100",
+                c[EngineCodes.Firebird]);
+        }
+
     }
 }
