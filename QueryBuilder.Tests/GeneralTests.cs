@@ -160,5 +160,50 @@ namespace SqlKata.Tests
 
             Assert.Equal("[My Table One] AS [Table One]", compiler.Wrap("My Table One as Table One"));
         }
+
+        [Fact]
+        public void CompilerSpecificFrom()
+        {
+            var query = new Query()
+                .ForSqlServer(q => q.From("mssql"))
+                .ForPostgreSql(q => q.From("pgsql"))
+                .ForMySql(q => q.From("mysql"));
+            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
+            Assert.Equal("SELECT * FROM `mysql`", c[EngineCodes.MySql].RawSql);
+        }
+
+        [Fact]
+        public void CompilerSpecificFromRaw()
+        {
+            var query = new Query()
+                .ForSqlServer(q => q.FromRaw("[mssql]"))
+                .ForPostgreSql(q => q.FromRaw("[pgsql]"))
+                .ForMySql(q => q.FromRaw("[mysql]"));
+            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
+            Assert.Equal("SELECT * FROM `mysql`", c[EngineCodes.MySql].RawSql);
+        }
+
+        [Fact]
+        public void CompilerSpecificFromMixed()
+        {
+            var query = new Query()
+                .ForSqlServer(q => q.From("mssql"))
+                .ForPostgreSql(q => q.FromRaw("[pgsql]"))
+                .ForMySql(q => q.From("mysql"));
+            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
+            Assert.Equal("SELECT * FROM `mysql`", c[EngineCodes.MySql].RawSql);
+        }
     }
 }
