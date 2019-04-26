@@ -54,7 +54,8 @@ namespace SqlKata.Compilers
         protected virtual string CompileRawCondition(SqlResult ctx, RawCondition x)
         {
             ctx.Bindings.AddRange(x.Bindings);
-            return WrapIdentifiers(x.Expression);
+            var result = WrapIdentifiers(x.Expression);
+            return ReplaceWithCustomVariables(result);
         }
 
         protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>

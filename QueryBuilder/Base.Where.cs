@@ -659,5 +659,18 @@ namespace SqlKata
 
         #endregion
 
+
+        #region with_variables 
+
+        public Q WithVar(string parameterName, object value)
+        {
+            return AddComponent("withVar", new WithVarClause
+            {
+                Name = parameterName,
+                Value = value
+            });
+
+        }
+        #endregion
     }
 }

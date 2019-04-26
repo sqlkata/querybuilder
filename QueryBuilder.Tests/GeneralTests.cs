@@ -160,5 +160,42 @@ namespace SqlKata.Tests
 
             Assert.Equal("[My Table One] AS [Table One]", compiler.Wrap("My Table One as Table One"));
         }
+
+        #region with_var
+
+
+        [Fact]
+        public void WithVarCanUseReplaceWithDateTime()
+        {
+            var dateObj = new System.DateTime(year: 2017, month: 6, day: 2).ToString("yyyy-MM-dd");
+
+            var query = new Query("Account")
+                     .Select("name")
+                    .WithVar("@date", dateObj)
+                    .WhereRaw("created_date = @date");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT [name] FROM [Account] WHERE created_date = '2017-06-02'", c[EngineCodes.SqlServer]);
+
+        }
+
+
+        [Fact]
+        public void WithVarCanUseReplaceWithNumber()
+        {
+
+            var query = new Query("Account")
+                     .Select("name")
+                    .WithVar("@myNUmb", 234.00)
+                    .WhereRaw("balance >= @myNUmb AND balance <= @myNUmb");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT [name] FROM [Account] WHERE balance >= 234 AND balance <= 234", c[EngineCodes.SqlServer]);
+
+        }
+        #endregion
+
     }
 }

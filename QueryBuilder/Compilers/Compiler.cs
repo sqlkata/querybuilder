@@ -16,6 +16,7 @@ namespace SqlKata.Compilers
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
+        protected virtual List<WithVarClause> VariablesClauses { get; private set; }
 
         protected Compiler()
         {
@@ -584,6 +585,8 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
+            VariablesClauses = ctx.Query.GetComponents<WithVarClause>("withVar", EngineCode);
+
             if (!ctx.Query.HasComponent("from", EngineCode) || !ctx.Query.HasComponent("where", EngineCode))
             {
                 return null;
@@ -591,6 +594,7 @@ namespace SqlKata.Compilers
 
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
             var sql = CompileConditions(ctx, conditions).Trim();
+            VariablesClauses.Clear();
 
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
@@ -822,6 +826,38 @@ namespace SqlKata.Compilers
 
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"[", this.OpeningIdentifier)
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"]", this.ClosingIdentifier);
+        }
+
+
+        /// <summary>
+        /// takes an raw input and replace wth custom variable of format e.g @date, @foo and replace it with a value
+        /// </summary>
+        /// <example>
+        /// <code>
+        ///    var query = new Query("Account")
+        ///        .WithVar("@nameVar", "faa")
+        ///        .Select("name")
+        ///        .WhereRaw("myName = @nameVar");
+        ///        .WhereRaw("lastName = @nameVar");
+        /// 
+        ///     output: SELECT [name] FROM [Account] WHERE name = 'faa' and lastName = 'faa'
+        /// </code>
+        /// </example>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual string ReplaceWithCustomVariables(string input)
+        {
+            var clause = VariablesClauses.FirstOrDefault(_ => input.Contains(_.Name));
+            if (clause == null) return input;
+
+            var name = clause.Name;
+            var value = clause.Value.ToString();
+            if (!int.TryParse(value, out int literalValue))
+            {
+                value = $"'{value}'";
+            }
+            return input.Replace(name, value);
+
         }
     }
 }
