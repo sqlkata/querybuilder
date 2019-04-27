@@ -1,6 +1,8 @@
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
+using System;
+using System.Linq;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -204,6 +206,65 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
             Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
             Assert.Equal("SELECT * FROM `mysql`", c[EngineCodes.MySql].RawSql);
+        }
+
+        [Fact]
+        public void OneFromPerEngine()
+        {
+            var query = new Query("generic")
+                .ForSqlServer(q => q.From("dnu"))
+                .ForSqlServer(q => q.From("mssql"));
+            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal(2, query.Clauses.OfType<AbstractFrom>().Count());
+            Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Equal("SELECT * FROM \"generic\"", c[EngineCodes.PostgreSql].RawSql);
+            Assert.Equal("SELECT * FROM `generic`", c[EngineCodes.MySql].RawSql);
+        }
+
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData(null, "mssql")]
+        [InlineData("original", null)]
+        [InlineData("original", "mssql")]
+        public void AddOrReplace_Works(string table, string engine)
+        {
+            var query = new Query();
+            if (table != null)
+                query.From(table);
+            query.AddOrReplaceComponent("from", new FromClause() { Table = "updated", Engine = engine });
+            var froms = query.Clauses.OfType<FromClause>();
+
+            Assert.Single(froms);
+            Assert.Equal("updated", froms.Single().Table);
+        }
+
+        [Theory]
+        [InlineData(null, "generic")]
+        [InlineData(EngineCodes.SqlServer, "mssql")]
+        [InlineData(EngineCodes.MySql, "generic")]
+        public void GetOneComponent_Prefers_Engine(string engine, string column)
+        {
+            var query = new Query()
+                .Where("generic", "foo")
+                .ForSqlServer(q => q.Where("mssql", "foo"));
+
+            var where = query.GetOneComponent("where", engine) as BasicCondition;
+
+            Assert.NotNull(where);
+            Assert.Equal(column, where.Column);
+        }
+
+        [Fact]
+        public void AddOrReplace_Throws_MoreThanOne()
+        {
+            var query = new Query()
+                .Where("a", "b")
+                .Where("c", "d");
+
+            Action act = () => query.AddOrReplaceComponent("where", new BasicCondition());
+            Assert.Throws<InvalidOperationException>(act);
         }
     }
 }
