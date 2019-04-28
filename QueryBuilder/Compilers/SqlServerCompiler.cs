@@ -14,7 +14,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
-            if (!UseLegacyPagination || !query.HasOffset())
+            if (!UseLegacyPagination || !query.HasOffset(EngineCode))
             {
                 return base.CompileSelectQuery(query);
             }

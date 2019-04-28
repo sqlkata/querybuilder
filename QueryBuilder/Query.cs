@@ -25,6 +25,7 @@ namespace SqlKata
 
         public bool HasOffset(string engineCode = null)
         {
+            engineCode = engineCode ?? EngineScope;
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.HasOffset() ?? false;
@@ -32,6 +33,7 @@ namespace SqlKata
 
         public bool HasLimit(string engineCode = null)
         {
+            engineCode = engineCode ?? EngineScope;
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.HasLimit() ?? false;
@@ -39,6 +41,7 @@ namespace SqlKata
 
         internal int GetOffset(string engineCode = null)
         {
+            engineCode = engineCode ?? EngineScope;
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.Offset ?? 0;
@@ -46,6 +49,7 @@ namespace SqlKata
 
         internal int GetLimit(string engineCode = null)
         {
+            engineCode = engineCode ?? EngineScope;
             var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
             return limitOffset?.Limit ?? 0;
@@ -134,34 +138,28 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Limit = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new LimitOffset
             {
                 Limit = value
-            });
+            };
+
+            if (GetOneComponent("limit", EngineScope) is LimitOffset currentClause)
+                newClause.Offset = currentClause.Offset;
+
+            return AddOrReplaceComponent("limit", newClause);
         }
 
         public Query Offset(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Offset = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new LimitOffset
             {
                 Offset = value
-            });
+            };
+
+            if (GetOneComponent("limit", EngineScope) is LimitOffset currentClause)
+                newClause.Limit = currentClause.Limit;
+
+            return AddOrReplaceComponent("limit", newClause);
         }
 
         /// <summary>
