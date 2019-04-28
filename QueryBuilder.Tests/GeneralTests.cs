@@ -348,5 +348,20 @@ namespace SqlKata.Tests
             Assert.Equal(10, limits.Single().Offset);
             Assert.Equal(5, limits.Single().Limit);
         }
+
+        [Fact]
+        public void LimitOffset_Takes_Generic_If_Needed()
+        {
+            var query = new Query("mytable")
+                .Limit(5)
+                .Offset(10)
+                .ForPostgreSql(q => q.Limit(20));
+
+            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 10", c[EngineCodes.PostgreSql].ToString());
+        }
     }
 }
