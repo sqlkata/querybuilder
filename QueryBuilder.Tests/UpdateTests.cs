@@ -118,5 +118,44 @@ namespace SqlKata.Tests
                 c[EngineCodes.Firebird]);
         }
 
+
+
+        private class OrderProductComposite
+        {
+            public OrderProductComposite(string orderid, string productid, int quantity)
+            {
+                OrderId = orderid;
+                ProductId = productid;
+                Quantity = quantity;
+                Foo = "baz";
+            }
+
+            [Key("OrdId")]
+            public string OrderId { get; set; }
+
+            [Key]
+            public string ProductId { get; set; }
+
+            public int Quantity { get; set; }
+
+            [Column("Faa")]
+            public string Foo { get; set; }
+        }
+
+        [Fact]
+        public void UpdateWithKeyAttribute()
+        {
+            var order = new OrderProductComposite("ORD01", "PROD02", 20);
+
+            var query = new Query("OrderProductComposite").AsUpdate(order);
+
+            var c = Compile(query);
+
+
+            Assert.Equal(
+                "UPDATE [OrderProductComposite] SET [OrdId] = 'ORD01', [ProductId] = 'PROD02', [Quantity] = 20, [Faa] = 'baz' WHERE [OrdId] = 'ORD01' AND [ProductId] = 'PROD02'",
+                c[EngineCodes.SqlServer]);
+        }
+
     }
 }
