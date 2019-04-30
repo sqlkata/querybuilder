@@ -32,12 +32,11 @@ namespace SqlKata
                 }
 
                 var value = property.GetValue(data);
-                var name = property.Name;
 
                 var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                var name = colAttr?.Name ?? property.Name;
                 if(colAttr != null)
                 {
-                    name = colAttr.Name;
                     if((colAttr as KeyAttribute) != null)
                     {
                         this.Where(name, value);

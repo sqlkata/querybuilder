@@ -9,26 +9,34 @@ namespace SqlKata
     {
         public Query AsInsert(object data, bool returnId = false)
         {
-            var dictionary = new Dictionary<string, object>();
-
-            var props = data.GetType()
-                        .GetRuntimeProperties()
-                        .Where(_ => _.GetCustomAttribute(typeof(IgnoreAttribute)) == null);
-
-            foreach (var item in props)
-            {
-                var attr = item.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-                if (attr != null)
-                {
-                    dictionary.Add(attr.Name, item.GetValue(data));
-                }
-                else
-                {
-                    dictionary.Add(item.Name, item.GetValue(data));
-                }
-            }
+            var dictionary = BuildDictionaryOnInsert(data);
 
             return AsInsert(dictionary, returnId);
+        }
+
+
+        private Dictionary<string, object> BuildDictionaryOnInsert(object data)
+        {
+
+            var dictionary = new Dictionary<string, object>();
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (PropertyInfo property in props)
+            {
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                {
+                    continue;
+                }
+
+                var value = property.GetValue(data);
+
+                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                var name = colAttr?.Name ?? property.Name;
+                  
+                dictionary.Add(name, value);
+            }
+
+            return dictionary;
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
