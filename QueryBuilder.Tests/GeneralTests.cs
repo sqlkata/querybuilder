@@ -274,7 +274,7 @@ namespace SqlKata.Tests
                 .ForSqlServer(q => q.Limit(5))
                 .ForSqlServer(q => q.Limit(10));
 
-            var limits = query.GetComponents<LimitOffset>("limit", EngineCodes.SqlServer);
+            var limits = query.GetComponents<LimitClause>("limit", EngineCodes.SqlServer);
             Assert.Single(limits);
             Assert.Equal(10, limits.Single().Limit);
         }
@@ -296,26 +296,13 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void Limit_Preserves_Offset()
-        {
-            var query = new Query("mytable")
-                .Offset(5);
-            query.Limit(10);
-
-            var limits = query.GetComponents<LimitOffset>("limit");
-            Assert.Single(limits);
-            Assert.Equal(5, limits.Single().Offset);
-            Assert.Equal(10, limits.Single().Limit);
-        }
-
-        [Fact]
         public void OneOffsetPerEngine()
         {
             var query = new Query("mytable")
                 .ForSqlServer(q => q.Offset(5))
                 .ForSqlServer(q => q.Offset(10));
 
-            var limits = query.GetComponents<LimitOffset>("limit", EngineCodes.SqlServer);
+            var limits = query.GetComponents<OffsetClause>("offset", EngineCodes.SqlServer);
             Assert.Single(limits);
             Assert.Equal(10, limits.Single().Offset);
         }
@@ -330,27 +317,29 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("limit").Count());
+            Assert.Equal(2, query.GetComponents("offset").Count());
             Assert.Equal("SELECT * FROM `mytable` LIMIT 18446744073709551615 OFFSET 5", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" OFFSET 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
         }
 
         [Fact]
-        public void Offset_Preserves_Limit()
+        public void Limit_Takes_Generic_If_Needed()
         {
             var query = new Query("mytable")
-                .Limit(5);
-            query.Offset(10);
+                .Limit(5)
+                .Offset(10)
+                .ForPostgreSql(q => q.Offset(20));
 
-            var limits = query.GetComponents<LimitOffset>("limit");
-            Assert.Single(limits);
-            Assert.Equal(10, limits.Single().Offset);
-            Assert.Equal(5, limits.Single().Limit);
+            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 5 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
         }
 
         [Fact]
-        public void LimitOffset_Takes_Generic_If_Needed()
+        public void Offset_Takes_Generic_If_Needed()
         {
             var query = new Query("mytable")
                 .Limit(5)
@@ -362,6 +351,38 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 10", c[EngineCodes.PostgreSql].ToString());
+        }
+
+        [Fact]
+        public void Can_Change_Generic_Limit_After_SpecificOffset()
+        {
+            var query = new Query("mytable")
+                .Limit(5)
+                .Offset(10)
+                .ForPostgreSql(q => q.Offset(20))
+                .Limit(7);
+
+            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 7 OFFSET 10", c[EngineCodes.MySql].ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 7 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
+        }
+
+        [Fact]
+        public void Can_Change_Generic_Offset_After_SpecificLimit()
+        {
+            var query = new Query("mytable")
+                .Limit(5)
+                .Offset(10)
+                .ForPostgreSql(q => q.Limit(20))
+                .Offset(7);
+
+            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c[EngineCodes.MySql].ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c[EngineCodes.PostgreSql].ToString());
         }
     }
 }
