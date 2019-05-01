@@ -1,3 +1,4 @@
+using SqlKata.Compilers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -168,6 +169,68 @@ namespace SqlKata
             //Then replace escaped identifiers, by just removing the escape character
             var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
             return escapedRegex.Replace(nonEscapedReplace, identifier);
+
         }
+
+       
     }
+
+
+    public static  class ConvertHelper
+    {
+        private static readonly string[] SqlServerTypes = { "BIGINT", "BINARY", "BIT", "CHAR", "DATE", "DATETIME", "DATETIME2", "DATETIMEOFFSET", "DECIMAL", "FILESTREAM", "FLOAT", "GEOGRAPHY", "GEOMETRY", "HIERARCHYID", "IMAGE", "INT", "MONEY", "NCHAR", "NTEXT", "NUMERIC", "NVARCHAR", "REAL", "ROWVERSION", "SMALLDATETIME", "SMALLINT", "SMALLMONEY", "SQL_VARIANT", "TEXT", "TIME", "TIMESTAMP", "TINYINT", "UNIQUEIDENTIFIER", "VARBINARY", "VARCHAR", "XML" };
+        private static readonly string[] CSharpTypes = { "long", "byte[]", "bool", "char", "DateTime", "DateTime", "DateTime", "DateTimeOffset", "decimal", "byte[]", "Double", "Microsoft.SqlServer.Types.SqlGeography", "Microsoft.SqlServer.Types.SqlGeometry", "Microsoft.SqlServer.Types.SqlHierarchyId", "byte[]", "int", "decimal", "string", "string", "decimal", "string", "Single", "byte[]", "DateTime", "short", "decimal", "object", "string", "TimeSpan", "byte[]", "byte", "Guid", "bite[]", "string", "string" };
+
+        /// <summary>
+        /// Returns the 
+        /// </summary>
+        /// <param name="engineCode"></param>
+        /// <param name=""></param>
+        /// <returns></returns>
+        public static string ConverToTypeSqlDataType(Type valueType, string engineCode)
+        {
+
+            var index = Array.IndexOf(CSharpTypes, valueType.Name);
+            if (EngineCodes.SqlServer == engineCode)
+            {
+                if(index != -1)
+                {
+                    return SqlServerTypes[index];
+                }
+            }
+            //else if(EngineCodes.Sqlite == EngineCode)
+            //{
+            //    return $"{clause.Name} <SqliteDataType> = ?";
+            //}
+
+            //else if(EngineCodes.Oracle == EngineCode)
+            //{
+            //    return $"{clause.Name} <OrcleDataType> = ?";
+            //}
+            else if(EngineCodes.MySql == engineCode)
+            {
+                if(index != -1)
+                {
+                    return SqlServerTypes[index];
+                }
+            }
+
+            //else if(EngineCodes.Firebird == EngineCode)
+            //{
+            //    return $"{clause.Name} <FireBirdDataType> = ?";
+            //}
+
+            //else if(EngineCodes.Generic == EngineCode)
+            //{
+            //    return $"{clause.Name} <GenericDataType> = ?";
+            //}
+
+            //else if(EngineCodes.PostgreSql == EngineCode)
+            //{
+            //    return $"{clause.Name} <PostgresSqlDataType> = ?";
+            //}
+            throw new NotSupportedException("DataType not supported");
+        }
+    } 
+
 }
