@@ -5,30 +5,47 @@ using System.Reflection;
 
 namespace SqlKata
 {
+
     public partial class Query
     {
 
         public Query AsUpdate(object data)
         {
+            var dictionary = BuildDictionaryOnUpdate(data);
+            return AsUpdate(dictionary);
+        }
+
+
+        private static Dictionary<Type, List<PropertyInfo>> CacheDictionaryProperties = new Dictionary<Type, List<PropertyInfo>>(); 
+
+
+        private Dictionary<string, object> BuildDictionaryOnUpdate(object data)
+        {
+
             var dictionary = new Dictionary<string, object>();
+            var props = data.GetType().GetRuntimeProperties();
 
-            var props = data.GetType().GetRuntimeProperties()
-                .Where(_ => _.GetCustomAttribute(typeof(IgnoreAttribute)) == null);
-
-            foreach (var item in props)
+            foreach (PropertyInfo property in props)
             {
-                var attr = item.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-                if (attr != null)
-                {
-                    dictionary.Add(attr.Name, item.GetValue(data));
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null){
+                    continue;
                 }
-                else
+
+                var value = property.GetValue(data);
+
+                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                var name = colAttr?.Name ?? property.Name;
+                if(colAttr != null)
                 {
-                    dictionary.Add(item.Name, item.GetValue(data));
-                }
+                    if((colAttr as KeyAttribute) != null)
+                    {
+                        this.Where(name, value);
+                    }
+                } 
+                dictionary.Add(name, value);
             }
 
-            return AsUpdate(dictionary);
+            return dictionary;
         }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
