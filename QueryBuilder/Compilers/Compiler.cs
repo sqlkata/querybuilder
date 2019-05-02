@@ -475,8 +475,6 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// How to declare variable SqlServer {DECLARE @foo DATETIME = ?}
-        /// How to declare variables MySql {SET @foo = '2019-03-03'} https://stackoverflow.com/questions/11754781/how-to-declare-a-variable-in-mysql
         /// </summary>
         /// <param name="ctx"></param>
         /// <returns></returns>
@@ -489,20 +487,28 @@ namespace SqlKata.Compilers
 
             if(declarations.Count() > 0)
             {
-                var bodyDeclaractions =  string.Join(", ", declarations);
                 if (EngineCodes.SqlServer == EngineCode)
                 {
-                    return $"DECLARE {bodyDeclaractions} ;";
+                    var bodyDeclaractionsSqlServer =  string.Join(", ", declarations);
+                    return $"DECLARE {bodyDeclaractionsSqlServer} ;";
+
                 } else if(EngineCodes.MySql == EngineCode)
                 {
-                    return $"SET {bodyDeclaractions} ;";
-                } else if(EngineCodes.MySql == EngineCode)
+                    //https://stackoverflow.com/questions/30854689/how-does-system-data-sqlite-deal-with-net-data-types
+                    var bodyDeclarationMySql =  string.Join(", ", declarations);
+                    return $"SET {bodyDeclarationMySql} ;";
+
+                } else if(EngineCodes.Oracle == EngineCode)
                 {
-                    return $"DEF {bodyDeclaractions} ;";
+                    var bodyOracleDeclarations =  string.Join("; ", declarations);
+                    return $"DECLARE {bodyOracleDeclarations} ";
+                } else if (EngineCodes.Firebird == EngineCode)
+                {
+
                 }
             }
 
-            return "";
+            return string.Empty;
         }
         /// <summary>
         ///  execute when CompileSelectQuery is called
@@ -513,10 +519,10 @@ namespace SqlKata.Compilers
         public virtual string CompileDeclaration(SqlResult ctx, WithVarClause clause)
         {
             ctx.Bindings.Add(clause.Value);
-            if(EngineCodes.MySql == EngineCode || EngineCodes.Oracle == EngineCode)
+            if(EngineCodes.MySql == EngineCode)
             {
                 return $"{clause.Name} = ?";
-            } else
+            } else 
             {
                 return  $"{clause.Name} {ConvertHelper.ConverToTypeSqlDataType(clause.Value.GetType(), EngineCode)} = ?";
             }

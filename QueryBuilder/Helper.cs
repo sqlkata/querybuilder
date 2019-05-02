@@ -178,8 +178,110 @@ namespace SqlKata
 
     public static  class ConvertHelper
     {
-        private static readonly string[] SqlServerTypes = { "BIGINT", "BINARY", "BIT", "CHAR", "DATE", "DATETIME", "DATETIME2", "DATETIMEOFFSET", "DECIMAL", "FILESTREAM", "FLOAT", "GEOGRAPHY", "GEOMETRY", "HIERARCHYID", "IMAGE", "INT", "MONEY", "NCHAR", "NTEXT", "NUMERIC", "NVARCHAR", "REAL", "ROWVERSION", "SMALLDATETIME", "SMALLINT", "SMALLMONEY", "SQL_VARIANT", "TEXT", "TIME", "TIMESTAMP", "TINYINT", "UNIQUEIDENTIFIER", "VARBINARY", "VARCHAR", "XML" };
-        private static readonly string[] CSharpTypes = { "long", "byte[]", "bool", "char", "DateTime", "DateTime", "DateTime", "DateTimeOffset", "decimal", "byte[]", "Double", "Microsoft.SqlServer.Types.SqlGeography", "Microsoft.SqlServer.Types.SqlGeometry", "Microsoft.SqlServer.Types.SqlHierarchyId", "byte[]", "int", "decimal", "string", "string", "decimal", "string", "Single", "byte[]", "DateTime", "short", "decimal", "object", "string", "TimeSpan", "byte[]", "byte", "Guid", "bite[]", "string", "string" };
+        //https://stackoverflow.com/questions/425389/c-sharp-equivalent-of-sql-server-datatypes
+        private static readonly Dictionary<string, string> DotNetMappingSqlServer = new Dictionary<string, string> {
+             { "Byte[]", "VARBINARY" } ,
+             { "Byte", "BINARY" } ,
+             { "Boolean", "BIT" } ,
+             { "Char", "nvarchar(1)" } ,
+             { "DateTime", "DATETIME" } ,
+             { "Decimal", "DECIMAL" } ,
+             { "Double", "FLOAT" } ,
+             {"Int16", "smallint"},
+             {"Int32", "Int"},
+             {"Int64", "bigint"},
+             { "Single", "REAL" } ,
+             { "object", "SQL_VARIANT" } ,
+             { "Guid", "UNIQUEIDENTIFIER" } ,
+             { "string", "NVARCHAR" } ,
+             };
+
+
+        /// Mapping of .NET Framework Data Types to Oracle Native Data Types https://docs.microsoft.com/en-us/dotnet/api/system.data.oracleclient.oracletype?redirectedfrom=MSDN&view=netframework-4.8    and https://docs.oracle.com/html/B10961_01/features.htm#1024984 and https://docs.oracle.com/cd/B19306_01/win.102/b14306/appendixa.htm
+        private static readonly Dictionary<string, string> DotNetMappingOracle = new Dictionary<string, string> {
+            {"Byte","Byte"},
+            {"Byte[]", "Raw"},
+            {"Char", "Varchar2"},
+            {"Char[]", "Varchar2"},
+            {"DateTime", "TimeStamp"},
+            {"Decimal", "Decimal"},
+            {"Double", "Double"},
+            {"Float", "Single"},
+            {"Int16", "Int16"},
+            {"Int32", "Int32"},
+            {"Int64", "Int64"},
+            {"Single", "Single"},
+            {"String", "Varchar2" },
+            {"TimeSpan", "IntervalDS"},
+        };
+
+
+        //https://docs.telerik.com/data-access/developers-guide/database-specifics/sqlite/database-specifics-sqlite-type-mapping
+        private static readonly Dictionary<string, string> DotNetMappingSqlite = new Dictionary<string, string>() {
+            {"Boolean"  ,"BIT"},
+            {"Char"     ,"CHAR(1)"},
+            {"SByte"    ,"SMALLINT"},
+            {"Byte"     ,"SMALLINT"},
+            {"Int16"    ,"SMALLINT"},
+            {"UInt16"   ,"INTEGER"},
+            {"Int32"    ,"INTEGER"},
+            {"UInt32"   ,"BIGINT"},
+            {"Int64"    ,"BIGINT"},
+            {"UInt64"   ,"UNSIGNED BIG INT"},
+            {"Single"   ,"REAL"},
+            {"Double"   ,"DOUBLE"},
+            {"String"   ,"VARCHAR(255)"},
+            {"DateTime" ,"TIMESTAMP"},
+            {"Decimal"  ,"NUMERIC(20,10)"},
+            {"Guid"     ,"GUID"},
+            {"Byte[]"   ,"BLOB"},
+        };
+
+
+        //https://docs.telerik.com/data-access/developers-guide/database-specifics/firebird/database-specifics-firebird-type-mapping
+        private static readonly Dictionary<string, string> DotNetMappingFireBird = new Dictionary<string, string>{
+            {"Boolean",  "SMALLINT"},
+            {"Char", "CHAR(1)"},
+            {"SByte",    "SMALLINT"},
+            {"Byte", "SMALLINT"},
+            {"Int16",    "SMALLINT"},
+            {"UInt16",   "INTEGER"},
+            {"Int32",    "INTEGER"},
+            {"UInt32",   "BIGINT"},
+            {"Int64",    "BIGINT"},
+            {"UInt64",   "BIGINT"},
+            {"Single",   "FLOAT"},
+            {"Double",   "DOUBLE PRECISION"},
+            {"String",   "VARCHAR(190)"},
+            {"DateTime", "TIMESTAMP"},
+            {"Decimal",  "NUMERIC(18,8)"},
+            {"Guid", "CHAR(16)"},
+            {"Byte[]", "BLOB"},
+
+        };
+
+
+        //https://docs.telerik.com/data-access/developers-guide/database-specifics/postgresql/data-access-tasks-postgresql-type-mapping
+        private static readonly Dictionary<string, string> DotNetMappingPostGreSQL = new Dictionary<string, string>
+        {
+            {"Boolean",  "BOOL"},
+            {"Char", "BPCHAR(1)"},
+            {"SByte",    "INT2"},
+            {"Byte", "INT2"},
+            {"Int16",    "INT2"},
+            {"UInt16",   "INT4"},
+            {"Int32",    "INT4"},
+            {"UInt32",   "INT8"},
+            {"Int64",    "INT8"},
+            {"UInt64",   "NUMERIC(20)"},
+            {"Single",   "FLOAT4"},
+            {"Double",   "FLOAT8"},
+            {"String",   "VARCHAR(255)"},
+            {"DateTime", "TIMESTAMP"},
+            {"Decimal",  "NUMERIC(20,10)"},
+            {"Guid", "UUID"},
+            {"Byte[]",  "BYTEA"},
+        };
 
         /// <summary>
         /// Returns the 
@@ -190,46 +292,47 @@ namespace SqlKata
         public static string ConverToTypeSqlDataType(Type valueType, string engineCode)
         {
 
-            var index = Array.IndexOf(CSharpTypes, valueType.Name);
+            var valueTypeName = valueType.Name;
+
             if (EngineCodes.SqlServer == engineCode)
             {
-                if(index != -1)
+                if (DotNetMappingSqlServer.TryGetValue(valueTypeName, out string value))
                 {
-                    return SqlServerTypes[index];
+                    return value;
                 }
-            }
-            //else if(EngineCodes.Sqlite == EngineCode)
-            //{
-            //    return $"{clause.Name} <SqliteDataType> = ?";
-            //}
 
-            //else if(EngineCodes.Oracle == EngineCode)
-            //{
-            //    return $"{clause.Name} <OrcleDataType> = ?";
-            //}
-            else if(EngineCodes.MySql == engineCode)
+            }
+            else if (EngineCodes.Sqlite == engineCode)
             {
-                if(index != -1)
+                if (DotNetMappingSqlite.TryGetValue(valueTypeName, out string value))
                 {
-                    return SqlServerTypes[index];
+                    return value;
                 }
             }
 
-            //else if(EngineCodes.Firebird == EngineCode)
-            //{
-            //    return $"{clause.Name} <FireBirdDataType> = ?";
-            //}
+            else if (EngineCodes.Oracle == engineCode)
+            {
+                if(DotNetMappingOracle.TryGetValue(valueTypeName, out string value))
+                {
+                    return value;
+                }
+            }
+            else if(EngineCodes.Firebird == engineCode)
+            {
+                if(DotNetMappingFireBird.TryGetValue(valueTypeName, out string value))
+                {
+                    return value;
+                }
+            }
+            else if (EngineCodes.PostgreSql == engineCode)
+            {
+                if (DotNetMappingPostGreSQL.TryGetValue(valueTypeName, out string value))
+                {
+                    return value;
+                }
+            }
+            throw new NotSupportedException($"DataType {valueTypeName} not supported for the engine {engineCode}");
 
-            //else if(EngineCodes.Generic == EngineCode)
-            //{
-            //    return $"{clause.Name} <GenericDataType> = ?";
-            //}
-
-            //else if(EngineCodes.PostgreSql == EngineCode)
-            //{
-            //    return $"{clause.Name} <PostgresSqlDataType> = ?";
-            //}
-            throw new NotSupportedException("DataType not supported");
         }
     } 
 

@@ -167,16 +167,24 @@ namespace SqlKata.Tests
         [Fact]
         public void WithVarCanUseReplaceWithDateTime()
         {
-            var dateObj = new System.DateTime(year: 2017, month: 6, day: 2).ToString("yyyy-MM-dd");
+            //var dateObj = new System.DateTime(year: 2017, month: 6, day: 2).ToString("yyyy-MM-dd");
 
-            var query = new Query("Account")
-                     .Select("name")
-                    .WithVar("@date", dateObj)
-                    .WhereRaw("created_date = @date");
+            //var query = new Query("Account")
+            //         .Select("name")
+            //        .WithVar("@date", dateObj)
+            //        .WhereRaw("created_date = @date");
+
+            //var c = Compile(query);
+
+            //Assert.Equal("SELECT [name] FROM [Account] WHERE created_date = '2017-06-02'", c[EngineCodes.SqlServer]);
+
+
+            var query = new Query("Table")
+              .WithVar("@date", System.DateTime.UtcNow)
+              .Where("Date", "@date");
 
             var c = Compile(query);
-
-            Assert.Equal("SELECT [name] FROM [Account] WHERE created_date = '2017-06-02'", c[EngineCodes.SqlServer]);
+            Assert.Equal("DECLARE @date DATETIME = ? SELECT * FROM[Table] WHERE[Date] = @date; ",c[EngineCodes.SqlServer]);
 
         }
 
