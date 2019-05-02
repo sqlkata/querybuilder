@@ -23,32 +23,24 @@ namespace SqlKata
         }
 
 
-        public bool HasOffset(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+        public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
-            return limitOffset?.HasOffset() ?? false;
-        }
-
-        public bool HasLimit(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
-
-            return limitOffset?.HasLimit() ?? false;
-        }
+        public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
 
         internal int GetOffset(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
 
-            return limitOffset?.Offset ?? 0;
+            return offset?.Offset ?? 0;
         }
 
         internal int GetLimit(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
 
-            return limitOffset?.Limit ?? 0;
+            return limit?.Limit ?? 0;
         }
 
         public override Query Clone()
@@ -134,34 +126,22 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Limit = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new LimitClause
             {
                 Limit = value
-            });
+            };
+
+            return AddOrReplaceComponent("limit", newClause);
         }
 
         public Query Offset(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Offset = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new OffsetClause
             {
                 Offset = value
-            });
+            };
+
+            return AddOrReplaceComponent("offset", newClause);
         }
 
         /// <summary>
