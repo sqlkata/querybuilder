@@ -185,9 +185,9 @@ namespace SqlKata.Compilers
                     this.CompileWheres(ctx),
                     this.CompileGroups(ctx),
                     this.CompileHaving(ctx),
+                    this.CompileUnion(ctx),
                     this.CompileOrders(ctx),
                     this.CompileLimit(ctx),
-                    this.CompileUnion(ctx),
                 }
                .Where(x => x != null)
                .Where(x => !string.IsNullOrEmpty(x))
