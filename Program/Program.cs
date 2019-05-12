@@ -30,11 +30,39 @@ namespace Program
             public int DaysCount { get; set; }
         }
 
+        public class TournamentWithCorrelationDto
+        {
+            public Guid TournamentId { get; set; }
+
+            public string TournamentName { get; set; }
+
+            public IList<CorrelationTournamentDto> Correlations { get; set; }
+
+        }
+
+        public class CorrelationTournamentDto
+        {
+
+            public Guid TournamentId { get; set; }
+
+            public string ProviderName { get; set; }
+
+            public string ProviderTournamentId { get; set; }
+
+            public string TournamentName { get; set; }
+
+            public bool IsDefault { get; set; }
+
+            public bool AutoOfferTournament { get; set; }
+
+            public bool AutoOfferLiveTournament { get; set; }
+        }
+
         static void Main(string[] args)
         {
 
             IDbConnection connection = new SqlConnection(
-                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+                "Data Source=OT-DEVS02;Initial Catalog=Fixtures;User ID=sa;Password=Orenesnewtech$"
             );
 
             // SQLiteConnection.CreateFile("Demo.db");
@@ -58,6 +86,26 @@ namespace Program
                 .Select("Id", "Name", "BankId")
                 .OrderByDesc("Id").Limit(10).Get();
             */
+
+            var correlations = new Dictionary<Guid, TournamentWithCorrelationDto>();
+            var data = db.Query("Tournaments as t")
+                         .Join("CorrelationsTournaments as ct", "ct.TournamentId", "t.TournamentId")
+                         .SelectRaw("ct.*, '' split, t.*")
+                         .Where("t.TournamentId", "=", "c65a3f10-475a-410b-ad07-b67922388a00")
+                         .GetAsync<TournamentWithCorrelationDto, CorrelationTournamentDto, TournamentWithCorrelationDto>((t, ct) =>
+                         {
+                             if (!correlations.TryGetValue(t.TournamentId, out TournamentWithCorrelationDto tournament))
+                             {
+                                 correlations.Add(t.TournamentId, tournament = t);
+                             }
+
+                             if (tournament.Correlations == null) tournament.Correlations = new List<CorrelationTournamentDto>();
+
+                             tournament.Correlations.Add(ct);
+
+                             return tournament;
+                         },
+                         splitOn: "split").GetAwaiter().GetResult();
 
             var includedAccountsQuery = db.Query("Accounts").Limit(2)
                 .IncludeMany("Transactions", db.Query("Transactions"))

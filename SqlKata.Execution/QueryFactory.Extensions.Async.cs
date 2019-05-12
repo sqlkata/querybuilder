@@ -28,6 +28,26 @@ namespace SqlKata.Execution
             return result;
         }
 
+        public static async Task<IEnumerable<TReturn>> GetAsync<TFirst, TSecond, TReturn>(this QueryFactory db,
+                                                                                               Query query,
+                                                                                               Func<TFirst, TSecond, TReturn> map,
+                                                                                               string splitOn)
+        {
+            var compiled = db.Compile(query);
+
+            var result = (await db.Connection.QueryAsync<TFirst, TSecond, TReturn>(
+                sql: compiled.Sql,
+                map: map,
+                splitOn: splitOn,
+                param: compiled.NamedBindings,
+                commandTimeout: db.QueryTimeout
+            )).ToList();
+
+            result = (await handleIncludesAsync(query, result)).ToList();
+
+            return result;
+        }
+
         public static async Task<IEnumerable<IDictionary<string, object>>> GetDictionaryAsync(this QueryFactory db, Query query)
         {
             var compiled = db.Compile(query);

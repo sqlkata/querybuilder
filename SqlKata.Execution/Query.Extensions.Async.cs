@@ -11,6 +11,12 @@ namespace SqlKata.Execution
             return await QueryHelper.CreateQueryFactory(query).GetAsync<T>(query);
         }
 
+        public static async Task<IEnumerable<TReturn>> GetAsync<TFirst,TSecond,TReturn>(this Query query, Func<TFirst, TSecond, TReturn> map,
+                                                                                        string splitOn)
+        {
+            return await QueryHelper.CreateQueryFactory(query).GetAsync<TFirst, TSecond, TReturn>(query, map, splitOn);
+        }
+
         public static async Task<IEnumerable<dynamic>> GetAsync(this Query query)
         {
             return await GetAsync<dynamic>(query);
