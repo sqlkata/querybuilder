@@ -30,6 +30,26 @@ namespace Program
             public int DaysCount { get; set; }
         }
 
+        private class OrderDto
+        {
+            public Guid OrderId { get; set; }
+
+            public DateTime Date { get; set; }
+
+            public IList<OrderLineDto> OrderLines { get; set; }
+        }
+
+        private class OrderLineDto
+        {
+            public Guid OrderId { get; set; }
+
+            public int Line { get; set; }
+
+            public string ProductCode { get; set; }
+
+            public decimal Price { get; set; }
+        }
+
         static void Main(string[] args)
         {
 
@@ -70,6 +90,26 @@ namespace Program
                 .Get();
 
             Console.WriteLine(JsonConvert.SerializeObject(bank, Formatting.Indented));
+
+            //var orders = new Dictionary<Guid, OrderDto>();
+            //var data = db.Query("Orders as o")
+            //             .Join("OrderLines as ol", "ol.OrderId", "o.OrderId")
+            //             .SelectRaw("o.*, '' split, ol.*")
+            //             .Where("o.OrderId", "=", "c65a3f10-475a-410b-ad07-b67922388a00")
+            //             .GetAsync<OrderDto, OrderLineDto, OrderDto>((o, ol) =>
+            //             {
+            //                 if (!orders.TryGetValue(o.OrderId, out OrderDto order))
+            //                 {
+            //                     orders.Add(o.OrderId, order = o);
+            //                 }
+
+            //                 if (order.OrderLines == null) order.OrderLines = new List<OrderLineDto>();
+
+            //                 order.OrderLines.Add(ol);
+
+            //                 return order;
+            //             },
+            //             splitOn: "split").GetAwaiter().GetResult();
 
         }
 
