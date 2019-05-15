@@ -12,7 +12,7 @@ namespace SqlKata.Tests
     {
 
         [Fact]
-        public void Run_Test_WhereRaw()
+        public void Test_WithVar_WhereRaw()
         {
 
             var query = new Query("Products")
@@ -30,7 +30,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereIn()
+        public void Test_WithVar_WhereIn()
         {
             var query = new Query("Customers")
                 .WithVar("@regions", new[] { "SP", "BC" })
@@ -42,7 +42,7 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void Run_Test_SubQuery()
+        public void Test_WithVar_SubQuery()
         {
 
             var subquery = new Query("Products")
@@ -62,7 +62,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereEnds()
+        public void Test_WithVar_WhereEnds()
         {
 
             var query1 = new Query("Products")
@@ -87,7 +87,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereStarts()
+        public void Test_WithVar_WhereStarts()
         {
 
 
@@ -111,7 +111,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereContains()
+        public void Test_WithVar_WhereContains()
         {
 
             var query1 = new Query("Products")
@@ -137,7 +137,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereLike()
+        public void Test_WithVar_WhereLike()
         {
             var query1 = new Query("Products")
                                       .Select("ProductId", "ProductName", "SupplierID")
@@ -159,7 +159,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Test_WhereInSubquery()
+        public void Test_WithVar_WhereInSubquery()
         {
 
             var subquery = new Query("Orders")
@@ -177,9 +177,18 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [ShipperID], [CompanyName] FROM [Shippers] WHERE [ShipperID] IN (SELECT [ShipVia] FROM [Orders] WHERE [ShipVia] = 3)", c1[EngineCodes.SqlServer]);
         }
 
+        [Fact]
+        public void Test_WithVar_Having()
+        {
+            var c = Compile(new Query("Table")
+                .WithVar("@foo",1)
+                .Having("Id", "=", "@foo"));
+
+            Assert.Equal("SELECT * FROM [Table] HAVING [Id] = 1", c[EngineCodes.SqlServer]);
+        }
 
         [Fact]
-        public void Run_Test_HavingRaw()
+        public void Test_WithVar_HavingRaw()
         {
             var query1 = new Query("Orders")
                                .WithVar("@count", 80)
@@ -196,7 +205,7 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void Run_Test_HavingStarts()
+        public void Test_WithVar_HavingStarts()
         {
 
             var query = new Query("Customers")
@@ -215,7 +224,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_Having_Ends()
+        public void Test_WithVar_Having_Ends()
         {
             var query = new Query("Customers")
                             .WithVar("@label", "d")
@@ -231,7 +240,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_Having_Contains()
+        public void Test_WithVar_Having_Contains()
         {
 
 
@@ -250,7 +259,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_NestedCondition()
+        public void Test_WithVar_NestedCondition()
         {
             var query = new Query("Orders")
                .WithVar("@shipReg", null)
@@ -268,7 +277,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_WhereDate()
+        public void Test_WithVar_WhereDate()
         {
             var dateObj = new System.DateTime(year: 1996, month: 8, day: 1);
 
@@ -290,6 +299,12 @@ namespace SqlKata.Tests
             var c3 = Compile(query3);
 
             Assert.Equal("SELECT * FROM [Orders] WHERE CAST([RequiredDate] AS DATE) = '1996-08-01'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Orders\" WHERE \"RequiredDate\"::date = '1996-08-01'", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT * FROM \"Orders\" WHERE strftime('%Y-%m-%d', \"RequiredDate\") = cast('1996-08-01' as text)", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT * FROM \"ORDERS\" WHERE CAST(\"REQUIREDDATE\" as DATE) = '1996-08-01'", c[EngineCodes.Firebird]);
+
+
+
             Assert.Equal("SELECT * FROM [Orders] WHERE DATEPART(YEAR, [RequiredDate]) = 1996", c2[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM [Orders] WHERE CAST([RequiredDate] AS TIME) != '00:00:00'", c3[EngineCodes.SqlServer]);
 
@@ -297,7 +312,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_WhereExists()
+        public void Test_WithVar_WhereExists()
         {
             var query = new Query("Customers").WhereExists(q => q.From("Orders").WithVar("@postal", "8200").Where("ShipPostalCode", "@postal"));
             var c = Compile(query);
@@ -307,7 +322,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_With()
+        public void Test_WithVar_With()
         {
 
             var query = new Query("Products")
@@ -328,7 +343,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_WithRaw()
+        public void Test_WithVar_WithRaw()
         {
 
             //WithRaw
@@ -345,7 +360,7 @@ namespace SqlKata.Tests
         }
         //
         [Fact]
-        public void Run_Example_Union()
+        public void Test_WithVar_Union()
         {
             var q1 = new Query("Suppliers")
                         .WithVar("@foo", 1)
@@ -364,7 +379,7 @@ namespace SqlKata.Tests
 
 
         [Fact]
-        public void Run_Example_Except()
+        public void Test_WithVar_Except()
         {
             var q1 = new Query("Suppliers")
                         .WithVar("@foo", 1)
@@ -382,7 +397,7 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void Run_Example_Intersect()
+        public void Test_WithVar_Intersect()
         {
             var q1 = new Query("Suppliers")
                          .WithVar("@foo", 1)
@@ -400,7 +415,7 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public  void Run_Example_CombineRaw()
+        public  void Test_WithVar_CombineRaw()
         {
 
             var query = new Query("Customers")
