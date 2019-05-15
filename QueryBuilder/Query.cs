@@ -330,5 +330,16 @@ namespace SqlKata
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
 
+
+        public Query WithVar(string parameterName, object value)
+        {
+            return AddComponent("withVar", new WithVarClause
+            {
+                Name = parameterName,
+                Value = value
+            });
+
+        }
+
     }
 }

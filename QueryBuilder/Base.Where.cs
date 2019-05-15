@@ -364,8 +364,35 @@ namespace SqlKata
             return Or().Not().WhereBetween(column, lower, higher);
         }
 
+
+
+        /// <summary>
+        /// This method is intented only to use for variable. Example:
+        /// 
+        /// <code>
+        /// var myQuery = db.Query('fooz')
+        /// .WithVar('@faa', new {{1,2,3}})
+        /// .WhereIn('column', '@faa')
+        /// </code>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="column"></param>
+        /// <param name="variableName"></param>
+        /// <returns></returns>
+        public Q WhereIn<T>(string column, string variableName)
+        {
+            var withVar = this.GetComponents<WithVarClause>("withVar")
+                           .FirstOrDefault(_ => _.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase));
+            if (withVar == null)
+            {
+                throw new Exception($"Must declare the variable {variableName} before use WhereIn clause. e.g \nThe Correct way is: db.Query('fooz').WithVar('@faa', new {{1,2,3}}).WhereIn('column', '@faa')");
+            }
+            return WhereIn(column, withVar.Value as IEnumerable<T>);
+        }
+
         public Q WhereIn<T>(string column, IEnumerable<T> values)
         {
+
             // If the developer has passed a string most probably he wants List<string>
             // since string is considered as List<char>
             if (values is string)
@@ -541,6 +568,8 @@ namespace SqlKata
         {
             return Or().Not().WhereExists(callback);
         }
+
+
 
         #region date
         public Q WhereDatePart(string part, string column, string op, object value)

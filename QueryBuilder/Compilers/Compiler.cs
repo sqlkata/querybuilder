@@ -45,18 +45,33 @@ namespace SqlKata.Compilers
 
         };
 
-        protected Dictionary<string, object> generateNamedBindings(object[] bindings)
+        protected Dictionary<string, object> generateNamedBindings(object[] bindings, List<WithVarClause> withVarClauses)
         {
+            WithVarClause variable = null;
+            int currentIndexNonVariableParameter = 0;
+
             return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPlaceholderPrefix + x.i, x => x.v);
+                .ToDictionary(x =>
+                {
+                    variable = GetVariableByName(withVarClauses, x.v);
+                    return (variable != null) ?
+                            x.v.ToString() :
+                            parameterPlaceholderPrefix + (currentIndexNonVariableParameter++);
+                }, x =>
+                {
+                    return variable?.Value ?? x.v;
+                });
+
         }
 
         protected SqlResult PrepareResult(SqlResult ctx)
         {
-            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPlaceholderPrefix + i);
+            var variables = ctx.Query.GetComponents<WithVarClause>("withVar", EngineCode);
+            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray(), variables);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, (i) => parameterPlaceholderPrefix + i);
             return ctx;
         }
+
 
         private Query TransformAggregateQuery(Query query)
         {
@@ -341,6 +356,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
             var cteFinder = new CteFinder(query, EngineCode);
@@ -348,12 +364,22 @@ namespace SqlKata.Compilers
 
             var rawSql = new StringBuilder("WITH ");
             var cteBindings = new List<object>();
+            var cteWithVars = new List<WithVarClause>();
 
             foreach (var cte in cteSearchResult)
             {
                 var cteCtx = CompileCte(cte);
 
                 cteBindings.AddRange(cteCtx.Bindings);
+                cteWithVars.AddRange(cteCtx.Query.GetComponents<WithVarClause>("withVar", EngineCode));
+
+                if (cte is RawFromClause raw)
+                {
+                    var rawCte = cte as RawFromClause;
+                    SetBindingsBaseOnVarsInExpression(ctx, rawCte.Expression);
+                }
+
+
                 rawSql.Append(cteCtx.RawSql.Trim());
                 rawSql.Append(",\n");
             }
@@ -364,6 +390,7 @@ namespace SqlKata.Compilers
 
             ctx.Bindings.InsertRange(0, cteBindings);
             ctx.RawSql = rawSql.ToString();
+            ctx.Query.Clauses.AddRange(cteWithVars);
 
             return ctx;
         }
@@ -406,6 +433,7 @@ namespace SqlKata.Compilers
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
             var ctx = new SqlResult();
+            ctx.Query = new Query();
 
             if (null == cte)
             {
@@ -420,6 +448,7 @@ namespace SqlKata.Compilers
             else if (cte is QueryFromClause queryFromClause)
             {
                 var subCtx = CompileSelectQuery(queryFromClause.Query);
+                ctx.CopyClauses<WithVarClause>(subCtx, "withVar", EngineCode);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
@@ -494,6 +523,8 @@ namespace SqlKata.Compilers
 
                     var subCtx = CompileSelectQuery(combineClause.Query);
 
+                    ctx.CopyClauses<WithVarClause>(subCtx, "withVar", EngineCode);
+
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
                     combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
@@ -503,6 +534,8 @@ namespace SqlKata.Compilers
                     var combineRawClause = clause as RawCombine;
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
+
+                    SetBindingsBaseOnVarsInExpression(ctx, combineRawClause.Expression);
 
                     combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
 
@@ -787,8 +820,23 @@ namespace SqlKata.Compilers
 
         public virtual string Parameter<T>(SqlResult ctx, T value)
         {
-            ctx.Bindings.Add(value);
-            return "?";
+            var withVar = GetVariableByName(ctx.Query.GetComponents<WithVarClause>("withVar", EngineCode), value);
+
+            if (withVar != null)
+            {
+                if (!ctx.Bindings.Contains(withVar.Name))
+                {
+                    ctx.Bindings.Add(withVar.Name);
+                }
+
+                return withVar.Name.ToString();
+            }
+            else
+            {
+                ctx.Bindings.Add(value);
+                return "?";
+            }
+
         }
 
         /// <summary>
