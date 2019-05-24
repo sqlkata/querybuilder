@@ -7,7 +7,10 @@
     <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql, PostgreSql and Firebird</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard1.1</TargetFrameworks>
     <RootNamespace>SqlKata</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+  </ItemGroup>
 </Project>

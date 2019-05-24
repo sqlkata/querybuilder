@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,19 +16,17 @@ namespace SqlKata
             return AsUpdate(dictionary);
         }
 
-
-        private static Dictionary<Type, List<PropertyInfo>> CacheDictionaryProperties = new Dictionary<Type, List<PropertyInfo>>(); 
-
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         private Dictionary<string, object> BuildDictionaryOnUpdate(object data)
         {
-
             var dictionary = new Dictionary<string, object>();
-            var props = data.GetType().GetRuntimeProperties();
+            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
 
             foreach (PropertyInfo property in props)
             {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null){
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                {
                     continue;
                 }
 
@@ -35,13 +34,14 @@ namespace SqlKata
 
                 var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
                 var name = colAttr?.Name ?? property.Name;
-                if(colAttr != null)
+                if (colAttr != null)
                 {
-                    if((colAttr as KeyAttribute) != null)
+                    if ((colAttr as KeyAttribute) != null)
                     {
                         this.Where(name, value);
                     }
-                } 
+                }
+
                 dictionary.Add(name, value);
             }
 
