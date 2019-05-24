@@ -30,15 +30,9 @@ namespace SqlKata
 
                 var value = property.GetValue(data);
 
-                var colAttr = property.GetCustomAttributes<ColumnAttribute>();
-                var isKey = false;
-                var name = property.Name;
-
-                foreach (var columnAttribute in colAttr)
-                {
-                    if (columnAttribute is KeyAttribute) isKey = true;
-                    else name = columnAttribute.Name;
-                }
+                var colAttrs = property.GetCustomAttributes<ColumnAttribute>().ToArray();
+                var isKey = colAttrs.Any(c => c is KeyAttribute);
+                var name = colAttrs.FirstOrDefault(c => !(c is KeyAttribute))?.Name ?? colAttrs.FirstOrDefault()?.Name ?? property.Name;
 
                 if (isKey)
                 {
