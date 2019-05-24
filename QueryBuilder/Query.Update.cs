@@ -15,33 +15,37 @@ namespace SqlKata
             return AsUpdate(dictionary);
         }
 
-
-        private static Dictionary<Type, List<PropertyInfo>> CacheDictionaryProperties = new Dictionary<Type, List<PropertyInfo>>(); 
-
-
         private Dictionary<string, object> BuildDictionaryOnUpdate(object data)
         {
 
             var dictionary = new Dictionary<string, object>();
             var props = data.GetType().GetRuntimeProperties();
 
-            foreach (PropertyInfo property in props)
+            foreach (var property in props)
             {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null){
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                {
                     continue;
                 }
 
                 var value = property.GetValue(data);
 
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-                var name = colAttr?.Name ?? property.Name;
-                if(colAttr != null)
+                var colAttr = property.GetCustomAttributes<ColumnAttribute>();
+                var isKey = false;
+                var name = property.Name;
+
+                foreach (var columnAttribute in colAttr)
                 {
-                    if((colAttr as KeyAttribute) != null)
-                    {
-                        this.Where(name, value);
-                    }
-                } 
+                    if (columnAttribute is KeyAttribute) isKey = true;
+                    else name = columnAttribute.Name;
+                }
+
+                if (isKey)
+                {
+                    this.Where(name, value);
+                    continue;
+                }
+
                 dictionary.Add(name, value);
             }
 
