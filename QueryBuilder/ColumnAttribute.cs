@@ -14,6 +14,7 @@ namespace SqlKata
             {
                 throw new ArgumentNullException("Name parameter is required");
             }
+
             Name = name;
         }
 
