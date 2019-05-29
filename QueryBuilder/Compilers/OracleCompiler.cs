@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -92,6 +94,61 @@ namespace SqlKata.Compilers
             }
 
             ctx.RawSql = newSql;
+        }
+
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        {
+
+            var column = Wrap(condition.Column);
+            var value = Parameter(ctx, condition.Value);
+
+            var sql = "";
+            var valueFormat = "";
+
+            var isDateTime = (condition.Value is DateTime dt);
+
+            switch (condition.Part)
+            {
+                case "date": // assume YY-MM-DD format
+                    if (isDateTime)
+                        valueFormat = $"{value}";
+                    else
+                        valueFormat = $"TO_DATE({value}, 'YY-MM-DD')";
+                    sql = $"TO_CHAR({column}, 'YY-MM-DD') {condition.Operator} TO_CHAR({valueFormat}, 'YY-MM-DD')";
+                    break;
+                case "time":
+                    if (isDateTime)
+                        valueFormat = $"{value}";
+                    else
+                    {
+                        // assume HH:MM format
+                        if (condition.Value.ToString().Split(':').Count() == 2)
+                            valueFormat = $"TO_DATE({value}, 'HH24:MI')";
+                        else // assume HH:MM:SS format
+                            valueFormat = $"TO_DATE({value}, 'HH24:MI:SS')";
+                    } 
+                    sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";
+                    break;
+                case "year":
+                case "month":
+                case "day":
+                case "hour":
+                case "minute":
+                case "second":
+                    sql = $"EXTRACT({condition.Part.ToUpper()} FROM {column}) {condition.Operator} {value}";
+                    break;
+                default:
+                    sql = $"{column} {condition.Operator} {value}";
+                    break;
+            }
+
+            if (condition.IsNot)
+            {
+                return $"NOT ({sql})";
+            }
+
+            return sql;
+
         }
     }
 }
