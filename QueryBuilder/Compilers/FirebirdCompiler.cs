@@ -44,43 +44,6 @@ namespace SqlKata.Compilers
             return null;
         }
 
-        public override string CompileUnion(SqlResult ctx)
-        {
-            // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents("combine", EngineCode).Any())
-            {
-                return null;
-            }
-
-            var combinedQueries = new List<string>();
-
-            var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
-
-            foreach (var clause in clauses)
-            {
-                if (clause is Combine combineClause)
-                {
-                    var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
-
-                    var subCtx = CompileSelectQuery(combineClause.Query);
-
-                    ctx.Bindings.AddRange(subCtx.Bindings);
-
-                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
-                }
-                else
-                {
-                    var combineRawClause = clause as RawCombine;
-
-                    ctx.Bindings.AddRange(combineRawClause.Bindings);
-
-                    combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
-
-                }
-            }
-
-            return string.Join(" ", combinedQueries);
-        }
 
         protected override string CompileColumns(SqlResult ctx)
         {

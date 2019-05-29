@@ -58,8 +58,16 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileRawCondition(SqlResult ctx, RawCondition x)
         {
-            ctx.Bindings.AddRange(x.Bindings);
-            return WrapIdentifiers(x.Expression);
+            if (ctx.Query.HasComponent("withVar", EngineCode))
+            {
+                SetBindingsBaseOnVarsInExpression(ctx, x.Expression);
+            }
+            else
+            {
+                ctx.Bindings.AddRange(x.Bindings);
+            }
+            var result = WrapIdentifiers(x.Expression);
+            return result;
         }
 
         protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>
@@ -67,6 +75,8 @@ namespace SqlKata.Compilers
             var subCtx = CompileSelectQuery(x.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
+
+            ctx.CopyClauses<WithVarClause>(subCtx, "withVar", EngineCode);
 
             return Wrap(x.Column) + " " + checkOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
@@ -94,11 +104,25 @@ namespace SqlKata.Compilers
                 throw new ArgumentException("The value should be a non null value of type string");
             }
 
+
+            // TODO refactor 
+            var withVar = GetVariableByName(ctx.Query.GetComponents<WithVarClause>("withVar", EngineCode), x.Value);
+
             if (!x.CaseSensitive)
             {
-                x.Value = value.ToLower();
+                x.Value = withVar?.Value.ToString().ToLower() ?? value.ToLower();
                 column = CompileLower(column);
             }
+            else
+            {
+                x.Value = withVar.Value;
+            }
+
+            //if (!x.CaseSensitive)
+            //{
+            //    x.Value = value.ToLower();
+            //    column = CompileLower(column);
+            //}
 
             var method = x.Operator;
 
@@ -197,6 +221,8 @@ namespace SqlKata.Compilers
 
             var subCtx = CompileSelectQuery(item.Query);
 
+            ctx.CopyClauses<WithVarClause>(subCtx, "withVar", EngineCode);
+
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
@@ -225,10 +251,47 @@ namespace SqlKata.Compilers
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
 
             var subCtx = CompileSelectQuery(item.Query);
+
+            ctx.CopyClauses<WithVarClause>(subCtx, "withVar", EngineCode);
+
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             return $"{op} ({subCtx.RawSql})";
         }
 
+
+        private WithVarClause GetVariableByName(List<WithVarClause> withVarClauses, object name)
+        {
+            if (withVarClauses != null && withVarClauses.Count == 0)
+            {
+                return null;
+            }
+            var nameStr = name.ToString().Replace("%", "");
+            return withVarClauses.FirstOrDefault(_ => _.Name.Equals(nameStr, StringComparison.OrdinalIgnoreCase));
+        }
+
+        protected void SetBindingsBaseOnVarsInExpression(SqlResult ctx, string expression)
+        {
+            var withVarList = ctx.Query.GetComponents<WithVarClause>("withVar", EngineCode);
+            if (withVarList == null || withVarList.Count == 0)
+            {
+                return;
+            }
+            var variablesInExpression = withVarList.Where(_ => expression.Contains(_.Name));
+            if (variablesInExpression != null && variablesInExpression.Count() > 0)
+            {
+                //ctx.Bindings.AddRange(variablesInExpression
+                //                         .Where(v => ctx.Bindings.Contains(v.Name) == false)
+                //                         .Select(_ => _.Name));
+
+                foreach (var variable in variablesInExpression)
+                {
+                    if (!ctx.Bindings.Contains(variable.Name))
+                    {
+                        ctx.Bindings.Add(variable.Name);
+                    }
+                }
+            }
+        }
     }
 }
