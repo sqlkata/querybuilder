@@ -1,36 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
-        public bool IsDistinct { get; set; } = false;
-        public string QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
-        public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
 
-        public Query() : base()
+        public Query()
         {
         }
 
-        public Query(string table, string comment = null) : base()
+        public Query(string table, string comment = null)
         {
             From(table);
             Comment(comment);
         }
 
+        public bool IsDistinct { get; set; }
+        public string QueryAlias { get; set; }
+        public string Method { get; set; } = "select";
+        public string QueryComment { get; set; }
 
-        public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
-        public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
+        public bool HasOffset(string engineCode = null)
+        {
+            return GetOffset(engineCode) > 0;
+        }
+
+        public bool HasLimit(string engineCode = null)
+        {
+            return GetLimit(engineCode) > 0;
+        }
 
         internal int GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            var offset = GetOneComponent<OffsetClause>("offset", engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -38,7 +46,7 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            var limit = GetOneComponent<LimitClause>("limit", engineCode);
 
             return limit?.Limit ?? 0;
         }
@@ -80,10 +88,7 @@ namespace SqlKata
         public Query With(Query query)
         {
             // Clear query alias and add it to the containing clause
-            if (string.IsNullOrWhiteSpace(query.QueryAlias))
-            {
-                throw new InvalidOperationException("No Alias found for the CTE query");
-            }
+            if (string.IsNullOrWhiteSpace(query.QueryAlias)) throw new InvalidOperationException("No Alias found for the CTE query");
 
             query = query.Clone();
 
@@ -92,11 +97,13 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
-            {
-                Query = query,
-                Alias = alias,
-            });
+            return AddComponent(
+                "cte",
+                new QueryFromClause
+                {
+                    Query = query,
+                    Alias = alias
+                });
         }
 
         public Query With(Func<Query, Query> fn)
@@ -116,12 +123,14 @@ namespace SqlKata
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent("cte", new RawFromClause
-            {
-                Alias = alias,
-                Expression = sql,
-                Bindings = bindings,
-            });
+            return AddComponent(
+                "cte",
+                new RawFromClause
+                {
+                    Alias = alias,
+                    Expression = sql,
+                    Bindings = bindings
+                });
         }
 
         public Query Limit(int value)
@@ -145,7 +154,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for Limit
+        ///     Alias for Limit
         /// </summary>
         /// <param name="limit"></param>
         /// <returns></returns>
@@ -155,7 +164,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for Offset
+        ///     Alias for Offset
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
@@ -165,7 +174,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Set the limit and offset for a given page.
+        ///     Set the limit and offset for a given page.
         /// </summary>
         /// <param name="page"></param>
         /// <param name="perPage"></param>
@@ -182,7 +191,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Apply the callback's query changes if the given "condition" is true.
+        ///     Apply the callback's query changes if the given "condition" is true.
         /// </summary>
         /// <param name="condition"></param>
         /// <param name="whenTrue">Invoked when the condition is true</param>
@@ -190,31 +199,22 @@ namespace SqlKata
         /// <returns></returns>
         public Query When(bool condition, Func<Query, Query> whenTrue, Func<Query, Query> whenFalse = null)
         {
-            if (condition && whenTrue != null)
-            {
-                return whenTrue.Invoke(this);
-            }
+            if (condition && whenTrue != null) return whenTrue.Invoke(this);
 
-            if (!condition && whenFalse != null)
-            {
-                return whenFalse.Invoke(this);
-            }
+            if (!condition && whenFalse != null) return whenFalse.Invoke(this);
 
             return this;
         }
 
         /// <summary>
-        /// Apply the callback's query changes if the given "condition" is false.
+        ///     Apply the callback's query changes if the given "condition" is false.
         /// </summary>
         /// <param name="condition"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
         public Query WhenNot(bool condition, Func<Query, Query> callback)
         {
-            if (!condition)
-            {
-                return callback.Invoke(this);
-            }
+            if (!condition) return callback.Invoke(this);
 
             return this;
         }
@@ -222,13 +222,13 @@ namespace SqlKata
         public Query OrderBy(params string[] columns)
         {
             foreach (var column in columns)
-            {
-                AddComponent("order", new OrderBy
-                {
-                    Column = column,
-                    Ascending = true
-                });
-            }
+                AddComponent(
+                    "order",
+                    new OrderBy
+                    {
+                        Column = column,
+                        Ascending = true
+                    });
 
             return this;
         }
@@ -236,51 +236,55 @@ namespace SqlKata
         public Query OrderByDesc(params string[] columns)
         {
             foreach (var column in columns)
-            {
-                AddComponent("order", new OrderBy
-                {
-                    Column = column,
-                    Ascending = false
-                });
-            }
+                AddComponent(
+                    "order",
+                    new OrderBy
+                    {
+                        Column = column,
+                        Ascending = false
+                    });
 
             return this;
         }
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent("order", new RawOrderBy
-            {
-                Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToArray()
-            });
+            return AddComponent(
+                "order",
+                new RawOrderBy
+                {
+                    Expression = expression,
+                    Bindings = Helper.Flatten(bindings).ToArray()
+                });
         }
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom { });
+            return AddComponent("order", new OrderByRandom());
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
-            {
-                AddComponent("group", new Column
-                {
-                    Name = column
-                });
-            }
+                AddComponent(
+                    "group",
+                    new Column
+                    {
+                        Name = column
+                    });
 
             return this;
         }
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent("group", new RawColumn
-            {
-                Expression = expression,
-                Bindings = bindings,
-            });
+            AddComponent(
+                "group",
+                new RawColumn
+                {
+                    Expression = expression,
+                    Bindings = bindings
+                });
 
             return this;
         }
@@ -292,23 +296,58 @@ namespace SqlKata
 
         public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id", bool isMany = false)
         {
-
-            Includes.Add(new Include
-            {
-                Name = relationName,
-                LocalKey = localKey,
-                ForeignKey = foreignKey,
-                Query = query,
-                IsMany = isMany,
-            });
+            Includes.Add(
+                new Include
+                {
+                    Name = relationName,
+                    LocalKey = localKey,
+                    ForeignKey = foreignKey,
+                    Query = query,
+                    IsMany = isMany
+                });
 
             return this;
         }
 
         public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
         {
-            return Include(relationName, query, foreignKey, localKey, isMany: true);
+            return Include(relationName, query, foreignKey, localKey, true);
         }
 
+        /// <summary>
+        ///     Build a dictionary from plain object, intended to be used with Insert and Update queries
+        /// </summary>
+        /// <param name="data">the plain C# object</param>
+        /// <param name="considerKeys">
+        ///     When true it will search for properties with the [Key] attribute
+        ///     and add it automatically to the Where clause
+        /// </param>
+        /// <returns></returns>
+        private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
+        {
+            var dictionary = new Dictionary<string, object>();
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (var property in props)
+            {
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null) continue;
+
+                var value = property.GetValue(data);
+
+                var colAttrs = property.GetCustomAttributes<ColumnAttribute>().ToArray();
+                var isKey = colAttrs.Any(c => c is KeyAttribute);
+                var name = colAttrs.FirstOrDefault(c => !(c is KeyAttribute))?.Name ?? colAttrs.FirstOrDefault()?.Name ?? property.Name;
+
+                if (isKey && considerKeys)
+                {
+                    Where(name, value);
+                    continue;
+                }
+
+                dictionary.Add(name, value);
+            }
+
+            return dictionary;
+        }
     }
 }
