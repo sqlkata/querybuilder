@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
         {
             ColumnAsKeyword = "";
             TableAsKeyword = "";
-            parameterPlaceholderPrefix = ":p";
+            parameterPrefix = ":p";
         }
 
         public override string EngineCode { get; } = EngineCodes.Oracle;

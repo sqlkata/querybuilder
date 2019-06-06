@@ -26,7 +26,12 @@ namespace SqlKata.Compilers
 
             try
             {
-                var result = methodInfo.Invoke(this, new object[] { ctx, clause });
+
+                var result = methodInfo.Invoke(this, new object[] {
+                    ctx,
+                    clause
+                });
+
                 return result as string;
             }
             catch (Exception ex)
