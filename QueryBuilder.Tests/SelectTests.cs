@@ -629,5 +629,37 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
         }
+
+        [Fact]
+        public void Having()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .Having("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleOrHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .OrHaving("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1", c[EngineCodes.SqlServer]);
+        }
     }
 }
