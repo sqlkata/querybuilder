@@ -71,6 +71,15 @@ namespace SqlKata.Compilers
             return Wrap(x.Column) + " " + checkOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
+        protected virtual string CompileSubQueryCondition<T>(SqlResult ctx, SubQueryCondition<T> x) where T : BaseQuery<T>
+        {
+            var subCtx = CompileSelectQuery(x.Query);
+
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            return "(" + subCtx.RawSql + ") " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
+        }
+
         protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
         {
             var sql = Wrap(x.Column) + " " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
