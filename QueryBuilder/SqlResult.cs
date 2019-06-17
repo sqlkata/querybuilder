@@ -27,9 +27,9 @@ namespace SqlKata
 
         public override string ToString()
         {
-            var deepParameters = GetParametersWithoutVars();
+            var deepParameters = Helper.Flatten(Bindings).ToList();
 
-            return Helper.ReplaceAll(ReplaceVariables(RawSql), "?", i =>
+            return Helper.ReplaceAll(RawSql, "?", i =>
             {
                 if (i >= deepParameters.Count)
                 {
@@ -41,25 +41,6 @@ namespace SqlKata
                 return ChangeToSqlValue(value);
             });
         }
-
-        public void CopyClauses<C>(SqlResult subCtx, string name, string engineCode = null) where C : AbstractClause
-        {
-            var clauses = subCtx.Query.GetComponents<C>(name, engineCode);
-            Query.Clauses.AddRange(clauses);
-        }
-
-        private string ReplaceVariables(string rawSqlquery)
-        {
-            var withVars = Query.GetComponents<WithVarClause>("withVar");
-            foreach (var variable in withVars)
-            {
-                object value = variable.Value;
-                string valueSql = ChangeToSqlValue(value);
-                rawSqlquery = rawSqlquery.Replace(variable.Name, valueSql);
-            }
-            return rawSqlquery;
-        }
-
 
         private string ChangeToSqlValue(object value)
         {
@@ -103,18 +84,6 @@ namespace SqlKata
             return "'" + value.ToString() + "'";
         }
 
-
-        /// <summary>
-        /// Additional helper method in order to avoid assign wrong parameters in the to string method.
-        /// </summary>
-        /// <returns></returns>
-        private List<object> GetParametersWithoutVars()
-        {
-
-            var withVars = Query.GetComponents<WithVarClause>("withVar");
-            return Helper.Flatten(Bindings).
-                                Where(x => !withVars.Any(k => k.Name.Equals(x.ToString(), StringComparison.OrdinalIgnoreCase))).ToList();
-        }
 
 
     }

@@ -11,6 +11,7 @@ namespace SqlKata
         public string Method { get; set; } = "select";
         public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
+        public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
         public Query() : base()
         {
@@ -46,10 +47,12 @@ namespace SqlKata
         public override Query Clone()
         {
             var clone = base.Clone();
+            clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
             clone.Includes = Includes;
+            clone.Variables = Variables;
             return clone;
         }
 
@@ -311,15 +314,78 @@ namespace SqlKata
         }
 
 
-        public Query WithVar(string parameterName, object value)
+        /// <summary>
+        /// Define a variable to be used within the query
+        /// </summary>
+        /// <param name="variable"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Query Define(string variable, object value)
         {
-            return AddComponent("withVar", new WithVarClause
+            Variables.Add(variable, value);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Instruct the compiler to fetch the value from the predefined variables
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static Variable Variable(string name)
+        {
+            return new Variable(name);
+        }
+
+        /// <summary>
+        /// Instruct the compiler to treat this as a literal
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static Literal Literal(string name)
+        {
+            return new Literal(name);
+        }
+
+        public object FindVariable(string variable)
+        {
+            var found = Variables.ContainsKey(variable);
+
+            if (found)
             {
-                Name = parameterName,
-                Value = value
-            });
+                return Variables[variable];
+            }
+
+            if (Parent != null)
+            {
+                return (Parent as Query).FindVariable(variable);
+            }
+
+            throw new Exception($"Variable '{variable}' not found");
 
         }
 
     }
+}
+
+public class Variable
+{
+    public string Name { get; set; }
+
+    public Variable(string name)
+    {
+        this.Name = name;
+    }
+
+}
+
+public class Literal
+{
+    public string Value { get; set; }
+
+    public Literal(string value)
+    {
+        this.Value = value;
+    }
+
 }

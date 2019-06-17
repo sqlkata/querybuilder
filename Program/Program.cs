@@ -11,6 +11,7 @@ using Npgsql;
 using System.Data;
 using Dapper;
 using System.Data.SQLite;
+using static SqlKata.Query;
 
 namespace Program
 {
@@ -48,34 +49,19 @@ namespace Program
                 Console.WriteLine(result.ToString());
             };
 
-            /*
-            var accounts = db.Query("Accounts")
-                .WhereNotNull("BankId")
-                .Include("bank",
-                    db.Query("Banks").Include("Country", db.Query("Countries"))
-                        .Select("Id", "Name", "CountryId")
-                )
-                .Select("Id", "Name", "BankId")
-                .OrderByDesc("Id").Limit(10).Get();
-            */
+            var query = new Query("Users")
+            .Define("Age", 17)
+            .Where(q => q.Where("Age", ">", Variable("Age")).OrWhere("Age", "<", Variable("Age")));
 
-            var includedAccountsQuery = db.Query("Accounts").Limit(2)
-                .IncludeMany("Transactions", db.Query("Transactions"))
-                .Include("Company", db.Query("Companies"));
-
-            var bank = db.Query("Banks as Icon")
-                .IncludeMany("Accounts", includedAccountsQuery, "BankId")
-                .WhereExists(q => q.From("Accounts").WhereColumns("Accounts.BankId", "=", "Icon.Id"))
-                .Limit(1)
-                .Get();
-
-            Console.WriteLine(JsonConvert.SerializeObject(bank, Formatting.Indented));
+            log(new SqlServerCompiler(), query);
 
         }
 
         private static void log(Compiler compiler, Query query)
         {
-            Console.WriteLine(compiler.Compile(query).ToString());
+            var compiled = compiler.Compile(query);
+            Console.WriteLine(compiled.ToString());
+            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
         }
 
     }
