@@ -49,10 +49,12 @@ namespace SqlKata.Execution
 
             xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
 
+            xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;
             xQuery.IsDistinct = query.IsDistinct;
             xQuery.Method = query.Method;
             xQuery.Includes = query.Includes;
+            xQuery.Variables = query.Variables;
 
             xQuery.SetEngineScope(query.EngineScope);
 
