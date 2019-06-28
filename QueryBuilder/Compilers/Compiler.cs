@@ -698,11 +698,11 @@ namespace SqlKata.Compilers
                 {
                     boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
-                    sql.Add(boolOperator + "HAVING " + compiled);
+                    sql.Add(boolOperator + compiled);
                 }
             }
 
-            return string.Join(", ", sql);
+            return $"HAVING {string.Join(" ", sql)}";
         }
 
         public virtual string CompileLimit(SqlResult ctx)

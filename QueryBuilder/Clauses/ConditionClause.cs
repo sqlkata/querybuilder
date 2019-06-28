@@ -126,6 +126,31 @@ namespace SqlKata
     }
 
     /// <summary>
+    /// Represents a comparison between a full "subquery" and a value.
+    /// </summary>
+    public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    {
+        public object Value { get; set; }
+        public string Operator { get; set; }
+        public Query Query { get; set; }
+
+        /// <inheritdoc />
+        public override AbstractClause Clone()
+        {
+            return new SubQueryCondition<T>
+            {
+                Engine = Engine,
+                Value = Value,
+                Operator = Operator,
+                Query = Query.Clone(),
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Component = Component,
+            };
+        }
+    }
+
+    /// <summary>
     /// Represents a "is in" condition.
     /// </summary>
     public class InCondition<T> : AbstractCondition

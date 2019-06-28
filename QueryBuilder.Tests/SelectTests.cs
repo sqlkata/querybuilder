@@ -148,6 +148,34 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void WhereSub()
+        {
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+
+            var query = new Query("Table").WhereSub(subQuery, 1);
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void OrWhereSub()
+        {
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+
+            var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" IS NULL OR (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") < 1", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void PassingArrayAsParameter()
         {
             var query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
@@ -628,6 +656,38 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void Having()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .Having("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleOrHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .OrHaving("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1", c[EngineCodes.SqlServer]);
         }
     }
 }
