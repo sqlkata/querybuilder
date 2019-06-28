@@ -798,7 +798,7 @@ namespace SqlKata.Compilers
         public virtual object Resolve(SqlResult ctx, object parameter)
         {
             // if we face a literal value we have to return it directly
-            if (parameter is Literal literal)
+            if (parameter is UnsafeLiteral literal)
             {
                 return literal.Value;
             }
@@ -824,7 +824,7 @@ namespace SqlKata.Compilers
         public virtual string Parameter(SqlResult ctx, object parameter)
         {
             // if we face a literal value we have to return it directly
-            if (parameter is Literal literal)
+            if (parameter is UnsafeLiteral literal)
             {
                 return literal.Value;
             }

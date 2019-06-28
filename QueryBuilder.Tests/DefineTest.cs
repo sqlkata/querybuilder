@@ -1,8 +1,7 @@
-﻿using SqlKata.Compilers;
-using SqlKata.Extensions;
+﻿using static SqlKata.Expressions;
+using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
-using static SqlKata.Query;
 
 namespace SqlKata.Tests
 {
@@ -15,7 +14,6 @@ namespace SqlKata.Tests
         [Fact]
         public void Test_Define_Where()
         {
-
             var query = new Query("Products")
               .Define("@name", "Anto")
               .Where("ProductName", Variable("@name"));
@@ -36,8 +34,8 @@ namespace SqlKata.Tests
                 .Where("UnitsInStock", ">", Variable("@UnitsInSt"));
 
             var query = new Query("Products")
-                        .Where("unitprice", ">", subquery)
-                        .Where("UnitsOnOrder", ">", 5);
+                .Where("unitprice", ">", subquery)
+                .Where("UnitsOnOrder", ">", 5);
 
             var c = Compile(query);
 
@@ -51,15 +49,15 @@ namespace SqlKata.Tests
         {
 
             var query1 = new Query("Products")
-                        .Select("ProductId")
-                        .Define("@product", "Coffee")
-                        .WhereEnds("ProductName", Variable("@product"));
+                .Select("ProductId")
+                .Define("@product", "Coffee")
+                .WhereEnds("ProductName", Variable("@product"));
 
 
             var query2 = new Query("Products")
-                       .Select("ProductId", "ProductName")
-                       .Define("@product", "Coffee")
-                       .WhereEnds("ProductName", Variable("@product"), true);
+                .Select("ProductId", "ProductName")
+                .Define("@product", "Coffee")
+                .WhereEnds("ProductName", Variable("@product"), true);
 
             var c1 = Compile(query1);
             var c2 = Compile(query2);

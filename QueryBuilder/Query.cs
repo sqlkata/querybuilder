@@ -327,26 +327,6 @@ namespace SqlKata
             return this;
         }
 
-        /// <summary>
-        /// Instruct the compiler to fetch the value from the predefined variables
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static Variable Variable(string name)
-        {
-            return new Variable(name);
-        }
-
-        /// <summary>
-        /// Instruct the compiler to treat this as a literal
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static Literal Literal(string name)
-        {
-            return new Literal(name);
-        }
-
         public object FindVariable(string variable)
         {
             var found = Variables.ContainsKey(variable);
@@ -366,26 +346,4 @@ namespace SqlKata
         }
 
     }
-}
-
-public class Variable
-{
-    public string Name { get; set; }
-
-    public Variable(string name)
-    {
-        this.Name = name;
-    }
-
-}
-
-public class Literal
-{
-    public string Value { get; set; }
-
-    public Literal(string value)
-    {
-        this.Value = value;
-    }
-
 }

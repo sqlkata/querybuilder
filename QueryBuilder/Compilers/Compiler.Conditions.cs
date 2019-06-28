@@ -126,7 +126,7 @@ namespace SqlKata.Compilers
                 value = value.ToLowerInvariant();
             }
 
-            if (x.Value is Literal)
+            if (x.Value is UnsafeLiteral)
             {
                 sql = $"{column} {checkOperator(method)} {value}";
             }
