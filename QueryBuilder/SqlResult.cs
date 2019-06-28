@@ -38,45 +38,53 @@ namespace SqlKata
                 }
 
                 var value = deepParameters[i];
-
-                if (value == null)
-                {
-                    return "NULL";
-                }
-
-                if (Helper.IsArray(value))
-                {
-                    return Helper.JoinArray(",", value as IEnumerable);
-                }
-
-                if (NumberTypes.Contains(value.GetType()))
-                {
-                    return value.ToString();
-                }
-
-                if (value is DateTime date)
-                {
-                    if (date.Date == date)
-                    {
-                        return "'" + date.ToString("yyyy-MM-dd") + "'";
-                    }
-
-                    return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
-                }
-
-                if (value is bool vBool)
-                {
-                    return vBool ? "true" : "false";
-                }
-
-                if (value is Enum vEnum)
-                {
-                    return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
-                }
-
-                // fallback to string
-                return "'" + value.ToString() + "'";
+                return ChangeToSqlValue(value);
             });
         }
+
+        private string ChangeToSqlValue(object value)
+        {
+
+            if (value == null)
+            {
+                return "NULL";
+            }
+
+            if (Helper.IsArray(value))
+            {
+                return Helper.JoinArray(",", value as IEnumerable);
+            }
+
+            if (NumberTypes.Contains(value.GetType()))
+            {
+                return value.ToString();
+            }
+
+            if (value is DateTime date)
+            {
+                if (date.Date == date)
+                {
+                    return "'" + date.ToString("yyyy-MM-dd") + "'";
+                }
+
+                return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+            }
+
+            if (value is bool vBool)
+            {
+                return vBool ? "true" : "false";
+            }
+
+            if (value is Enum vEnum)
+            {
+                return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
+            }
+
+            // fallback to string
+            return "'" + value.ToString() + "'";
+        }
+
+
+
     }
 }

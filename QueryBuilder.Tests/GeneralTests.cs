@@ -9,10 +9,12 @@ namespace SqlKata.Tests
 {
     public class GeneralTests : TestSupport
     {
-       [Fact]
+        [Fact]
         public void ColumnsEscaping()
         {
-            var q = new Query().From("users").Select("mycol[isthis]");
+            var q = new Query().From("users")
+                .Select("mycol[isthis]");
+
             var c = Compile(q);
 
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[EngineCodes.SqlServer]);
@@ -53,8 +55,8 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM (SELECT * FROM \"table\" WHERE postgres = true) AS \"series\"", c[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"", c[EngineCodes.Firebird]);
-        }      
-        
+        }
+
         [Fact]
         public void ItShouldCacheMethodInfoByType()
         {
@@ -125,7 +127,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"USERS\"", c[EngineCodes.Firebird]);
         }
-        
+
         [Fact]
         public void Raw_WrapIdentifiers_Escaped()
         {

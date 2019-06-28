@@ -58,6 +58,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+
         private Query TransformAggregateQuery(Query query)
         {
             var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
@@ -348,6 +349,7 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
+
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
@@ -756,6 +758,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual string Wrap(string value)
         {
+
             if (value.ToLower().Contains(" as "))
             {
                 var index = value.ToLower().IndexOf(" as ");
@@ -793,9 +796,56 @@ namespace SqlKata.Compilers
             return opening + value.Replace(closing, closing + closing) + closing;
         }
 
-        public virtual string Parameter<T>(SqlResult ctx, T value)
+        /// <summary>
+        /// Resolve a parameter
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual object Resolve(SqlResult ctx, object parameter)
         {
-            ctx.Bindings.Add(value);
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                return value;
+            }
+
+            return parameter;
+
+        }
+
+        /// <summary>
+        /// Resolve a parameter and add it to the binding list
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual string Parameter(SqlResult ctx, object parameter)
+        {
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                ctx.Bindings.Add(value);
+                return "?";
+            }
+
+            ctx.Bindings.Add(parameter);
             return "?";
         }
 
