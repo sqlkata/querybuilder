@@ -11,7 +11,8 @@ using Npgsql;
 using System.Data;
 using Dapper;
 using System.Data.SQLite;
-using static SqlKata.Query;
+using static SqlKata.Expressions;
+using System.IO;
 
 namespace Program
 {
@@ -34,26 +35,19 @@ namespace Program
         static void Main(string[] args)
         {
 
-            IDbConnection connection = new SqlConnection(
-                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-            );
+            var db = SqlLiteQueryFactory();
 
-            // SQLiteConnection.CreateFile("Demo.db");
-
-            // connection = new SQLiteConnection("Data Source=Demo.db");
-
-            var db = new QueryFactory(connection, new SqlServerCompiler());
-
-            db.Logger = result =>
+            var id = db.Query("accounts").InsertGetId<int>(new
             {
-                Console.WriteLine(result.ToString());
-            };
+                name = "new Account",
+                currency_id = "USD",
+                created_at = DateTime.UtcNow
+            });
 
-            var query = new Query("Users")
-            .Define("Age", 17)
-            .Where(q => q.Where("Age", ">", Variable("Age")).OrWhere("Age", "<", Variable("Age")));
+            var id2 = db.Select<int>("insert into accounts(name, currency_id, created_at) values ('account 2','usd','2019-01-01 20:00:00');select last_insert_rowid();");
 
-            log(new SqlServerCompiler(), query);
+            Console.WriteLine($"last id is: {id}");
+            Console.WriteLine($"last id2 is: {id2.First()}");
 
         }
 
@@ -62,6 +56,49 @@ namespace Program
             var compiled = compiler.Compile(query);
             Console.WriteLine(compiled.ToString());
             Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
+        }
+
+        private static QueryFactory SqlLiteQueryFactory()
+        {
+            var compiler = new SqliteCompiler();
+
+            var connection = new SQLiteConnection("Data Source=Demo.db");
+
+            var db = new QueryFactory(connection, compiler);
+
+            db.Logger = result =>
+            {
+                Console.WriteLine(result.ToString());
+            };
+
+            if (!File.Exists("Demo.db"))
+            {
+                Console.WriteLine("db not exists creating db");
+
+                SQLiteConnection.CreateFile("Demo.db");
+
+                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, created_at datetime);");
+
+            }
+
+            return db;
+        }
+
+        private static QueryFactory SqlServerQueryFactory()
+        {
+            var compiler = new PostgresCompiler();
+            var connection = new SqlConnection(
+               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+           );
+
+            var db = new QueryFactory(connection, compiler);
+
+            db.Logger = result =>
+            {
+                Console.WriteLine(result.ToString());
+            };
+
+            return db;
         }
 
     }
