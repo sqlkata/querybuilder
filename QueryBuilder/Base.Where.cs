@@ -482,6 +482,33 @@ namespace SqlKata
             });
         }
 
+        public Q WhereSub(Query query, object value)
+        {
+            return WhereSub(query, "=", value);
+        }
+
+        public Q WhereSub(Query query, string op, object value)
+        {
+            return AddComponent("where", new SubQueryCondition<Query>
+            {
+                Value = value,
+                Operator = op,
+                Query = query,
+                IsNot = GetNot(),
+                IsOr = GetOr(),
+            });
+        }
+
+        public Q OrWhereSub(Query query, object value)
+        {
+            return Or().WhereSub(query, value);
+        }
+
+        public Q OrWhereSub(Query query, string op, object value)
+        {
+            return Or().WhereSub(query, op, value);
+        }
+
         public Q OrWhere(string column, string op, Query query)
         {
             return Or().Where(column, op, query);

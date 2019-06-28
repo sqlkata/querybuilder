@@ -8,7 +8,7 @@ namespace SqlKata.Compilers
     {
         public override string EngineCode { get; } = EngineCodes.Sqlite;
         protected override string parameterPlaceholder { get; set; } = "?";
-        protected override string parameterPlaceholderPrefix { get; set; } = "@p";
+        protected override string parameterPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
         protected override string LastId { get; set; } = "select last_insert_rowid()";

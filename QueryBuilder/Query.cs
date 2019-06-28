@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
@@ -313,7 +314,6 @@ namespace SqlKata
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
 
-
         /// <summary>
         /// Define a variable to be used within the query
         /// </summary>
@@ -342,7 +342,6 @@ namespace SqlKata
             }
 
             throw new Exception($"Variable '{variable}' not found");
-
         }
 
     }

@@ -26,7 +26,12 @@ namespace SqlKata.Compilers
 
             try
             {
-                var result = methodInfo.Invoke(this, new object[] { ctx, clause });
+
+                var result = methodInfo.Invoke(this, new object[] {
+                    ctx,
+                    clause
+                });
+
                 return result as string;
             }
             catch (Exception ex)
@@ -70,6 +75,15 @@ namespace SqlKata.Compilers
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             return Wrap(x.Column) + " " + checkOperator(x.Operator) + " (" + subCtx.RawSql + ")";
+        }
+
+        protected virtual string CompileSubQueryCondition<T>(SqlResult ctx, SubQueryCondition<T> x) where T : BaseQuery<T>
+        {
+            var subCtx = CompileSelectQuery(x.Query);
+
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            return "(" + subCtx.RawSql + ") " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
         }
 
         protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
