@@ -1,28 +1,37 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using Dapper;
-using SqlKata;
-using System.Threading.Tasks;
+using Humanizer;
 
 namespace SqlKata.Execution
 {
     public static class QueryFactoryExtensions
     {
         #region Dapper
+
         public static IEnumerable<T> Get<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query);
+            var compiled = db.Compile(query);
 
-            return db.Connection.Query<T>(compiled.Sql, compiled.NamedBindings);
+            var result = db.Connection.Query<T>(
+                compiled.Sql,
+                compiled.NamedBindings,
+                commandTimeout: db.QueryTimeout
+            ).ToList();
+
+            result = handleIncludes<T>(query, result).ToList();
+
+            return result;
         }
 
         public static IEnumerable<IDictionary<string, object>> GetDictionary(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query);
+            var compiled = db.Compile(query);
 
-            return db.Connection.Query(compiled.Sql, compiled.NamedBindings) as IEnumerable<IDictionary<string, object>>;
+            return db.Connection.Query(compiled.Sql, compiled.NamedBindings, commandTimeout: db.QueryTimeout) as IEnumerable<IDictionary<string, object>>;
         }
 
         public static IEnumerable<dynamic> Get(this QueryFactory db, Query query)
@@ -30,23 +39,11 @@ namespace SqlKata.Execution
             return Get<dynamic>(db, query);
         }
 
-        public static T First<T>(this QueryFactory db, Query query)
-        {
-            var compiled = db.compile(query.Limit(1));
-
-            return db.Connection.QueryFirst<T>(compiled.Sql, compiled.NamedBindings);
-        }
-
-        public static dynamic First(this QueryFactory db, Query query)
-        {
-            return First<dynamic>(db, query);
-        }
-
         public static T FirstOrDefault<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query.Limit(1));
+            var list = Get<T>(db, query.Limit(1));
 
-            return db.Connection.QueryFirstOrDefault<T>(compiled.Sql, compiled.NamedBindings);
+            return list.ElementAtOrDefault(0);
         }
 
         public static dynamic FirstOrDefault(this QueryFactory db, Query query)
@@ -54,9 +51,32 @@ namespace SqlKata.Execution
             return FirstOrDefault<dynamic>(db, query);
         }
 
-        public static int Execute(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
+        public static T First<T>(this QueryFactory db, Query query)
         {
-            var compiled = db.compile(query);
+            var item = FirstOrDefault<T>(db, query);
+
+            if (item == null)
+            {
+                throw new InvalidOperationException("The sequence contains no elements");
+            }
+
+            return item;
+        }
+
+        public static dynamic First(this QueryFactory db, Query query)
+        {
+            return First<dynamic>(db, query);
+        }
+
+
+        public static int Execute(
+            this QueryFactory db,
+            Query query,
+            IDbTransaction transaction = null,
+            CommandType? commandType = null
+        )
+        {
+            var compiled = db.Compile(query);
 
             return db.Connection.Execute(
                 compiled.Sql,
@@ -69,7 +89,7 @@ namespace SqlKata.Execution
 
         public static T ExecuteScalar<T>(this QueryFactory db, Query query, IDbTransaction transaction = null, CommandType? commandType = null)
         {
-            var compiled = db.compile(query.Limit(1));
+            var compiled = db.Compile(query.Limit(1));
 
             return db.Connection.ExecuteScalar<T>(
                 compiled.Sql,
@@ -87,10 +107,7 @@ namespace SqlKata.Execution
             CommandType? commandType = null
         )
         {
-
-            var compiled = queries
-                .Select(q => db.compile(q))
-                .Aggregate((a, b) => a + b);
+            var compiled = db.Compiler.Compile(queries);
 
             return db.Connection.QueryMultiple(
                 compiled.Sql,
@@ -182,7 +199,15 @@ namespace SqlKata.Execution
 
             var count = query.Clone().Count<long>();
 
-            var list = query.Clone().ForPage(page, perPage).Get<T>();
+            IEnumerable<T> list;
+            if (count > 0)
+            {
+                list = query.Clone().ForPage(page, perPage).Get<T>();
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
 
             return new PaginationResult<T>
             {
@@ -233,7 +258,7 @@ namespace SqlKata.Execution
         #region free statements
         public static IEnumerable<T> Select<T>(this QueryFactory db, string sql, object param = null)
         {
-            return db.Connection.Query<T>(sql, param);
+            return db.Connection.Query<T>(sql, param, commandTimeout: db.QueryTimeout);
         }
         public static IEnumerable<dynamic> Select(this QueryFactory db, string sql, object param = null)
         {
@@ -241,31 +266,104 @@ namespace SqlKata.Execution
         }
         public static int Statement(this QueryFactory db, string sql, object param = null)
         {
-            return db.Connection.Execute(sql, param);
-        }
-
-        public static async Task<IEnumerable<T>> SelectAsync<T>(this QueryFactory db, string sql, object param = null)
-        {
-            return await db.Connection.QueryAsync<T>(sql, param);
-        }
-        public static async Task<IEnumerable<dynamic>> SelectAsync(this QueryFactory db, string sql, object param = null)
-        {
-            return await db.SelectAsync<dynamic>(sql, param);
-        }
-        public static async Task<int> StatementAsync(this QueryFactory db, string sql, object param = null)
-        {
-            return await db.Connection.ExecuteAsync(sql, param);
+            return db.Connection.Execute(sql, param, commandTimeout: db.QueryTimeout);
         }
         #endregion
 
-        private static SqlResult compile(this QueryFactory db, Query query)
+        private static IEnumerable<T> handleIncludes<T>(Query query, IEnumerable<T> result)
         {
-            var compiled = db.Compiler.Compile(query);
+            if (!result.Any())
+            {
+                return result;
+            }
 
-            db.Logger(compiled);
+            var canBeProcessed = query.Includes.Any() && result.ElementAt(0) is IDynamicMetaObjectProvider;
 
-            return compiled;
+            if (!canBeProcessed)
+            {
+                return result;
+            }
+
+            var dynamicResult = result
+                .Cast<IDictionary<string, object>>()
+                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var include in query.Includes)
+            {
+
+                if (include.IsMany)
+                {
+                    if (include.ForeignKey == null)
+                    {
+                        // try to guess the default key
+                        // I will try to fetch the table name if provided and appending the Id as a convention
+                        // Here am using Humanizer package to help getting the singular form of the table
+
+                        var fromTable = query.GetOneComponent("from") as FromClause;
+
+                        if (fromTable == null)
+                        {
+                            throw new InvalidOperationException($"Cannot guess the foreign key for the included relation '{include.Name}'");
+                        }
+
+                        var table = fromTable.Alias ?? fromTable.Table;
+
+                        include.ForeignKey = table.Singularize(false) + "Id";
+                    }
+
+                    var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
+                    .Select(x => x[include.LocalKey].ToString())
+                    .ToList();
+
+                    if (!localIds.Any())
+                    {
+                        continue;
+                    }
+
+                    var children = include.Query.WhereIn(include.ForeignKey, localIds).Get()
+                        .Cast<IDictionary<string, object>>()
+                        .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                        .GroupBy(x => x[include.ForeignKey].ToString())
+                        .ToDictionary(x => x.Key, x => x.ToList());
+
+                    foreach (var item in dynamicResult)
+                    {
+                        var localValue = item[include.LocalKey].ToString();
+                        item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                    }
+
+                    continue;
+                }
+
+                if (include.ForeignKey == null)
+                {
+                    include.ForeignKey = include.Name + "Id";
+                }
+
+                var foreignIds = dynamicResult.Where(x => x[include.ForeignKey] != null)
+                    .Select(x => x[include.ForeignKey].ToString())
+                    .ToList();
+
+                if (!foreignIds.Any())
+                {
+                    continue;
+                }
+
+                var related = include.Query.WhereIn(include.LocalKey, foreignIds).Get()
+                    .Cast<IDictionary<string, object>>()
+                    .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                    .ToDictionary(x => x[include.LocalKey].ToString());
+
+                foreach (var item in dynamicResult)
+                {
+                    var foreignValue = item[include.ForeignKey].ToString();
+                    item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                }
+            }
+
+            return dynamicResult.Cast<T>();
+
         }
-
     }
 }

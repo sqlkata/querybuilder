@@ -5,19 +5,13 @@ using System.Reflection;
 
 namespace SqlKata
 {
+
     public partial class Query
     {
 
         public Query AsUpdate(object data)
         {
-            var dictionary = new Dictionary<string, object>();
-
-            var props = data.GetType().GetRuntimeProperties();
-
-            foreach (var item in props)
-            {
-                dictionary.Add(item.Name, item.GetValue(data));
-            }
+            var dictionary = BuildDictionaryFromObject(data, considerKeys: true);
 
             return AsUpdate(dictionary);
         }

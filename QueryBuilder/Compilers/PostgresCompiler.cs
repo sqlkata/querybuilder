@@ -1,13 +1,13 @@
-using System;
-
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
-        public PostgresCompiler() : base()
+        public PostgresCompiler()
         {
-            EngineCode = "postgres";
+            LastId = "SELECT lastval() AS id";
         }
+
+        public override string EngineCode { get; } = EngineCodes.PostgreSql;
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
@@ -25,7 +25,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"DATE_PART('{condition.Part.ToUpper()}', {column})";
+                left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
@@ -36,15 +36,6 @@ namespace SqlKata.Compilers
             }
 
             return sql;
-        }
-    }
-    public static class PostgresCompilerExtensions
-    {
-        public static string ENGINE_CODE = "postgres";
-
-        public static Query ForPostgres(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(PostgresCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

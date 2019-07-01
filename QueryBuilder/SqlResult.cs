@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,91 +10,81 @@ namespace SqlKata
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
+        public string Sql { get; set; } = "";
+        public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
 
-        public SqlResult()
+        private static readonly Type[] NumberTypes =
         {
-        }
-
-        public string Sql
-        {
-            get
-            {
-                return Helper.ReplaceAll(RawSql, "?", x => "@p" + x);
-            }
-        }
-
-        public Dictionary<string, object> NamedBindings
-        {
-            get
-            {
-                var namedParams = new Dictionary<string, object>();
-
-                for (var i = 0; i < Bindings.Count; i++)
-                {
-                    namedParams["p" + i] = Bindings[i];
-                }
-
-                return namedParams;
-            }
-        }
+            typeof(int),
+            typeof(long),
+            typeof(decimal),
+            typeof(double),
+            typeof(float),
+            typeof(short),
+            typeof(ushort),
+            typeof(ulong),
+        };
 
         public override string ToString()
         {
+            var deepParameters = Helper.Flatten(Bindings).ToList();
+
             return Helper.ReplaceAll(RawSql, "?", i =>
             {
-                if (i >= Bindings.Count)
+                if (i >= deepParameters.Count)
                 {
-                    throw new Exception($"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
+                    throw new Exception(
+                        $"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
                 }
 
-                var value = Bindings[i];
-
-                if (value == null)
-                {
-                    return "NULL";
-                }
-                else if (IsNumber(value.ToString()))
-                {
-                    return value.ToString();
-                }
-                else if (value is DateTime date)
-                {
-                    return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
-                }
-                else if (value is bool vBool)
-                {
-                    return vBool ? "true" : "false";
-                }
-                else if (value is Enum vEnum)
-                {
-                    return ((int)value) + $" /* {vEnum} */";
-                }
-
-                // fallback to string
-                return "'" + value.ToString() + "'";
-
+                var value = deepParameters[i];
+                return ChangeToSqlValue(value);
             });
         }
 
-        private static bool IsNumber(string val)
+        private string ChangeToSqlValue(object value)
         {
-            return !string.IsNullOrEmpty(val) && double.TryParse(val, out double num);
-        }
 
-        public static SqlResult operator +(SqlResult a, SqlResult b)
-        {
-            var sql = a.RawSql + ";" + b.RawSql;
-
-            var bindings = a.Bindings.Concat(b.Bindings).ToList();
-
-            var result = new SqlResult
+            if (value == null)
             {
-                RawSql = sql,
-                Bindings = bindings
-            };
+                return "NULL";
+            }
 
-            return result;
+            if (Helper.IsArray(value))
+            {
+                return Helper.JoinArray(",", value as IEnumerable);
+            }
+
+            if (NumberTypes.Contains(value.GetType()))
+            {
+                return value.ToString();
+            }
+
+            if (value is DateTime date)
+            {
+                if (date.Date == date)
+                {
+                    return "'" + date.ToString("yyyy-MM-dd") + "'";
+                }
+
+                return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+            }
+
+            if (value is bool vBool)
+            {
+                return vBool ? "true" : "false";
+            }
+
+            if (value is Enum vEnum)
+            {
+                return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
+            }
+
+            // fallback to string
+            return "'" + value.ToString() + "'";
         }
+
+
 
     }
 }

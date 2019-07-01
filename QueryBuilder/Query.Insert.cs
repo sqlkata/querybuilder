@@ -7,18 +7,11 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsInsert(object data)
+        public Query AsInsert(object data, bool returnId = false)
         {
-            var dictionary = new Dictionary<string, object>();
+            var dictionary = BuildDictionaryFromObject(data);
 
-            var props = data.GetType().GetRuntimeProperties();
-
-            foreach (var item in props)
-            {
-                dictionary.Add(item.Name, item.GetValue(data));
-            }
-
-            return AsInsert(dictionary);
+            return AsInsert(dictionary, returnId);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
@@ -47,7 +40,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IReadOnlyDictionary<string, object> data)
+        public Query AsInsert(IReadOnlyDictionary<string, object> data, bool returnId = false)
         {
             if (data == null || data.Count == 0)
             {
@@ -59,7 +52,8 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
                 Columns = data.Keys.ToList(),
-                Values = data.Values.ToList()
+                Values = data.Values.ToList(),
+                ReturnId = returnId,
             });
 
             return this;

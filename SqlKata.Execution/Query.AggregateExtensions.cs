@@ -1,21 +1,19 @@
-using SqlKata;
-
 namespace SqlKata.Execution
 {
     public static class QueryAggregateExtensions
     {
         public static T Aggregate<T>(this Query query, string aggregateOperation, params string[] columns)
         {
-            var factory = QueryHelper.CreateQueryFactory(query);
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            return factory.ExecuteScalar<T>(query.AsAggregate(aggregateOperation, columns));
+            return db.ExecuteScalar<T>(query.AsAggregate(aggregateOperation, columns));
         }
 
         public static T Count<T>(this Query query, params string[] columns)
         {
-            var factory = QueryHelper.CreateQueryFactory(query);
+            var db = QueryHelper.CreateQueryFactory(query);
 
-            return factory.ExecuteScalar<T>(query.AsCount(columns));
+            return db.ExecuteScalar<T>(query.AsCount(columns));
         }
 
         public static T Average<T>(this Query query, string column)

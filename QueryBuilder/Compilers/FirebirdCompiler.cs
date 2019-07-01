@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -7,10 +6,11 @@ namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
-        public FirebirdCompiler() : base()
+        public FirebirdCompiler()
         {
-            EngineCode = "firebird";
         }
+
+        public override string EngineCode { get; } = EngineCodes.Firebird;
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
@@ -44,43 +44,6 @@ namespace SqlKata.Compilers
             return null;
         }
 
-        public override string CompileUnion(SqlResult ctx)
-        {
-            // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents("combine", EngineCode).Any())
-            {
-                return null;
-            }
-
-            var combinedQueries = new List<string>();
-
-            var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
-
-            foreach (var clause in clauses)
-            {
-                if (clause is Combine combineClause)
-                {
-                    var combineOperator = combineClause.Operation.ToUpper() + " " + (combineClause.All ? "ALL " : "");
-
-                    var subCtx = CompileSelectQuery(combineClause.Query);
-
-                    ctx.Bindings.AddRange(subCtx.Bindings);
-
-                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
-                }
-                else
-                {
-                    var combineRawClause = clause as RawCombine;
-
-                    ctx.Bindings.AddRange(combineRawClause.Bindings);
-
-                    combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
-
-                }
-            }
-
-            return string.Join(" ", combinedQueries);
-        }
 
         protected override string CompileColumns(SqlResult ctx)
         {
@@ -125,7 +88,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                left = $"EXTRACT({condition.Part.ToUpper()} FROM {column})";
+                left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
@@ -140,7 +103,7 @@ namespace SqlKata.Compilers
 
         public override string WrapValue(string value)
         {
-            return base.WrapValue(value).ToUpper();
+            return base.WrapValue(value).ToUpperInvariant();
         }
 
         public override string CompileTrue()
@@ -151,16 +114,6 @@ namespace SqlKata.Compilers
         public override string CompileFalse()
         {
             return "0";
-        }
-    }
-
-    public static class FirebirdCompilerExtensions
-    {
-        public static string ENGINE_CODE = "firebird";
-
-        public static Query ForFirebird(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(FirebirdCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

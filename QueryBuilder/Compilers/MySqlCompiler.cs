@@ -1,14 +1,14 @@
-using System;
-
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
-        public MySqlCompiler() : base()
+        public MySqlCompiler()
         {
-            EngineCode = "mysql";
             OpeningIdentifier = ClosingIdentifier = "`";
+            LastId = "SELECT last_insert_id() as Id";
         }
+
+        public override string EngineCode { get; } = EngineCodes.MySql;
 
         public override string CompileLimit(SqlResult ctx)
         {
@@ -44,15 +44,6 @@ namespace SqlKata.Compilers
 
             return "LIMIT ? OFFSET ?";
 
-        }
-    }
-
-    public static class MySqlCompilerExtensions
-    {
-        public static string ENGINE_CODE = "mysql";
-        public static Query ForMySql(this Query src, Func<Query, Query> fn)
-        {
-            return src.For(MySqlCompilerExtensions.ENGINE_CODE, fn);
         }
     }
 }

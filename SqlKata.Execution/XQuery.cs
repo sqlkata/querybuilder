@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
-using SqlKata;
 using SqlKata.Compilers;
 
 namespace SqlKata.Execution
@@ -11,6 +10,7 @@ namespace SqlKata.Execution
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
         public Action<SqlResult> Logger = result => { };
+        public QueryFactory QueryFactory { get; set; }
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
@@ -29,11 +29,12 @@ namespace SqlKata.Execution
             query.QueryAlias = QueryAlias;
             query.IsDistinct = IsDistinct;
             query.Method = Method;
+            query.Includes = Includes;
+            query.Variables = Variables;
 
             query.SetEngineScope(EngineScope);
 
             return query;
-
         }
 
     }

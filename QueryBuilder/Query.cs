@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
@@ -9,65 +10,62 @@ namespace SqlKata
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-
-        protected List<string> operators = new List<string> {
-            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-            "like", "like binary", "not like", "ilike",
-            "&", "|", "^", "<<", ">>",
-            "rlike", "regexp", "not regexp",
-            "~", "~*", "!~", "!~*", "similar to",
-            "not similar to", "not ilike", "~~*", "!~~*",
-        };
+        public string QueryComment { get; set; }
+        public List<Include> Includes = new List<Include>();
+        public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
         public Query() : base()
         {
         }
 
-        public Query(string table) : base()
+        public Query(string table, string comment = null) : base()
         {
             From(table);
+            Comment(comment);
         }
 
-        public bool HasOffset(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
 
-            return limitOffset?.HasOffset() ?? false;
-        }
+        public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
-        public bool HasLimit(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
-
-            return limitOffset?.HasLimit() ?? false;
-        }
+        public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
 
         internal int GetOffset(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
 
-            return limitOffset?.Offset ?? 0;
+            return offset?.Offset ?? 0;
         }
 
         internal int GetLimit(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
 
-            return limitOffset?.Limit ?? 0;
+            return limit?.Limit ?? 0;
         }
 
         public override Query Clone()
         {
             var clone = base.Clone();
+            clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
+            clone.Includes = Includes;
+            clone.Variables = Variables;
             return clone;
         }
 
         public Query As(string alias)
         {
             QueryAlias = alias;
+            return this;
+        }
+
+        public Query Comment(string comment)
+        {
+            QueryComment = comment;
             return this;
         }
 
@@ -126,40 +124,28 @@ namespace SqlKata
             {
                 Alias = alias,
                 Expression = sql,
-                Bindings = Helper.Flatten(bindings).ToArray(),
+                Bindings = bindings,
             });
         }
 
         public Query Limit(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Limit = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new LimitClause
             {
                 Limit = value
-            });
+            };
+
+            return AddOrReplaceComponent("limit", newClause);
         }
 
         public Query Offset(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Offset = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new OffsetClause
             {
                 Offset = value
-            });
+            };
+
+            return AddOrReplaceComponent("offset", newClause);
         }
 
         /// <summary>
@@ -203,13 +189,19 @@ namespace SqlKata
         /// Apply the callback's query changes if the given "condition" is true.
         /// </summary>
         /// <param name="condition"></param>
-        /// <param name="callback"></param>
+        /// <param name="whenTrue">Invoked when the condition is true</param>
+        /// <param name="whenFalse">Optional, invoked when the condition is false</param>
         /// <returns></returns>
-        public Query When(bool condition, Func<Query, Query> callback)
+        public Query When(bool condition, Func<Query, Query> whenTrue, Func<Query, Query> whenFalse = null)
         {
-            if (condition)
+            if (condition && whenTrue != null)
             {
-                return callback.Invoke(this);
+                return whenTrue.Invoke(this);
+            }
+
+            if (!condition && whenFalse != null)
+            {
+                return whenFalse.Invoke(this);
             }
 
             return this;
@@ -300,6 +292,99 @@ namespace SqlKata
         public override Query NewQuery()
         {
             return new Query();
+        }
+
+        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id", bool isMany = false)
+        {
+
+            Includes.Add(new Include
+            {
+                Name = relationName,
+                LocalKey = localKey,
+                ForeignKey = foreignKey,
+                Query = query,
+                IsMany = isMany,
+            });
+
+            return this;
+        }
+
+        public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
+        {
+            return Include(relationName, query, foreignKey, localKey, isMany: true);
+        }
+
+        /// <summary>
+        /// Define a variable to be used within the query
+        /// </summary>
+        /// <param name="variable"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Query Define(string variable, object value)
+        {
+            Variables.Add(variable, value);
+
+            return this;
+        }
+
+        public object FindVariable(string variable)
+        {
+            var found = Variables.ContainsKey(variable);
+
+            if (found)
+            {
+                return Variables[variable];
+            }
+
+            if (Parent != null)
+            {
+                return (Parent as Query).FindVariable(variable);
+            }
+
+            throw new Exception($"Variable '{variable}' not found");
+        }
+
+        /// <summary>
+        /// Build a dictionary from plain object, intended to be used with Insert and Update queries
+        /// </summary>
+        /// <param name="data">the plain C# object</param>
+        /// <param name="considerKeys">
+        /// When true it will search for properties with the [Key] attribute
+        /// and add it automatically to the Where clause
+        /// </param>
+        /// <returns></returns>
+        private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
+        {
+
+            var dictionary = new Dictionary<string, object>();
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (var property in props)
+            {
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                {
+                    continue;
+                }
+
+                var value = property.GetValue(data);
+
+                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+
+                var name = colAttr?.Name ?? property.Name;
+
+                dictionary.Add(name, value);
+
+                if (considerKeys && colAttr != null)
+                {
+                    if ((colAttr as KeyAttribute) != null)
+                    {
+                        this.Where(name, value);
+                    }
+                }
+
+            }
+
+            return dictionary;
         }
 
     }

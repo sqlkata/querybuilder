@@ -40,6 +40,7 @@ namespace SqlKata
         {
             return new FromClause
             {
+                Engine = Engine,
                 Alias = Alias,
                 Table = Table,
                 Component = Component,

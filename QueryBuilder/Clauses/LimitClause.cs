@@ -1,34 +1,13 @@
 namespace SqlKata
 {
-    public class LimitOffset : AbstractClause
+    public class LimitClause : AbstractClause
     {
         private int _limit;
-        private int _offset;
-
+        
         public int Limit
         {
             get => _limit;
-
-            set
-            {
-                if (value > 0)
-                {
-                    _limit = value;
-                }
-            }
-        }
-
-        public int Offset
-        {
-            get => _offset;
-
-            set
-            {
-                if (value > 0)
-                {
-                    _offset = value;
-                }
-            }
+            set => _limit = value > 0 ? value : _limit;
         }
 
         public bool HasLimit()
@@ -36,35 +15,18 @@ namespace SqlKata
             return _limit > 0;
         }
 
-        public bool HasOffset()
-        {
-            return _offset > 0;
-        }
-
-        public LimitOffset ClearLimit()
+        public LimitClause Clear()
         {
             _limit = 0;
             return this;
         }
 
-        public LimitOffset ClearOffset()
-        {
-            _offset = 0;
-            return this;
-        }
-
-        public LimitOffset Clear()
-        {
-            return ClearLimit().ClearOffset();
-        }
-
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new LimitOffset
+            return new LimitClause
             {
                 Engine = Engine,
-                Offset = Offset,
                 Limit = Limit,
                 Component = Component,
             };

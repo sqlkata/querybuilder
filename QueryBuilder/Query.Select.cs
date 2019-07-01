@@ -10,6 +10,12 @@ namespace SqlKata
         {
             Method = "select";
 
+            columns = columns
+                .Select(x => Helper.ExpandExpression(x))
+                .SelectMany(x => x)
+                .ToArray();
+
+
             foreach (var column in columns)
             {
                 AddComponent("select", new Column
@@ -25,14 +31,14 @@ namespace SqlKata
         /// Add a new "raw" select expression to the query.
         /// </summary>
         /// <returns></returns>
-        public Query SelectRaw(string expression, params object[] bindings)
+        public Query SelectRaw(string sql, params object[] bindings)
         {
             Method = "select";
 
             AddComponent("select", new RawColumn
             {
-                Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToArray()
+                Expression = sql,
+                Bindings = bindings,
             });
 
             return this;
