@@ -5,6 +5,7 @@
 *.pfx
 npm-debug.log
 Program/node_modules
+*.db
 
 # User-specific files
 *.suo

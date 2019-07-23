@@ -9,7 +9,10 @@ namespace SqlKata.Tests
         [Fact]
         public void ShouldThrowException()
         {
-            Assert.Throws<InvalidOperationException>(() => { new Query("Books").Get(); });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                new Query("Books").Get();
+            });
         }
     }
 }
