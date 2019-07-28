@@ -148,6 +148,34 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void WhereSub()
+        {
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+
+            var query = new Query("Table").WhereSub(subQuery, 1);
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void OrWhereSub()
+        {
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+
+            var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" IS NULL OR (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") < 1", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void PassingArrayAsParameter()
         {
             var query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
@@ -369,7 +397,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON ([countries].[id] = [users].[country_id])",
+            Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
                 c[EngineCodes.SqlServer]);
         }
 
@@ -462,10 +490,13 @@ namespace SqlKata.Tests
 
             var c = Compile(mainQuery);
 
-            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
-            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5", c[EngineCodes.MySql]);
-            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", c[EngineCodes.PostgreSql]);
-            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", c[EngineCodes.Firebird]);
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON [Column1] = [Column3] WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON `Column1` = `Column3` WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5", c[EngineCodes.MySql]);
+
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON \"Column1\" = \"Column3\" WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", c[EngineCodes.PostgreSql]);
+
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON \"COLUMN1\" = \"COLUMN3\" WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", c[EngineCodes.Firebird]);
         }
 
         // test for issue #50
@@ -497,10 +528,13 @@ namespace SqlKata.Tests
 
             var c = Compile(mainQuery);
 
-            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
-            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5", c[EngineCodes.MySql]);
-            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", c[EngineCodes.PostgreSql]);
-            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", c[EngineCodes.Firebird]);
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON [Column1] = [Column3] WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON [Column1] = [Column3_3] WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON `Column1` = `Column3` WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON `Column1` = `Column3_3` WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5", c[EngineCodes.MySql]);
+
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON \"Column1\" = \"Column3\" WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON \"Column1\" = \"Column3_3\" WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5", c[EngineCodes.PostgreSql]);
+
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON \"COLUMN1\" = \"COLUMN3\" WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON \"COLUMN1\" = \"COLUMN3_3\" WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5", c[EngineCodes.Firebird]);
         }
 
         // test for issue #50
@@ -531,10 +565,13 @@ namespace SqlKata.Tests
 
             var c = Compile(mainQuery);
 
-            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5", c[EngineCodes.SqlServer]);
-            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte3` WHERE `Column3_4` = 5", c[EngineCodes.MySql]);
-            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5", c[EngineCodes.PostgreSql]);
-            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5", c[EngineCodes.Firebird]);
+            Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON [Column1] = [Column3] WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON [Column1] = [Column3_3] WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5", c[EngineCodes.SqlServer]);
+
+            Assert.Equal("WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON `Column1` = `Column3` WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON `Column1` = `Column3_3` WHERE `Column3_4` = 33)\nSELECT * FROM `cte3` WHERE `Column3_4` = 5", c[EngineCodes.MySql]);
+
+            Assert.Equal("WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON \"Column1\" = \"Column3\" WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON \"Column1\" = \"Column3_3\" WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5", c[EngineCodes.PostgreSql]);
+
+            Assert.Equal("WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON \"COLUMN1\" = \"COLUMN3\" WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON \"COLUMN1\" = \"COLUMN3_3\" WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5", c[EngineCodes.Firebird]);
         }
 
 
@@ -619,7 +656,7 @@ namespace SqlKata.Tests
                 $"SELECT * FROM \"USERS\" \n{output} \"COUNTRIES\" ON \"COUNTRIES\".\"ID\" = \"USERS\".\"COUNTRY_ID\"",
                 c[EngineCodes.Firebird]);
         }
-        
+
         [Fact]
         public void OrWhereRawEscaped()
         {
@@ -628,6 +665,38 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void Having()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .Having("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MultipleOrHaving()
+        {
+            var q = new Query("Table1")
+                .Having("Column1", ">", 1)
+                .OrHaving("Column2", "=", 1);
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1", c[EngineCodes.SqlServer]);
         }
     }
 }

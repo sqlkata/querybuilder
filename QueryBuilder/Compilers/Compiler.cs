@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
-        protected virtual string parameterPlaceholderPrefix { get; set; } = "@p";
+        protected virtual string parameterPrefix { get; set; } = "@p";
         protected virtual string OpeningIdentifier { get; set; } = "\"";
         protected virtual string ClosingIdentifier { get; set; } = "\"";
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
@@ -48,19 +48,21 @@ namespace SqlKata.Compilers
         protected Dictionary<string, object> generateNamedBindings(object[] bindings)
         {
             return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPlaceholderPrefix + x.i, x => x.v);
+                .ToDictionary(x => parameterPrefix + x.i, x => x.v);
         }
 
         protected SqlResult PrepareResult(SqlResult ctx)
         {
             ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPlaceholderPrefix + i);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPrefix + i);
             return ctx;
         }
+
 
         private Query TransformAggregateQuery(Query query)
         {
             var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+
             if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
 
             if (query.IsDistinct)
@@ -79,7 +81,7 @@ namespace SqlKata.Compilers
 
             var outerClause = new AggregateClause()
             {
-                Columns = new List<string> {"*"},
+                Columns = new List<string> { "*" },
                 Type = clause.Type
             };
 
@@ -129,6 +131,13 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        /// <summary>
+        /// Add the passed operator(s) to the white list so they can be used with
+        /// the Where/Having methods, this prevent passing arbitrary operators
+        /// that opens the door for SQL injections.
+        /// </summary>
+        /// <param name="operators"></param>
+        /// <returns></returns>
         public Compiler Whitelist(params string[] operators)
         {
             foreach (var op in operators)
@@ -300,9 +309,10 @@ namespace SqlKata.Compilers
 
             if (inserts[0] is InsertClause insertClause)
             {
-                ctx.RawSql = $"INSERT INTO {table}"
-                    + " (" + string.Join(", ", WrapArray(insertClause.Columns)) + ") "
-                    + "VALUES (" + string.Join(", ", Parameterize(ctx, insertClause.Values)) + ")";
+                var columns = string.Join(", ", WrapArray(insertClause.Columns));
+                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
+
+                ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
 
                 if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
                 {
@@ -340,6 +350,7 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
+
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
@@ -657,11 +668,11 @@ namespace SqlKata.Compilers
                 {
                     boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
-                    sql.Add(boolOperator + "HAVING " + compiled);
+                    sql.Add(boolOperator + compiled);
                 }
             }
 
-            return string.Join(", ", sql);
+            return $"HAVING {string.Join(" ", sql)}";
         }
 
         public virtual string CompileLimit(SqlResult ctx)
@@ -748,6 +759,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual string Wrap(string value)
         {
+
             if (value.ToLower().Contains(" as "))
             {
                 var index = value.ToLower().IndexOf(" as ");
@@ -785,9 +797,56 @@ namespace SqlKata.Compilers
             return opening + value.Replace(closing, closing + closing) + closing;
         }
 
-        public virtual string Parameter<T>(SqlResult ctx, T value)
+        /// <summary>
+        /// Resolve a parameter
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual object Resolve(SqlResult ctx, object parameter)
         {
-            ctx.Bindings.Add(value);
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                return value;
+            }
+
+            return parameter;
+
+        }
+
+        /// <summary>
+        /// Resolve a parameter and add it to the binding list
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual string Parameter(SqlResult ctx, object parameter)
+        {
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                ctx.Bindings.Add(value);
+                return "?";
+            }
+
+            ctx.Bindings.Add(parameter);
             return "?";
         }
 
@@ -817,11 +876,11 @@ namespace SqlKata.Compilers
             return input
 
                 // deprecated
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"{", this.OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"}", this.ClosingIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "{", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "}", this.ClosingIdentifier)
 
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"[", this.OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter,"]", this.ClosingIdentifier);
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "[", this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "]", this.ClosingIdentifier);
         }
     }
 }

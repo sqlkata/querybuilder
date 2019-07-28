@@ -11,6 +11,8 @@ using Npgsql;
 using System.Data;
 using Dapper;
 using System.Data.SQLite;
+using static SqlKata.Expressions;
+using System.IO;
 
 namespace Program
 {
@@ -33,49 +35,70 @@ namespace Program
         static void Main(string[] args)
         {
 
-            IDbConnection connection = new SqlConnection(
-                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-            );
+            var db = SqlLiteQueryFactory();
 
-            // SQLiteConnection.CreateFile("Demo.db");
+            var id = db.Query("accounts").InsertGetId<int>(new
+            {
+                name = "new Account",
+                currency_id = "USD",
+                created_at = DateTime.UtcNow
+            });
 
-            // connection = new SQLiteConnection("Data Source=Demo.db");
+            var id2 = db.Select<int>("insert into accounts(name, currency_id, created_at) values ('account 2','usd','2019-01-01 20:00:00');select last_insert_rowid();");
 
-            var db = new QueryFactory(connection, new SqlServerCompiler());
+            Console.WriteLine($"last id is: {id}");
+            Console.WriteLine($"last id2 is: {id2.First()}");
+
+        }
+
+        private static void log(Compiler compiler, Query query)
+        {
+            var compiled = compiler.Compile(query);
+            Console.WriteLine(compiled.ToString());
+            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
+        }
+
+        private static QueryFactory SqlLiteQueryFactory()
+        {
+            var compiler = new SqliteCompiler();
+
+            var connection = new SQLiteConnection("Data Source=Demo.db");
+
+            var db = new QueryFactory(connection, compiler);
 
             db.Logger = result =>
             {
                 Console.WriteLine(result.ToString());
             };
 
-            /*
-            var accounts = db.Query("Accounts")
-                .WhereNotNull("BankId")
-                .Include("bank",
-                    db.Query("Banks").Include("Country", db.Query("Countries"))
-                        .Select("Id", "Name", "CountryId")
-                )
-                .Select("Id", "Name", "BankId")
-                .OrderByDesc("Id").Limit(10).Get();
-            */
+            if (!File.Exists("Demo.db"))
+            {
+                Console.WriteLine("db not exists creating db");
 
-            var includedAccountsQuery = db.Query("Accounts").Limit(2)
-                .IncludeMany("Transactions", db.Query("Transactions"))
-                .Include("Company", db.Query("Companies"));
+                SQLiteConnection.CreateFile("Demo.db");
 
-            var bank = db.Query("Banks as Icon")
-                .IncludeMany("Accounts", includedAccountsQuery, "BankId")
-                .WhereExists(q => q.From("Accounts").WhereColumns("Accounts.BankId", "=", "Icon.Id"))
-                .Limit(1)
-                .Get();
+                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, created_at datetime);");
 
-            Console.WriteLine(JsonConvert.SerializeObject(bank, Formatting.Indented));
+            }
 
+            return db;
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static QueryFactory SqlServerQueryFactory()
         {
-            Console.WriteLine(compiler.Compile(query).ToString());
+            var compiler = new PostgresCompiler();
+            var connection = new SqlConnection(
+               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+           );
+
+            var db = new QueryFactory(connection, compiler);
+
+            db.Logger = result =>
+            {
+                Console.WriteLine(result.ToString());
+            };
+
+            return db;
         }
 
     }

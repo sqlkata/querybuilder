@@ -29,11 +29,12 @@ namespace SqlKata.Execution
             query.QueryAlias = QueryAlias;
             query.IsDistinct = IsDistinct;
             query.Method = Method;
+            query.Includes = Includes;
+            query.Variables = Variables;
 
             query.SetEngineScope(EngineScope);
 
             return query;
-
         }
 
     }

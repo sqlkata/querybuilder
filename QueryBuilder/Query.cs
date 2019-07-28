@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
@@ -11,6 +12,7 @@ namespace SqlKata
         public string Method { get; set; } = "select";
         public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
+        public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
         public Query() : base()
         {
@@ -23,41 +25,35 @@ namespace SqlKata
         }
 
 
-        public bool HasOffset(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+        public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
-            return limitOffset?.HasOffset() ?? false;
-        }
-
-        public bool HasLimit(string engineCode = null)
-        {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
-
-            return limitOffset?.HasLimit() ?? false;
-        }
+        public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
 
         internal int GetOffset(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
 
-            return limitOffset?.Offset ?? 0;
+            return offset?.Offset ?? 0;
         }
 
         internal int GetLimit(string engineCode = null)
         {
-            var limitOffset = this.GetOneComponent<LimitOffset>("limit", engineCode);
+            engineCode = engineCode ?? EngineScope;
+            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
 
-            return limitOffset?.Limit ?? 0;
+            return limit?.Limit ?? 0;
         }
 
         public override Query Clone()
         {
             var clone = base.Clone();
+            clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
             clone.Includes = Includes;
+            clone.Variables = Variables;
             return clone;
         }
 
@@ -134,34 +130,22 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Limit = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new LimitClause
             {
                 Limit = value
-            });
+            };
+
+            return AddOrReplaceComponent("limit", newClause);
         }
 
         public Query Offset(int value)
         {
-            var clause = GetOneComponent("limit", EngineScope) as LimitOffset;
-
-            if (clause != null)
-            {
-                clause.Offset = value;
-                return this;
-            }
-
-            return AddComponent("limit", new LimitOffset
+            var newClause = new OffsetClause
             {
                 Offset = value
-            });
+            };
+
+            return AddOrReplaceComponent("offset", newClause);
         }
 
         /// <summary>
@@ -328,6 +312,79 @@ namespace SqlKata
         public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
         {
             return Include(relationName, query, foreignKey, localKey, isMany: true);
+        }
+
+        /// <summary>
+        /// Define a variable to be used within the query
+        /// </summary>
+        /// <param name="variable"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Query Define(string variable, object value)
+        {
+            Variables.Add(variable, value);
+
+            return this;
+        }
+
+        public object FindVariable(string variable)
+        {
+            var found = Variables.ContainsKey(variable);
+
+            if (found)
+            {
+                return Variables[variable];
+            }
+
+            if (Parent != null)
+            {
+                return (Parent as Query).FindVariable(variable);
+            }
+
+            throw new Exception($"Variable '{variable}' not found");
+        }
+
+        /// <summary>
+        /// Build a dictionary from plain object, intended to be used with Insert and Update queries
+        /// </summary>
+        /// <param name="data">the plain C# object</param>
+        /// <param name="considerKeys">
+        /// When true it will search for properties with the [Key] attribute
+        /// and add it automatically to the Where clause
+        /// </param>
+        /// <returns></returns>
+        private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
+        {
+
+            var dictionary = new Dictionary<string, object>();
+            var props = data.GetType().GetRuntimeProperties();
+
+            foreach (var property in props)
+            {
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                {
+                    continue;
+                }
+
+                var value = property.GetValue(data);
+
+                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+
+                var name = colAttr?.Name ?? property.Name;
+
+                dictionary.Add(name, value);
+
+                if (considerKeys && colAttr != null)
+                {
+                    if ((colAttr as KeyAttribute) != null)
+                    {
+                        this.Where(name, value);
+                    }
+                }
+
+            }
+
+            return dictionary;
         }
 
     }
