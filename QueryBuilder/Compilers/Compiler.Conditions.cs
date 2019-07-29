@@ -174,7 +174,7 @@ namespace SqlKata.Compilers
 
             var sql = CompileConditions(ctx, clauses);
 
-            return x.IsNot ? $"NOT ({sql})" : sql;
+            return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
 
         protected string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
