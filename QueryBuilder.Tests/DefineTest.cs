@@ -256,7 +256,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM [Orders] WHERE [ShipRegion] != NULL", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM [Orders] WHERE ([ShipRegion] != NULL)", c[EngineCodes.SqlServer]);
 
         }
 
