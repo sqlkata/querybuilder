@@ -66,6 +66,13 @@ var introToSql = db.Query("Books").Where("Id", 145).Where("Lang", "en").First();
 var recent = db.Query("Books").OrderByDesc("PublishedAt").Limit(10).Get();
 ```
 
+### Include Author information
+```cs
+var books = db.Query("Books")
+    .Incluce(db.Query("Authors")) // Assumes that the Books table have a `AuthorId` column
+    .Get();
+```
+
 ### Join with authors table
 
 ```cs
