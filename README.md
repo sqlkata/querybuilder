@@ -46,22 +46,22 @@ var compiler = new SqlCompiler();
 var db = new QueryFactory(connection, compiler);
 ```
 
-### Get all records
+### Retrieve all records
 ```cs
 var books = db.Query("Books").Get();
 ```
 
-### Published books only
+### Retrieve published books only
 ```cs
 var books = db.Query("Books").WhereTrue("IsPublished").Get();
 ```
 
-### Get one book by Id
+### Retrieve one book
 ```cs
 var introToSql = db.Query("Books").Where("Id", 145).Where("Lang", "en").First();
 ```
 
-### Recent books: last 10
+### Retrieve recent books: last 10
 ```cs
 var recent = db.Query("Books").OrderByDesc("PublishedAt").Limit(10).Get();
 ```
@@ -69,8 +69,21 @@ var recent = db.Query("Books").OrderByDesc("PublishedAt").Limit(10).Get();
 ### Include Author information
 ```cs
 var books = db.Query("Books")
-    .Incluce(db.Query("Authors")) // Assumes that the Books table have a `AuthorId` column
+    .Include(db.Query("Authors")) // Assumes that the Books table have a `AuthorId` column
     .Get();
+```
+
+This will include the property "Author" on each "Book"
+```json
+[{
+    "Id": 1,
+    "PublishedAt": "2019-01-01",
+    "AuthorId": 2
+    "Author": { // <-- included property
+        "Id": 2,
+        "...": ""
+    }
+}]
 ```
 
 ### Join with authors table
