@@ -118,9 +118,9 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithByteArray()
         {
-            var fauxImagebytes = new byte[] {0x1, 0x3, 0x3, 0x7};
+            var fauxImagebytes = new byte[] { 0x1, 0x3, 0x3, 0x7 };
             var query = new Query("Books")
-                .AsInsert(new[]{"Id", "CoverImageBytes"},
+                .AsInsert(new[] { "Id", "CoverImageBytes" },
                     new object[]
                     {
                         1,
@@ -167,6 +167,41 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\") VALUES ('popular', 'US')",
                  c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void InsertFromRaw()
+        {
+            var query = new Query().FromRaw("Table.With.Dots").AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            });
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO Table.With.Dots ([Name], [Age]) VALUES ('The User', '2018-01-01')",
+                c[EngineCodes.SqlServer]
+            );
+
+        }
+
+
+        [Fact]
+        public void InsertFromQueryShouldFail()
+        {
+            var query = new Query().From(new Query("InnerTable")).AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            });
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                Compile(query);
+            });
+
         }
 
     }
