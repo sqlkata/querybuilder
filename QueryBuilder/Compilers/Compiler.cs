@@ -214,7 +214,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult();
 
-            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {WrapIdentifiers(col)}"));
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {Wrap(col)}"));
 
             var fromTable = SingleRowDummyTableName;
 
