@@ -478,5 +478,28 @@ namespace SqlKata.Tests
             Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS a, 2 AS b, 3 AS c FROM RDB$DATABASE UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
             Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a, 2 AS b, 3 AS c FROM DUAL UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
         }
+
+        [Fact]
+        public void AdHoc_ProperBindingsPlacement()
+        {
+            var query = new Query("rows")
+                .With("othercte", q => q.From("othertable").Where("othertable.status", "A"))
+                .Where("rows.foo", "bar")
+                .With("rows",
+                new[] { "a", "b", "c" },
+                new object[][] {
+                    new object[] { 1, 2, 3 },
+                    new object[] { 4, 5, 6 },
+                })
+                .Where("rows.baz", "buzz");
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal(string.Join("\n", new[] {
+                "WITH [othercte] AS (SELECT * FROM [othertable] WHERE [othertable].[status] = 'A'),",
+                "[rows] AS (SELECT 1 AS a, 2 AS b, 3 AS c UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c)",
+                "SELECT * FROM [rows] WHERE [rows].[foo] = 'bar' AND [rows].[baz] = 'buzz'",
+            }), c[EngineCodes.SqlServer].ToString());
+        }
     }
 }
