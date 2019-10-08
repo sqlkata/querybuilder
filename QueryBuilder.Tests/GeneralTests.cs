@@ -401,5 +401,82 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }
+
+        [Fact]
+        public void AdHoc_Throws_WhenNoColumnsProvided() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new string[0],
+                    new object[][] {
+                        new object[] {},
+                        new object[] {},
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenNoValueRowsProvided() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b", "c" },
+                    new object[][] {
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenColumnsOutnumberFieldValues() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b", "c", "d" },
+                    new object[][] {
+                        new object[] { 1, 2, 3 },
+                        new object[] { 4, 5, 6 },
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenFieldValuesOutNumberColumns() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b" },
+                    new object[][] {
+                        new object[] { 1, 2, 3 },
+                        new object[] { 4, 5, 6 },
+                    }));
+
+        [Fact]
+        public void AdHoc_SingletonRow()
+        {
+            var query = new Query("rows").With("rows",
+                new[] { "a" },
+                new object[][] {
+                    new object[] { 1 },
+                });
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal("WITH [rows] AS (SELECT 1 AS a)\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a)\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("WITH `rows` AS (SELECT 1 AS a)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a)\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
+            Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS a FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
+        }
+
+        [Fact]
+        public void AdHoc_TwoRows()
+        {
+            var query = new Query("rows").With("rows",
+                new[] { "a", "b", "c" },
+                new object[][] {
+                    new object[] { 1, 2, 3 },
+                    new object[] { 4, 5, 6 },
+                });
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal("WITH [rows] AS (SELECT 1 AS a, 2 AS b, 3 AS c UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c)\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a, 2 AS b, 3 AS c UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c)\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("WITH `rows` AS (SELECT 1 AS a, 2 AS b, 3 AS c UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a, 2 AS b, 3 AS c UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c)\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
+            Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS a, 2 AS b, 3 AS c FROM RDB$DATABASE UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS a, 2 AS b, 3 AS c FROM DUAL UNION ALL SELECT 4 AS a, 5 AS b, 6 AS c FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
+        }
     }
 }

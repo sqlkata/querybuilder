@@ -24,6 +24,7 @@ namespace SqlKata.Compilers
 
         public virtual string EngineCode { get; }
 
+        protected virtual string SingleRowDummyTableName { get => null; }
 
         /// <summary>
         /// A list of white-listed operators
@@ -205,6 +206,27 @@ namespace SqlKata.Compilers
             string sql = string.Join(" ", results);
 
             ctx.RawSql = sql;
+
+            return ctx;
+        }
+
+        protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        {
+            var ctx = new SqlResult();
+
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {WrapIdentifiers(col)}"));
+
+            var fromTable = SingleRowDummyTableName;
+
+            if (fromTable != null)
+            {
+                row += $" FROM {fromTable}";
+            }
+
+            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Count / adHoc.Columns.Count));
+
+            ctx.RawSql = rows;
+            ctx.Bindings = adHoc.Values;
 
             return ctx;
         }
@@ -476,6 +498,13 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
+            }
+            else if (cte is AdHocTableFromClause adHoc)
+            {
+                var subCtx = CompileAdHocQuery(adHoc);
+                ctx.Bindings.AddRange(subCtx.Bindings);
+
+                ctx.RawSql = $"{WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})";
             }
 
             return ctx;
