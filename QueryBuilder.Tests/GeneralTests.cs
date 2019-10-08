@@ -451,7 +451,7 @@ namespace SqlKata.Tests
 
             var c = Compilers.Compile(query);
 
-            Assert.Equal("WITH [rows] AS (SELECT 1 AS [a])\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH [rows] AS (SELECT [a] FROM (VALUES (1)) AS tbl ([a]))\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
             Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\")\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("WITH `rows` AS (SELECT 1 AS `a`)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
             Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\")\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
@@ -471,7 +471,7 @@ namespace SqlKata.Tests
 
             var c = Compilers.Compile(query);
 
-            Assert.Equal("WITH [rows] AS (SELECT 1 AS [a], 2 AS [b], 3 AS [c] UNION ALL SELECT 4 AS [a], 5 AS [b], 6 AS [c])\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH [rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
             Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("WITH `rows` AS (SELECT 1 AS `a`, 2 AS `b`, 3 AS `c` UNION ALL SELECT 4 AS `a`, 5 AS `b`, 6 AS `c`)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
             Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
@@ -497,7 +497,7 @@ namespace SqlKata.Tests
 
             Assert.Equal(string.Join("\n", new[] {
                 "WITH [othercte] AS (SELECT * FROM [othertable] WHERE [othertable].[status] = 'A'),",
-                "[rows] AS (SELECT 1 AS [a], 2 AS [b], 3 AS [c] UNION ALL SELECT 4 AS [a], 5 AS [b], 6 AS [c])",
+                "[rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))",
                 "SELECT * FROM [rows] WHERE [rows].[foo] = 'bar' AND [rows].[baz] = 'buzz'",
             }), c[EngineCodes.SqlServer].ToString());
         }
