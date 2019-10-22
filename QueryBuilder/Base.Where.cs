@@ -527,8 +527,7 @@ namespace SqlKata
 
             // remove unneeded components
             query = query.Clone().ClearComponent("select")
-                .SelectRaw("1")
-                .Limit(1);
+                .SelectRaw("1");
 
             return AddComponent("where", new ExistsCondition
             {

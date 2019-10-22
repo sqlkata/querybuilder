@@ -306,7 +306,7 @@ namespace SqlKata.Tests
             );
 
             var c = Compile(query);
-            Assert.Equal("SELECT * FROM [Customers] WHERE EXISTS (SELECT TOP (1) 1 FROM [Orders] WHERE [ShipPostalCode] = '8200')", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM [Customers] WHERE EXISTS (SELECT 1 FROM [Orders] WHERE [ShipPostalCode] = '8200')", c[EngineCodes.SqlServer]);
         }
 
 
