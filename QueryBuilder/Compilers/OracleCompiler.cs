@@ -48,9 +48,10 @@ namespace SqlKata.Compilers
             }
 
             var safeOrder = "";
+
             if (!ctx.Query.HasComponent("order"))
             {
-                safeOrder = "ORDER BY (SELECT 0) ";
+                safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
             }
 
             if (limit == 0)
@@ -126,7 +127,7 @@ namespace SqlKata.Compilers
                             valueFormat = $"TO_DATE({value}, 'HH24:MI')";
                         else // assume HH:MM:SS format
                             valueFormat = $"TO_DATE({value}, 'HH24:MI:SS')";
-                    } 
+                    }
                     sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";
                     break;
                 case "year":
