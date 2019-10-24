@@ -136,7 +136,7 @@ namespace SqlKata.Compilers
                 case "hour":
                 case "minute":
                 case "second":
-                    sql = $"EXTRACT({condition.Part.ToUpper()} FROM {column}) {condition.Operator} {value}";
+                    sql = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column}) {condition.Operator} {value}";
                     break;
                 default:
                     sql = $"{column} {condition.Operator} {value}";

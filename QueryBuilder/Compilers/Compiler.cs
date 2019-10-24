@@ -782,7 +782,7 @@ namespace SqlKata.Compilers
 
         protected string checkOperator(string op)
         {
-            op = op.ToLower();
+            op = op.ToLowerInvariant();
 
             var valid = operators.Contains(op) || userOperators.Contains(op);
 
@@ -802,9 +802,9 @@ namespace SqlKata.Compilers
         public virtual string Wrap(string value)
         {
 
-            if (value.ToLower().Contains(" as "))
+            if (value.ToLowerInvariant().Contains(" as "))
             {
-                var index = value.ToLower().IndexOf(" as ");
+                var index = value.ToLowerInvariant().IndexOf(" as ");
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
 
