@@ -198,7 +198,7 @@ namespace SqlKata.Compilers
 
             if (!item.Values.Any())
             {
-                return item.IsNot ? $"1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
+                return item.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
             }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
