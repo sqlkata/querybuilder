@@ -11,7 +11,7 @@ namespace SqlKata
             Method = QueryMethod.Select;
 
             columns = columns
-                .Select(x => Helper.ExpandExpression(x))
+                .Select(Helper.ExpandExpression)
                 .SelectMany(x => x)
                 .ToArray();
 

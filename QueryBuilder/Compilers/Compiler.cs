@@ -904,7 +904,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual List<string> WrapArray(List<string> values)
         {
-            return values.Select(x => Wrap(x)).ToList();
+            return values.Select(Wrap).ToList();
         }
 
         public virtual string WrapIdentifiers(string input)
