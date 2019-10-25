@@ -280,7 +280,7 @@ namespace SqlKata
             if (alias != null)
             {
                 query.As(alias);
-            };
+            }
 
             return AddOrReplaceComponent(ClauseComponent.From, new QueryFromClause
             {
