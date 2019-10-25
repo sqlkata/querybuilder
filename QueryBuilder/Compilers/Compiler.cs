@@ -801,22 +801,18 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual string Wrap(string value)
         {
-
-            if (value.ToLowerInvariant().Contains(" as "))
+            var index = value.IndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+            if (index != -1)
             {
-                var index = value.ToLowerInvariant().IndexOf(" as ");
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
 
-                return Wrap(before) + $" {ColumnAsKeyword}" + WrapValue(after);
+                return $"{Wrap(before)} {ColumnAsKeyword}{WrapValue(after)}";
             }
 
-            if (value.Contains("."))
+            if (value.IndexOf('.') != -1)
             {
-                return string.Join(".", value.Split('.').Select((x, index) =>
-                {
-                    return WrapValue(x);
-                }));
+                return string.Join(".", value.Split('.').Select((x, i) => WrapValue(x)));
             }
 
             // If we reach here then the value does not contain an "AS" alias
