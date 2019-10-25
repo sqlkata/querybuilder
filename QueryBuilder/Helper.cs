@@ -143,7 +143,7 @@ namespace SqlKata
                 return new List<string> { expression };
             }
 
-            var table = expression.Substring(0, expression.IndexOf(".{"));
+            var table = expression.Substring(0, expression.IndexOf(".{" , StringComparison.Ordinal));
 
             var captures = match.Groups[1].Value;
 
