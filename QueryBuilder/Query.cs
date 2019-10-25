@@ -262,7 +262,7 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent(ClauseComponent.Order, new OrderByRandom { });
+            return AddComponent(ClauseComponent.Order, new OrderByRandom());
         }
 
         public Query GroupBy(params string[] columns)

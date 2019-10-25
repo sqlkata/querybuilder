@@ -40,10 +40,7 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
-        protected HashSet<string> userOperators = new HashSet<string>
-        {
-
-        };
+        protected HashSet<string> userOperators = new HashSet<string>();
 
         protected Dictionary<string, object> generateNamedBindings(object[] bindings)
         {
