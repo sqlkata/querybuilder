@@ -8,7 +8,7 @@ namespace SqlKata
 
         public Query Select(params string[] columns)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
             columns = columns
                 .Select(x => Helper.ExpandExpression(x))
@@ -33,7 +33,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query SelectRaw(string sql, params object[] bindings)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
             AddComponent("select", new RawColumn
             {
@@ -46,7 +46,7 @@ namespace SqlKata
 
         public Query Select(Query query, string alias)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
             query = query.Clone();
 

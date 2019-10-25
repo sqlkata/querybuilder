@@ -29,7 +29,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Columns count should be equal to Values count");
             }
 
-            Method = "insert";
+            Method = QueryMethod.Insert;
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
@@ -47,7 +47,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Values dictionary cannot be null or empty");
             }
 
-            Method = "insert";
+            Method = QueryMethod.Insert;
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
@@ -75,7 +75,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
             }
 
-            Method = "insert";
+            Method = QueryMethod.Insert;
 
             ClearComponent("insert");
 
@@ -105,7 +105,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query AsInsert(IEnumerable<string> columns, Query query)
         {
-            Method = "insert";
+            Method = QueryMethod.Insert;
 
             ClearComponent("insert").AddComponent("insert", new InsertQueryClause
             {

@@ -9,7 +9,7 @@ namespace SqlKata
     {
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
+        public QueryMethod Method { get; set; } = QueryMethod.Select;
         public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();

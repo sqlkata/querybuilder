@@ -94,30 +94,31 @@ namespace SqlKata.Compilers
         {
             SqlResult ctx;
 
-            if (query.Method == "insert")
+            switch (query.Method)
             {
-                ctx = CompileInsertQuery(query);
-            }
-            else if (query.Method == "update")
-            {
-                ctx = CompileUpdateQuery(query);
-            }
-            else if (query.Method == "delete")
-            {
-                ctx = CompileDeleteQuery(query);
-            }
-            else
-            {
-                if (query.Method == "aggregate")
-                {
-                    query.ClearComponent("limit")
-                        .ClearComponent("order")
-                        .ClearComponent("group");
+                case QueryMethod.Insert:
+                    ctx = CompileInsertQuery(query);
+                    break;
+                case QueryMethod.Update:
+                    ctx = CompileUpdateQuery(query);
+                    break;
+                case QueryMethod.Delete:
+                    ctx = CompileDeleteQuery(query);
+                    break;
+                default:
+                    {
+                        if (query.Method == QueryMethod.Aggregate)
+                        {
+                            query.ClearComponent("limit")
+                                .ClearComponent("order")
+                                .ClearComponent("group");
 
-                    query = TransformAggregateQuery(query);
-                }
+                            query = TransformAggregateQuery(query);
+                        }
 
-                ctx = CompileSelectQuery(query);
+                        ctx = CompileSelectQuery(query);
+                        break;
+                    }
             }
 
             // handle CTEs

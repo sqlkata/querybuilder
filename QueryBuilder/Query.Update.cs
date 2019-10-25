@@ -29,7 +29,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Columns count should be equal to Values count");
             }
 
-            Method = "update";
+            Method = QueryMethod.Update;
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
@@ -48,7 +48,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Values dictionary cannot be null or empty");
             }
 
-            Method = "update";
+            Method = QueryMethod.Update;
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
