@@ -165,12 +165,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
-            if (!x.Query.HasComponent("where", EngineCode))
+            if (!x.Query.HasComponent(ClauseComponent.Where, EngineCode))
             {
                 return null;
             }
 
-            var clauses = x.Query.GetComponents<AbstractCondition>("where", EngineCode);
+            var clauses = x.Query.GetComponents<AbstractCondition>(ClauseComponent.Where, EngineCode);
 
             var sql = CompileConditions(ctx, clauses);
 

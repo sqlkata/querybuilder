@@ -300,7 +300,7 @@ namespace SqlKata.Execution
                         // I will try to fetch the table name if provided and appending the Id as a convention
                         // Here am using Humanizer package to help getting the singular form of the table
 
-                        var fromTable = query.GetOneComponent("from") as FromClause;
+                        var fromTable = query.GetOneComponent(ClauseComponent.From) as FromClause;
 
                         if (fromTable == null)
                         {

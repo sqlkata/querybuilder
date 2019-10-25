@@ -32,7 +32,7 @@ namespace SqlKata.Compilers
 
         private List<AbstractFrom> findInternal(Query queryToSearch)
         {
-            var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
+            var cteList = queryToSearch.GetComponents<AbstractFrom>(ClauseComponent.Cte, engineCode);
 
             var resultList = new List<AbstractFrom>();
 

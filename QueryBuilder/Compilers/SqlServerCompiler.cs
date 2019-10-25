@@ -1,5 +1,7 @@
 namespace SqlKata.Compilers
 {
+    using System;
+
     public class SqlServerCompiler : Compiler
     {
         public SqlServerCompiler()
@@ -30,7 +32,7 @@ namespace SqlKata.Compilers
             var offset = query.GetOffset(EngineCode);
 
 
-            if (!query.HasComponent("select"))
+            if (!query.HasComponent(ClauseComponent.Select))
             {
                 query.Select("*");
             }
@@ -39,7 +41,7 @@ namespace SqlKata.Compilers
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
-            query.ClearComponent("order");
+            query.ClearComponent(ClauseComponent.Order);
 
 
             var result = base.CompileSelectQuery(query);
@@ -79,10 +81,10 @@ namespace SqlKata.Compilers
                 // top bindings should be inserted first
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                ctx.Query.ClearComponent(ClauseComponent.Limit);
 
                 // handle distinct
-                if (compiled.IndexOf("SELECT DISTINCT") == 0)
+                if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
                 {
                     return "SELECT DISTINCT TOP (?)" + compiled.Substring(15);
                 }
@@ -111,7 +113,7 @@ namespace SqlKata.Compilers
             }
 
             var safeOrder = "";
-            if (!ctx.Query.HasComponent("order"))
+            if (!ctx.Query.HasComponent(ClauseComponent.Order))
             {
                 safeOrder = "ORDER BY (SELECT 0) ";
             }

@@ -32,7 +32,7 @@ namespace SqlKata
         internal int GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            var offset = this.GetOneComponent<OffsetClause>(ClauseComponent.Offset, engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -40,7 +40,7 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            var limit = this.GetOneComponent<LimitClause>(ClauseComponent.Limit, engineCode);
 
             return limit?.Limit ?? 0;
         }
@@ -96,7 +96,7 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
+            return AddComponent(ClauseComponent.Cte, new QueryFromClause
             {
                 Query = query,
                 Alias = alias,
@@ -120,7 +120,7 @@ namespace SqlKata
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent("cte", new RawFromClause
+            return AddComponent(ClauseComponent.Cte, new RawFromClause
             {
                 Alias = alias,
                 Expression = sql,
@@ -135,7 +135,7 @@ namespace SqlKata
                 Limit = value
             };
 
-            return AddOrReplaceComponent("limit", newClause);
+            return AddOrReplaceComponent(ClauseComponent.Limit, newClause);
         }
 
         public Query Offset(int value)
@@ -145,7 +145,7 @@ namespace SqlKata
                 Offset = value
             };
 
-            return AddOrReplaceComponent("offset", newClause);
+            return AddOrReplaceComponent(ClauseComponent.Offset, newClause);
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                AddComponent(ClauseComponent.Order, new OrderBy
                 {
                     Column = column,
                     Ascending = true
@@ -241,7 +241,7 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                AddComponent(ClauseComponent.Order, new OrderBy
                 {
                     Column = column,
                     Ascending = false
@@ -253,7 +253,7 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent("order", new RawOrderBy
+            return AddComponent(ClauseComponent.Order, new RawOrderBy
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
@@ -262,14 +262,14 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom { });
+            return AddComponent(ClauseComponent.Order, new OrderByRandom { });
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
-                AddComponent("group", new Column
+                AddComponent(ClauseComponent.Group, new Column
                 {
                     Name = column
                 });
@@ -280,7 +280,7 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent("group", new RawColumn
+            AddComponent(ClauseComponent.Group, new RawColumn
             {
                 Expression = expression,
                 Bindings = bindings,

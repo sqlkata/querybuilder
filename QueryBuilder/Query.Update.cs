@@ -31,7 +31,7 @@ namespace SqlKata
 
             Method = QueryMethod.Update;
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            ClearComponent(ClauseComponent.Update).AddComponent(ClauseComponent.Update, new InsertClause
             {
                 Columns = columns.ToList(),
                 Values = values.ToList()
@@ -50,7 +50,7 @@ namespace SqlKata
 
             Method = QueryMethod.Update;
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            ClearComponent(ClauseComponent.Update).AddComponent(ClauseComponent.Update, new InsertClause
             {
                 Columns = data.Keys.ToList(),
                 Values = data.Values.ToList(),

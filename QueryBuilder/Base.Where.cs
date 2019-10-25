@@ -18,7 +18,7 @@ namespace SqlKata
                 return Not(op != "=").WhereNull(column);
             }
 
-            return AddComponent("where", new BasicCondition
+            return AddComponent(ClauseComponent.Where, new BasicCondition
             {
                 Column = column,
                 Operator = op,
@@ -102,7 +102,7 @@ namespace SqlKata
 
         public Q WhereRaw(string sql, params object[] bindings)
         {
-            return AddComponent("where", new RawCondition
+            return AddComponent(ClauseComponent.Where, new RawCondition
             {
                 Expression = sql,
                 Bindings = bindings,
@@ -126,12 +126,12 @@ namespace SqlKata
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Where(x => x.Component == "where").Any())
+            if (!query.Clauses.Any(x => x.Component == ClauseComponent.Where))
             {
                 return (Q)this;
             }
 
-            return AddComponent("where", new NestedCondition<Q>
+            return AddComponent(ClauseComponent.Where, new NestedCondition<Q>
             {
                 Query = query,
                 IsNot = GetNot(),
@@ -156,7 +156,7 @@ namespace SqlKata
 
         public Q WhereColumns(string first, string op, string second)
         {
-            return AddComponent("where", new TwoColumnsCondition
+            return AddComponent(ClauseComponent.Where, new TwoColumnsCondition
             {
                 First = first,
                 Second = second,
@@ -173,7 +173,7 @@ namespace SqlKata
 
         public Q WhereNull(string column)
         {
-            return AddComponent("where", new NullCondition
+            return AddComponent(ClauseComponent.Where, new NullCondition
             {
                 Column = column,
                 IsOr = GetOr(),
@@ -198,7 +198,7 @@ namespace SqlKata
 
         public Q WhereTrue(string column)
         {
-            return AddComponent("where", new BooleanCondition
+            return AddComponent(ClauseComponent.Where, new BooleanCondition
             {
                 Column = column,
                 Value = true,
@@ -214,7 +214,7 @@ namespace SqlKata
 
         public Q WhereFalse(string column)
         {
-            return AddComponent("where", new BooleanCondition
+            return AddComponent(ClauseComponent.Where, new BooleanCondition
             {
                 Column = column,
                 Value = false,
@@ -230,7 +230,7 @@ namespace SqlKata
 
         public Q WhereLike(string column, object value, bool caseSensitive = false)
         {
-            return AddComponent("where", new BasicStringCondition
+            return AddComponent(ClauseComponent.Where, new BasicStringCondition
             {
                 Operator = "like",
                 Column = column,
@@ -257,7 +257,7 @@ namespace SqlKata
         }
         public Q WhereStarts(string column, object value, bool caseSensitive = false)
         {
-            return AddComponent("where", new BasicStringCondition
+            return AddComponent(ClauseComponent.Where, new BasicStringCondition
             {
                 Operator = "starts",
                 Column = column,
@@ -285,7 +285,7 @@ namespace SqlKata
 
         public Q WhereEnds(string column, object value, bool caseSensitive = false)
         {
-            return AddComponent("where", new BasicStringCondition
+            return AddComponent(ClauseComponent.Where, new BasicStringCondition
             {
                 Operator = "ends",
                 Column = column,
@@ -313,7 +313,7 @@ namespace SqlKata
 
         public Q WhereContains(string column, object value, bool caseSensitive = false)
         {
-            return AddComponent("where", new BasicStringCondition
+            return AddComponent(ClauseComponent.Where, new BasicStringCondition
             {
                 Operator = "contains",
                 Column = column,
@@ -341,7 +341,7 @@ namespace SqlKata
 
         public Q WhereBetween<T>(string column, T lower, T higher)
         {
-            return AddComponent("where", new BetweenCondition<T>
+            return AddComponent(ClauseComponent.Where, new BetweenCondition<T>
             {
                 Column = column,
                 IsOr = GetOr(),
@@ -373,7 +373,7 @@ namespace SqlKata
             {
                 string val = values as string;
 
-                return AddComponent("where", new InCondition<string>
+                return AddComponent(ClauseComponent.Where, new InCondition<string>
                 {
                     Column = column,
                     IsOr = GetOr(),
@@ -382,7 +382,7 @@ namespace SqlKata
                 });
             }
 
-            return AddComponent("where", new InCondition<T>
+            return AddComponent(ClauseComponent.Where, new InCondition<T>
             {
                 Column = column,
                 IsOr = GetOr(),
@@ -411,7 +411,7 @@ namespace SqlKata
 
         public Q WhereIn(string column, Query query)
         {
-            return AddComponent("where", new InQueryCondition
+            return AddComponent(ClauseComponent.Where, new InQueryCondition
             {
                 Column = column,
                 IsOr = GetOr(),
@@ -472,7 +472,7 @@ namespace SqlKata
 
         public Q Where(string column, string op, Query query)
         {
-            return AddComponent("where", new QueryCondition<Query>
+            return AddComponent(ClauseComponent.Where, new QueryCondition<Query>
             {
                 Column = column,
                 Operator = op,
@@ -489,7 +489,7 @@ namespace SqlKata
 
         public Q WhereSub(Query query, string op, object value)
         {
-            return AddComponent("where", new SubQueryCondition<Query>
+            return AddComponent(ClauseComponent.Where, new SubQueryCondition<Query>
             {
                 Value = value,
                 Operator = op,
@@ -520,16 +520,16 @@ namespace SqlKata
 
         public Q WhereExists(Query query)
         {
-            if (!query.HasComponent("from"))
+            if (!query.HasComponent(ClauseComponent.From))
             {
                 throw new ArgumentException("'FromClause' cannot be empty if used inside a 'WhereExists' condition");
             }
 
             // remove unneeded components
-            query = query.Clone().ClearComponent("select")
+            query = query.Clone().ClearComponent(ClauseComponent.Select)
                 .SelectRaw("1");
 
-            return AddComponent("where", new ExistsCondition
+            return AddComponent(ClauseComponent.Where, new ExistsCondition
             {
                 Query = query,
                 IsNot = GetNot(),
@@ -574,7 +574,7 @@ namespace SqlKata
         #region date
         public Q WhereDatePart(string part, string column, string op, object value)
         {
-            return AddComponent("where", new BasicDateCondition
+            return AddComponent(ClauseComponent.Where, new BasicDateCondition
             {
                 Operator = op,
                 Column = column,

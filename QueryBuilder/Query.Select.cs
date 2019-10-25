@@ -18,7 +18,7 @@ namespace SqlKata
 
             foreach (var column in columns)
             {
-                AddComponent("select", new Column
+                AddComponent(ClauseComponent.Select, new Column
                 {
                     Name = column
                 });
@@ -35,7 +35,7 @@ namespace SqlKata
         {
             Method = QueryMethod.Select;
 
-            AddComponent("select", new RawColumn
+            AddComponent(ClauseComponent.Select, new RawColumn
             {
                 Expression = sql,
                 Bindings = bindings,
@@ -50,7 +50,7 @@ namespace SqlKata
 
             query = query.Clone();
 
-            AddComponent("select", new QueryColumn
+            AddComponent(ClauseComponent.Select, new QueryColumn
             {
                 Query = query.As(alias),
             });

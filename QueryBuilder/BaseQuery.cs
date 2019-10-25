@@ -68,7 +68,7 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Q AddComponent(string component, AbstractClause clause, string engineCode = null)
+        public Q AddComponent(ClauseComponent component, AbstractClause clause, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -91,7 +91,7 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Q AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
+        public Q AddOrReplaceComponent(ClauseComponent component, AbstractClause clause, string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
 
@@ -108,7 +108,7 @@ namespace SqlKata
         /// Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
-        public List<C> GetComponents<C>(string component, string engineCode = null) where C : AbstractClause
+        public List<C> GetComponents<C>(ClauseComponent component, string engineCode = null) where C : AbstractClause
         {
             if (engineCode == null)
             {
@@ -129,7 +129,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public List<AbstractClause> GetComponents(string component, string engineCode = null)
+        public List<AbstractClause> GetComponents(ClauseComponent component, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -143,7 +143,7 @@ namespace SqlKata
         /// Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
-        public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
+        public C GetOneComponent<C>(ClauseComponent component, string engineCode = null) where C : AbstractClause
         {
             engineCode = engineCode ?? EngineScope;
 
@@ -157,7 +157,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public AbstractClause GetOneComponent(string component, string engineCode = null)
+        public AbstractClause GetOneComponent(ClauseComponent component, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -173,7 +173,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public bool HasComponent(string component, string engineCode = null)
+        public bool HasComponent(ClauseComponent component, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -189,7 +189,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Q ClearComponent(string component, string engineCode = null)
+        public Q ClearComponent(ClauseComponent component, string engineCode = null)
         {
             if (engineCode == null)
             {
@@ -266,7 +266,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q From(string table)
         {
-            return AddOrReplaceComponent("from", new FromClause
+            return AddOrReplaceComponent(ClauseComponent.From, new FromClause
             {
                 Table = table,
             });
@@ -282,7 +282,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return AddOrReplaceComponent("from", new QueryFromClause
+            return AddOrReplaceComponent(ClauseComponent.From, new QueryFromClause
             {
                 Query = query
             });
@@ -290,7 +290,7 @@ namespace SqlKata
 
         public Q FromRaw(string sql, params object[] bindings)
         {
-            return AddOrReplaceComponent("from", new RawFromClause
+            return AddOrReplaceComponent(ClauseComponent.From, new RawFromClause
             {
                 Expression = sql,
                 Bindings = bindings,

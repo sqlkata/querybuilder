@@ -13,7 +13,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Only select queries can be combined.");
             }
 
-            return AddComponent("combine", new Combine
+            return AddComponent(ClauseComponent.Combine, new Combine
             {
                 Query = query,
                 Operation = operation,
@@ -28,7 +28,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Only select queries can be combined.");
             }
 
-            return AddComponent("combine", new RawCombine
+            return AddComponent(ClauseComponent.Combine, new RawCombine
             {
                 Expression = sql,
                 Bindings = bindings,

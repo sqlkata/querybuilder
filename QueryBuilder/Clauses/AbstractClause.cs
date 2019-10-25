@@ -16,7 +16,7 @@ namespace SqlKata
         /// <value>
         /// The component name.
         /// </value>
-        public string Component { get; set; }
+        public ClauseComponent Component { get; set; }
         public abstract AbstractClause Clone();
     }
 }
