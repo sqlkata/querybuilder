@@ -209,7 +209,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileDeleteQuery(Query query)
+        private SqlResult IntializeSQL_Result(Query query, string errorMsg)
         {
             var ctx = new SqlResult
             {
@@ -218,19 +218,29 @@ namespace SqlKata.Compilers
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
-                throw new InvalidOperationException("No table set to delete");
+                throw new InvalidOperationException("No table set to " + errorMsg);
             }
 
+            return ctx;
+        }
+        private string MakeTable(SqlResult ctx)
+        {
             var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
+            // this is only found on only one method. that is the CompileInsertQuery
+            // added it and still passes all unit tests
+            if (fromClause is null)
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+            
             string table = null;
 
             if (fromClause is FromClause fromClauseCast)
             {
                 table = Wrap(fromClauseCast.Table);
             }
-
-            if (fromClause is RawFromClause rawFromClause)
+            else if (fromClause is RawFromClause rawFromClause) // made into else  since table gets over written
             {
                 table = WrapIdentifiers(rawFromClause.Expression);
                 ctx.Bindings.AddRange(rawFromClause.Bindings);
@@ -241,7 +251,16 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var where = CompileWheres(ctx);
+            return table;
+        }
+
+        private SqlResult CompileDeleteQuery(Query query)
+        {
+            SqlResult ctx = IntializeSQL_Result(query,"delete");
+
+            string table = MakeTable(ctx);
+
+            string where = CompileWheres(ctx);
 
             if (!string.IsNullOrEmpty(where))
             {
@@ -252,47 +271,25 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
-
-        private SqlResult CompileUpdateQuery(Query query)
+        private List<string> MakeUpdateParts(InsertClause toUpdate)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
-
-            if (!ctx.Query.HasComponent("from", EngineCode))
-            {
-                throw new InvalidOperationException("No table set to update");
-            }
-
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            string table = null;
-
-            if (fromClause is FromClause fromClauseCast)
-            {
-                table = Wrap(fromClauseCast.Table);
-            }
-
-            if (fromClause is RawFromClause rawFromClause)
-            {
-                table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
-            }
-
-            if (table is null)
-            {
-                throw new InvalidOperationException("Invalid table expression");
-            }
-
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
-
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
                 parts.Add($"{Wrap(toUpdate.Columns[i])} = ?");
             }
+            return parts;
+        }
+        private SqlResult CompileUpdateQuery(Query query)
+        {
+            var ctx = IntializeSQL_Result(query, "update");
+
+            string table = MakeTable(ctx);
+
+            InsertClause toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+
+            List<string> parts = MakeUpdateParts(toUpdate);
 
             ctx.Bindings.AddRange(toUpdate.Values);
 
@@ -310,72 +307,36 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        private SqlResult IfInsertCase(SqlResult ctx, string table, InsertClause insertClause)
+        {
+            var columns = string.Join(", ", WrapArray(insertClause.Columns));
+            var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
+
+            ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
+
+            if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
+            {
+                ctx.RawSql += ";" + LastId;
+            }
+
+            return ctx;
+        }
+
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = IntializeSQL_Result(query, " insert");
 
-            if (!ctx.Query.HasComponent("from", EngineCode))
-            {
-                throw new InvalidOperationException("No table set to insert");
-            }
-
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            if (fromClause is null)
-            {
-                throw new InvalidOperationException("Invalid table expression");
-            }
-
-            string table = null;
-
-            if (fromClause is FromClause fromClauseCast)
-            {
-                table = Wrap(fromClauseCast.Table);
-            }
-
-            if (fromClause is RawFromClause rawFromClause)
-            {
-                table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
-            }
-
-            if (table is null)
-            {
-                throw new InvalidOperationException("Invalid table expression");
-            }
+            string table = MakeTable(ctx);
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
             if (inserts[0] is InsertClause insertClause)
             {
-                var columns = string.Join(", ", WrapArray(insertClause.Columns));
-                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
-
-                ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
-
-                if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
-                {
-                    ctx.RawSql += ";" + LastId;
-                }
+                ctx = IfInsertCase(ctx, table, insertClause);
             }
             else
             {
-                var clause = inserts[0] as InsertQueryClause;
-
-                var columns = "";
-
-                if (clause.Columns.Any())
-                {
-                    columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
-                }
-
-                var subCtx = CompileSelectQuery(clause.Query);
-                ctx.Bindings.AddRange(subCtx.Bindings);
-
-                ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
+                ElseInsertCase(ctx, table, inserts);
             }
 
             if (inserts.Count > 1)
@@ -393,6 +354,22 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        private void ElseInsertCase(SqlResult ctx, string table, List<AbstractInsertClause> inserts)
+        {
+            var clause = inserts[0] as InsertQueryClause;
+
+            var columns = "";
+
+            if (clause.Columns.Any())
+            {
+                columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
+            }
+
+            var subCtx = CompileSelectQuery(clause.Query);
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
+        }
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
