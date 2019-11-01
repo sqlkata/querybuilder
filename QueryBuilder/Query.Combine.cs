@@ -47,7 +47,7 @@ namespace SqlKata
 
         public Query Union(Func<Query, Query> callback, bool all = false)
         {
-            var query = callback.Invoke(new Query());
+            Query query = callback.Invoke(new Query());
             return Union(query, all);
         }
 
@@ -70,7 +70,7 @@ namespace SqlKata
 
         public Query Except(Func<Query, Query> callback, bool all = false)
         {
-            var query = callback.Invoke(new Query());
+            Query query = callback.Invoke(new Query());
             return Except(query, all);
         }
 
@@ -92,7 +92,7 @@ namespace SqlKata
 
         public Query Intersect(Func<Query, Query> callback, bool all = false)
         {
-            var query = callback.Invoke(new Query());
+            Query query = callback.Invoke(new Query());
             return Intersect(query, all);
         }
 

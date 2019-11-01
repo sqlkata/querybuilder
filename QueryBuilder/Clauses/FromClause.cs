@@ -26,7 +26,7 @@ namespace SqlKata
             {
                 if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                     return segments[2];
                 }

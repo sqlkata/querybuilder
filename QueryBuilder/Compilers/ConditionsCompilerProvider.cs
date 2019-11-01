@@ -19,7 +19,7 @@ namespace SqlKata.Compilers
         public MethodInfo GetMethodInfo(Type clauseType, string methodName)
         {
             // The cache key should take the type and the method name into consideration
-            var cacheKey = methodName + "::" + clauseType.FullName;
+            string cacheKey = methodName + "::" + clauseType.FullName;
 
             if (methodsCache.ContainsKey(cacheKey))
             {

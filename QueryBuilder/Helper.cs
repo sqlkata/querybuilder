@@ -30,11 +30,11 @@ namespace SqlKata
         /// <returns></returns>
         public static IEnumerable<object> Flatten(IEnumerable<object> array)
         {
-            foreach (var item in array)
+            foreach (object item in array)
             {
                 if (IsArray(item))
                 {
-                    foreach (var sub in (item as IEnumerable))
+                    foreach (object sub in (item as IEnumerable))
                     {
                         yield return sub;
                     }
@@ -59,7 +59,7 @@ namespace SqlKata
                 yield break;
             }
 
-            var index = 0;
+            int index = 0;
 
             do
             {
@@ -82,7 +82,7 @@ namespace SqlKata
                 return subject;
             }
 
-            var splitted = subject.Split(
+            string[] splitted = subject.Split(
                 new[] { match },
                 StringSplitOptions.None
             );
@@ -94,9 +94,9 @@ namespace SqlKata
 
         public static string JoinArray(string glue, IEnumerable array)
         {
-            var result = new List<string>();
+            List<string> result = new List<string>();
 
-            foreach (var item in array)
+            foreach (object item in array)
             {
                 result.Add(item.ToString());
             }
@@ -108,11 +108,11 @@ namespace SqlKata
         {
             return ReplaceAll(sql, placeholder, i =>
             {
-                var parameter = bindings[i];
+                object parameter = bindings[i];
 
                 if (IsArray(parameter))
                 {
-                    var count = EnumerableCount(parameter as IEnumerable);
+                    int count = EnumerableCount(parameter as IEnumerable);
                     return string.Join(",", placeholder.Repeat(count));
                 }
 
@@ -124,7 +124,7 @@ namespace SqlKata
         {
             int count = 0;
 
-            foreach (var item in obj)
+            foreach (object item in obj)
             {
                 count++;
             }
@@ -134,8 +134,8 @@ namespace SqlKata
 
         public static List<string> ExpandExpression(string expression)
         {
-            var regex = @"^(?:\w+\.){1,2}{(.*)}";
-            var match = Regex.Match(expression, regex);
+            string regex = @"^(?:\w+\.){1,2}{(.*)}";
+            Match match = Regex.Match(expression, regex);
 
             if (!match.Success)
             {
@@ -143,11 +143,11 @@ namespace SqlKata
                 return new List<string> { expression };
             }
 
-            var table = expression.Substring(0, expression.IndexOf(".{"));
+            string table = expression.Substring(0, expression.IndexOf(".{"));
 
-            var captures = match.Groups[1].Value;
+            string captures = match.Groups[1].Value;
 
-            var cols = Regex.Split(captures, @"\s*,\s*")
+            List<string> cols = Regex.Split(captures, @"\s*,\s*")
                 .Select(x => $"{table}.{x.Trim()}")
                 .ToList();
 
@@ -162,11 +162,11 @@ namespace SqlKata
         public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
         {
             //Replace standard, non-escaped identifiers first
-            var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
-            var nonEscapedReplace = nonEscapedRegex.Replace(input, newIdentifier);
+            Regex nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
+            string nonEscapedReplace = nonEscapedRegex.Replace(input, newIdentifier);
             
             //Then replace escaped identifiers, by just removing the escape character
-            var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
+            Regex escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
             return escapedRegex.Replace(nonEscapedReplace, identifier);
         }
     }

@@ -24,7 +24,7 @@ namespace SqlKata.Compilers
                 return base.CompileSelectQuery(query);
             }
 
-            var result = base.CompileSelectQuery(query);
+            SqlResult result = base.CompileSelectQuery(query);
 
             ApplyLegacyLimit(result);
 
@@ -39,15 +39,15 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
                 return null;
             }
 
-            var safeOrder = "";
+            string safeOrder = "";
 
             if (!ctx.Query.HasComponent("order"))
             {
@@ -68,8 +68,8 @@ namespace SqlKata.Compilers
 
         internal void ApplyLegacyLimit(SqlResult ctx)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
@@ -100,13 +100,13 @@ namespace SqlKata.Compilers
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
 
-            var column = Wrap(condition.Column);
-            var value = Parameter(ctx, condition.Value);
+            string column = Wrap(condition.Column);
+            string value = Parameter(ctx, condition.Value);
 
-            var sql = "";
-            var valueFormat = "";
+            string sql = "";
+            string valueFormat = "";
 
-            var isDateTime = (condition.Value is DateTime dt);
+            bool isDateTime = (condition.Value is DateTime dt);
 
             switch (condition.Part)
             {

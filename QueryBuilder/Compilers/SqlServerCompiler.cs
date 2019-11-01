@@ -21,13 +21,13 @@ namespace SqlKata.Compilers
 
             query = query.Clone();
 
-            var ctx = new SqlResult
+            SqlResult ctx = new SqlResult
             {
                 Query = query,
             };
 
-            var limit = query.GetLimit(EngineCode);
-            var offset = query.GetOffset(EngineCode);
+            int limit = query.GetLimit(EngineCode);
+            int offset = query.GetOffset(EngineCode);
 
 
             if (!query.HasComponent("select"))
@@ -35,14 +35,14 @@ namespace SqlKata.Compilers
                 query.Select("*");
             }
 
-            var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            string order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
             query.ClearComponent("order");
 
 
-            var result = base.CompileSelectQuery(query);
+            SqlResult result = base.CompileSelectQuery(query);
 
             if (limit == 0)
             {
@@ -61,7 +61,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(ctx);
+            string compiled = base.CompileColumns(ctx);
 
             if (!UseLegacyPagination)
             {
@@ -71,8 +71,8 @@ namespace SqlKata.Compilers
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
@@ -102,15 +102,15 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
                 return null;
             }
 
-            var safeOrder = "";
+            string safeOrder = "";
             if (!ctx.Query.HasComponent("order"))
             {
                 safeOrder = "ORDER BY (SELECT 0) ";
@@ -145,8 +145,8 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
-            var part = condition.Part.ToUpperInvariant();
+            string column = Wrap(condition.Column);
+            string part = condition.Part.ToUpperInvariant();
 
             string left;
 
@@ -159,7 +159,7 @@ namespace SqlKata.Compilers
                 left = $"DATEPART({part.ToUpperInvariant()}, {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            string sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
             if (condition.IsNot)
             {

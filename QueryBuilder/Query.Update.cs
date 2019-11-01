@@ -11,7 +11,7 @@ namespace SqlKata
 
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildDictionaryFromObject(data, considerKeys: true);
+            Dictionary<string,object> dictionary = BuildDictionaryFromObject(data, considerKeys: true);
 
             return AsUpdate(dictionary);
         }

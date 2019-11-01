@@ -24,7 +24,7 @@ namespace SqlKata
 
         public override Join Clone()
         {
-            var clone = base.Clone();
+            Join clone = base.Clone();
             clone._type = _type;
             return clone;
         }

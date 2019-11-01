@@ -27,7 +27,7 @@ namespace SqlKata
 
         public override string ToString()
         {
-            var deepParameters = Helper.Flatten(Bindings).ToList();
+            List<object> deepParameters = Helper.Flatten(Bindings).ToList();
 
             return Helper.ReplaceAll(RawSql, "?", i =>
             {
@@ -37,7 +37,7 @@ namespace SqlKata
                         $"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
                 }
 
-                var value = deepParameters[i];
+                object value = deepParameters[i];
                 return ChangeToSqlValue(value);
             });
         }

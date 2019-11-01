@@ -12,8 +12,8 @@ namespace SqlKata.Compilers
 
         public override string CompileLimit(SqlResult ctx)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
 
             if (offset == 0 && limit == 0)

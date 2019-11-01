@@ -14,9 +14,9 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = base.CompileInsertQuery(query);
+            SqlResult ctx = base.CompileInsertQuery(query);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            List<AbstractInsertClause> inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
             if (inserts.Count > 1)
             {
@@ -30,8 +30,8 @@ namespace SqlKata.Compilers
 
         public override string CompileLimit(SqlResult ctx)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset > 0)
             {
@@ -47,10 +47,10 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(ctx);
+            string compiled = base.CompileColumns(ctx);
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = ctx.Query.GetLimit(EngineCode);
+            int offset = ctx.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
@@ -74,7 +74,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            string column = Wrap(condition.Column);
 
             string left;
 
@@ -91,7 +91,7 @@ namespace SqlKata.Compilers
                 left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            string sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
             if (condition.IsNot)
             {

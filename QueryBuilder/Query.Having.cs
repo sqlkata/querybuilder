@@ -67,9 +67,9 @@ namespace SqlKata
         /// <returns></returns>
         public Query Having(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
+            Dictionary<string,object> dictionary = new Dictionary<string, object>();
 
-            foreach (var item in constraints.GetType().GetRuntimeProperties())
+            foreach (PropertyInfo item in constraints.GetType().GetRuntimeProperties())
             {
                 dictionary.Add(item.Name, item.GetValue(constraints));
             }
@@ -79,11 +79,11 @@ namespace SqlKata
 
         public Query Having(IReadOnlyDictionary<string, object> values)
         {
-            var query = this;
-            var orFlag = GetOr();
-            var notFlag = GetNot();
+            Query query = this;
+            bool orFlag = GetOr();
+            bool notFlag = GetNot();
 
-            foreach (var tuple in values)
+            foreach (KeyValuePair<string,object> tuple in values)
             {
                 if (orFlag)
                 {
@@ -123,7 +123,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query Having(Func<Query, Query> callback)
         {
-            var query = callback.Invoke(NewChild());
+            Query query = callback.Invoke(NewChild());
 
             return AddComponent("having", new NestedCondition<Query>
             {
@@ -410,7 +410,7 @@ namespace SqlKata
         }
         public Query HavingIn(string column, Func<Query, Query> callback)
         {
-            var query = callback.Invoke(new Query());
+            Query query = callback.Invoke(new Query());
 
             return HavingIn(column, query);
         }
@@ -454,7 +454,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query Having(string column, string op, Func<Query, Query> callback)
         {
-            var query = callback.Invoke(NewChild());
+            Query query = callback.Invoke(NewChild());
 
             return Having(column, op, query);
         }
@@ -501,7 +501,7 @@ namespace SqlKata
         }
         public Query HavingExists(Func<Query, Query> callback)
         {
-            var childQuery = new Query().SetParent(this);
+            Query childQuery = new Query().SetParent(this);
             return HavingExists(callback.Invoke(childQuery));
         }
 
