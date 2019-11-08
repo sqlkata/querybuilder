@@ -65,7 +65,8 @@ namespace SqlKata.Tests
             var result = Helper.AllIndexesOf(input, "l");
 
             // Then
-            Assert.Equal(new[] { 2, 3 }, result);
+            int[] expected = new[] { 2, 3 };
+            Assert.Equal(expected, result);
         }
 
         [Theory]
@@ -143,7 +144,8 @@ namespace SqlKata.Tests
             var flatten = Helper.Flatten(objects);
 
             // Then
-            Assert.Equal(new[] { 4, 5, 6 }, flatten.ElementAt(3));
+            int[] expected = new[] { 4, 5, 6 };
+            Assert.Equal(expected, flatten.ElementAt(3));
         }
         [Fact]
         public void Flatten_ShouldRemoveEmptyCollections()

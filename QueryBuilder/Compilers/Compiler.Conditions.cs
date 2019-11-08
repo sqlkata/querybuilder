@@ -47,14 +47,11 @@ namespace SqlKata.Compilers
             {
                 string compiled = CompileCondition(context, conditions[i]);
 
-                if (string.IsNullOrEmpty(compiled))
+                if (!string.IsNullOrEmpty(compiled))
                 {
-                    continue;
+                    string boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
+                    result.Add(boolOperator + compiled);                    
                 }
-
-                string boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
-
-                result.Add(boolOperator + compiled);
             }
 
             return string.Join(" ", result);
@@ -98,21 +95,17 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileBasicStringCondition(SqlResult context, BasicStringCondition x)
         {
-
-            string column = Wrap(x.Column);
-
-            string value = Resolve(context, x.Value) as string;
-
-            if (value == null)
+            if (!(Resolve(context, x.Value) is string value))
             {
                 throw new ArgumentException("Expecting a non nullable string");
             }
 
+            string[] basicStringConditions = new[] { "starts", "ends", "contains", "like" };
+            string column = Wrap(x.Column);
             string method = x.Operator;
 
-            if (new[] { "starts", "ends", "contains", "like" }.Contains(x.Operator))
+            if (basicStringConditions.Contains(x.Operator))
             {
-
                 method = "LIKE";
 
                 if (x.Operator == "starts")
@@ -130,8 +123,6 @@ namespace SqlKata.Compilers
             }
 
             string sql;
-
-
             if (!x.CaseSensitive)
             {
                 column = CompileLower(column);
@@ -148,7 +139,6 @@ namespace SqlKata.Compilers
             }
 
             return x.IsNot ? $"NOT ({sql})" : sql;
-
         }
 
         protected virtual string CompileBasicDateCondition(SqlResult context, BasicDateCondition x)
