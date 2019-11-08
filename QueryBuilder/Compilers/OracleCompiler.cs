@@ -31,7 +31,7 @@ namespace SqlKata.Compilers
             return result;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
             if (UseLegacyPagination)
             {
@@ -39,8 +39,8 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            int limit = ctx.Query.GetLimit(EngineCode);
-            int offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
@@ -49,27 +49,27 @@ namespace SqlKata.Compilers
 
             string safeOrder = "";
 
-            if (!ctx.Query.HasComponent("order"))
+            if (!context.Query.HasComponent("order"))
             {
                 safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
             }
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
+                context.Bindings.Add(offset);
                 return $"{safeOrder}OFFSET ? ROWS";
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
+            context.Bindings.Add(offset);
+            context.Bindings.Add(limit);
 
             return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
 
-        internal void ApplyLegacyLimit(SqlResult ctx)
+        internal void ApplyLegacyLimit(SqlResult context)
         {
-            int limit = ctx.Query.GetLimit(EngineCode);
-            int offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
@@ -79,29 +79,29 @@ namespace SqlKata.Compilers
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
-                ctx.Bindings.Add(offset);
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({context.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
+                context.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
-                ctx.Bindings.Add(limit);
+                newSql = $"SELECT * FROM ({context.RawSql}) WHERE ROWNUM <= ?";
+                context.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
-                ctx.Bindings.Add(limit + offset);
-                ctx.Bindings.Add(offset);
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({context.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
+                context.Bindings.Add(limit + offset);
+                context.Bindings.Add(offset);
             }
 
-            ctx.RawSql = newSql;
+            context.RawSql = newSql;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult context, BasicDateCondition condition)
         {
 
             string column = Wrap(condition.Column);
-            string value = Parameter(ctx, condition.Value);
+            string value = Parameter(context, condition.Value);
 
             string sql = "";
             string valueFormat = "";

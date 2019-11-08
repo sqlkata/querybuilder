@@ -23,24 +23,24 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
-            int limit = ctx.Query.GetLimit(EngineCode);
-            int offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Add(offset);
+                context.Bindings.Add(offset);
                 return "LIMIT -1 OFFSET ?";
             }
 
-            return base.CompileLimit(ctx);
+            return base.CompileLimit(context);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult context, BasicDateCondition condition)
         {
             string column = Wrap(condition.Column);
-            string value = Parameter(ctx, condition.Value);
+            string value = Parameter(context, condition.Value);
 
             Dictionary<string,string> formatMap = new Dictionary<string, string> {
                 {"date", "%Y-%m-%d"},

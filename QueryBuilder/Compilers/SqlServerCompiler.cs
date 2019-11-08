@@ -21,7 +21,7 @@ namespace SqlKata.Compilers
 
             query = query.Clone();
 
-            SqlResult ctx = new SqlResult
+            SqlResult context = new SqlResult
             {
                 Query = query,
             };
@@ -35,9 +35,9 @@ namespace SqlKata.Compilers
                 query.Select("*");
             }
 
-            string order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            string order = CompileOrders(context) ?? "ORDER BY (SELECT 0)";
 
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", context.Bindings.ToArray());
 
             query.ClearComponent("order");
 
@@ -58,10 +58,9 @@ namespace SqlKata.Compilers
 
             return result;
         }
-
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileColumns(SqlResult context)
         {
-            string compiled = base.CompileColumns(ctx);
+            string compiled = base.CompileColumns(context);
 
             if (!UseLegacyPagination)
             {
@@ -71,15 +70,15 @@ namespace SqlKata.Compilers
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            int limit = ctx.Query.GetLimit(EngineCode);
-            int offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
                 // top bindings should be inserted first
-                ctx.Bindings.Insert(0, limit);
+                context.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                context.Query.ClearComponent("limit");
 
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT") == 0)
@@ -93,7 +92,7 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
             if (UseLegacyPagination)
             {
@@ -102,8 +101,8 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            int limit = ctx.Query.GetLimit(EngineCode);
-            int offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
@@ -111,19 +110,19 @@ namespace SqlKata.Compilers
             }
 
             string safeOrder = "";
-            if (!ctx.Query.HasComponent("order"))
+            if (!context.Query.HasComponent("order"))
             {
                 safeOrder = "ORDER BY (SELECT 0) ";
             }
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
+                context.Bindings.Add(offset);
                 return $"{safeOrder}OFFSET ? ROWS";
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
+            context.Bindings.Add(offset);
+            context.Bindings.Add(limit);
 
             return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
@@ -143,7 +142,7 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult context, BasicDateCondition condition)
         {
             string column = Wrap(condition.Column);
             string part = condition.Part.ToUpperInvariant();
@@ -159,7 +158,7 @@ namespace SqlKata.Compilers
                 left = $"DATEPART({part.ToUpperInvariant()}, {column})";
             }
 
-            string sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            string sql = $"{left} {condition.Operator} {Parameter(context, condition.Value)}";
 
             if (condition.IsNot)
             {

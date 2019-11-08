@@ -25,12 +25,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDate("STAMP", "=", "2018-04-01");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", ctx.RawSql);
-            Assert.Equal("2018-04-01", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", context.RawSql);
+            Assert.Equal("2018-04-01", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -42,12 +42,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("date", "STAMP", "=", "2018-04-01");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", ctx.RawSql);
-            Assert.Equal("2018-04-01", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", context.RawSql);
+            Assert.Equal("2018-04-01", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -59,12 +59,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereTime("STAMP", "=", "19:01:10");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", ctx.RawSql);
-            Assert.Equal("19:01:10", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", context.RawSql);
+            Assert.Equal("19:01:10", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -76,12 +76,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("time", "STAMP", "=", "19:01:10");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", ctx.RawSql);
-            Assert.Equal("19:01:10", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", context.RawSql);
+            Assert.Equal("19:01:10", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -93,12 +93,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereTime("STAMP", "=", "19:01");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", ctx.RawSql);
-            Assert.Equal("19:01", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", context.RawSql);
+            Assert.Equal("19:01", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -110,12 +110,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("time", "STAMP", "=", "19:01");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", ctx.RawSql);
-            Assert.Equal("19:01", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", context.RawSql);
+            Assert.Equal("19:01", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -127,12 +127,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("year", "STAMP", "=", "2018");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(YEAR FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("2018", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(YEAR FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("2018", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -144,12 +144,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("month", "STAMP", "=", "9");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MONTH FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("9", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MONTH FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("9", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -161,12 +161,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("day", "STAMP", "=", "15");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(DAY FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("15", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(DAY FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("15", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -178,12 +178,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("hour", "STAMP", "=", "15");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(HOUR FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("15", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(HOUR FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("15", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -195,12 +195,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("minute", "STAMP", "=", "25");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MINUTE FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("25", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MINUTE FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("25", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
 
         [Fact]
@@ -212,12 +212,12 @@ namespace SqlKata.Tests.Oracle
                 .WhereDatePart("second", "STAMP", "=", "59");
 
             // Act:
-            var ctx = compiler.Compile(query);
+            var context = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(SECOND FROM \"STAMP\") = ?", ctx.RawSql);
-            Assert.Equal("59", ctx.Bindings[0]);
-            Assert.Single(ctx.Bindings);
+            Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(SECOND FROM \"STAMP\") = ?", context.RawSql);
+            Assert.Equal("59", context.Bindings[0]);
+            Assert.Single(context.Bindings);
         }
     }
 }
