@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
@@ -11,13 +12,13 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertObject()
         {
-            var query = new Query("Table").AsInsert(new
+            Query query = new Query("Table").AsInsert(new
             {
                 Name = "The User",
                 Age = new DateTime(2018, 1, 1),
             });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')", c[EngineCodes.SqlServer]);
 
@@ -28,14 +29,14 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertFromSubQueryWithCte()
         {
-            var query = new Query("expensive_cars")
+            Query query = new Query("expensive_cars")
                 .With("old_cards", new Query("all_cars").Where("year", "<", 2000))
                 .AsInsert(
                     new[] { "name", "model", "year" },
                     new Query("old_cars").Where("price", ">", 100).ForPage(2, 10)
                 );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "WITH [old_cards] AS (SELECT * FROM [all_cars] WHERE [year] < 2000)\nINSERT INTO [expensive_cars] ([name], [model], [year]) SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [old_cars] WHERE [price] > 100) AS [results_wrapper] WHERE [row_num] BETWEEN 11 AND 20",
@@ -53,7 +54,7 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertMultiRecords()
         {
-            var query = new Query("expensive_cars")
+            Query query = new Query("expensive_cars")
                 .AsInsert(
                     new[] { "name", "brand", "year" },
                     new[]
@@ -64,7 +65,7 @@ namespace SqlKata.Tests
                     }
                 );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "INSERT INTO [expensive_cars] ([name], [brand], [year]) VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)",
@@ -79,12 +80,12 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithNullValues()
         {
-            var query = new Query("Books").AsInsert(
+            Query query = new Query("Books").AsInsert(
                 new[] { "Id", "Author", "ISBN", "Date" },
                 new object[] { 1, "Author 1", "123456", null }
             );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("INSERT INTO [Books] ([Id], [Author], [ISBN], [Date]) VALUES (1, 'Author 1', '123456', NULL)",
                 c[EngineCodes.SqlServer]);
@@ -98,12 +99,12 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithEmptyString()
         {
-            var query = new Query("Books").AsInsert(
+            Query query = new Query("Books").AsInsert(
                 new[] { "Id", "Author", "ISBN", "Description" },
                 new object[] { 1, "Author 1", "123456", "" }
             );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "INSERT INTO [Books] ([Id], [Author], [ISBN], [Description]) VALUES (1, 'Author 1', '123456', '')",
@@ -118,8 +119,8 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithByteArray()
         {
-            var fauxImagebytes = new byte[] { 0x1, 0x3, 0x3, 0x7 };
-            var query = new Query("Books")
+            byte[] fauxImagebytes = new byte[] { 0x1, 0x3, 0x3, 0x7 };
+            Query query = new Query("Books")
                 .AsInsert(new[] { "Id", "CoverImageBytes" },
                     new object[]
                     {
@@ -127,10 +128,10 @@ namespace SqlKata.Tests
                         fauxImagebytes
                     });
 
-            var c = Compilers.Compile(query);
+            TestSqlResultContainer c = Compilers.Compile(query);
             Assert.All(c.Values, a => Assert.Equal(2, a.NamedBindings.Count));
 
-            var exemplar = c[EngineCodes.SqlServer];
+            SqlResult exemplar = c[EngineCodes.SqlServer];
             Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (?, ?)", exemplar.RawSql);
             Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (@p0, @p1)", exemplar.Sql);
         }
@@ -155,10 +156,10 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithIgnoreAndColumnProperties()
         {
-            var account = new Account(name: $"popular", color: $"blue", currency: "US");
-            var query = new Query("Account").AsInsert(account);
+            Account account = new Account(name: $"popular", color: $"blue", currency: "US");
+            Query query = new Query("Account").AsInsert(account);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "INSERT INTO [Account] ([name], [currency_id]) VALUES ('popular', 'US')",
@@ -172,13 +173,13 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertFromRaw()
         {
-            var query = new Query().FromRaw("Table.With.Dots").AsInsert(new
+            Query query = new Query().FromRaw("Table.With.Dots").AsInsert(new
             {
                 Name = "The User",
                 Age = new DateTime(2018, 1, 1),
             });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "INSERT INTO Table.With.Dots ([Name], [Age]) VALUES ('The User', '2018-01-01')",
@@ -191,7 +192,7 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertFromQueryShouldFail()
         {
-            var query = new Query().From(new Query("InnerTable")).AsInsert(new
+            Query query = new Query().From(new Query("InnerTable")).AsInsert(new
             {
                 Name = "The User",
                 Age = new DateTime(2018, 1, 1),

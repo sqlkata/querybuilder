@@ -11,13 +11,13 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateObject()
         {
-            var query = new Query("Table").AsUpdate(new
+            Query query = new Query("Table").AsUpdate(new
             {
                 Name = "The User",
                 Age = new DateTime(2018, 1, 1),
             });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'", c[EngineCodes.SqlServer]);
 
@@ -28,12 +28,12 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithNullValues()
         {
-            var query = new Query("Books").Where("Id", 1).AsUpdate(
+            Query query = new Query("Books").Where("Id", 1).AsUpdate(
                 new[] { "Author", "Date", "Version" },
                 new object[] { "Author 1", null, null }
             );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1",
                 c[EngineCodes.SqlServer]);
@@ -47,12 +47,12 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithEmptyString()
         {
-            var query = new Query("Books").Where("Id", 1).AsUpdate(
+            Query query = new Query("Books").Where("Id", 1).AsUpdate(
                 new[] { "Author", "Description" },
                 new object[] { "Author 1", "" }
             );
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Description] = '' WHERE [Id] = 1", c[EngineCodes.SqlServer]);
 
@@ -63,9 +63,9 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithCte()
         {
-            var now = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            string now = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-            var query = new Query("Books")
+            Query query = new Query("Books")
                 .With("OldBooks", q => q.From("Books").Where("Date", "<", now))
                 .Where("Price", ">", 100)
                 .AsUpdate(new Dictionary<string, object>
@@ -73,7 +73,7 @@ namespace SqlKata.Tests
                     {"Price", "150"}
                 });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 $"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100",
@@ -103,10 +103,10 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithIgnoreAndColumnProperties()
         {
-            var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
-            var query = new Query("Book").AsUpdate(book);
+            Book book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
+            Query query = new Query("Book").AsUpdate(book);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100",
@@ -145,11 +145,11 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithKeyAttribute()
         {
-            var order = new OrderProductComposite("ORD01", "PROD02", 20);
+            OrderProductComposite order = new OrderProductComposite("ORD01", "PROD02", 20);
 
-            var query = new Query("OrderProductComposite").AsUpdate(order);
+            Query query = new Query("OrderProductComposite").AsUpdate(order);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
 
             Assert.Equal(
@@ -165,12 +165,12 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateFromRaw()
         {
-            var query = new Query().FromRaw("Table.With.Dots").AsUpdate(new
+            Query query = new Query().FromRaw("Table.With.Dots").AsUpdate(new
             {
                 Name = "The User",
             });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "UPDATE Table.With.Dots SET [Name] = 'The User'",
@@ -182,7 +182,7 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateFromQueryShouldFail()
         {
-            var query = new Query().From(new Query("InnerTable")).AsUpdate(new
+            Query query = new Query().From(new Query("InnerTable")).AsUpdate(new
             {
                 Name = "The User",
             });
@@ -191,7 +191,6 @@ namespace SqlKata.Tests
             {
                 Compile(query);
             });
-
         }
 
     }

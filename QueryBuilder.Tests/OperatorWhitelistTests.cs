@@ -18,7 +18,7 @@ namespace SqlKata.Tests
         [InlineData("*=")]
         public void DenyInvalidOperatorsInWhere(string op)
         {
-            var compiler = new SqlServerCompiler();
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
             Assert.Throws<Exception>(() =>
             {
@@ -38,7 +38,7 @@ namespace SqlKata.Tests
         [InlineData("*=")]
         public void DenyInvalidOperatorsInHaving(string op)
         {
-            var compiler = new SqlServerCompiler();
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
             Assert.Throws<Exception>(() =>
             {
@@ -93,9 +93,9 @@ namespace SqlKata.Tests
         [InlineData("!~*")]
         public void ShouldNotThrowAfterWhiteListing(string op)
         {
-            var compiler = new SqlServerCompiler().Whitelist(op);
+            Compiler compiler = new SqlServerCompiler().Whitelist(op);
 
-            var query = new Query("Table");
+            Query query = new Query("Table");
 
             compiler.Compile(query.Clone().Where("Id", op, 1));
             compiler.Compile(query.Clone().OrWhere("Id", op, 1));
@@ -117,9 +117,9 @@ namespace SqlKata.Tests
         [Fact]
         public void ShouldAllowWhiteListedOperatorsInNestedWhere()
         {
-            var compiler = new SqlServerCompiler().Whitelist("!!");
+            Compiler compiler = new SqlServerCompiler().Whitelist("!!");
 
-            var query = new Query("Table")
+            Query query = new Query("Table")
                 .Where(q => q.Where("A", "!!", "value"));
 
             compiler.Compile(query);
@@ -128,11 +128,10 @@ namespace SqlKata.Tests
         [Fact]
         public void ShouldNotConsiderWhereRawCondition()
         {
-            var compiler = new SqlServerCompiler();
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
-            var query = new Query("Table")
+            Query query = new Query("Table")
                 .WhereRaw("Col !! value");
-
         }
 
     }

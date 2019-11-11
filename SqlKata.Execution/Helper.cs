@@ -6,7 +6,7 @@ namespace SqlKata.Execution
     {
         internal static XQuery CastToXQuery(Query query, string method = null)
         {
-            var xQuery = query as XQuery;
+            XQuery xQuery = query as XQuery;
 
             if (xQuery is null)
             {
@@ -21,12 +21,11 @@ namespace SqlKata.Execution
             }
 
             return xQuery;
-
         }
 
         internal static QueryFactory CreateQueryFactory(XQuery xQuery)
         {
-            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
+            QueryFactory factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
 
             factory.Logger = xQuery.Logger;
 
@@ -35,9 +34,9 @@ namespace SqlKata.Execution
 
         internal static QueryFactory CreateQueryFactory(Query query)
         {
-            var xQuery = CastToXQuery(query);
+            XQuery xQuery = CastToXQuery(query);
 
-            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
+            QueryFactory factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
 
             factory.Logger = xQuery.Logger;
 

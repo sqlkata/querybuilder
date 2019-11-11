@@ -16,8 +16,8 @@ namespace SqlKata.Tests.Sqlite
         [Fact]
         public void WithNoLimitNorOffset()
         {
-            var query = new Query("Table");
-            var context = new SqlResult { Query = query };
+            Query query = new Query("Table");
+            SqlResult context = new SqlResult { Query = query };
 
             Assert.Null(compiler.CompileLimit(context));
         }
@@ -25,8 +25,8 @@ namespace SqlKata.Tests.Sqlite
         [Fact]
         public void WithNoOffset()
         {
-            var query = new Query("Table").Limit(10);
-            var context = new SqlResult { Query = query };
+            Query query = new Query("Table").Limit(10);
+            SqlResult context = new SqlResult { Query = query };
 
             Assert.Equal("LIMIT ?", compiler.CompileLimit(context));
             Assert.Equal(10, context.Bindings[0]);
@@ -35,8 +35,8 @@ namespace SqlKata.Tests.Sqlite
         [Fact]
         public void WithNoLimit()
         {
-            var query = new Query("Table").Offset(20);
-            var context = new SqlResult { Query = query };
+            Query query = new Query("Table").Offset(20);
+            SqlResult context = new SqlResult { Query = query };
 
             Assert.Equal("LIMIT -1 OFFSET ?", compiler.CompileLimit(context));
             Assert.Equal(20, context.Bindings[0]);
@@ -46,8 +46,8 @@ namespace SqlKata.Tests.Sqlite
         [Fact]
         public void WithLimitAndOffset()
         {
-            var query = new Query("Table").Limit(5).Offset(20);
-            var context = new SqlResult { Query = query };
+            Query query = new Query("Table").Limit(5).Offset(20);
+            SqlResult context = new SqlResult { Query = query };
 
             Assert.Equal("LIMIT ? OFFSET ?", compiler.CompileLimit(context));
             Assert.Equal(5, context.Bindings[0]);

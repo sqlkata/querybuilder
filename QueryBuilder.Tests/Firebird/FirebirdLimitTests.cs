@@ -16,8 +16,8 @@ namespace SqlKata.Tests.Firebird
         [Fact]
         public void NoLimitNorOffset()
         {
-            var query = new Query("Table");
-            var context = new SqlResult {Query = query};
+            Query query = new Query("Table");
+            SqlResult context = new SqlResult {Query = query};
 
             Assert.Null(compiler.CompileLimit(context));
         }
@@ -25,8 +25,8 @@ namespace SqlKata.Tests.Firebird
         [Fact]
         public void LimitOnly()
         {
-            var query = new Query("Table").Limit(10);
-            var context = new SqlResult {Query = query};
+            Query query = new Query("Table").Limit(10);
+            SqlResult context = new SqlResult {Query = query};
 
             Assert.Null(compiler.CompileLimit(context));
         }
@@ -34,8 +34,8 @@ namespace SqlKata.Tests.Firebird
         [Fact]
         public void OffsetOnly()
         {
-            var query = new Query("Table").Offset(20);
-            var context = new SqlResult {Query = query};
+            Query query = new Query("Table").Offset(20);
+            SqlResult context = new SqlResult {Query = query};
 
             Assert.Null(compiler.CompileLimit(context));
         }
@@ -43,8 +43,8 @@ namespace SqlKata.Tests.Firebird
         [Fact]
         public void LimitAndOffset()
         {
-            var query = new Query("Table").Limit(5).Offset(20);
-            var context = new SqlResult {Query = query};
+            Query query = new Query("Table").Limit(5).Offset(20);
+            SqlResult context = new SqlResult {Query = query};
 
             Assert.Equal("ROWS ? TO ?", compiler.CompileLimit(context));
             Assert.Equal(21, context.Bindings[0]);

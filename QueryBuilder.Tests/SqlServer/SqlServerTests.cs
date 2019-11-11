@@ -17,16 +17,16 @@ namespace SqlKata.Tests.SqlServer
         [Fact]
         public void SqlServerTop()
         {
-            var query = new Query("table").Limit(1);
-            var result = compiler.Compile(query);
+            Query query = new Query("table").Limit(1);
+            SqlResult result = compiler.Compile(query);
             Assert.Equal("SELECT TOP (@p0) * FROM [table]", result.Sql);
         }
 
         [Fact]
         public void SqlServerTopWithDistinct()
         {
-            var query = new Query("table").Limit(1).Distinct();
-            var result = compiler.Compile(query);
+            Query query = new Query("table").Limit(1).Distinct();
+            SqlResult result = compiler.Compile(query);
             Assert.Equal("SELECT DISTINCT TOP (@p0) * FROM [table]", result.Sql);
         }
 
@@ -36,10 +36,10 @@ namespace SqlKata.Tests.SqlServer
         [InlineData(0)]
         public void OffsetSqlServer_Should_Be_Ignored_If_Zero_Or_Negative(int offset)
         {
-            var q = new Query().From("users").Offset(offset);
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Query query = new Query().From("users").Offset(offset);
+            SqlResult result = Compilers.CompileFor(EngineCodes.SqlServer, query);
 
-            Assert.Equal("SELECT * FROM [users]", c.ToString());
+            Assert.Equal("SELECT * FROM [users]", result.ToString());
         }
 
 
@@ -52,11 +52,11 @@ namespace SqlKata.Tests.SqlServer
         [InlineData(1000000)]
         public void OffsetSqlServer_Should_Be_Incremented_By_One(int offset)
         {
-            var q = new Query().From("users").Offset(offset);
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Query query = new Query().From("users").Offset(offset);
+            SqlResult result = Compilers.CompileFor(EngineCodes.SqlServer, query);
             Assert.Equal(
                 "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= " +
-                (offset + 1), c.ToString());
+                (offset + 1), result.ToString());
         }
     }
 }

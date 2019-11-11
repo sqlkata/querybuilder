@@ -20,12 +20,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDateTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDate("STAMP", "=", "2018-04-01");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", context.RawSql);
@@ -37,12 +37,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartDateTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("date", "STAMP", "=", "2018-04-01");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'YY-MM-DD') = TO_CHAR(TO_DATE(?, 'YY-MM-DD'), 'YY-MM-DD')", context.RawSql);
@@ -54,12 +54,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereTimeWithSecondsTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereTime("STAMP", "=", "19:01:10");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", context.RawSql);
@@ -71,12 +71,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartTimeWithSecondsTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("time", "STAMP", "=", "19:01:10");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI:SS'), 'HH24:MI:SS')", context.RawSql);
@@ -88,12 +88,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereTimeWithoutSecondsTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereTime("STAMP", "=", "19:01");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", context.RawSql);
@@ -105,12 +105,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartTimeWithoutSecondsTest()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("time", "STAMP", "=", "19:01");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE TO_CHAR(\"STAMP\", 'HH24:MI:SS') = TO_CHAR(TO_DATE(?, 'HH24:MI'), 'HH24:MI:SS')", context.RawSql);
@@ -122,12 +122,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartYear()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("year", "STAMP", "=", "2018");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(YEAR FROM \"STAMP\") = ?", context.RawSql);
@@ -139,12 +139,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartMonth()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("month", "STAMP", "=", "9");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MONTH FROM \"STAMP\") = ?", context.RawSql);
@@ -156,12 +156,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartDay()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("day", "STAMP", "=", "15");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(DAY FROM \"STAMP\") = ?", context.RawSql);
@@ -173,12 +173,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartHour()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("hour", "STAMP", "=", "15");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(HOUR FROM \"STAMP\") = ?", context.RawSql);
@@ -190,12 +190,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartMinute()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("minute", "STAMP", "=", "25");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(MINUTE FROM \"STAMP\") = ?", context.RawSql);
@@ -207,12 +207,12 @@ namespace SqlKata.Tests.Oracle
         public void SimpleWhereDatePartSecond()
         {
             // Arrange:
-            var query = new Query(TableName)
+            Query query = new Query(TableName)
                 .Select()
                 .WhereDatePart("second", "STAMP", "=", "59");
 
             // Act:
-            var context = compiler.Compile(query);
+            SqlResult context = compiler.Compile(query);
 
             // Assert:
             Assert.Equal($"SELECT * FROM \"{TableName}\" WHERE EXTRACT(SECOND FROM \"STAMP\") = ?", context.RawSql);
