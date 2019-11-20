@@ -307,7 +307,7 @@ namespace SqlKata.Compilers
             return context;
         }
 
-        private SqlResult IfInsertCase(SqlResult context, string table, InsertClause insertClause)
+        private SqlResult InsertSqlClause(SqlResult context, string table, InsertClause insertClause)
         {
             string columns = string.Join(", ", WrapArray(insertClause.Columns));
             string values = string.Join(", ", Parameterize(context, insertClause.Values));
@@ -332,11 +332,11 @@ namespace SqlKata.Compilers
 
             if (inserts[0] is InsertClause insertClause)
             {
-                context = IfInsertCase(context, table, insertClause);
+                context = InsertSqlClause(context, table, insertClause);
             }
             else
             {
-                ElseInsertCase(context, table, inserts);
+                RawSqlInsert(ref context, table, inserts);
             }
 
             if (inserts.Count > 1)
@@ -353,7 +353,7 @@ namespace SqlKata.Compilers
             return context;
         }
 
-        private void ElseInsertCase(SqlResult context, string table, List<AbstractInsertClause> inserts)
+        private void RawSqlInsert(ref SqlResult context, string table, List<AbstractInsertClause> inserts)
         {
             InsertQueryClause clause = inserts[0] as InsertQueryClause;
 
