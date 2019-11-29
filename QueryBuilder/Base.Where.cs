@@ -67,9 +67,9 @@ namespace SqlKata
         /// <returns></returns>
         public Q Where(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
+            Dictionary<string, object> dictionary = new Dictionary<string, object>();
 
-            foreach (var item in constraints.GetType().GetRuntimeProperties())
+            foreach (PropertyInfo item in constraints.GetType().GetRuntimeProperties())
             {
                 dictionary.Add(item.Name, item.GetValue(constraints));
             }
@@ -79,11 +79,11 @@ namespace SqlKata
 
         public Q Where(IReadOnlyDictionary<string, object> values)
         {
-            var query = (Q)this;
-            var orFlag = GetOr();
-            var notFlag = GetNot();
+            Q query = (Q)this;
+            bool orFlag = GetOr();
+            bool notFlag = GetNot();
 
-            foreach (var tuple in values)
+            foreach (KeyValuePair <string, object> tuple in values)
             {
                 if (orFlag)
                 {
@@ -123,7 +123,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q Where(Func<Q, Q> callback)
         {
-            var query = callback.Invoke(NewChild());
+            Q query = callback.Invoke(NewChild());
 
             // omit empty queries
             if (!query.Clauses.Where(x => x.Component == "where").Any())
@@ -421,7 +421,7 @@ namespace SqlKata
         }
         public Q WhereIn(string column, Func<Query, Query> callback)
         {
-            var query = callback.Invoke(new Query().SetParent(this));
+            Query query = callback.Invoke(new Query().SetParent(this));
 
             return WhereIn(column, query);
         }
@@ -465,7 +465,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q Where(string column, string op, Func<Q, Q> callback)
         {
-            var query = callback.Invoke(NewChild());
+            Q query = callback.Invoke(NewChild());
 
             return Where(column, op, query);
         }
@@ -538,7 +538,7 @@ namespace SqlKata
         }
         public Q WhereExists(Func<Query, Query> callback)
         {
-            var childQuery = new Query().SetParent(this);
+            Query childQuery = new Query().SetParent(this);
             return WhereExists(callback.Invoke(childQuery));
         }
 

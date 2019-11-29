@@ -16,7 +16,7 @@ namespace SqlKata
                 .ToArray();
 
 
-            foreach (var column in columns)
+            foreach (string column in columns)
             {
                 AddComponent("select", new Column
                 {

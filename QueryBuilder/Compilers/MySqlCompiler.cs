@@ -10,10 +10,10 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.MySql;
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
 
             if (offset == 0 && limit == 0)
@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
             if (offset == 0)
             {
-                ctx.Bindings.Add(limit);
+                context.Bindings.Add(limit);
                 return "LIMIT ?";
             }
 
@@ -33,17 +33,16 @@ namespace SqlKata.Compilers
                 // MySql will not accept offset without limit, so we will put a large number
                 // to avoid this error.
 
-                ctx.Bindings.Add(offset);
+                context.Bindings.Add(offset);
                 return "LIMIT 18446744073709551615 OFFSET ?";
             }
 
             // We have both values
 
-            ctx.Bindings.Add(limit);
-            ctx.Bindings.Add(offset);
+            context.Bindings.Add(limit);
+            context.Bindings.Add(offset);
 
             return "LIMIT ? OFFSET ?";
-
         }
     }
 }

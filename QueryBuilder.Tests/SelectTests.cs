@@ -1,6 +1,7 @@
 ﻿using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -10,8 +11,8 @@ namespace SqlKata.Tests
         [Fact]
         public void BasicSelect()
         {
-            var q = new Query().From("users").Select("id", "name");
-            var c = Compile(q);
+            Query q = new Query().From("users").Select("id", "name");
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `id`, `name` FROM `users`", c[EngineCodes.MySql]);
@@ -23,13 +24,13 @@ namespace SqlKata.Tests
         [Fact]
         public void BasicSelectWhereBindingIsEmptyOrNull()
         {
-            var q = new Query()
+            Query q = new Query()
                 .From("users")
                 .Select("id", "name")
                 .Where("author", "")
                 .OrWhere("author", null);
 
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users] WHERE [author] = '' OR [author] IS NULL", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `id`, `name` FROM `users` WHERE `author` = '' OR `author` IS NULL", c[EngineCodes.MySql]);
@@ -40,8 +41,8 @@ namespace SqlKata.Tests
         [Fact]
         public void BasicSelectWithAlias()
         {
-            var q = new Query().From("users as u").Select("id", "name");
-            var c = Compile(q);
+            Query q = new Query().From("users as u").Select("id", "name");
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users] AS [u]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `id`, `name` FROM `users` AS `u`", c[EngineCodes.MySql]);
@@ -52,8 +53,8 @@ namespace SqlKata.Tests
         [Fact]
         public void ExpandedSelect()
         {
-            var q = new Query().From("users").Select("users.{id,name, age}");
-            var c = Compile(q);
+            Query q = new Query().From("users").Select("users.{id,name, age}");
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [users].[id], [users].[name], [users].[age] FROM [users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `users`.`id`, `users`.`name`, `users`.`age` FROM `users`", c[EngineCodes.MySql]);
@@ -62,8 +63,8 @@ namespace SqlKata.Tests
         [Fact]
         public void ExpandedSelectWithSchema()
         {
-            var q = new Query().From("users").Select("dbo.users.{id,name, age}");
-            var c = Compile(q);
+            Query q = new Query().From("users").Select("dbo.users.{id,name, age}");
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name], [dbo].[users].[age] FROM [users]", c[EngineCodes.SqlServer]);
         }
@@ -71,11 +72,11 @@ namespace SqlKata.Tests
         [Fact]
         public void NestedEmptyWhereAtFirstCondition()
         {
-            var query = new Query("table")
+            Query query = new Query("table")
                 .Where(q => new Query())
                 .Where("id", 1);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [table] WHERE [id] = 1", c[EngineCodes.SqlServer]);
 
@@ -86,9 +87,9 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereTrue()
         {
-            var query = new Query("Table").WhereTrue("IsActive");
+            Query query = new Query("Table").WhereTrue("IsActive");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(1 as bit)", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = true", c[EngineCodes.MySql]);
@@ -99,9 +100,9 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereFalse()
         {
-            var query = new Query("Table").WhereFalse("IsActive");
+            Query query = new Query("Table").WhereFalse("IsActive");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(0 as bit)", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = false", c[EngineCodes.MySql]);
@@ -112,9 +113,9 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereFalse()
         {
-            var query = new Query("Table").Where("MyCol", "abc").OrWhereFalse("IsActive");
+            Query query = new Query("Table").Where("MyCol", "abc").OrWhereFalse("IsActive");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(0 as bit)", c[EngineCodes.SqlServer]);
 
@@ -125,9 +126,9 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereTrue()
         {
-            var query = new Query("Table").Where("MyCol", "abc").OrWhereTrue("IsActive");
+            Query query = new Query("Table").Where("MyCol", "abc").OrWhereTrue("IsActive");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(1 as bit)", c[EngineCodes.SqlServer]);
 
@@ -138,9 +139,9 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereNull()
         {
-            var query = new Query("Table").Where("MyCol", "abc").OrWhereNull("IsActive");
+            Query query = new Query("Table").Where("MyCol", "abc").OrWhereNull("IsActive");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] IS NULL", c[EngineCodes.SqlServer]);
 
@@ -150,11 +151,11 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            Query subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
 
-            var query = new Query("Table").WhereSub(subQuery, 1);
+            Query query = new Query("Table").WhereSub(subQuery, 1);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1", c[EngineCodes.SqlServer]);
 
@@ -164,11 +165,11 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            Query subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
 
-            var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
+            Query query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1", c[EngineCodes.SqlServer]);
 
@@ -178,9 +179,9 @@ namespace SqlKata.Tests
         [Fact]
         public void PassingArrayAsParameter()
         {
-            var query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
+            Query query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [Id] in (1,2,3)", c[EngineCodes.SqlServer]);
         }
@@ -188,9 +189,9 @@ namespace SqlKata.Tests
         [Fact]
         public void UsingJsonArray()
         {
-            var query = new Query("Table").WhereRaw("[Json]->'address'->>'country' in (?)", new[] { 1, 2, 3, 4 });
+            Query query = new Query("Table").WhereRaw("[Json]->'address'->>'country' in (?)", new[] { 1, 2, 3, 4 });
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"Json\"->'address'->>'country' in (1,2,3,4)", c[EngineCodes.PostgreSql]);
         }
@@ -198,10 +199,10 @@ namespace SqlKata.Tests
         [Fact]
         public void Union()
         {
-            var laptops = new Query("Laptops");
-            var mobiles = new Query("Phones").Union(laptops);
+            Query laptops = new Query("Laptops");
+            Query mobiles = new Query("Phones").Union(laptops);
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\"", c[EngineCodes.Sqlite]);
@@ -212,10 +213,10 @@ namespace SqlKata.Tests
         [Fact]
         public void UnionWithBindings()
         {
-            var laptops = new Query("Laptops").Where("Type", "A");
-            var mobiles = new Query("Phones").Union(laptops);
+            Query laptops = new Query("Laptops").Where("Type", "A");
+            Query mobiles = new Query("Phones").Union(laptops);
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'", c[EngineCodes.Sqlite]);
@@ -226,9 +227,9 @@ namespace SqlKata.Tests
         [Fact]
         public void RawUnionWithBindings()
         {
-            var mobiles = new Query("Phones").UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A");
+            Query mobiles = new Query("Phones").UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A");
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'", c[EngineCodes.MySql]);
@@ -237,12 +238,12 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleUnion()
         {
-            var laptops = new Query("Laptops");
-            var tablets = new Query("Tablets");
+            Query laptops = new Query("Laptops");
+            Query tablets = new Query("Tablets");
 
-            var mobiles = new Query("Phones").Union(laptops).Union(tablets);
+            Query mobiles = new Query("Phones").Union(laptops).Union(tablets);
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] UNION SELECT * FROM [Tablets]",
                 c[EngineCodes.SqlServer]);
@@ -255,12 +256,12 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleUnionWithBindings()
         {
-            var laptops = new Query("Laptops").Where("Price", ">", 1000);
-            var tablets = new Query("Tablets").Where("Price", ">", 2000);
+            Query laptops = new Query("Laptops").Where("Price", ">", 1000);
+            Query tablets = new Query("Tablets").Where("Price", ">", 2000);
 
-            var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).Union(tablets);
+            Query mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).Union(tablets);
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal(
                 "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION SELECT * FROM [Tablets] WHERE [Price] > 2000",
@@ -275,13 +276,13 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleUnionWithBindingsAndPagination()
         {
-            var laptops = new Query("Laptops").Where("Price", ">", 1000);
-            var tablets = new Query("Tablets").Where("Price", ">", 2000).ForPage(2);
+            Query laptops = new Query("Laptops").Where("Price", ">", 1000);
+            Query tablets = new Query("Tablets").Where("Price", ">", 2000).ForPage(2);
 
-            var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).UnionAll(tablets);
+            Query mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).UnionAll(tablets);
 
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal(
                 "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION ALL SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30",
@@ -296,12 +297,12 @@ namespace SqlKata.Tests
         [Fact]
         public void UnionWithCallbacks()
         {
-            var mobiles = new Query("Phones")
+            Query mobiles = new Query("Phones")
                 .Where("Price", "<", 3000)
                 .Union(q => q.From("Laptops"))
                 .UnionAll(q => q.From("Tablets"));
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal(
                 "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] UNION ALL SELECT * FROM [Tablets]",
@@ -316,7 +317,7 @@ namespace SqlKata.Tests
         [Fact]
         public void UnionWithDifferentEngine()
         {
-            var mobiles = new Query("Phones")
+            Query mobiles = new Query("Phones")
                 .Where("Price", "<", 300)
                 .ForSqlServer(scope => scope.Except(q => q.From("Phones").WhereNot("Os", "iOS")))
                 .ForPostgreSql(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
@@ -324,7 +325,7 @@ namespace SqlKata.Tests
                 .ForFirebird(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
                 .UnionAll(q => q.From("Tablets").Where("Price", "<", 100));
 
-            var c = Compile(mobiles);
+            IReadOnlyDictionary<string, string> c = Compile(mobiles);
 
             Assert.Equal(
                 "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS') UNION ALL SELECT * FROM [Tablets] WHERE [Price] < 100",
@@ -346,9 +347,9 @@ namespace SqlKata.Tests
         [Fact]
         public void CombineRaw()
         {
-            var query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM Devices");
+            Query query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM Devices");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Mobiles] UNION ALL SELECT * FROM Devices", c[EngineCodes.SqlServer]);
         }
@@ -356,9 +357,9 @@ namespace SqlKata.Tests
         [Fact]
         public void CombineRawWithPlaceholders()
         {
-            var query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM {Devices}");
+            Query query = new Query("Mobiles").CombineRaw("UNION ALL SELECT * FROM {Devices}");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Mobiles] UNION ALL SELECT * FROM [Devices]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT * FROM `Mobiles` UNION ALL SELECT * FROM `Devices`", c[EngineCodes.MySql]);
@@ -370,9 +371,9 @@ namespace SqlKata.Tests
         public void NestedEmptyWhere()
         {
             // Empty nested where should be ignored
-            var query = new Query("A").Where(q => new Query().Where(q2 => new Query().Where(q3 => new Query())));
+            Query query = new Query("A").Where(q => new Query().Where(q2 => new Query().Where(q3 => new Query())));
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [A]", c[EngineCodes.SqlServer]);
         }
@@ -380,9 +381,9 @@ namespace SqlKata.Tests
         [Fact]
         public void NestedQuery()
         {
-            var query = new Query("A").Where(q => new Query("B"));
+            Query query = new Query("A").Where(q => new Query("B"));
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [A]", c[EngineCodes.SqlServer]);
         }
@@ -391,11 +392,11 @@ namespace SqlKata.Tests
         public void NestedQueryAfterNestedJoin()
         {
             // in this test, i am testing the compiler dynamic caching functionality
-            var query = new Query("users")
+            Query query = new Query("users")
                 .Join("countries", j => j.On("countries.id", "users.country_id"))
                 .Where(q => new Query());
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON ([countries].[id] = [users].[country_id])",
                 c[EngineCodes.SqlServer]);
@@ -404,16 +405,16 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleCte()
         {
-            var q1 = new Query("A");
-            var q2 = new Query("B");
-            var q3 = new Query("C");
+            Query q1 = new Query("A");
+            Query q2 = new Query("B");
+            Query q3 = new Query("C");
 
-            var query = new Query("A")
+            Query query = new Query("A")
                 .With("A", q1)
                 .With("B", q2)
                 .With("C", q3);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "WITH [A] AS (SELECT * FROM [A]),\n[B] AS (SELECT * FROM [B]),\n[C] AS (SELECT * FROM [C])\nSELECT * FROM [A]",
@@ -423,7 +424,7 @@ namespace SqlKata.Tests
         [Fact]
         public void CteAndBindings()
         {
-            var query = new Query("Races")
+            Query query = new Query("Races")
                 .For("mysql", s =>
                     s.With("range", q =>
                             q.From("seqtbl")
@@ -449,7 +450,7 @@ namespace SqlKata.Tests
                 .Where("Id", ">", 55)
                 .WhereBetween("Value", 18, 24);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal(
                 "WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78)\nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [results_wrapper] WHERE [row_num] BETWEEN 21 AND 45",
@@ -472,23 +473,23 @@ namespace SqlKata.Tests
         [Fact]
         public void CascadedCteAndBindings()
         {
-            var cte1 = new Query("Table1");
+            Query cte1 = new Query("Table1");
             cte1.Select("Column1", "Column2");
             cte1.Where("Column2", 1);
 
-            var cte2 = new Query("Table2");
+            Query cte2 = new Query("Table2");
             cte2.With("cte1", cte1);
             cte2.Select("Column3", "Column4");
             cte2.Join("cte1", join => join.On("Column1", "Column3"));
             cte2.Where("Column4", 2);
 
-            var mainQuery = new Query("Table3");
+            Query mainQuery = new Query("Table3");
             mainQuery.With("cte2", cte2);
             mainQuery.Select("*");
             mainQuery.From("cte2");
             mainQuery.Where("Column3", 5);
 
-            var c = Compile(mainQuery);
+            IReadOnlyDictionary<string, string> c = Compile(mainQuery);
 
             Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
 
@@ -503,30 +504,30 @@ namespace SqlKata.Tests
         [Fact]
         public void CascadedAndMultiReferencedCteAndBindings()
         {
-            var cte1 = new Query("Table1");
+            Query cte1 = new Query("Table1");
             cte1.Select("Column1", "Column2");
             cte1.Where("Column2", 1);
 
-            var cte2 = new Query("Table2");
+            Query cte2 = new Query("Table2");
             cte2.With("cte1", cte1);
             cte2.Select("Column3", "Column4");
             cte2.Join("cte1", join => join.On("Column1", "Column3"));
             cte2.Where("Column4", 2);
 
-            var cte3 = new Query("Table3");
+            Query cte3 = new Query("Table3");
             cte3.With("cte1", cte1);
             cte3.Select("Column3_3", "Column3_4");
             cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
             cte3.Where("Column3_4", 33);
 
-            var mainQuery = new Query("Table3");
+            Query mainQuery = new Query("Table3");
             mainQuery.With("cte2", cte2);
             mainQuery.With("cte3", cte3);
             mainQuery.Select("*");
             mainQuery.From("cte2");
             mainQuery.Where("Column3", 5);
 
-            var c = Compile(mainQuery);
+            IReadOnlyDictionary<string, string> c = Compile(mainQuery);
 
             Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5", c[EngineCodes.SqlServer]);
 
@@ -541,21 +542,21 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleCtesAndBindings()
         {
-            var cte1 = new Query("Table1");
+            Query cte1 = new Query("Table1");
             cte1.Select("Column1", "Column2");
             cte1.Where("Column2", 1);
 
-            var cte2 = new Query("Table2");
+            Query cte2 = new Query("Table2");
             cte2.Select("Column3", "Column4");
             cte2.Join("cte1", join => join.On("Column1", "Column3"));
             cte2.Where("Column4", 2);
 
-            var cte3 = new Query("Table3");
+            Query cte3 = new Query("Table3");
             cte3.Select("Column3_3", "Column3_4");
             cte3.Join("cte1", join => join.On("Column1", "Column3_3"));
             cte3.Where("Column3_4", 33);
 
-            var mainQuery = new Query("Table3");
+            Query mainQuery = new Query("Table3");
             mainQuery.With("cte1", cte1);
             mainQuery.With("cte2", cte2);
             mainQuery.With("cte3", cte3);
@@ -563,7 +564,7 @@ namespace SqlKata.Tests
             mainQuery.From("cte3");
             mainQuery.Where("Column3_4", 5);
 
-            var c = Compile(mainQuery);
+            IReadOnlyDictionary<string, string> c = Compile(mainQuery);
 
             Assert.Equal("WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5", c[EngineCodes.SqlServer]);
 
@@ -578,8 +579,8 @@ namespace SqlKata.Tests
         [Fact]
         public void Limit()
         {
-            var q = new Query().From("users").Select("id", "name").Limit(10);
-            var c = Compile(q);
+            Query q = new Query().From("users").Select("id", "name").Limit(10);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             // Assert.Equal(c[EngineCodes.SqlServer], "SELECT * FROM (SELECT [id], [name],ROW_NUMBER() OVER (SELECT 0) AS [row_num] FROM [users]) AS [temp_table] WHERE [row_num] >= 10");
             Assert.Equal("SELECT TOP (10) [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
@@ -591,8 +592,8 @@ namespace SqlKata.Tests
         [Fact]
         public void Offset()
         {
-            var q = new Query().From("users").Offset(10);
-            var c = Compile(q);
+            Query q = new Query().From("users").Offset(10);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal(
                 "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= 11",
@@ -605,9 +606,9 @@ namespace SqlKata.Tests
         [Fact]
         public void LimitOffset()
         {
-            var q = new Query().From("users").Offset(10).Limit(5);
+            Query q = new Query().From("users").Offset(10).Limit(5);
 
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal(
                 "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] BETWEEN 11 AND 15",
@@ -620,9 +621,9 @@ namespace SqlKata.Tests
         [Fact]
         public void BasicJoin()
         {
-            var q = new Query().From("users").Join("countries", "countries.id", "users.country_id");
+            Query q = new Query().From("users").Join("countries", "countries.id", "users.country_id");
 
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
                 c[EngineCodes.SqlServer]);
@@ -637,10 +638,10 @@ namespace SqlKata.Tests
         [InlineData("cross join", "CROSS JOIN")]
         public void JoinTypes(string given, string output)
         {
-            var q = new Query().From("users")
+            Query q = new Query().From("users")
                 .Join("countries", "countries.id", "users.country_id", "=", given);
 
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal($"SELECT * FROM [users] \n{output} [countries] ON [countries].[id] = [users].[country_id]",
                 c[EngineCodes.SqlServer]);
@@ -660,9 +661,9 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereRawEscaped()
         {
-            var query = new Query("Table").WhereRaw("[MyCol] = ANY(?::int\\[\\])", "{1,2,3}");
+            Query query = new Query("Table").WhereRaw("[MyCol] = ANY(?::int\\[\\])", "{1,2,3}");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
         }
@@ -670,9 +671,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Having()
         {
-            var q = new Query("Table1")
+            Query q = new Query("Table1")
                 .Having("Column1", ">", 1);
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1", c[EngineCodes.SqlServer]);
         }
@@ -680,10 +681,10 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleHaving()
         {
-            var q = new Query("Table1")
+            Query q = new Query("Table1")
                 .Having("Column1", ">", 1)
                 .Having("Column2", "=", 1);
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1", c[EngineCodes.SqlServer]);
         }
@@ -691,10 +692,10 @@ namespace SqlKata.Tests
         [Fact]
         public void MultipleOrHaving()
         {
-            var q = new Query("Table1")
+            Query q = new Query("Table1")
                 .Having("Column1", ">", 1)
                 .OrHaving("Column2", "=", 1);
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1", c[EngineCodes.SqlServer]);
         }

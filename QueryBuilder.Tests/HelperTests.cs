@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -14,7 +15,7 @@ namespace SqlKata.Tests
         [InlineData("   ")]
         public void ItShouldKeepItAsIs(string input)
         {
-            var output = Helper.ReplaceAll(input, "any", x => x + "");
+            string output = Helper.ReplaceAll(input, "any", x => x + "");
 
             Assert.Equal(input, output);
         }
@@ -28,7 +29,7 @@ namespace SqlKata.Tests
         [InlineData(" ? ? hello", " @ @ hello")]
         public void ReplaceOnTheBegining(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => "@");
+            string output = Helper.ReplaceAll(input, "?", x => "@");
             Assert.Equal(expected, output);
         }
 
@@ -39,7 +40,7 @@ namespace SqlKata.Tests
         [InlineData("hello ? ?? ? ", "hello @ @@ @ ")]
         public void ReplaceOnTheEnd(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => "@");
+            string output = Helper.ReplaceAll(input, "?", x => "@");
             Assert.Equal(expected, output);
         }
 
@@ -51,7 +52,7 @@ namespace SqlKata.Tests
         [InlineData("????", "0123")]
         public void ReplaceWithPositions(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => x + "");
+            string output = Helper.ReplaceAll(input, "?", x => x + "");
             Assert.Equal(expected, output);
         }
 
@@ -59,13 +60,14 @@ namespace SqlKata.Tests
         public void AllIndexesOf_ReturnIndexes_IfValueIsContainedInAString()
         {
             // Given
-            var input = "hello";
+            string input = "hello";
 
             // When
-            var result = Helper.AllIndexesOf(input, "l");
+            IEnumerable<int> result = Helper.AllIndexesOf(input, "l");
 
             // Then
-            Assert.Equal(new[] { 2, 3 }, result);
+            int[] expected = new[] { 2, 3 };
+            Assert.Equal(expected, result);
         }
 
         [Theory]
@@ -74,10 +76,10 @@ namespace SqlKata.Tests
         public void AllIndexesOf_ReturnEmptyCollection_IfValueIsEmptyOrNull(string value)
         {
             // Given
-            var input = "hello";
+            string input = "hello";
 
             // When
-            var result = Helper.AllIndexesOf(input, value);
+            IEnumerable<int> result = Helper.AllIndexesOf(input, value);
 
             // Then
             Assert.Empty(result);
@@ -87,10 +89,10 @@ namespace SqlKata.Tests
         public void AllIndexesOf_ReturnEmptyCollection_IfValueIsNotContainedInAString()
         {
             // Given
-            var input = "hello";
+            string input = "hello";
 
             // When
-            var result = Helper.AllIndexesOf(input, "F");
+            IEnumerable<int> result = Helper.AllIndexesOf(input, "F");
 
             // Then
             Assert.Empty(result);
@@ -100,7 +102,7 @@ namespace SqlKata.Tests
         public void Flatten_ReturnFlatttenDeepCollectionRecursively_IfArrayIsNested()
         {
             // Given
-            var objects = new object[]
+            object[] objects = new object[]
             {
                 1,
                 0.1,
@@ -118,7 +120,7 @@ namespace SqlKata.Tests
             };
 
             // When
-            var flatten = Helper.FlattenDeep(objects);
+            IEnumerable<object> flatten = Helper.FlattenDeep(objects);
 
             // Then
             Assert.Equal(new object[] { 1, 0.1, 'A', 'A', "B", "C", 'D' }, flatten);
@@ -128,7 +130,7 @@ namespace SqlKata.Tests
         public void Flatten_FlatOneLevel()
         {
             // Given
-            var objects = new object[]
+            object[] objects = new object[]
             {
                 1,
                 new object[]
@@ -140,16 +142,17 @@ namespace SqlKata.Tests
             };
 
             // When
-            var flatten = Helper.Flatten(objects);
+            IEnumerable<object> flatten = Helper.Flatten(objects);
 
             // Then
-            Assert.Equal(new[] { 4, 5, 6 }, flatten.ElementAt(3));
+            int[] expected = new[] { 4, 5, 6 };
+            Assert.Equal(expected, flatten.ElementAt(3));
         }
         [Fact]
         public void Flatten_ShouldRemoveEmptyCollections()
         {
             // Given
-            var objects = new object[]
+            object[] objects = new object[]
             {
                 1,
                 new object[] {},
@@ -161,7 +164,7 @@ namespace SqlKata.Tests
             };
 
             // When
-            var flatten = Helper.Flatten(objects);
+            IEnumerable<object> flatten = Helper.Flatten(objects);
 
             // Then
             Assert.Equal(new object[] { 1, 2, 3 }, flatten);
@@ -174,7 +177,7 @@ namespace SqlKata.Tests
             IEnumerable test = null;
 
             // When
-            var isArray = Helper.IsArray(test);
+            bool isArray = Helper.IsArray(test);
 
             // Then
             Assert.False(isArray);
@@ -184,10 +187,10 @@ namespace SqlKata.Tests
         public void IsArray_ReturnFalse_IfTypeOfValueIsString()
         {
             // Given
-            var value = "string";
+            string value = "string";
 
             // When
-            var isArray = Helper.IsArray(value);
+            bool isArray = Helper.IsArray(value);
 
             // Then
             Assert.False(isArray);
@@ -197,10 +200,10 @@ namespace SqlKata.Tests
         public void IsArray_ReturnTrue_IfValueIsExactlyIEnumerable()
         {
             // Given
-            var value = new object[] { 1, 'B', "C" };
+            object[] value = new object[] { 1, 'B', "C" };
 
             // When
-            var isArray = Helper.IsArray(value);
+            bool isArray = Helper.IsArray(value);
 
             // Then
             Assert.True(isArray);
@@ -220,7 +223,7 @@ namespace SqlKata.Tests
         [Fact]
         public void ExpandParameters()
         {
-            var expanded = Helper.ExpandParameters("where id = ? or id in (?) or id in (?)", "?", new object[] { 1, new[] { 1, 2 }, new object[] { } });
+            string expanded = Helper.ExpandParameters("where id = ? or id in (?) or id in (?)", "?", new object[] { 1, new[] { 1, 2 }, new object[] { } });
 
             Assert.Equal("where id = ? or id in (?,?) or id in ()", expanded);
         }
@@ -230,7 +233,7 @@ namespace SqlKata.Tests
         [InlineData(@"{ text {", @"\", "{", "[", "[ text [")]
         public void WrapIdentifiers(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
         {
-            var result = input.ReplaceIdentifierUnlessEscaped(escapeCharacter, identifier, newIdentifier);
+            string result = input.ReplaceIdentifierUnlessEscaped(escapeCharacter, identifier, newIdentifier);
             Assert.Equal(expected, result);
         }
     }

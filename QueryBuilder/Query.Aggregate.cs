@@ -21,7 +21,7 @@ namespace SqlKata
 
         public Query AsCount(params string[] columns)
         {
-            var cols = columns.ToList();
+            System.Collections.Generic.List<string> cols = columns.ToList();
 
             if (!cols.Any())
             {

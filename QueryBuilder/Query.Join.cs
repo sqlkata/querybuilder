@@ -7,7 +7,7 @@ namespace SqlKata
 
         private Query Join(Func<Join, Join> callback)
         {
-            var join = callback.Invoke(new Join().AsInner());
+            Join join = callback.Invoke(new Join().AsInner());
 
             return AddComponent("join", new BaseJoin
             {

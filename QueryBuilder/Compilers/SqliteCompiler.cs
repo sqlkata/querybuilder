@@ -23,26 +23,26 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Add(offset);
+                context.Bindings.Add(offset);
                 return "LIMIT -1 OFFSET ?";
             }
 
-            return base.CompileLimit(ctx);
+            return base.CompileLimit(context);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult context, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
-            var value = Parameter(ctx, condition.Value);
+            string column = Wrap(condition.Column);
+            string value = Parameter(context, condition.Value);
 
-            var formatMap = new Dictionary<string, string> {
+            Dictionary<string,string> formatMap = new Dictionary<string, string> {
                 {"date", "%Y-%m-%d"},
                 {"time", "%H:%M:%S"},
                 {"year", "%Y"},
@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
                 return $"{column} {condition.Operator} {value}";
             }
 
-            var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
+            string sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
 
             if (condition.IsNot)
             {

@@ -2,7 +2,9 @@ using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -12,10 +14,10 @@ namespace SqlKata.Tests
         [Fact]
         public void ColumnsEscaping()
         {
-            var q = new Query().From("users")
+            Query q = new Query().From("users")
                 .Select("mycol[isthis]");
 
-            var c = Compile(q);
+            IReadOnlyDictionary<string, string> c = Compile(q);
 
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[EngineCodes.SqlServer]);
         }
@@ -24,13 +26,13 @@ namespace SqlKata.Tests
         [Fact]
         public void InnerScopeEngineWithinCTE()
         {
-            var series = new Query("table")
+            Query series = new Query("table")
                 .ForPostgreSql(q => q.WhereRaw("postgres = true"))
                 .ForSqlServer(q => q.WhereRaw("sqlsrv = 1"))
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
-            var query = new Query("series").With("series", series);
+            Query query = new Query("series").With("series", series);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1)\nSELECT * FROM [series]", c[EngineCodes.SqlServer]);
 
@@ -43,13 +45,13 @@ namespace SqlKata.Tests
         [Fact]
         public void InnerScopeEngineWithinSubQuery()
         {
-            var series = new Query("table")
+            Query series = new Query("table")
                 .ForPostgreSql(q => q.WhereRaw("postgres = true"))
                 .ForSqlServer(q => q.WhereRaw("sqlsrv = 1"))
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
-            var query = new Query("series").From(series.As("series"));
+            Query query = new Query("series").From(series.As("series"));
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT * FROM (SELECT * FROM [table] WHERE sqlsrv = 1) AS [series]", c[EngineCodes.SqlServer]);
 
@@ -60,13 +62,13 @@ namespace SqlKata.Tests
         [Fact]
         public void ItShouldCacheMethodInfoByType()
         {
-            var compiler = new TestSqlServerCompiler();
+            TestSqlServerCompiler compiler = new TestSqlServerCompiler();
 
-            var call1 = compiler.Call_FindCompilerMethodInfo(
+            MethodInfo call1 = compiler.Call_FindCompilerMethodInfo(
                 typeof(BasicCondition), "CompileBasicCondition"
             );
 
-            var call2 = compiler.Call_FindCompilerMethodInfo(
+            MethodInfo call2 = compiler.Call_FindCompilerMethodInfo(
                 typeof(BasicCondition), "CompileBasicCondition"
             );
 
@@ -76,13 +78,13 @@ namespace SqlKata.Tests
         [Fact]
         public void Return_Different_MethodInfo_WhenSame_Method_With_Different_GenericTypes()
         {
-            var compiler = new TestSqlServerCompiler();
+            TestSqlServerCompiler compiler = new TestSqlServerCompiler();
 
-            var call1 = compiler.Call_FindCompilerMethodInfo(
+            MethodInfo call1 = compiler.Call_FindCompilerMethodInfo(
                 typeof(NestedCondition<Query>), "CompileNestedCondition"
             );
 
-            var call2 = compiler.Call_FindCompilerMethodInfo(
+            MethodInfo call2 = compiler.Call_FindCompilerMethodInfo(
                 typeof(NestedCondition<Join>), "CompileNestedCondition"
             );
 
@@ -92,14 +94,14 @@ namespace SqlKata.Tests
         [Fact]
         public void Should_Equal_AfterMultipleCompile()
         {
-            var query = new Query()
+            Query query = new Query()
                 .Select("Id", "Name")
                 .From("Table")
                 .OrderBy("Name")
                 .Limit(20)
                 .Offset(1);
 
-            var first = Compile(query);
+            IReadOnlyDictionary<string, string> first = Compile(query);
             Assert.Equal(
                 "SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [results_wrapper] WHERE [row_num] BETWEEN 2 AND 21",
                 first[EngineCodes.SqlServer]);
@@ -107,7 +109,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1", first[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"TABLE\" ORDER BY \"NAME\" ROWS 2 TO 21", first[EngineCodes.Firebird]);
 
-            var second = Compile(query);
+            IReadOnlyDictionary<string, string> second = Compile(query);
 
             Assert.Equal(first[EngineCodes.SqlServer], second[EngineCodes.SqlServer]);
             Assert.Equal(first[EngineCodes.MySql], second[EngineCodes.MySql]);
@@ -118,9 +120,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Raw_WrapIdentifiers()
         {
-            var query = new Query("Users").SelectRaw("[Id], [Name], {Age}");
+            Query query = new Query("Users").SelectRaw("[Id], [Name], {Age}");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT [Id], [Name], [Age] FROM [Users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `Id`, `Name`, `Age` FROM `Users`", c[EngineCodes.MySql]);
@@ -131,9 +133,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Raw_WrapIdentifiers_Escaped()
         {
-            var query = new Query("Users").SelectRaw("'\\{1,2,3\\}'::int\\[\\]");
+            Query query = new Query("Users").SelectRaw("'\\{1,2,3\\}'::int\\[\\]");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT '{1,2,3}'::int[] FROM \"Users\"", c[EngineCodes.PostgreSql]);
         }
@@ -141,8 +143,7 @@ namespace SqlKata.Tests
         [Fact]
         public void WrapWithSpace()
         {
-            var compiler = new SqlServerCompiler();
-
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
             Assert.Equal("[My Table] AS [Table]", compiler.Wrap("My Table as Table"));
         }
@@ -150,8 +151,7 @@ namespace SqlKata.Tests
         [Fact]
         public void WrapWithDotes()
         {
-            var compiler = new SqlServerCompiler();
-
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
             Assert.Equal("[My Schema].[My Table] AS [Table]", compiler.Wrap("My Schema.My Table as Table"));
         }
@@ -159,8 +159,7 @@ namespace SqlKata.Tests
         [Fact]
         public void WrapWithMultipleSpaces()
         {
-            var compiler = new SqlServerCompiler();
-
+            SqlServerCompiler compiler = new SqlServerCompiler();
 
             Assert.Equal("[My Table One] AS [Table One]", compiler.Wrap("My Table One as Table One"));
         }
@@ -168,12 +167,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CompilerSpecificFrom()
         {
-            var query = new Query()
+            Query query = new Query()
                 .ForSqlServer(q => q.From("mssql"))
                 .ForPostgreSql(q => q.From("pgsql"))
                 .ForMySql(q => q.From("mysql"));
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
             Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
@@ -183,12 +182,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CompilerSpecificFromRaw()
         {
-            var query = new Query()
+            Query query = new Query()
                 .ForSqlServer(q => q.FromRaw("[mssql]"))
                 .ForPostgreSql(q => q.FromRaw("[pgsql]"))
                 .ForMySql(q => q.FromRaw("[mysql]"));
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
             Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
@@ -198,12 +197,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CompilerSpecificFromMixed()
         {
-            var query = new Query()
+            Query query = new Query()
                 .ForSqlServer(q => q.From("mssql"))
                 .ForPostgreSql(q => q.FromRaw("[pgsql]"))
                 .ForMySql(q => q.From("mysql"));
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
             Assert.Equal("SELECT * FROM \"pgsql\"", c[EngineCodes.PostgreSql].RawSql);
@@ -213,11 +212,11 @@ namespace SqlKata.Tests
         [Fact]
         public void OneFromPerEngine()
         {
-            var query = new Query("generic")
+            Query query = new Query("generic")
                 .ForSqlServer(q => q.From("dnu"))
                 .ForSqlServer(q => q.From("mssql"));
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal(2, query.Clauses.OfType<AbstractFrom>().Count());
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
@@ -232,11 +231,11 @@ namespace SqlKata.Tests
         [InlineData("original", "mssql")]
         public void AddOrReplace_Works(string table, string engine)
         {
-            var query = new Query();
+            Query query = new Query();
             if (table != null)
                 query.From(table);
             query.AddOrReplaceComponent("from", new FromClause() { Table = "updated", Engine = engine });
-            var froms = query.Clauses.OfType<FromClause>();
+            IEnumerable<FromClause> froms = query.Clauses.OfType<FromClause>();
 
             Assert.Single(froms);
             Assert.Equal("updated", froms.Single().Table);
@@ -248,11 +247,11 @@ namespace SqlKata.Tests
         [InlineData(EngineCodes.MySql, "generic")]
         public void GetOneComponent_Prefers_Engine(string engine, string column)
         {
-            var query = new Query()
+            Query query = new Query()
                 .Where("generic", "foo")
                 .ForSqlServer(q => q.Where("mssql", "foo"));
 
-            var where = query.GetOneComponent("where", engine) as BasicCondition;
+            BasicCondition where = query.GetOneComponent("where", engine) as BasicCondition;
 
             Assert.NotNull(where);
             Assert.Equal(column, where.Column);
@@ -261,7 +260,7 @@ namespace SqlKata.Tests
         [Fact]
         public void AddOrReplace_Throws_MoreThanOne()
         {
-            var query = new Query()
+            Query query = new Query()
                 .Where("a", "b")
                 .Where("c", "d");
 
@@ -272,11 +271,11 @@ namespace SqlKata.Tests
         [Fact]
         public void OneLimitPerEngine()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .ForSqlServer(q => q.Limit(5))
                 .ForSqlServer(q => q.Limit(10));
 
-            var limits = query.GetComponents<LimitClause>("limit", EngineCodes.SqlServer);
+            List<LimitClause> limits = query.GetComponents<LimitClause>("limit", EngineCodes.SqlServer);
             Assert.Single(limits);
             Assert.Equal(10, limits.Single().Limit);
         }
@@ -284,12 +283,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CompilerSpecificLimit()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .ForSqlServer(q => q.Limit(5))
                 .ForPostgreSql(q => q.Limit(10));
 
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal(2, query.GetComponents("limit").Count());
             Assert.Equal("SELECT TOP (5) * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
@@ -300,11 +299,11 @@ namespace SqlKata.Tests
         [Fact]
         public void OneOffsetPerEngine()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .ForSqlServer(q => q.Offset(5))
                 .ForSqlServer(q => q.Offset(10));
 
-            var limits = query.GetComponents<OffsetClause>("offset", EngineCodes.SqlServer);
+            List<OffsetClause> limits = query.GetComponents<OffsetClause>("offset", EngineCodes.SqlServer);
             Assert.Single(limits);
             Assert.Equal(10, limits.Single().Offset);
         }
@@ -312,12 +311,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CompilerSpecificOffset()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .ForMySql(q => q.Offset(5))
                 .ForPostgreSql(q => q.Offset(10));
 
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal(2, query.GetComponents("offset").Count());
             Assert.Equal("SELECT * FROM `mytable` LIMIT 18446744073709551615 OFFSET 5", c[EngineCodes.MySql].ToString());
@@ -328,13 +327,13 @@ namespace SqlKata.Tests
         [Fact]
         public void Limit_Takes_Generic_If_Needed()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .Limit(5)
                 .Offset(10)
                 .ForPostgreSql(q => q.Offset(20));
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 5 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
@@ -343,13 +342,13 @@ namespace SqlKata.Tests
         [Fact]
         public void Offset_Takes_Generic_If_Needed()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .Limit(5)
                 .Offset(10)
                 .ForPostgreSql(q => q.Limit(20));
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 10", c[EngineCodes.PostgreSql].ToString());
@@ -358,14 +357,14 @@ namespace SqlKata.Tests
         [Fact]
         public void Can_Change_Generic_Limit_After_SpecificOffset()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .Limit(5)
                 .Offset(10)
                 .ForPostgreSql(q => q.Offset(20))
                 .Limit(7);
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 7 OFFSET 10", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 7 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
@@ -374,14 +373,14 @@ namespace SqlKata.Tests
         [Fact]
         public void Can_Change_Generic_Offset_After_SpecificLimit()
         {
-            var query = new Query("mytable")
+            Query query = new Query("mytable")
                 .Limit(5)
                 .Offset(10)
                 .ForPostgreSql(q => q.Limit(20))
                 .Offset(7);
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            string[] engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c[EngineCodes.PostgreSql].ToString());
@@ -390,14 +389,14 @@ namespace SqlKata.Tests
         [Fact]
         public void Where_Nested()
         {
-            var query = new Query("table")
+            Query query = new Query("table")
             .Where(q => q.Where("a", 1).OrWhere("a", 2));
 
-            var engines = new[] {
+            string[] engines = new[] {
                 EngineCodes.SqlServer,
             };
 
-            var c = Compilers.Compile(engines, query);
+            TestSqlResultContainer c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }

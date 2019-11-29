@@ -14,29 +14,29 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = base.CompileInsertQuery(query);
+            SqlResult context = base.CompileInsertQuery(query);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            List<AbstractInsertClause> inserts = context.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
             if (inserts.Count > 1)
             {
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)\s+VALUES\s+\(", ") SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)$", " FROM RDB$DATABASE");
+                context.RawSql = Regex.Replace(context.RawSql, @"\)\s+VALUES\s+\(", ") SELECT ");
+                context.RawSql = Regex.Replace(context.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
+                context.RawSql = Regex.Replace(context.RawSql, @"\)$", " FROM RDB$DATABASE");
             }
 
-            return ctx;
+            return context;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string CompileLimit(SqlResult context)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset > 0)
             {
-                ctx.Bindings.Add(offset + 1);
-                ctx.Bindings.Add(limit + offset);
+                context.Bindings.Add(offset + 1);
+                context.Bindings.Add(limit + offset);
 
                 return "ROWS ? TO ?";
             }
@@ -45,26 +45,26 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileColumns(SqlResult context)
         {
-            var compiled = base.CompileColumns(ctx);
+            string compiled = base.CompileColumns(context);
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            int limit = context.Query.GetLimit(EngineCode);
+            int offset = context.Query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Insert(0, limit);
+                context.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                context.Query.ClearComponent("limit");
 
                 return "SELECT FIRST ?" + compiled.Substring(6);
             }
             else if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Insert(0, offset);
+                context.Bindings.Insert(0, offset);
 
-                ctx.Query.ClearComponent("offset");
+                context.Query.ClearComponent("offset");
 
                 return "SELECT SKIP ?" + compiled.Substring(6);
             }
@@ -72,9 +72,9 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult context, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            string column = Wrap(condition.Column);
 
             string left;
 
@@ -91,7 +91,7 @@ namespace SqlKata.Compilers
                 left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            string sql = $"{left} {condition.Operator} {Parameter(context, condition.Value)}";
 
             if (condition.IsNot)
             {

@@ -42,9 +42,9 @@ namespace SqlKata.Tests
         [ClassData(typeof(ParameterTypeGenerator))]
         public void CorrectParameterTypeOutput(string rendered, object input)
         {
-            var query = new Query("Table").Where("Col", input);
+            Query query = new Query("Table").Where("Col", input);
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c[EngineCodes.SqlServer]);
         }

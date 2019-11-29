@@ -9,15 +9,15 @@ namespace SqlKata
     {
         public Query AsInsert(object data, bool returnId = false)
         {
-            var dictionary = BuildDictionaryFromObject(data);
+            Dictionary<string,object> dictionary = BuildDictionaryFromObject(data);
 
             return AsInsert(dictionary, returnId);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            var columnsList = columns?.ToList();
-            var valuesList = values?.ToList();
+            List<string> columnsList = columns?.ToList();
+            List<object> valuesList = values?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
             {
@@ -67,8 +67,8 @@ namespace SqlKata
         /// <returns></returns>
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
-            var columnsList = columns?.ToList();
-            var valuesCollectionList = valuesCollection?.ToList();
+            List<string> columnsList = columns?.ToList();
+            List<IEnumerable<object>> valuesCollectionList = valuesCollection?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
             {
@@ -79,9 +79,9 @@ namespace SqlKata
 
             ClearComponent("insert");
 
-            foreach (var values in valuesCollectionList)
+            foreach (IEnumerable<object> values in valuesCollectionList)
             {
-                var valuesList = values.ToList();
+                List<object> valuesList = values.ToList();
                 if (columnsList.Count != valuesList.Count)
                 {
                     throw new InvalidOperationException("Columns count should be equal to each Values count");

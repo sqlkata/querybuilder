@@ -63,7 +63,7 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public SqlResult CompileFor(string engineCode, Query query)
         {
-            var compiler = Get(engineCode);
+            Compiler compiler = Get(engineCode);
             return compiler.Compile(query);
         }
 
@@ -75,9 +75,9 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public TestSqlResultContainer Compile(IEnumerable<string> engineCodes, Query query)
         {
-            var codes = engineCodes.ToList();
+            List<string> codes = engineCodes.ToList();
 
-            var results = Compilers
+            Dictionary<string,SqlResult> results = Compilers
                 .Where(w => codes.Contains(w.Key))
                 .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
 
@@ -98,7 +98,7 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public TestSqlResultContainer Compile(Query query)
         {
-            var resultKeyValues = Compilers
+            Dictionary<string, SqlResult> resultKeyValues = Compilers
                 .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
             return new TestSqlResultContainer(resultKeyValues);
         }

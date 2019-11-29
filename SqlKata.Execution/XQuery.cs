@@ -21,7 +21,7 @@ namespace SqlKata.Execution
         public override Query Clone()
         {
 
-            var query = new XQuery(this.Connection, this.Compiler);
+            XQuery query = new XQuery(this.Connection, this.Compiler);
 
             query.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
             query.Logger = this.Logger;

@@ -32,11 +32,11 @@ namespace SqlKata.Compilers
 
         private List<AbstractFrom> findInternal(Query queryToSearch)
         {
-            var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
+            List<AbstractFrom> cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
 
-            var resultList = new List<AbstractFrom>();
+            List<AbstractFrom> resultList = new List<AbstractFrom>();
 
-            foreach (var cte in cteList)
+            foreach (AbstractFrom cte in cteList)
             {
                 if (namesOfPreviousCtes.Contains(cte.Alias))
                     continue;

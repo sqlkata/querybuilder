@@ -1,5 +1,6 @@
 ﻿using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -9,9 +10,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Count()
         {
-            var query = new Query("A").AsCount();
+            Query query = new Query("A").AsCount();
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[EngineCodes.MySql]);
@@ -22,9 +23,9 @@ namespace SqlKata.Tests
         [Fact]
         public void CountMultipleColumns()
         {
-            var query = new Query("A").AsCount("ColumnA", "ColumnB");
+            Query query = new Query("A").AsCount("ColumnA", "ColumnB");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
@@ -32,9 +33,9 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCount()
         {
-            var query = new Query("A").Distinct().AsCount();
+            Query query = new Query("A").Distinct().AsCount();
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT * FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
@@ -42,9 +43,9 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCountMultipleColumns()
         {
-            var query = new Query("A").Distinct().AsCount("ColumnA", "ColumnB");
+            Query query = new Query("A").Distinct().AsCount("ColumnA", "ColumnB");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
         }
@@ -52,9 +53,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Average()
         {
-            var query = new Query("A").AsAverage("TTL");
+            Query query = new Query("A").AsAverage("TTL");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT AVG([TTL]) AS [avg] FROM [A]", c[EngineCodes.SqlServer]);
         }
@@ -62,9 +63,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Sum()
         {
-            var query = new Query("A").AsSum("PacketsDropped");
+            Query query = new Query("A").AsSum("PacketsDropped");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT SUM([PacketsDropped]) AS [sum] FROM [A]", c[EngineCodes.SqlServer]);
         }
@@ -72,9 +73,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Max()
         {
-            var query = new Query("A").AsMax("LatencyMs");
+            Query query = new Query("A").AsMax("LatencyMs");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT MAX([LatencyMs]) AS [max] FROM [A]", c[EngineCodes.SqlServer]);
         }
@@ -82,9 +83,9 @@ namespace SqlKata.Tests
         [Fact]
         public void Min()
         {
-            var query = new Query("A").AsMin("LatencyMs");
+            Query query = new Query("A").AsMin("LatencyMs");
 
-            var c = Compile(query);
+            IReadOnlyDictionary<string, string> c = Compile(query);
 
             Assert.Equal("SELECT MIN([LatencyMs]) AS [min] FROM [A]", c[EngineCodes.SqlServer]);
         }

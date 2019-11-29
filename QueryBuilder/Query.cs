@@ -32,7 +32,7 @@ namespace SqlKata
         internal int GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            OffsetClause offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -40,14 +40,14 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            LimitClause limit = this.GetOneComponent<LimitClause>("limit", engineCode);
 
             return limit?.Limit ?? 0;
         }
 
         public override Query Clone()
         {
-            var clone = base.Clone();
+            Query clone = base.Clone();
             clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
@@ -73,7 +73,7 @@ namespace SqlKata
         {
             EngineScope = engine;
 
-            var result = fn.Invoke(this);
+            Query result = fn.Invoke(this);
 
             // reset the engine
             EngineScope = null;
@@ -91,7 +91,7 @@ namespace SqlKata
 
             query = query.Clone();
 
-            var alias = query.QueryAlias.Trim();
+            string alias = query.QueryAlias.Trim();
 
             // clear the query alias
             query.QueryAlias = null;
@@ -130,7 +130,7 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var newClause = new LimitClause
+            LimitClause newClause = new LimitClause
             {
                 Limit = value
             };
@@ -140,7 +140,7 @@ namespace SqlKata
 
         public Query Offset(int value)
         {
-            var newClause = new OffsetClause
+            OffsetClause newClause = new OffsetClause
             {
                 Offset = value
             };
@@ -225,7 +225,7 @@ namespace SqlKata
 
         public Query OrderBy(params string[] columns)
         {
-            foreach (var column in columns)
+            foreach (string column in columns)
             {
                 AddComponent("order", new OrderBy
                 {
@@ -239,7 +239,7 @@ namespace SqlKata
 
         public Query OrderByDesc(params string[] columns)
         {
-            foreach (var column in columns)
+            foreach (string column in columns)
             {
                 AddComponent("order", new OrderBy
                 {
@@ -267,7 +267,7 @@ namespace SqlKata
 
         public Query GroupBy(params string[] columns)
         {
-            foreach (var column in columns)
+            foreach (string column in columns)
             {
                 AddComponent("group", new Column
                 {
@@ -329,7 +329,7 @@ namespace SqlKata
 
         public object FindVariable(string variable)
         {
-            var found = Variables.ContainsKey(variable);
+            bool found = Variables.ContainsKey(variable);
 
             if (found)
             {
@@ -356,21 +356,21 @@ namespace SqlKata
         private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
         {
 
-            var dictionary = new Dictionary<string, object>();
-            var props = data.GetType().GetRuntimeProperties();
+            Dictionary<string,object> dictionary = new Dictionary<string, object>();
+            IEnumerable<PropertyInfo> props = data.GetType().GetRuntimeProperties();
 
-            foreach (var property in props)
+            foreach (PropertyInfo property in props)
             {
                 if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
                 {
                     continue;
                 }
 
-                var value = property.GetValue(data);
+                object value = property.GetValue(data);
 
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                ColumnAttribute colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
 
-                var name = colAttr?.Name ?? property.Name;
+                string name = colAttr?.Name ?? property.Name;
 
                 dictionary.Add(name, value);
 

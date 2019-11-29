@@ -34,7 +34,7 @@ namespace SqlKata
         /// <returns></returns>
         public virtual Q Clone()
         {
-            var q = NewQuery();
+            Q q = NewQuery();
 
             q.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
 
@@ -56,7 +56,7 @@ namespace SqlKata
 
         public Q NewChild()
         {
-            var newQuery = NewQuery().SetParent((Q)this);
+            Q newQuery = NewQuery().SetParent((Q)this);
             newQuery.EngineScope = this.EngineScope;
             return newQuery;
         }
@@ -95,7 +95,7 @@ namespace SqlKata
         {
             engineCode = engineCode ?? EngineScope;
 
-            var current = GetComponents(component).SingleOrDefault(c => c.Engine == engineCode);
+            AbstractClause current = GetComponents(component).SingleOrDefault(c => c.Engine == engineCode);
             if (current != null)
                 Clauses.Remove(current);
 
@@ -115,7 +115,7 @@ namespace SqlKata
                 engineCode = EngineScope;
             }
 
-            var clauses = Clauses
+            IEnumerable<C> clauses = Clauses
                 .Where(x => x.Component == component)
                 .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
                 .Cast<C>();
@@ -147,7 +147,7 @@ namespace SqlKata
         {
             engineCode = engineCode ?? EngineScope;
 
-            var all = GetComponents<C>(component, engineCode);
+            List<C> all = GetComponents<C>(component, engineCode);
             return all.FirstOrDefault(c => c.Engine == engineCode) ?? all.FirstOrDefault(c => c.Engine == null);
         }
 
@@ -239,7 +239,7 @@ namespace SqlKata
         /// <returns></returns>
         protected bool GetOr()
         {
-            var ret = orFlag;
+            bool ret = orFlag;
 
             // reset the flag
             orFlag = false;
@@ -252,7 +252,7 @@ namespace SqlKata
         /// <returns></returns>
         protected bool GetNot()
         {
-            var ret = notFlag;
+            bool ret = notFlag;
 
             // reset the flag
             notFlag = false;
@@ -299,7 +299,7 @@ namespace SqlKata
 
         public Q From(Func<Query, Query> callback, string alias = null)
         {
-            var query = new Query();
+            Query query = new Query();
 
             query.SetParent((Q)this);
 
