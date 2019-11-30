@@ -336,12 +336,11 @@ namespace SqlKata
                 return Variables[variable];
             }
 
-            if (Parent != null)
+            if (Parent == null)
             {
-                return (Parent as Query).FindVariable(variable);
+                throw new Exception($"Variable '{variable}' not found");
             }
-
-            throw new Exception($"Variable '{variable}' not found");
+            return (Parent as Query).FindVariable(variable);
         }
 
         /// <summary>
@@ -356,7 +355,7 @@ namespace SqlKata
         private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
         {
 
-            Dictionary<string,object> dictionary = new Dictionary<string, object>();
+            Dictionary<string, object> dictionary = new Dictionary<string, object>();
             IEnumerable<PropertyInfo> props = data.GetType().GetRuntimeProperties();
 
             foreach (PropertyInfo property in props)
