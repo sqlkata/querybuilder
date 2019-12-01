@@ -277,83 +277,35 @@ namespace SqlKata.Execution
                 return result;
             }
 
-            var canBeProcessed = query.Includes.Any() && result.ElementAt(0) is IDynamicMetaObjectProvider;
+            bool canBeProcessed = query.Includes.Any() && result.ElementAt(0) is IDynamicMetaObjectProvider;
 
             if (!canBeProcessed)
             {
                 return result;
             }
+            List<Dictionary<string, object>> dynamicResult = QueryFactoryHelper.GetDynamicResult(result); 
 
-            var dynamicResult = result
-                .Cast<IDictionary<string, object>>()
-                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
-                .ToList();
-
-            foreach (var include in query.Includes)
+            foreach (Include include in query.Includes)
             {
-
-                if (include.IsMany)
-                {
-                    if (include.ForeignKey == null)
-                    {
-                        // try to guess the default key
-                        // I will try to fetch the table name if provided and appending the Id as a convention
-                        // Here am using Humanizer package to help getting the singular form of the table
-
-                        var fromTable = query.GetOneComponent("from") as FromClause;
-
-                        if (fromTable == null)
-                        {
-                            throw new InvalidOperationException($"Cannot guess the foreign key for the included relation '{include.Name}'");
-                        }
-
-                        var table = fromTable.Alias ?? fromTable.Table;
-
-                        include.ForeignKey = table.Singularize(false) + "Id";
-                    }
-
-                    var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
-                    .Select(x => x[include.LocalKey].ToString())
-                    .ToList();
-
-                    if (!localIds.Any())
-                    {
-                        continue;
-                    }
-
-                    var children = include.Query.WhereIn(include.ForeignKey, localIds).Get()
-                        .Cast<IDictionary<string, object>>()
-                        .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
-                        .GroupBy(x => x[include.ForeignKey].ToString())
-                        .ToDictionary(x => x.Key, x => x.ToList());
-
-                    foreach (var item in dynamicResult)
-                    {
-                        var localValue = item[include.LocalKey].ToString();
-                        item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
-                    }
-
-                    continue;
-                }
+                processManyIncludeStatements(query, dynamicResult, include);
 
                 if (include.ForeignKey == null)
                 {
                     include.ForeignKey = include.Name + "Id";
                 }
+                List<string> foreignIds = QueryFactoryHelper.GetForeignIDs(dynamicResult, include); 
 
-                var foreignIds = dynamicResult.Where(x => x[include.ForeignKey] != null)
-                    .Select(x => x[include.ForeignKey].ToString())
-                    .ToList();
+                processManyForeignIDs(dynamicResult, include, foreignIds);
+            }
 
-                if (!foreignIds.Any())
-                {
-                    continue;
-                }
+            return dynamicResult.Cast<T>();
+        }
 
-                var related = include.Query.WhereIn(include.LocalKey, foreignIds).Get()
-                    .Cast<IDictionary<string, object>>()
-                    .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
-                    .ToDictionary(x => x[include.LocalKey].ToString());
+        private static void processManyForeignIDs(List<Dictionary<string, object>> dynamicResult, Include include, List<string> foreignIds)
+        {
+            if (foreignIds.Any())
+            {
+                Dictionary<string, Dictionary<string, object>> related = getEmbeddedForeignKeysSync(include, foreignIds);
 
                 foreach (var item in dynamicResult)
                 {
@@ -361,9 +313,43 @@ namespace SqlKata.Execution
                     item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
                 }
             }
+        }
 
-            return dynamicResult.Cast<T>();
+        private static void processManyIncludeStatements(Query query, List<Dictionary<string, object>> dynamicResult, Include include)
+        {
+            if (include.IsMany)
+            {
+                QueryFactoryHelper.TryFetchingForeignKey(query, include);
+                List<string> localIds = QueryFactoryHelper.GetLocalIDs(dynamicResult, include);
 
+                if (localIds.Any())
+                {
+                    Dictionary<string, List<Dictionary<string, object>>> children = getEmbeddedIncludesSync(include, localIds);
+
+                    foreach (var item in dynamicResult)
+                    {
+                        var localValue = item[include.LocalKey].ToString();
+                        item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                    }
+                }
+            }
+        }
+
+        private static Dictionary<string, Dictionary<string, object>> getEmbeddedForeignKeysSync(Include include, List<string> foreignIds)
+        {
+            return include.Query.WhereIn(include.LocalKey, foreignIds).Get()
+                .Cast<IDictionary<string, object>>()
+                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                .ToDictionary(x => x[include.LocalKey].ToString());
+        }
+
+        private static Dictionary<string, List<Dictionary<string, object>>> getEmbeddedIncludesSync(Include include, List<string> localIds)
+        {
+            return include.Query.WhereIn(include.ForeignKey, localIds).Get()
+                .Cast<IDictionary<string, object>>()
+                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                .GroupBy(x => x[include.ForeignKey].ToString())
+                .ToDictionary(x => x.Key, x => x.ToList());
         }
     }
 }
