@@ -117,17 +117,17 @@ namespace SqlKata.Compilers
 
                 method = "LIKE";
 
-                if (x.Operator == "starts")
+                switch (x.Operator)
                 {
-                    value = $"{value}%";
-                }
-                else if (x.Operator == "ends")
-                {
-                    value = $"%{value}";
-                }
-                else if (x.Operator == "contains")
-                {
-                    value = $"%{value}%";
+                    case "starts":
+                        value = $"{value}%";
+                        break;
+                    case "ends":
+                        value = $"%{value}";
+                        break;
+                    case "contains":
+                        value = $"%{value}%";
+                        break;
                 }
             }
 
@@ -147,6 +147,11 @@ namespace SqlKata.Compilers
             else
             {
                 sql = $"{column} {checkOperator(method)} {Parameter(ctx, value)}";
+            }
+
+            if (!string.IsNullOrEmpty(x.EscapeCharacter))
+            {
+                sql = $"{sql} ESCAPE '{x.EscapeCharacter}'";
             }
 
             return x.IsNot ? $"NOT ({sql})" : sql;
