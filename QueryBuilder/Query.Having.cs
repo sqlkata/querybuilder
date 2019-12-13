@@ -218,7 +218,7 @@ namespace SqlKata
             return Or().HavingFalse(column);
         }
 
-        public Query HavingLike(string column, object value, bool caseSensitive = false)
+        public Query HavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -226,26 +226,27 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
+                EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
         }
 
-        public Query HavingNotLike(string column, object value, bool caseSensitive = false)
+        public Query HavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingLike(column, value, caseSensitive);
+            return Not().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingLike(string column, object value, bool caseSensitive = false)
+        public Query OrHavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingLike(column, value, caseSensitive);
+            return Or().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotLike(string column, object value, bool caseSensitive = false)
+        public Query OrHavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingLike(column, value, caseSensitive);
+            return Or().Not().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
-        public Query HavingStarts(string column, object value, bool caseSensitive = false)
+        public Query HavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -253,27 +254,28 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
+                EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
         }
 
-        public Query HavingNotStarts(string column, object value, bool caseSensitive = false)
+        public Query HavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingStarts(column, value, caseSensitive);
+            return Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingStarts(string column, object value, bool caseSensitive = false)
+        public Query OrHavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingStarts(column, value, caseSensitive);
+            return Or().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotStarts(string column, object value, bool caseSensitive = false)
+        public Query OrHavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingStarts(column, value, caseSensitive);
+            return Or().Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query HavingEnds(string column, object value, bool caseSensitive = false)
+        public Query HavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -281,27 +283,28 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
+                EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
         }
 
-        public Query HavingNotEnds(string column, object value, bool caseSensitive = false)
+        public Query HavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingEnds(column, value, caseSensitive);
+            return Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingEnds(string column, object value, bool caseSensitive = false)
+        public Query OrHavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingEnds(column, value, caseSensitive);
+            return Or().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotEnds(string column, object value, bool caseSensitive = false)
+        public Query OrHavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingEnds(column, value, caseSensitive);
+            return Or().Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query HavingContains(string column, object value, bool caseSensitive = false)
+        public Query HavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -309,24 +312,25 @@ namespace SqlKata
                 Column = column,
                 Value = value,
                 CaseSensitive = caseSensitive,
+                EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
         }
 
-        public Query HavingNotContains(string column, object value, bool caseSensitive = false)
+        public Query HavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingContains(column, value, caseSensitive);
+            return Not().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingContains(string column, object value, bool caseSensitive = false)
+        public Query OrHavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingContains(column, value, caseSensitive);
+            return Or().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotContains(string column, object value, bool caseSensitive = false)
+        public Query OrHavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingContains(column, value, caseSensitive);
+            return Or().Not().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
 
         public Query HavingBetween<T>(string column, T lower, T higher)
