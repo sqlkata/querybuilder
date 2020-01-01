@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v1
@@ -15,8 +15,16 @@ jobs:
         dotnet-version: 2.2.108
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Setup nuget config
-      run: sed 's/GITHUB_TOKEN/${{ secrets.GITHUB_TOKEN }}/g' nuget.config > nuget.config
-    - name: Build with dotnet
-      run: dotnet build --configuration Release
-    - name: Push NuGet packages - Nightly Builds
-      run: dotnet pack --configuration Release && dotnet nuget push "bin/Release/querybuilder.1.0.0.nupkg" --source "github"
+      run: sed -i 's/GITHUB_TOKEN/${{ secrets.GITHUB_TOKEN }}/' nuget.config
+
+    - name: Restore QueryBuilder
+      run: dotnet restore QueryBuilder/QueryBuilder.csproj --source "https://api.nuget.org/v3/index.json"
+
+    - name: Build QueryBuilder
+      run: dotnet build QueryBuilder/QueryBuilder.csproj --configuration Release --no-restore
+
+    - name: Nightly Builds - Create Packages
+      run: dotnet pack QueryBuilder/QueryBuilder.csproj --configuration Release
+
+    - name: Nightly Builds - Push Packages
+      run: dotnet nuget push "QueryBuilder/bin/Release/*.nupkg" --source "github"
