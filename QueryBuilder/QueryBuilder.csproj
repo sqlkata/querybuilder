@@ -7,7 +7,7 @@
     <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql, PostgreSql, Oracle and Firebird</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>SqlKata</RootNamespace>
     <AssemblyName>SqlKata</AssemblyName>
   </PropertyGroup>

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Condition="'$(OS)' != 'Windows_NT'" Project="..\Directory.build.props" />
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
