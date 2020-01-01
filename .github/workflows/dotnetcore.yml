@@ -16,6 +16,4 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Release
     - name: Push NuGet packages - Nightly Builds
-      run: |
-      dotnet pack --configuration Release
-      dotnet nuget push "bin/Release/querybuilder.1.0.0.nupkg" --source "github"
+      run: dotnet pack --configuration Release && dotnet nuget push "bin/Release/querybuilder.1.0.0.nupkg" --source "github"
