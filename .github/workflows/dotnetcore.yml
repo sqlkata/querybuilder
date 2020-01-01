@@ -13,6 +13,7 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.108
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Build with dotnet
       run: dotnet build --configuration Release
     - name: Push NuGet packages - Nightly Builds
