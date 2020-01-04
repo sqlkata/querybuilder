@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v1
@@ -14,8 +14,11 @@ jobs:
       with:
         dotnet-version: 2.2.108
 
-    - name: Update nuget.config
-      run: sed -i 's/GITHUB_TOKEN/${{ secrets.GITHUB_TOKEN }}/' nuget.config
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+
+    - name: Add GPR Source
+      run: nuget sources add -name "GPR" -Source https://nuget.pkg.github.com/sqlkata/index.json -Username "ahmad-moussawi" -Password ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build QueryBuilder
       run: dotnet build QueryBuilder/QueryBuilder.csproj
@@ -24,4 +27,4 @@ jobs:
       run: dotnet pack QueryBuilder/QueryBuilder.csproj --configuration Release --output="../nuget_packages"
 
     - name: Nightly Builds - Push Packages
-      run: dotnet nuget push nuget_packages/*.nupkg --source "github"
+      run: nuget push nuget_packages/*.nupkg -Source "GPR" -SkipDuplicate
