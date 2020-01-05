@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "cli-highlight": "^2.0.0",
-    "sql-formatter": "^2.3.1"
-  }
-}

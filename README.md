@@ -43,7 +43,8 @@ PM> Install-Package SqlKata
 ```cs
 var connection = new SqlConnection("...");
 var compiler = new SqlCompiler();
-var db = new QueryFactory(connection, compiler);
+
+var db = new QueryFactory(connection, compiler)
 ```
 
 ### Retrieve all records
