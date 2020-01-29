@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SqlKata
@@ -10,7 +11,7 @@ namespace SqlKata
     {
         public static bool IsArray(object value)
         {
-            if(value is string)
+            if (value is string)
             {
                 return false;
             }
@@ -88,8 +89,9 @@ namespace SqlKata
             );
 
             return splitted.Skip(1)
-                .Select((item, index) => callback(index) + item)
-                .Aggregate(splitted.First(), (left, right) => left + right);
+              .Select((item, index) => callback(index) + item)
+              .Aggregate(new StringBuilder(splitted.First()), (prev, right) => prev.Append(right))
+              .ToString();
         }
 
         public static string JoinArray(string glue, IEnumerable array)
@@ -158,13 +160,13 @@ namespace SqlKata
         {
             return Enumerable.Repeat(str, count);
         }
-        
+
         public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
         {
             //Replace standard, non-escaped identifiers first
             var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");
             var nonEscapedReplace = nonEscapedRegex.Replace(input, newIdentifier);
-            
+
             //Then replace escaped identifiers, by just removing the escape character
             var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(identifier)}");
             return escapedRegex.Replace(nonEscapedReplace, identifier);
