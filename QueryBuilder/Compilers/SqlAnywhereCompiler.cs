@@ -93,10 +93,10 @@ namespace SqlKata.Compilers
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT") == 0)
                 {
-                    return "SELECT DISTINCT TOP ?" + compiled.Substring(15);
+                    return "SELECT DISTINCT " + limit + compiled.Substring(15);
                 }
 
-                return "SELECT TOP ?" + compiled.Substring(6);
+                return "SELECT " + limit + compiled.Substring(6);
             }
 
             return compiled;
