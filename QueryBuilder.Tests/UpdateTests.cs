@@ -161,5 +161,38 @@ namespace SqlKata.Tests
               c[EngineCodes.Firebird]);
         }
 
+
+        [Fact]
+        public void UpdateFromRaw()
+        {
+            var query = new Query().FromRaw("Table.With.Dots").AsUpdate(new
+            {
+                Name = "The User",
+            });
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "UPDATE Table.With.Dots SET [Name] = 'The User'",
+                c[EngineCodes.SqlServer]
+            );
+        }
+
+
+        [Fact]
+        public void UpdateFromQueryShouldFail()
+        {
+            var query = new Query().From(new Query("InnerTable")).AsUpdate(new
+            {
+                Name = "The User",
+            });
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                Compile(query);
+            });
+
+        }
+
     }
 }

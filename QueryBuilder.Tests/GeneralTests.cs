@@ -386,5 +386,20 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c[EngineCodes.PostgreSql].ToString());
         }
+
+        [Fact]
+        public void Where_Nested()
+        {
+            var query = new Query("table")
+            .Where(q => q.Where("a", 1).OrWhere("a", 2));
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
+        }
     }
 }

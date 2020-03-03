@@ -1,9 +1,9 @@
 namespace SqlKata
 {
-    public class Expressions
+    public static class Expressions
     {
         /// <summary>
-        /// Instruct the compiler to fetch the value from the predefined variables
+        /// Instruct the compiler to resolve the value from the predefined variables
         /// In the current query or parents queries.
         /// </summary>
         /// <param name="name"></param>

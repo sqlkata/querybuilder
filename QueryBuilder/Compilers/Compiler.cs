@@ -221,9 +221,22 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to delete");
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            if (!(from is FromClause))
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
@@ -235,7 +248,7 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            ctx.RawSql = "DELETE FROM " + CompileTableExpression(ctx, from) + where;
+            ctx.RawSql = $"DELETE FROM {table}{where}";
 
             return ctx;
         }
@@ -252,9 +265,22 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to update");
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            if (!(from is FromClause))
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
@@ -277,9 +303,9 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            ctx.RawSql = "UPDATE " + CompileTableExpression(ctx, from)
-                + " SET " + string.Join(", ", parts)
-                + where;
+            var sets = string.Join(", ", parts);
+
+            ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
 
             return ctx;
         }
@@ -296,14 +322,30 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to insert");
             }
 
-            var fromClause = ctx.Query.GetOneComponent<FromClause>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             if (fromClause is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var table = Wrap(fromClause.Table);
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -740,7 +782,7 @@ namespace SqlKata.Compilers
 
         protected string checkOperator(string op)
         {
-            op = op.ToLower();
+            op = op.ToLowerInvariant();
 
             var valid = operators.Contains(op) || userOperators.Contains(op);
 
@@ -760,9 +802,9 @@ namespace SqlKata.Compilers
         public virtual string Wrap(string value)
         {
 
-            if (value.ToLower().Contains(" as "))
+            if (value.ToLowerInvariant().Contains(" as "))
             {
-                var index = value.ToLower().IndexOf(" as ");
+                var index = value.ToLowerInvariant().IndexOf(" as ");
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
 
