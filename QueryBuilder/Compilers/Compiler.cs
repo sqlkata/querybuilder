@@ -291,10 +291,8 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
-                parts.Add($"{Wrap(toUpdate.Columns[i])} = ?");
+                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
             }
-
-            ctx.Bindings.AddRange(toUpdate.Values);
 
             var where = CompileWheres(ctx);
 

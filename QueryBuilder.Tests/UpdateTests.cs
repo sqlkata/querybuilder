@@ -194,5 +194,24 @@ namespace SqlKata.Tests
 
         }
 
+        [Fact]
+        public void update_should_compile_literal_without_parameters_holders()
+        {
+
+            var query = new Query("MyTable").AsUpdate(new
+            {
+                Name = "The User",
+                Address = new UnsafeLiteral("@address")
+            });
+
+            var compiler = new SqlServerCompiler();
+            var result =  compiler.Compile(query);
+
+            Assert.Equal(
+                "UPDATE [MyTable] SET [Name] = ?, [Address] = @address",
+                result.RawSql
+            );
+        }
+
     }
 }
