@@ -21,11 +21,6 @@ namespace SqlKata.Compilers
             // The cache key should take the type and the method name into consideration
             var cacheKey = methodName + "::" + clauseType.FullName;
 
-            if (methodsCache.ContainsKey(cacheKey))
-            {
-                return methodsCache[cacheKey];
-            }
-
             lock (syncRoot)
             {
                 if (methodsCache.ContainsKey(cacheKey))
