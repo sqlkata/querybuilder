@@ -35,20 +35,17 @@ namespace Program
         static void Main(string[] args)
         {
 
-            var db = SqlLiteQueryFactory();
-
-            var id = db.Query("accounts").InsertGetId<int>(new
+            var query = new Query("accounts").AsInsert(new
             {
                 name = "new Account",
                 currency_id = "USD",
-                created_at = DateTime.UtcNow
+                created_at = DateTime.UtcNow,
+                Value = SqlKata.Expressions.UnsafeLiteral("nextval('hello')", replaceQuotes: false)
             });
 
-            var id2 = db.Select<int>("insert into accounts(name, currency_id, created_at) values ('account 2','usd','2019-01-01 20:00:00');select last_insert_rowid();");
-
-            Console.WriteLine($"last id is: {id}");
-            Console.WriteLine($"last id2 is: {id2.First()}");
-
+            var compiler = new SqlServerCompiler();
+            var sql = compiler.Compile(query).Sql;
+            Console.WriteLine(sql);
         }
 
         private static void log(Compiler compiler, Query query)
