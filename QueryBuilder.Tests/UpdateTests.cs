@@ -103,7 +103,7 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithIgnoreAndColumnProperties()
         {
-            var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
+            var book = new Book(name: "SqlKataBook", author: "Kata", color: "red", price: 100m);
             var query = new Query("Book").AsUpdate(book);
 
             var c = Compile(query);

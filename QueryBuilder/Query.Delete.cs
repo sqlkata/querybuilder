@@ -4,7 +4,7 @@ namespace SqlKata
     {
         public Query AsDelete()
         {
-            Method = "delete";
+            Method = QueryMethod.Delete;
             return this;
         }
 

@@ -18,7 +18,7 @@ namespace SqlKata.Compilers
 
             var name = clauseType.Name;
 
-            name = name.Substring(0, name.IndexOf("Condition"));
+            name = name.Substring(0, name.IndexOf("Condition", StringComparison.Ordinal));
 
             var methodName = "Compile" + name + "Condition";
 
@@ -170,12 +170,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
-            if (!x.Query.HasComponent("where", EngineCode))
+            if (!x.Query.HasComponent(ClauseComponent.Where, EngineCode))
             {
                 return null;
             }
 
-            var clauses = x.Query.GetComponents<AbstractCondition>("where", EngineCode);
+            var clauses = x.Query.GetComponents<AbstractCondition>(ClauseComponent.Where, EngineCode);
 
             var sql = CompileConditions(ctx, clauses);
 
@@ -203,7 +203,7 @@ namespace SqlKata.Compilers
 
             if (!item.Values.Any())
             {
-                return item.IsNot ? $"1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
+                return item.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
             }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";

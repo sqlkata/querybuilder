@@ -8,17 +8,17 @@ namespace SqlKata
 
         public Query Select(params string[] columns)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
             columns = columns
-                .Select(x => Helper.ExpandExpression(x))
+                .Select(Helper.ExpandExpression)
                 .SelectMany(x => x)
                 .ToArray();
 
 
             foreach (var column in columns)
             {
-                AddComponent("select", new Column
+                AddComponent(ClauseComponent.Select, new Column
                 {
                     Name = column
                 });
@@ -33,9 +33,9 @@ namespace SqlKata
         /// <returns></returns>
         public Query SelectRaw(string sql, params object[] bindings)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
-            AddComponent("select", new RawColumn
+            AddComponent(ClauseComponent.Select, new RawColumn
             {
                 Expression = sql,
                 Bindings = bindings,
@@ -46,11 +46,11 @@ namespace SqlKata
 
         public Query Select(Query query, string alias)
         {
-            Method = "select";
+            Method = QueryMethod.Select;
 
             query = query.Clone();
 
-            AddComponent("select", new QueryColumn
+            AddComponent(ClauseComponent.Select, new QueryColumn
             {
                 Query = query.As(alias),
             });

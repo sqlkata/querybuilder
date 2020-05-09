@@ -155,7 +155,7 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithIgnoreAndColumnProperties()
         {
-            var account = new Account(name: $"popular", color: $"blue", currency: "US");
+            var account = new Account(name: "popular", color: "blue", currency: "US");
             var query = new Query("Account").AsInsert(account);
 
             var c = Compile(query);

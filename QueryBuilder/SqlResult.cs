@@ -81,7 +81,7 @@ namespace SqlKata
             }
 
             // fallback to string
-            return "'" + value.ToString() + "'";
+            return string.Concat("'", value, "'");
         }
 
 
