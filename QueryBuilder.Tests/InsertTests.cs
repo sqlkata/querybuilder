@@ -26,6 +26,48 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertReturning()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            }, new [] { "Name", "Age" });
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01') RETURNING \"Name\", \"Age\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void InsertReturningNull()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            }, null);
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01')", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void InsertReturningAll()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            }, new [] { "*" });
+
+            var c = Compile(query);
+
+            Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01') RETURNING *", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void InsertFromSubQueryWithCte()
         {
             var query = new Query("expensive_cars")
@@ -74,6 +116,28 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "INSERT INTO \"EXPENSIVE_CARS\" (\"NAME\", \"BRAND\", \"YEAR\") SELECT 'Chiron', 'Bugatti', NULL FROM RDB$DATABASE UNION ALL SELECT 'Huayra', 'Pagani', 2012 FROM RDB$DATABASE UNION ALL SELECT 'Reventon roadster', 'Lamborghini', 2009 FROM RDB$DATABASE",
                 c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void InsertReturningMultiRecords()
+        {
+            var query = new Query("expensive_cars")
+                .AsInsert(
+                    new[] { "name", "brand", "year" },
+                    new[]
+                    {
+                        new object[] {"Chiron", "Bugatti", null},
+                        new object[] {"Huayra", "Pagani", 2012},
+                        new object[] {"Reventon roadster", "Lamborghini", 2009}
+                    },
+                    new[] { "name" }
+                );
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO \"expensive_cars\" (\"name\", \"brand\", \"year\") VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009) RETURNING \"name\"",
+                c[EngineCodes.PostgreSql]);
         }
 
         [Fact]

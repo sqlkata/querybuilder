@@ -346,6 +346,7 @@ namespace SqlKata.Compilers
             }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var returningColumns = inserts.Where(clause => (clause as InsertClause)?.ReturnColumns != null).SelectMany(clause => (clause as InsertClause).ReturnColumns).Distinct().ToList();
 
             if (inserts[0] is InsertClause insertClause)
             {
@@ -387,6 +388,11 @@ namespace SqlKata.Compilers
                 }
             }
 
+            if (returningColumns.Count > 0)
+            {
+                var returnColumns = string.Join(", ", WrapArray(returningColumns));
+                ctx.RawSql += $" RETURNING {returnColumns}";
+            }
 
             return ctx;
         }

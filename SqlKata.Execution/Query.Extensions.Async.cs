@@ -71,17 +71,18 @@ namespace SqlKata.Execution
 
         public static async Task<int> InsertAsync(
             this Query query,
-            IReadOnlyDictionary<string, object> values
+            IReadOnlyDictionary<string, object> values,
+            IEnumerable<string> returnColumns = null
         )
         {
             return await QueryHelper.CreateQueryFactory(query)
-                .ExecuteAsync(query.AsInsert(values));
+                .ExecuteAsync(query.AsInsert(values, returnColumns));
         }
 
-        public static async Task<int> InsertAsync(this Query query, object data)
+        public static async Task<int> InsertAsync(this Query query, object data, IEnumerable<string> returnColumns = null)
         {
             return await QueryHelper.CreateQueryFactory(query)
-                .ExecuteAsync(query.AsInsert(data));
+                .ExecuteAsync(query.AsInsert(data, returnColumns));
         }
 
         public static async Task<T> InsertGetIdAsync<T>(this Query query, object data)

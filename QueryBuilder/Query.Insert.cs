@@ -7,11 +7,16 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsInsert(object data, bool returnId = false)
+        public Query AsInsert(object data, bool returnId = false, IEnumerable<string> returnColumns = null)
         {
             var dictionary = BuildDictionaryFromObject(data);
 
-            return AsInsert(dictionary, returnId);
+            return AsInsert(dictionary, returnId, returnColumns);
+        }
+
+        public Query AsInsert(object data, IEnumerable<string> returnColumns)
+        {
+            return AsInsert(data, false, returnColumns);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
@@ -40,7 +45,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IReadOnlyDictionary<string, object> data, bool returnId = false)
+        public Query AsInsert(IReadOnlyDictionary<string, object> data, bool returnId = false, IEnumerable<string> returnColumns = null)
         {
             if (data == null || data.Count == 0)
             {
@@ -54,9 +59,15 @@ namespace SqlKata
                 Columns = data.Keys.ToList(),
                 Values = data.Values.ToList(),
                 ReturnId = returnId,
+                ReturnColumns = returnColumns?.ToList(),
             });
 
             return this;
+        }
+
+        public Query AsInsert(IReadOnlyDictionary<string, object> data, IEnumerable<string> returnColumns)
+        {
+            return AsInsert(data, false, returnColumns);
         }
 
         /// <summary>
@@ -64,11 +75,13 @@ namespace SqlKata
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="valuesCollection"></param>
+        /// <param name="returnColumns"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IEnumerable<string> returnColumns = null)
         {
             var columnsList = columns?.ToList();
             var valuesCollectionList = valuesCollection?.ToList();
+            var returnColumnsList = returnColumns?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
             {
@@ -90,7 +103,8 @@ namespace SqlKata
                 AddComponent("insert", new InsertClause
                 {
                     Columns = columnsList,
-                    Values = valuesList
+                    Values = valuesList,
+                    ReturnColumns = returnColumnsList,
                 });
             }
 

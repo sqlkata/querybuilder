@@ -12,6 +12,7 @@ namespace SqlKata
         public List<string> Columns { get; set; }
         public List<object> Values { get; set; }
         public bool ReturnId { get; set; } = false;
+        public List<string> ReturnColumns { get; set; } = new List<string>();
 
         public override AbstractClause Clone()
         {
@@ -22,6 +23,7 @@ namespace SqlKata
                 Columns = Columns,
                 Values = Values,
                 ReturnId = ReturnId,
+                ReturnColumns = ReturnColumns,
             };
         }
     }
