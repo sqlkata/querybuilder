@@ -105,14 +105,14 @@ namespace SqlKata.Execution
             return row.Id;
         }
 
-        public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
+        public static int Update(this Query query, IReadOnlyDictionary<string, object> values, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(values));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(values, returnColumns));
         }
 
-        public static int Update(this Query query, object data)
+        public static int Update(this Query query, object data, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(data));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(data, returnColumns));
         }
 
         public static int Delete(this Query query)

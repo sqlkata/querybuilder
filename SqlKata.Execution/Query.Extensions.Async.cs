@@ -111,16 +111,16 @@ namespace SqlKata.Execution
                 .ExecuteAsync(query.AsInsert(columns, fromQuery));
         }
 
-        public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values)
+        public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values, IEnumerable<string> returnColumns = null)
         {
             return await QueryHelper.CreateQueryFactory(query)
-                .ExecuteAsync(query.AsUpdate(values));
+                .ExecuteAsync(query.AsUpdate(values, returnColumns));
         }
 
-        public static async Task<int> UpdateAsync(this Query query, object data)
+        public static async Task<int> UpdateAsync(this Query query, object data, IEnumerable<string> returnColumns = null)
         {
             return await QueryHelper.CreateQueryFactory(query)
-                .ExecuteAsync(query.AsUpdate(data));
+                .ExecuteAsync(query.AsUpdate(data, returnColumns));
         }
 
         public static async Task<int> DeleteAsync(this Query query)

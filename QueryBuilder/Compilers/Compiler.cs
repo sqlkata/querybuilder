@@ -305,6 +305,11 @@ namespace SqlKata.Compilers
 
             ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
 
+            if (toUpdate.ReturnColumns != null) {
+                var returnColumns = string.Join(", ", WrapArray(toUpdate.ReturnColumns));
+                ctx.RawSql += $" RETURNING {returnColumns}";
+            }
+
             return ctx;
         }
 

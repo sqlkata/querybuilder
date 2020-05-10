@@ -26,6 +26,48 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void UpdateReturning()
+        {
+            var query = new Query("Table").AsUpdate(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            }, new [] { "Name", "Age" });
+
+            var c = Compile(query);
+
+            Assert.Equal("UPDATE \"Table\" SET \"Name\" = 'The User', \"Age\" = '2018-01-01' RETURNING \"Name\", \"Age\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void UpdateReturningNull()
+        {
+            var query = new Query("Table").AsUpdate(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            },  null);
+
+            var c = Compile(query);
+
+            Assert.Equal("UPDATE \"Table\" SET \"Name\" = 'The User', \"Age\" = '2018-01-01'", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void UpdateReturningAll()
+        {
+            var query = new Query("Table").AsUpdate(new
+            {
+                Name = "The User",
+                Age = new DateTime(2018, 1, 1),
+            }, new [] { "*" });
+
+            var c = Compile(query);
+
+            Assert.Equal("UPDATE \"Table\" SET \"Name\" = 'The User', \"Age\" = '2018-01-01' RETURNING *", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void UpdateWithNullValues()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
