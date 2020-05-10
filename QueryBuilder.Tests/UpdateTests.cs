@@ -37,6 +37,8 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("UPDATE \"Table\" SET \"Name\" = 'The User', \"Age\" = '2018-01-01' RETURNING \"Name\", \"Age\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01' OUTPUT inserted.[Name], inserted.[Age]", c[EngineCodes.SqlServer]);
+            Assert.Equal("UPDATE \"TABLE\" SET \"NAME\" = 'The User', \"AGE\" = '2018-01-01'", c[EngineCodes.Firebird]);
         }
 
         [Fact]
@@ -51,6 +53,7 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("UPDATE \"Table\" SET \"Name\" = 'The User', \"Age\" = '2018-01-01'", c[EngineCodes.PostgreSql]);
+            Assert.Equal("UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]

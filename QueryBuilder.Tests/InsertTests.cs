@@ -37,6 +37,8 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01') RETURNING \"Name\", \"Age\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("INSERT INTO [Table] ([Name], [Age]) OUTPUT inserted.[Name], inserted.[Age] VALUES ('The User', '2018-01-01')", c[EngineCodes.SqlServer]);
+            Assert.Equal("INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')", c[EngineCodes.Firebird]);
         }
 
         [Fact]
@@ -51,6 +53,7 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01')", c[EngineCodes.PostgreSql]);
+            Assert.Equal("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -65,6 +68,7 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("INSERT INTO \"Table\" (\"Name\", \"Age\") VALUES ('The User', '2018-01-01') RETURNING *", c[EngineCodes.PostgreSql]);
+            Assert.Equal("INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')", c[EngineCodes.Firebird]);
         }
 
         [Fact]
@@ -138,6 +142,14 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "INSERT INTO \"expensive_cars\" (\"name\", \"brand\", \"year\") VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009) RETURNING \"name\"",
                 c[EngineCodes.PostgreSql]);
+
+            Assert.Equal(
+                "INSERT INTO [expensive_cars] ([name], [brand], [year]) OUTPUT inserted.[name] VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)",
+                c[EngineCodes.SqlServer]);
+
+            Assert.Equal(
+                "INSERT INTO \"EXPENSIVE_CARS\" (\"NAME\", \"BRAND\", \"YEAR\") SELECT 'Chiron', 'Bugatti', NULL FROM RDB$DATABASE UNION ALL SELECT 'Huayra', 'Pagani', 2012 FROM RDB$DATABASE UNION ALL SELECT 'Reventon roadster', 'Lamborghini', 2009 FROM RDB$DATABASE",
+                c[EngineCodes.Firebird]);
         }
 
         [Fact]
