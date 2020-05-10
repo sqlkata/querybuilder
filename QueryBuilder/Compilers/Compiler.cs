@@ -303,9 +303,14 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
+            ctx.RawSql = CompileUpdateQueryString(table, sets, where, toUpdate.ReturnColumns ?? new List<string>());
 
             return ctx;
+        }
+
+        protected virtual string CompileUpdateQueryString(string table, string sets, string where, List<string> returnColumns)
+        {
+            return $"UPDATE {table} SET {sets}{where}";
         }
 
         protected virtual SqlResult CompileInsertQuery(Query query)
@@ -346,13 +351,20 @@ namespace SqlKata.Compilers
             }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var returningColumns = inserts.Where(clause => (clause as InsertClause)?.ReturnColumns != null).SelectMany(clause => (clause as InsertClause).ReturnColumns).Distinct().ToList();
 
             if (inserts[0] is InsertClause insertClause)
             {
-                var columns = string.Join(", ", WrapArray(insertClause.Columns));
-                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
+                var values = new StringBuilder("VALUES");
 
-                ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
+                foreach (var clauseValues in inserts.Select(clause => (clause as InsertClause).Values))
+                {
+                    values.Append(" (");
+                    values.Append(string.Join(", ", Parameterize(ctx, clauseValues)));
+                    values.Append("),");
+                }
+
+                ctx.RawSql = CompileInsertQueryString(table, insertClause.Columns, values.ToString(0, values.Length - 1), returningColumns);
 
                 if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
                 {
@@ -362,35 +374,21 @@ namespace SqlKata.Compilers
             else
             {
                 var clause = inserts[0] as InsertQueryClause;
-
-                var columns = "";
-
-                if (clause.Columns.Any())
-                {
-                    columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
-                }
-
                 var subCtx = CompileSelectQuery(clause.Query);
+
                 ctx.Bindings.AddRange(subCtx.Bindings);
-
-                ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
+                ctx.RawSql = CompileInsertQueryString(table, clause.Columns, subCtx.RawSql, returningColumns);
             }
-
-            if (inserts.Count > 1)
-            {
-                foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
-                {
-                    var clause = insert as InsertClause;
-
-                    ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
-
-                }
-            }
-
 
             return ctx;
         }
 
+        protected virtual string CompileInsertQueryString(string table, List<string> columns, string rawValues, List<string> returnColumns)
+        {
+            var columnsSql = columns.Count > 0 ? " (" + string.Join(", ", WrapArray(columns)) + ") " : "";
+
+            return $"INSERT INTO {table}{columnsSql}{rawValues}";
+        }
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {

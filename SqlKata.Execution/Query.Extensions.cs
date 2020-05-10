@@ -71,18 +71,19 @@ namespace SqlKata.Execution
             query.Chunk<dynamic>(chunkSize, action);
         }
 
-        public static int Insert(this Query query, IReadOnlyDictionary<string, object> values)
+        public static int Insert(this Query query, IReadOnlyDictionary<string, object> values, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(values));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(values, returnColumns));
         }
 
         public static int Insert(
             this Query query,
             IEnumerable<string> columns,
-            IEnumerable<IEnumerable<object>> valuesCollection
+            IEnumerable<IEnumerable<object>> valuesCollection,
+            IEnumerable<string> returnColumns = null
         )
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(columns, valuesCollection));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(columns, valuesCollection, returnColumns));
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery)
@@ -90,9 +91,9 @@ namespace SqlKata.Execution
             return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(columns, fromQuery));
         }
 
-        public static int Insert(this Query query, object data)
+        public static int Insert(this Query query, object data, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(data));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsInsert(data, returnColumns));
         }
 
         public static T InsertGetId<T>(this Query query, object data)
@@ -104,14 +105,14 @@ namespace SqlKata.Execution
             return row.Id;
         }
 
-        public static int Update(this Query query, IReadOnlyDictionary<string, object> values)
+        public static int Update(this Query query, IReadOnlyDictionary<string, object> values, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(values));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(values, returnColumns));
         }
 
-        public static int Update(this Query query, object data)
+        public static int Update(this Query query, object data, IEnumerable<string> returnColumns = null)
         {
-            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(data));
+            return QueryHelper.CreateQueryFactory(query).Execute(query.AsUpdate(data, returnColumns));
         }
 
         public static int Delete(this Query query)

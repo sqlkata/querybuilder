@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -167,6 +169,35 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        protected override string CompileInsertQueryString(string table, List<string> columns, string rawValues, List<string> returnColumns)
+        {
+            var columnsSql = columns.Count > 0 ? " (" + string.Join(", ", WrapArray(columns)) + ") " : "";
+            var rawSql = $"INSERT INTO {table}{columnsSql}";
+
+            if (returnColumns.Count > 0)
+            {
+                const string prefix = "inserted.";
+                var output = string.Join($", {prefix}", WrapArray(returnColumns));
+                rawSql += $"OUTPUT {prefix}{output} ";
+            }
+
+            return rawSql + rawValues;
+        }
+
+        protected override string CompileUpdateQueryString(string table, string sets, string where, List<string> returnColumns)
+        {
+            var rawSql = $"UPDATE {table} SET {sets}";
+
+            if (returnColumns.Count > 0)
+            {
+                const string prefix = "inserted.";
+                var output = string.Join($", {prefix}", WrapArray(returnColumns));
+                rawSql += $" OUTPUT {prefix}{output}";
+            }
+
+            return rawSql + where;
         }
     }
 }
