@@ -2,12 +2,51 @@
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
 {
     public class SelectTests : TestSupport
     {
+        [Fact]
+        public void FunctionSelect()
+        {
+            var query = new Query("TB_1").AddComponent("select",
+                new FunctionColumn()
+                {
+                    Name = "getStringVal",
+                    On = new FunctionColumn()
+                    {
+                        Name = "xmlagg",
+                        Parameters = new List<AbstractColumn>() {
+                            new FunctionColumn()
+                            {
+                                Name = "xmlelement",
+                                Parameters = new List<AbstractColumn>()
+                                {
+                                    new RawColumn() { Expression= "\"TB_1\"", Bindings = new object[0] },
+                                    new FunctionColumn()
+                                    {
+                                        Name = "xmlattributes",
+                                        Parameters = new List<AbstractColumn>()
+                                        {
+                                            new Column() { Name = "BEZEICHNUNG" },
+                                            new Column() { Name = "BESCHREIBUNG" },
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        Suffixes = new List<AbstractClause>() { new OrderBy() { Column = "BEZEICHNUNG" } },
+                    }
+                });
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT xmlagg(xmlelement(\"TB_1\", xmlattributes(\"BEZEICHNUNG\", \"BESCHREIBUNG\")) ORDER BY \"BEZEICHNUNG\").getStringVal() FROM \"TB_1\"", c[EngineCodes.Oracle]);
+        }
+
         [Fact]
         public void BasicSelect()
         {

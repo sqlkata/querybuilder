@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -51,6 +53,59 @@ namespace SqlKata
                 Query = Query.Clone(),
                 Component = Component,
             };
+        }
+    }
+
+    /// <summary>
+    /// Represents column clause calculated using query.
+    /// </summary>
+    /// <seealso cref="AbstractColumn" />
+    public class FunctionColumn : AbstractColumn
+    {
+        /// <summary>
+        /// Gets or sets the function name.
+        /// </summary>
+        /// <value>
+        /// The column name.
+        /// </value>
+        public string Name { get; set; }
+
+        public AbstractColumn On { get; set; }
+
+        public List<AbstractColumn> Parameters { get; set; }
+
+        public List<AbstractClause> Suffixes { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            var result = new FunctionColumn
+            {
+                Name = Name,
+                Engine = Engine,
+                Component = Component,
+                On = (AbstractColumn)On?.Clone(),
+            };
+
+            if (Parameters != null)
+            {
+                result.Parameters = new List<AbstractColumn>();
+                foreach (var p in Parameters)
+                {
+                    result.Parameters.Add((AbstractColumn)p.Clone());
+                }
+            }
+            
+
+            if (Suffixes != null)
+            {
+                result.Suffixes = new List<AbstractClause>();
+                foreach (var s in Suffixes)
+                {
+                    result.Suffixes.Add(s.Clone());
+                }
+            }
+
+            return result;
         }
     }
 
