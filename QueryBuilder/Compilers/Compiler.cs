@@ -449,6 +449,34 @@ namespace SqlKata.Compilers
                 return "(" + subCtx.RawSql + $"){alias}";
             }
 
+            if (column is FunctionColumn functionColumn)
+            {
+                var selectBuilder = new StringBuilder();
+
+                if (functionColumn.On != null)
+                {
+                    selectBuilder.Append(CompileColumn(ctx, functionColumn.On));
+                    selectBuilder.Append(".");
+                }
+
+                selectBuilder.Append(functionColumn.Name);
+                selectBuilder.Append("(");
+                if (functionColumn.Parameters != null)
+                    selectBuilder.Append(string.Join(", ", functionColumn.Parameters.Select(c => CompileColumn(ctx, c))));
+
+                if (functionColumn.Suffixes != null)
+                {
+                    var orderBys = functionColumn.Suffixes.Where(s => s is AbstractOrderBy);
+                    if (orderBys.Any())
+                    {
+                        selectBuilder.Append(" ORDER BY ");
+                        selectBuilder.Append(string.Join(", ", orderBys.Select(s => CompileOrder(ctx, (AbstractOrderBy)s))));
+                    }
+                }
+                selectBuilder.Append(")");
+                return selectBuilder.ToString();
+            }
+
             return Wrap((column as Column).Name);
 
         }
@@ -670,20 +698,24 @@ namespace SqlKata.Compilers
             var columns = ctx.Query
                 .GetComponents<AbstractOrderBy>("order", EngineCode)
                 .Select(x =>
-            {
-
-                if (x is RawOrderBy raw)
                 {
-                    ctx.Bindings.AddRange(raw.Bindings);
-                    return WrapIdentifiers(raw.Expression);
-                }
-
-                var direction = (x as OrderBy).Ascending ? "" : " DESC";
-
-                return Wrap((x as OrderBy).Column) + direction;
-            });
+                    return CompileOrder(ctx, x);
+                });
 
             return "ORDER BY " + string.Join(", ", columns);
+        }
+
+        private string CompileOrder(SqlResult ctx, AbstractOrderBy order)
+        {
+            if (order is RawOrderBy raw)
+            {
+                ctx.Bindings.AddRange(raw.Bindings);
+                return WrapIdentifiers(raw.Expression);
+            }
+
+            var direction = (order as OrderBy).Ascending ? "" : " DESC";
+
+            return Wrap((order as OrderBy).Column) + direction;
         }
 
         public virtual string CompileHaving(SqlResult ctx)
