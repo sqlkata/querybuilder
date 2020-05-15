@@ -9,5 +9,6 @@
         public const string PostgreSql = "postgres";
         public const string Sqlite = "sqlite";
         public const string SqlServer = "sqlsrv";
-    }
+        public const string MSAccess = "access";
+	}
 }
