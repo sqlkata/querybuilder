@@ -10,11 +10,13 @@ using SqlKata.Compilers;
 
 namespace SqlKata.Execution
 {
-    public class QueryFactory
+    public class QueryFactory : IDisposable
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
         public Action<SqlResult> Logger = result => { };
+        private bool disposedValue;
+
         public int QueryTimeout { get; set; } = 30;
 
         public QueryFactory() { }
@@ -823,5 +825,35 @@ namespace SqlKata.Execution
             return compiled;
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Connection.Dispose();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                Connection = null;
+                Compiler = null;
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~QueryFactory()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

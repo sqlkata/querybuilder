@@ -46,6 +46,13 @@ namespace Program
             var compiler = new SqlServerCompiler();
             var sql = compiler.Compile(query).Sql;
             Console.WriteLine(sql);
+
+
+            using (var db = SqlLiteQueryFactory())
+            {
+                var accounts = db.Query("accounts").Get();
+                Console.WriteLine(accounts.Count());
+            }
         }
 
         private static void log(Compiler compiler, Query query)
@@ -79,6 +86,7 @@ namespace Program
             }
 
             return db;
+
         }
 
         private static QueryFactory SqlServerQueryFactory()
