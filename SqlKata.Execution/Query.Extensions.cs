@@ -242,14 +242,14 @@ namespace SqlKata.Execution
             return await db.ExecuteScalarAsync<T>(query.AsAggregate(aggregateOperation, columns), transaction, timeout);
         }
 
-        public static T Count<T>(this Query query, string[] columns, IDbTransaction transaction = null, int? timeout = null)
+        public static T Count<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
             return db.ExecuteScalar<T>(query.AsCount(columns), transaction, timeout);
         }
 
-        public static async Task<T> CountAsync<T>(this Query query, string[] columns, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> CountAsync<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
