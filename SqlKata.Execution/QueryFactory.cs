@@ -342,6 +342,30 @@ namespace SqlKata.Execution
 
         }
 
+        public bool Exists(Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            var clone = query.Clone()
+                .ClearComponent("select")
+                .SelectRaw("1 as [Exists]")
+                .Limit(1);
+
+            var rows = Get(clone, transaction, timeout);
+
+            return rows.Any();
+        }
+
+        public async Task<bool> ExistsAsync(Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            var clone = query.Clone()
+                .ClearComponent("select")
+                .SelectRaw("1 as [Exists]")
+                .Limit(1);
+
+            var rows = await GetAsync(clone, transaction, timeout);
+
+            return rows.Any();
+        }
+
         public T Aggregate<T>(
             Query query,
             string aggregateOperation,
