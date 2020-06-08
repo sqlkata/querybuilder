@@ -34,24 +34,18 @@ namespace Program
 
         static void Main(string[] args)
         {
-
-            var query = new Query("accounts").AsInsert(new
-            {
-                name = "new Account",
-                currency_id = "USD",
-                created_at = DateTime.UtcNow,
-                Value = SqlKata.Expressions.UnsafeLiteral("nextval('hello')", replaceQuotes: false)
-            });
-
-            var compiler = new SqlServerCompiler();
-            var sql = compiler.Compile(query).Sql;
-            Console.WriteLine(sql);
-
-
             using (var db = SqlLiteQueryFactory())
             {
-                var accounts = db.Query("accounts").Get();
-                Console.WriteLine(accounts.Count());
+                var query = db.Query("accounts")
+                    .Where("balance", ">", 0)
+                    .GroupBy("balance")
+                .Limit(10);
+
+                var accounts = query.Clone().Get();
+                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+
+                var exists = query.Clone().Exists();
+                Console.WriteLine(exists);
             }
         }
 
@@ -81,7 +75,17 @@ namespace Program
 
                 SQLiteConnection.CreateFile("Demo.db");
 
-                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, created_at datetime);");
+                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
+                for (var i = 0; i < 10; i++)
+                {
+                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
+                    {
+                        name = $"Account {i}",
+                        currency = "USD",
+                        balance = 100 * i * 1.1,
+                        date = DateTime.UtcNow,
+                    });
+                }
 
             }
 

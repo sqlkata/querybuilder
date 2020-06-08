@@ -7,6 +7,26 @@ namespace SqlKata.Execution
 {
     public static class QueryExtensions
     {
+        public static bool Exists(this Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return CreateQueryFactory(query).Exists(query, transaction, timeout);
+        }
+
+        public async static Task<bool> ExistsAsync(this Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout);
+        }
+
+        public static bool NotExist(this Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return !CreateQueryFactory(query).Exists(query, transaction, timeout);
+        }
+
+        public async static Task<bool> NotExistAsync(this Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return !(await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout));
+        }
+
         public static IEnumerable<T> Get<T>(this Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             return CreateQueryFactory(query).Get<T>(query, transaction, timeout);
