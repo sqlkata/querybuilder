@@ -47,6 +47,11 @@ namespace SqlKata.Execution
             return await GetAsync<dynamic>(query, transaction, timeout);
         }
 
+        public static async Task<IEnumerable<TReturn>> GetAsync<TFirst, TSecond, TReturn>(this Query query, Func<TFirst, TSecond, TReturn> map, string splitOn, int? timeout = null)
+        {
+            return await CreateQueryFactory(query).GetAsync(query, map, splitOn, timeout);
+        }
+
         public static T FirstOrDefault<T>(this Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             return CreateQueryFactory(query).FirstOrDefault<T>(query, transaction, timeout);

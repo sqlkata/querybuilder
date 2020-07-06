@@ -103,6 +103,23 @@ namespace SqlKata.Execution
             return result;
         }
 
+        public async Task<IEnumerable<TReturn>> GetAsync<TFirst, TSecond, TReturn>(Query query, Func<TFirst, TSecond, TReturn> map, string splitOn, int? timeout = null)
+        {
+            var compiled = CompileAndLog(query);
+
+            var result = (await this.Connection.QueryAsync<TFirst, TSecond, TReturn>(
+                sql: compiled.Sql,
+                map: map,
+                splitOn: splitOn,
+                param: compiled.NamedBindings,
+                commandTimeout: timeout ?? this.QueryTimeout
+            )).ToList();
+
+            result = (await handleIncludesAsync(query, result)).ToList();
+
+            return result;
+        }
+
         public IEnumerable<IDictionary<string, object>> GetDictionary(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             var compiled = CompileAndLog(query);
