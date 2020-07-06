@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace SqlKata
@@ -35,8 +36,22 @@ namespace SqlKata
 
     public class BasicStringCondition : BasicCondition
     {
+
         public bool CaseSensitive { get; set; } = false;
 
+        private string escapeCharacter = null;
+        public string EscapeCharacter
+        {
+            get => escapeCharacter;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    value = null;
+                else if (value.Length > 1)
+                    throw new ArgumentOutOfRangeException("The EscapeCharacter can only contain a single character!");
+                escapeCharacter = value;
+            }
+        }
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -49,6 +64,7 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 CaseSensitive = CaseSensitive,
+                EscapeCharacter = EscapeCharacter,
                 Component = Component,
             };
         }

@@ -1,4 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>SqlKata.Execution</PackageId>
+    <PackageTags>sql;query-builder;dynamic-query</PackageTags>
+    <Title>SqlKata The C# Sql Query Builder</Title>
+    <Description>Adds the execution capabilities for SqlKata</Description>
+    <Authors>Ahmad Moussawi</Authors>
+    <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
+    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <RootNamespace>SqlKata</RootNamespace>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>

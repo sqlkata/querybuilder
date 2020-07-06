@@ -1,7 +1,7 @@
 <Project>
   <Import Project="version.props"/>
   <PropertyGroup>
-    <Copyright>2017 SqlKata</Copyright>
+    <Copyright>2020 SqlKata</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!--<AssemblyOriginatorKeyFile>../SqlKata.snk</AssemblyOriginatorKeyFile>-->

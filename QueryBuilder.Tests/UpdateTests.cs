@@ -161,5 +161,57 @@ namespace SqlKata.Tests
               c[EngineCodes.Firebird]);
         }
 
+
+        [Fact]
+        public void UpdateFromRaw()
+        {
+            var query = new Query().FromRaw("Table.With.Dots").AsUpdate(new
+            {
+                Name = "The User",
+            });
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "UPDATE Table.With.Dots SET [Name] = 'The User'",
+                c[EngineCodes.SqlServer]
+            );
+        }
+
+
+        [Fact]
+        public void UpdateFromQueryShouldFail()
+        {
+            var query = new Query().From(new Query("InnerTable")).AsUpdate(new
+            {
+                Name = "The User",
+            });
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                Compile(query);
+            });
+
+        }
+
+        [Fact]
+        public void update_should_compile_literal_without_parameters_holders()
+        {
+
+            var query = new Query("MyTable").AsUpdate(new
+            {
+                Name = "The User",
+                Address = new UnsafeLiteral("@address")
+            });
+
+            var compiler = new SqlServerCompiler();
+            var result =  compiler.Compile(query);
+
+            Assert.Equal(
+                "UPDATE [MyTable] SET [Name] = ?, [Address] = @address",
+                result.RawSql
+            );
+        }
+
     }
 }

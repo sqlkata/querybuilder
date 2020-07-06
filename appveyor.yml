@@ -1,4 +1,4 @@
-image: Visual Studio 2017
+image: Visual Studio 2019
 pull_requests:
   do_not_increment_build_number: true
 skip_branch_with_pr: true
@@ -38,4 +38,4 @@ deploy:
     branch: master
     appveyor_repo_tag: true
   api_key:
-    secure: OWJ9gfaNRCV3Xs1gl0grH4PZ56PqlPmpO2iy/8tAzJh7btrJqyEFGECrU44eEu62
+    secure: vjMzLgB/79JfN2E9TLXdRpnshxSrVKVlo6CH/w4uDQje05dwzcPZLtnMVp0dNWBb
