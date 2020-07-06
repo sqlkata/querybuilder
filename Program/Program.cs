@@ -32,26 +32,6 @@ namespace Program
             public int DaysCount { get; set; }
         }
 
-        private class OrderDto
-        {
-            public Guid OrderId { get; set; }
-
-            public DateTime Date { get; set; }
-
-            public IList<OrderLineDto> OrderLines { get; set; }
-        }
-
-        private class OrderLineDto
-        {
-            public Guid OrderId { get; set; }
-
-            public int Line { get; set; }
-
-            public string ProductCode { get; set; }
-
-            public decimal Price { get; set; }
-        }
-
         static void Main(string[] args)
         {
             using (var db = SqlLiteQueryFactory())
@@ -91,7 +71,7 @@ namespace Program
 
             if (!File.Exists("Demo.db"))
             {
-                Console.WriteLine("db not exists creating db");            
+                Console.WriteLine("db not exists creating db");
 
                 SQLiteConnection.CreateFile("Demo.db");
 
