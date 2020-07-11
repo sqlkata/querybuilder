@@ -4,12 +4,7 @@ using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using System.Data.SqlClient;
-using System.Threading.Tasks;
-using System.Linq;
 using Newtonsoft.Json;
-using Npgsql;
-using System.Data;
-using Dapper;
 using System.Data.SQLite;
 using static SqlKata.Expressions;
 using System.IO;
@@ -38,8 +33,10 @@ namespace Program
             {
                 var query = db.Query("accounts")
                     .Where("balance", ">", 0)
+                    .Where("currency_id", "=", Variable("@CurrencyID"))
                     .GroupBy("balance")
-                .Limit(10);
+                    .Limit(10)
+                    .Define("@CurrencyID", "USD");
 
                 var accounts = query.Clone().Get();
                 Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
@@ -49,11 +46,11 @@ namespace Program
             }
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static void log(SqlResult result)
         {
-            var compiled = compiler.Compile(query);
-            Console.WriteLine(compiled.ToString());
-            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
+            Console.WriteLine("Query:\t\t\t" + result.Sql);
+            Console.WriteLine("Bindings By Name:\t" + JsonConvert.SerializeObject(result.NamedBindings));
+            Console.WriteLine("Bindings By Position:\t" + JsonConvert.SerializeObject(result.Bindings));
         }
 
         private static QueryFactory SqlLiteQueryFactory()
@@ -64,10 +61,7 @@ namespace Program
 
             var db = new QueryFactory(connection, compiler);
 
-            db.Logger = result =>
-            {
-                Console.WriteLine(result.ToString());
-            };
+            db.Logger = log;
 
             if (!File.Exists("Demo.db"))
             {
@@ -102,13 +96,9 @@ namespace Program
 
             var db = new QueryFactory(connection, compiler);
 
-            db.Logger = result =>
-            {
-                Console.WriteLine(result.ToString());
-            };
+            db.Logger = log;
 
             return db;
         }
-
     }
 }
