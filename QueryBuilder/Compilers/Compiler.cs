@@ -17,6 +17,8 @@ namespace SqlKata.Compilers
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
+        public virtual bool UseCustomNamedParameters { get; set; }
+
         protected Compiler()
         {
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
@@ -45,16 +47,31 @@ namespace SqlKata.Compilers
 
         };
 
-        protected Dictionary<string, object> generateNamedBindings(object[] bindings)
+        protected IEnumerable<KeyValuePair<string, object>> generateNamedBindings(SqlResult ctx)
         {
-            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPrefix + x.i, x => x.v);
+            int posCount = 0;
+            KeyValuePair<string, object> generateNamedBinding(object v)
+            {
+                object value = v;
+                if (v is Variable variable)
+                {
+                    value = ctx.Query.FindVariable(variable.Name);
+                    if (this.UseCustomNamedParameters)
+                    {
+                        return new KeyValuePair<string, object>(variable.Name, value);
+                    }
+                }
+                return new KeyValuePair<string, object>(parameterPrefix + posCount++, value);
+            }
+            return Helper.Flatten(ctx.Bindings.ToArray()).Select(generateNamedBinding).ToArray();
         }
 
         protected SqlResult PrepareResult(SqlResult ctx)
         {
-            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPrefix + i);
+            var namedBindings = generateNamedBindings(ctx).ToArray();
+            ctx.Bindings = namedBindings.Select(x => x.Value).ToList();
+            ctx.NamedBindings = namedBindings.Distinct().ToDictionary(x => x.Key, x => x.Value);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => namedBindings[i].Key);
             return ctx;
         }
 
@@ -879,7 +896,7 @@ namespace SqlKata.Compilers
             }
 
             // if we face a variable we have to lookup the variable from the predefined variables
-            if (parameter is Variable variable)
+            if (!UseCustomNamedParameters && parameter is Variable variable)
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);

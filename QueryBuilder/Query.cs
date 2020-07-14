@@ -12,7 +12,6 @@ namespace SqlKata
         public string Method { get; set; } = "select";
         public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
-        public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
         public Query() : base()
         {

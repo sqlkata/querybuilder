@@ -7,7 +7,7 @@ namespace SqlKata
 
     }
 
-    public class Combine : AbstractCombine
+    public class Combine : AbstractCombine, IWithQuery<Query>
     {
         /// <summary>
         /// Gets or sets the query to be combined with.

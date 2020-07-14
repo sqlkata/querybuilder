@@ -7,6 +7,8 @@ namespace SqlKata
 {
     public abstract partial class BaseQuery<Q>
     {
+        public Dictionary<string, object> Variables = new Dictionary<string, object>();
+
         public Q Where(string column, string op, object value)
         {
 

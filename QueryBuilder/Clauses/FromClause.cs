@@ -51,7 +51,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a "from subquery" clause.
     /// </summary>
-    public class QueryFromClause : AbstractFrom
+    public class QueryFromClause : AbstractFrom, IWithQuery<Query>
     {
         public Query Query { get; set; }
 

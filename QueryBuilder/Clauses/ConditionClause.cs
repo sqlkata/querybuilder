@@ -119,7 +119,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a column and a full "subquery".
     /// </summary>
-    public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class QueryCondition<T> : AbstractCondition, IWithQuery<Query> where T : BaseQuery<T>
     {
         public string Column { get; set; }
         public string Operator { get; set; }
@@ -144,7 +144,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a full "subquery" and a value.
     /// </summary>
-    public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class SubQueryCondition<T> : AbstractCondition, IWithQuery<Query> where T : BaseQuery<T>
     {
         public object Value { get; set; }
         public string Operator { get; set; }
@@ -191,7 +191,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a "is in subquery" condition.
     /// </summary>
-    public class InQueryCondition : AbstractCondition
+    public class InQueryCondition : AbstractCondition, IWithQuery<Query>
     {
         public Query Query { get; set; }
         public string Column { get; set; }
@@ -280,7 +280,7 @@ namespace SqlKata
     /// Represents a "nested" clause condition.
     /// i.e OR (myColumn = "A")
     /// </summary>
-    public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class NestedCondition<T> : AbstractCondition, IWithQuery<T> where T : BaseQuery<T>
     {
         public T Query { get; set; }
         public override AbstractClause Clone()
@@ -299,7 +299,7 @@ namespace SqlKata
     /// <summary>
     /// Represents an "exists sub query" clause condition.
     /// </summary>
-    public class ExistsCondition : AbstractCondition
+    public class ExistsCondition : AbstractCondition, IWithQuery<Query>
     {
         public Query Query { get; set; }
 

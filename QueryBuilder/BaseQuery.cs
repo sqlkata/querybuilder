@@ -79,6 +79,15 @@ namespace SqlKata
             clause.Component = component;
             Clauses.Add(clause);
 
+            if (clause is IWithQuery<Q> withQuery)
+            {
+                // Pass Variables up, so they can be found later
+                foreach (var variable in withQuery.Query.Variables)
+                {
+                    Variables[variable.Key] = variable.Value;
+                }
+            }
+
             return (Q)this;
         }
 

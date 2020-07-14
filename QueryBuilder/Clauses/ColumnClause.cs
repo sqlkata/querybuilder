@@ -34,7 +34,7 @@ namespace SqlKata
     /// Represents column clause calculated using query.
     /// </summary>
     /// <seealso cref="AbstractColumn" />
-    public class QueryColumn : AbstractColumn
+    public class QueryColumn : AbstractColumn, IWithQuery<Query>
     {
         /// <summary>
         /// Gets or sets the query that will be used for column value calculation.

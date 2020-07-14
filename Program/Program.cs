@@ -55,7 +55,7 @@ namespace Program
 
         private static QueryFactory SqlLiteQueryFactory()
         {
-            var compiler = new SqliteCompiler();
+            var compiler = new SqliteCompiler() { UseCustomNamedParameters = true };
 
             var connection = new SQLiteConnection("Data Source=Demo.db");
 

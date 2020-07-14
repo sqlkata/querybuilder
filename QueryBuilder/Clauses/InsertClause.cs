@@ -26,7 +26,7 @@ namespace SqlKata
         }
     }
 
-    public class InsertQueryClause : AbstractInsertClause
+    public class InsertQueryClause : AbstractInsertClause, IWithQuery<Query>
     {
         public List<string> Columns { get; set; }
         public Query Query { get; set; }
