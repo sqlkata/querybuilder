@@ -20,7 +20,7 @@ namespace SqlKata.Tests.Infrastructure
             [EngineCodes.Oracle] = new OracleCompiler(),
             [EngineCodes.PostgreSql] = new PostgresCompiler(),
             [EngineCodes.Sqlite] = new SqliteCompiler(),
-            [EngineCodes.SqlServer] = new SqlServerCompiler()
+            [EngineCodes.SqlServer] = new SqlServerCompiler() { UseCustomNamedParameters = true },
         };
 
         public IEnumerable<string> KnownEngineCodes
@@ -52,7 +52,7 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public TCompiler Get<TCompiler>(string engineCode) where TCompiler : Compiler
         {
-            return (TCompiler) Get(engineCode);
+            return (TCompiler)Get(engineCode);
         }
 
         /// <summary>
