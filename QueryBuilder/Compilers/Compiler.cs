@@ -18,6 +18,7 @@ namespace SqlKata.Compilers
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
         public virtual bool UseCustomNamedParameters { get; set; }
+        public virtual bool AllowUndefinedNamedVariables { get; set; }
 
         protected Compiler()
         {
@@ -55,7 +56,16 @@ namespace SqlKata.Compilers
                 object value = v;
                 if (v is Variable variable)
                 {
-                    value = ctx.Query.FindVariable(variable.Name);
+                    try
+                    {
+                        value = ctx.Query.FindVariable(variable.Name);
+                    }
+                    catch (Exception) when (AllowUndefinedNamedVariables)
+                    {
+                        // Variable was undefined, assume this is intended and return default.
+                        value = default(object);
+                    }
+
                     if (this.UseCustomNamedParameters)
                     {
                         return new KeyValuePair<string, object>(variable.Name, value);
