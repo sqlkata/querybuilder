@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata
 {
@@ -61,6 +63,28 @@ namespace SqlKata
         public Query Select(Func<Query, Query> callback, string alias)
         {
             return Select(callback.Invoke(NewChild()), alias);
+        }
+
+        public Query Select(AbstractSqlExpression expression, string alias = null)
+        {
+            AddComponent("select", new SelectSqlExpressionClause
+            {
+                Expression = expression,
+                Alias = alias
+            });
+
+            return this;
+        }
+
+        public Query Select(Expression expression, string alias = null)
+        {
+            AddComponent("select", new SelectExpressionClause
+            {
+                Expression = expression,
+                Alias = alias
+            });
+
+            return this;
         }
     }
 }

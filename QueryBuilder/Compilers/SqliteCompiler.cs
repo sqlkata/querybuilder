@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using SqlKata;
-using SqlKata.Compilers;
+using SqlKata.Compilers.Visitors;
 
 namespace SqlKata.Compilers
 {
@@ -12,6 +11,8 @@ namespace SqlKata.Compilers
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
         protected override string LastId { get; set; } = "select last_insert_rowid() as id";
+
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         public override string CompileTrue()
         {

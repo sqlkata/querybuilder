@@ -1,3 +1,5 @@
+using SqlKata.Compilers.Visitors;
+
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
@@ -6,6 +8,8 @@ namespace SqlKata.Compilers
         {
             LastId = "SELECT lastval() AS id";
         }
+
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
 

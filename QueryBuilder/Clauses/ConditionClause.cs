@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata
 {
@@ -333,6 +335,38 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,
+            };
+        }
+    }
+
+    public class SqlExpressionCondition : AbstractCondition
+    {
+        public AbstractSqlExpression Expression { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new SqlExpressionCondition
+            {
+                Engine = Engine,
+                Component = Component,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Expression = Expression,
+            };
+        }
+    }
+
+    public class ExpressionCondition : AbstractCondition
+    {
+        public Expression Expression { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new ExpressionCondition
+            {
+                Engine = Engine,
+                Component = Component,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Expression = Expression,
             };
         }
     }

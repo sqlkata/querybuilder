@@ -1,3 +1,5 @@
+using SqlKata.Compilers.Visitors;
+
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
@@ -9,6 +11,8 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.MySql;
+
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         public override string CompileLimit(SqlResult ctx)
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using SqlKata.Compilers;
+using SqlKata.Compilers.Visitors;
 
 namespace SqlKata.Tests.Infrastructure
 {
@@ -10,6 +11,7 @@ namespace SqlKata.Tests.Infrastructure
     class TestCompiler : Compiler
     {
         public override string EngineCode { get; } = "test";
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
         {

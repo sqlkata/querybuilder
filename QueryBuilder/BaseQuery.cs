@@ -118,6 +118,7 @@ namespace SqlKata
             var clauses = Clauses
                 .Where(x => x.Component == component)
                 .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                .OfType<C>()
                 .Cast<C>();
 
             return clauses.ToList();

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SqlKata.Compilers.Visitors;
 
 namespace SqlKata.Compilers
 {
-    public partial class Compiler
+    public abstract partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
@@ -16,6 +17,8 @@ namespace SqlKata.Compilers
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
+
+        protected abstract SqlExpressionVisitorInterface ExpressionVisitor { get; }
 
         protected Compiler()
         {
@@ -419,6 +422,30 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        public virtual string CompileSqlExpression(SqlResult ctx, SelectSqlExpressionClause clause)
+        {
+            if (string.IsNullOrEmpty(clause.Alias))
+            {
+                return ExpressionVisitor.Visit(clause.Expression);
+            }
+            else
+            {
+                return ExpressionVisitor.Visit(clause.Expression) + " as " + Wrap(clause.Alias);
+            }
+        }
+
+        public virtual string CompileExpression(SqlResult ctx, SelectExpressionClause clause)
+        {
+            if (string.IsNullOrEmpty(clause.Alias))
+            {
+                return ExpressionVisitor.Visit(clause.Expression);
+            }
+            else
+            {
+                return ExpressionVisitor.Visit(clause.Expression) + " as " + Wrap(clause.Alias);
+            }
+        }
+
         /// <summary>
         /// Compile a single column clause
         /// </summary>
@@ -447,6 +474,16 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 return "(" + subCtx.RawSql + $"){alias}";
+            }
+
+            if (column is SelectSqlExpressionClause sqlExpressionClause)
+            {
+                return CompileSqlExpression(ctx, sqlExpressionClause);
+            }
+
+            if (column is SelectExpressionClause expressionClause)
+            {
+                return CompileExpression(ctx, expressionClause);
             }
 
             return Wrap((column as Column).Name);

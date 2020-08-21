@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -47,6 +48,7 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < conditions.Count; i++)
             {
+
                 var compiled = CompileCondition(ctx, conditions[i]);
 
                 if (string.IsNullOrEmpty(compiled))
@@ -66,6 +68,18 @@ namespace SqlKata.Compilers
         {
             ctx.Bindings.AddRange(x.Bindings);
             return WrapIdentifiers(x.Expression);
+        }
+
+        protected virtual string CompileSqlExpressionCondition(SqlResult ctx, SqlExpressionCondition x)
+        {
+            // ctx.Bindings.AddRange(x.Bindings);
+            return ExpressionVisitor.Visit(x.Expression);
+        }
+
+        protected virtual string CompileExpressionCondition(SqlResult ctx, ExpressionCondition x)
+        {
+            // ctx.Bindings.AddRange(x.Bindings);
+            return ExpressionVisitor.Visit(x.Expression);
         }
 
         protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>

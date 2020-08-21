@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using SqlKata.Compilers.Visitors;
 
 namespace SqlKata.Compilers
 {
@@ -13,6 +12,7 @@ namespace SqlKata.Compilers
             TableAsKeyword = "";
             parameterPrefix = ":p";
         }
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;

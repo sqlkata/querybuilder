@@ -1,6 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
+using SqlKata.Compilers.Visitors;
 
 namespace SqlKata.Compilers
 {
@@ -11,6 +10,7 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.Firebird;
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         protected override SqlResult CompileInsertQuery(Query query)
         {

@@ -13,6 +13,11 @@ using Dapper;
 using System.Data.SQLite;
 using static SqlKata.Expressions;
 using System.IO;
+using SqlKata.SqlExpressions;
+using System.Linq.Expressions;
+using static SqlKata.SqlExpressions.Functions;
+using static SqlKata.SqlExpressions.Conditions;
+using static SqlKata.SqlExpressions.Common;
 
 namespace Program
 {
@@ -34,12 +39,67 @@ namespace Program
 
         static void Main(string[] args)
         {
+
+            Expression amountIsBig = Expression.Condition(
+                        Expression.GreaterThan(
+                            Expression.Parameter(typeof(int), "Amount"),
+                            Expression.Constant(5)
+                        ),
+                        Expression.Constant("Big"),
+                        Expression.Constant("Small")
+                    );
+
+
+            var query = new Query("Users").Where(
+                GreaterThan("Name", "5")
+            ).Where(
+                LessThan(Length("Amount"), Literal(10))
+            ).Select(
+                Case(Length("Name")).When(
+                    Literal(10),
+                    StringValue("Big")
+                ).Otherwise(
+                    StringValue("Small")
+                ),
+                "NameIsBig"
+            );
+
+            log(new MySqlCompiler(), query);
+            log(new SqlServerCompiler(), query);
+
+            // query = new Query("Users").Select(
+            //     new Cast("Age", CastType.Bool), "BooleanAge"
+            // );
+
+            // log(new MySqlCompiler(), query);
+            // log(new SqlServerCompiler(), query);
+
+            // query = new Query("Users").Select(
+            //     new Function("GetExchangeRate", new Concat("Name", "LastName"), new StringValue("Anything")), "UpperName"
+            // );
+
+            // log(new MySqlCompiler(), query);
+            // log(new SqlServerCompiler(), query);
+
+
+            /*
             using (var db = SqlLiteQueryFactory())
             {
                 var query = db.Query("accounts")
                     .Where("balance", ">", 0)
+                    .Select(new Concat("name", "'+'", "balance"))
                     .GroupBy("balance")
                 .Limit(10);
+
+                var result = db.Query("accounts").InsertGetId<int>(new
+                {
+                    name = "New Account",
+                    currency_id = "GBP",
+                    balance = UnsafeLiteral("100 + 1"),
+                    created_at = DateTime.UtcNow
+                });
+
+                Console.WriteLine(result);
 
                 var accounts = query.Clone().Get();
                 Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
@@ -47,6 +107,7 @@ namespace Program
                 var exists = query.Clone().Exists();
                 Console.WriteLine(exists);
             }
+            */
         }
 
         private static void log(Compiler compiler, Query query)
@@ -66,7 +127,7 @@ namespace Program
 
             db.Logger = result =>
             {
-                Console.WriteLine(result.ToString());
+                Console.WriteLine(result.Sql);
             };
 
             if (!File.Exists("Demo.db"))
@@ -78,7 +139,12 @@ namespace Program
                 db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
                 for (var i = 0; i < 10; i++)
                 {
-                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
+                    db.Statement(@"insert into accounts(
+                        name,
+                        currency_id,
+                        balance,
+                        created_at
+                    ) values(@name, @currency, @balance, @date)", new
                     {
                         name = $"Account {i}",
                         currency = "USD",
@@ -110,5 +176,14 @@ namespace Program
             return db;
         }
 
+    }
+
+    public class MyOracleCompiler : OracleCompiler
+    {
+        MyOracleCompiler()
+        {
+            OpeningIdentifier = "";
+            ClosingIdentifier = "";
+        }
     }
 }

@@ -1,3 +1,5 @@
+using SqlKata.Compilers.Visitors;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -11,6 +13,7 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = true;
+        protected override SqlExpressionVisitorInterface ExpressionVisitor => new SqlServerVisitor();
 
         protected override SqlResult CompileSelectQuery(Query query)
         {

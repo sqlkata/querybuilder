@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata
 {
@@ -691,6 +693,30 @@ namespace SqlKata
         }
 
         #endregion
+
+
+        public Q Where(AbstractSqlExpression expression)
+        {
+            return AddComponent("where", new SqlExpressionCondition
+            {
+                Expression = expression,
+            });
+        }
+        public Q Where(Expression expression)
+        {
+            return AddComponent("where", new ExpressionCondition
+            {
+                Expression = expression,
+            });
+        }
+
+        public Q WhereExpression(Expression<Func<bool>> expression)
+        {
+            return AddComponent("where", new ExpressionCondition
+            {
+                Expression = expression,
+            });
+        }
 
     }
 }
