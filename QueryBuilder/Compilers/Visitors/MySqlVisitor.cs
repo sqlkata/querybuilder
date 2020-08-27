@@ -7,19 +7,9 @@ namespace SqlKata.Compilers.Visitors
     public class MySqlVisitor : AbstractVisitor
     {
 
-        public override string Visit(Concat expression)
-        {
-            return $"CONCAT({string.Join(", ", expression.Values.Select(x => Visit(x)))})";
-        }
-
         public override string Visit(JsonExtract expression)
         {
             return $"json_extract([{expression.Column}], '{expression.Path}')";
-        }
-
-        public override string Visit(Length expression)
-        {
-            return $"LENGTH({Visit(expression.Value)})";
         }
 
         public override string Visit(Cast expression)

@@ -54,15 +54,16 @@ namespace Program
                 GreaterThan("Name", "5")
             ).Where(
                 LessThan(Length("Amount"), Literal(10))
-            ).Select(
-                Case(Length("Name")).When(
-                    Literal(10),
-                    StringValue("Big")
-                ).Otherwise(
-                    StringValue("Small")
-                ),
-                "NameIsBig"
-            );
+            )
+            .Select(Concat("Name", "Lname"))
+            .Select(
+                Case(Length("Name"))
+                    .When(Literal("10"), StringValue("NameIsBig"))
+                    .When(Literal("20"), StringValue("NameIsMedium"))
+                    .Otherwise(StringValue("Small")),
+                "NameIsBig2"
+            )
+            .Select(Lower("Name"), "Namelower");
 
             log(new MySqlCompiler(), query);
             log(new SqlServerCompiler(), query);

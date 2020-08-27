@@ -6,19 +6,20 @@ namespace SqlKata.Compilers.Visitors
 {
     public class SqlServerVisitor : AbstractVisitor
     {
-        public override string Visit(Concat expression)
-        {
-            return string.Join(" + ", expression.Values.Select(x => Visit(x)));
-        }
-
         public override string Visit(JsonExtract expression)
         {
             return $"json_value({expression.Column}, '{expression.Path}')";
         }
 
-        public override string Visit(Length expression)
+        public override string Visit(Function expression)
         {
-            return $"LEN({Visit(expression.Value)})";
+            if (string.Equals(expression.Name, "length", StringComparison.OrdinalIgnoreCase))
+            {
+                // Sql Server use LEN instead of Length
+                return Visit(new Function("Len", expression.Values.ToArray()));
+            }
+
+            return base.Visit(expression);
         }
 
         public override string Visit(Cast expression)

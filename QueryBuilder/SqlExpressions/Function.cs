@@ -12,7 +12,7 @@ namespace SqlKata.SqlExpressions
         public Function(string name, params string[] args)
         {
             this.Name = name;
-            Values = args.Select(x => new Literal(x)).Cast<Expression>().ToList();
+            Values = args.Select(x => new Identifier(x)).Cast<Expression>().ToList();
         }
 
         public Function(string name, params Expression[] expressions)
