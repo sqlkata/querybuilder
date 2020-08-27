@@ -13,9 +13,7 @@ namespace SqlKata.Compilers.Visitors
         //     return Visit((dynamic)expression);
         // }
 
-        public abstract string Visit(Concat expression);
         public abstract string Visit(JsonExtract expression);
-        public abstract string Visit(Length expression);
         public abstract string Visit(Cast expression);
 
         public string Visit(StringValue expression)
@@ -28,24 +26,9 @@ namespace SqlKata.Compilers.Visitors
             return expression.Value;
         }
 
-        public string Visit(Function expression)
+        public virtual string Visit(Function expression)
         {
             return $"{expression.Name}({string.Join(", ", expression.Values.Select(x => Visit(x)))})";
-        }
-
-        public string Visit(Count expression)
-        {
-            return $"COUNT({Visit(expression.Value)})";
-        }
-
-        public string Visit(Lower expression)
-        {
-            return $"LOWER({Visit(expression.Value)})";
-        }
-
-        public string Visit(Upper expression)
-        {
-            return $"UPPER({Visit(expression.Value)})";
         }
 
         public string Visit(Identifier expression)

@@ -8,12 +8,7 @@ namespace SqlKata.Compilers.Visitors
     {
         // string Visit(AbstractSqlExpression expression);
         string Visit(StringValue expression);
-        string Visit(Concat expression);
-        string Visit(Count expression);
         string Visit(JsonExtract expression);
-        string Visit(Lower expression);
-        string Visit(Upper expression);
-        string Visit(Length expression);
         string Visit(Cast expression);
         string Visit(Identifier expression);
         string Visit(Literal expression);

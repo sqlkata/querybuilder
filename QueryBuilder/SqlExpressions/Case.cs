@@ -22,6 +22,12 @@ namespace SqlKata.SqlExpressions
             return this;
         }
 
+        public Case When(string condition, string outcome)
+        {
+            Cases.Add(new Literal(condition), new Literal(outcome));
+            return this;
+        }
+
         public Case Otherwise(Expression expression)
         {
             ElseDefault = expression;

@@ -54,16 +54,45 @@ namespace SqlKata.SqlExpressions
             return new Case(expression);
         }
 
-        public static Length Length(Expression expression)
+        public static Function Length(Expression expression)
         {
-            return new Length(expression);
+            return new Function("Length", expression);
         }
 
-        public static Length Length(string column)
+        public static Function Length(string column)
         {
             return Length(new Identifier(column));
         }
 
+        public static Function Upper(Expression expression)
+        {
+            return new Function("Upper", expression);
+        }
+
+        public static Function Upper(string column)
+        {
+            return Upper(new Identifier(column));
+        }
+
+        public static Function Lower(Expression expression)
+        {
+            return new Function("Lower", expression);
+        }
+
+        public static Function Lower(string column)
+        {
+            return Lower(new Identifier(column));
+        }
+
+        public static Function Concat(params Expression[] expressions)
+        {
+            return new Function("Concat", expressions);
+        }
+
+        public static Function Concat(params string[] expressions)
+        {
+            return new Function("Concat", expressions);
+        }
 
     }
 }
