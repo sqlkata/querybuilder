@@ -77,7 +77,7 @@ namespace SqlKata
             return Where(dictionary);
         }
 
-        public Q Where(IReadOnlyDictionary<string, object> values)
+        public Q Where(IEnumerable<KeyValuePair<string, object>> values)
         {
             var query = (Q)this;
             var orFlag = GetOr();

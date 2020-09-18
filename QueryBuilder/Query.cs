@@ -353,7 +353,7 @@ namespace SqlKata
         /// and add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
+        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
         {
 
             var dictionary = new Dictionary<string, object>();

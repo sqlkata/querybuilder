@@ -11,7 +11,7 @@ namespace SqlKata
 
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildDictionaryFromObject(data, considerKeys: true);
+            var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true);
 
             return AsUpdate(dictionary);
         }
@@ -40,10 +40,10 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsUpdate(IReadOnlyDictionary<string, object> data)
+        public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> data)
         {
 
-            if (data == null || data.Count == 0)
+            if (data == null || data.Any() == false)
             {
                 throw new InvalidOperationException("Values dictionary cannot be null or empty");
             }
@@ -52,8 +52,8 @@ namespace SqlKata
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = data.Keys.ToList(),
-                Values = data.Values.ToList(),
+                Columns = data.Select(x => x.Key).ToList(),
+                Values = data.Select(x => x.Value).ToList(),
             });
 
             return this;

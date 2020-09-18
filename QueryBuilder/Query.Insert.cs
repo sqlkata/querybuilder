@@ -9,7 +9,7 @@ namespace SqlKata
     {
         public Query AsInsert(object data, bool returnId = false)
         {
-            var dictionary = BuildDictionaryFromObject(data);
+            var dictionary = BuildKeyValuePairsFromObject(data);
 
             return AsInsert(dictionary, returnId);
         }
@@ -42,7 +42,7 @@ namespace SqlKata
 
         public Query AsInsert(IEnumerable<KeyValuePair<string, object>> data, bool returnId = false)
         {
-            if (data == null || data.Count == 0)
+            if (data == null || data.Any() == false)
             {
                 throw new InvalidOperationException("Values dictionary cannot be null or empty");
             }
@@ -51,8 +51,8 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = data.Keys.ToList(),
-                Values = data.Values.ToList(),
+                Columns = data.Select(x=>x.Key).ToList(),
+                Values = data.Select(x => x.Value).ToList(),
                 ReturnId = returnId,
             });
 

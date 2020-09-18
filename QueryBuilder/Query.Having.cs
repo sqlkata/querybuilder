@@ -77,7 +77,7 @@ namespace SqlKata
             return Having(dictionary);
         }
 
-        public Query Having(IReadOnlyDictionary<string, object> values)
+        public Query Having(IEnumerable<KeyValuePair<string, object>> values)
         {
             var query = this;
             var orFlag = GetOr();
