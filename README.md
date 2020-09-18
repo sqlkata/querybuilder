@@ -21,6 +21,8 @@ By providing a level of abstraction over the supported database engines, that al
 
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql, PostgreSql and Firebird.
 
+The SqlKata.Execution package provides the ability to submit the queries to the database, using [Dapper](https://github.com/StackExchange/Dapper) under the covers.
+
 Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
 ## Installation
@@ -46,6 +48,8 @@ var compiler = new SqlCompiler();
 
 var db = new QueryFactory(connection, compiler)
 ```
+
+> `QueryFactory` is provided by the SqlKata.Execution package.
 
 ### Retrieve all records
 ```cs
