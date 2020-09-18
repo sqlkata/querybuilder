@@ -40,7 +40,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IReadOnlyDictionary<string, object> data, bool returnId = false)
+        public Query AsInsert(IEnumerable<KeyValuePair<string, object>> data, bool returnId = false)
         {
             if (data == null || data.Count == 0)
             {
