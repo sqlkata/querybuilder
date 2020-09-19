@@ -5,10 +5,8 @@ using System.Reflection;
 
 namespace SqlKata
 {
-
     public partial class Query
     {
-
         public Query AsUpdate(object data)
         {
             var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true);
@@ -18,15 +16,14 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-
-            if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
+            if ((columns?.Any() ?? false) == false || (values?.Any() ?? false) == false)
             {
-                throw new InvalidOperationException("Columns and Values cannot be null or empty");
+                throw new InvalidOperationException($"{columns} and {values} cannot be null or empty");
             }
 
             if (columns.Count() != values.Count())
             {
-                throw new InvalidOperationException("Columns count should be equal to Values count");
+                throw new InvalidOperationException($"{columns} count should be equal to {values} count");
             }
 
             Method = "update";
@@ -40,24 +37,22 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> data)
+        public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> values)
         {
-
-            if (data == null || data.Any() == false)
+            if (values == null || values.Any() == false)
             {
-                throw new InvalidOperationException("Values dictionary cannot be null or empty");
+                throw new InvalidOperationException($"{values} cannot be null or empty");
             }
 
             Method = "update";
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = data.Select(x => x.Key).ToList(),
-                Values = data.Select(x => x.Value).ToList(),
+                Columns = values.Select(x => x.Key).ToList(),
+                Values = values.Select(x => x.Value).ToList(),
             });
 
             return this;
         }
-
     }
 }

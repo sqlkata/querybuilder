@@ -40,7 +40,7 @@ namespace SqlKata.Compilers
 
             if (methodInfo == null)
             {
-                throw new Exception($"Failed to locate a compiler for {methodName}.");
+                throw new Exception($"Failed to locate a compiler for '{methodName}'.");
             }
 
             if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())

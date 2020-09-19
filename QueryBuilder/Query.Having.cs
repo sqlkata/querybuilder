@@ -488,7 +488,7 @@ namespace SqlKata
         {
             if (!query.HasComponent("from"))
             {
-                throw new ArgumentException("'FromClause' cannot be empty if used inside a 'HavingExists' condition");
+                throw new ArgumentException($"{nameof(FromClause)} cannot be empty if used inside a {nameof(HavingExists)} condition");
             }
 
             // simplify the query as much as possible

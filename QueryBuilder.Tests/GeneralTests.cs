@@ -291,7 +291,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("limit").Count());
+            Assert.Equal(2, query.GetComponents("limit").Count);
             Assert.Equal("SELECT TOP (5) * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM `mytable`", c[EngineCodes.MySql].ToString());
@@ -319,7 +319,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("offset").Count());
+            Assert.Equal(2, query.GetComponents("offset").Count);
             Assert.Equal("SELECT * FROM `mytable` LIMIT 18446744073709551615 OFFSET 5", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" OFFSET 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM [mytable]", c[EngineCodes.SqlServer].ToString());

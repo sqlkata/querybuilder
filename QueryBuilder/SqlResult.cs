@@ -34,7 +34,7 @@ namespace SqlKata
                 if (i >= deepParameters.Count)
                 {
                     throw new Exception(
-                        $"Failed to retrieve a binding at the index {i}, the total bindings count is {Bindings.Count}");
+                        $"Failed to retrieve a binding at index {i}, the total bindings count is {Bindings.Count}");
                 }
 
                 var value = deepParameters[i];
@@ -44,7 +44,6 @@ namespace SqlKata
 
         private string ChangeToSqlValue(object value)
         {
-
             if (value == null)
             {
                 return "NULL";
@@ -83,8 +82,5 @@ namespace SqlKata
             // fallback to string
             return "'" + value.ToString() + "'";
         }
-
-
-
     }
 }

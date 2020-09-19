@@ -47,7 +47,7 @@ namespace SqlKata.Tests
         [Fact]
         public void ShouldThrowIfAnyEngineCodesAreInvalid()
         {
-            var codes = new[] {EngineCodes.SqlServer, "123", EngineCodes.MySql, "abc"};
+            var codes = new[] { EngineCodes.SqlServer, "123", EngineCodes.MySql, "abc" };
             Assert.Throws<InvalidOperationException>(() => Compilers.Compile(codes, new Query()));
         }
     }
