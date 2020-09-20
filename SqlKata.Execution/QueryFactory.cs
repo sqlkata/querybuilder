@@ -271,14 +271,12 @@ namespace SqlKata.Execution
                 transaction,
                 timeout ?? this.QueryTimeout
             );
-
         }
 
         public async Task<SqlMapper.GridReader> GetMultipleAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null
-        )
+            int? timeout = null)
         {
             var compiled = this.Compiler.Compile(queries);
 
@@ -288,8 +286,6 @@ namespace SqlKata.Execution
                 transaction,
                 timeout ?? this.QueryTimeout
             );
-
-
         }
 
         public IEnumerable<IEnumerable<T>> Get<T>(
@@ -307,12 +303,11 @@ namespace SqlKata.Execution
 
             using (multi)
             {
-                for (var i = 0; i < queries.Count(); i++)
+                for (var i = 0; i < queries.Length; i++)
                 {
                     yield return multi.Read<T>();
                 }
             }
-
         }
 
         public async Task<IEnumerable<IEnumerable<T>>> GetAsync<T>(
@@ -321,7 +316,6 @@ namespace SqlKata.Execution
             int? timeout = null
         )
         {
-
             var multi = await this.GetMultipleAsync<T>(
                 queries,
                 transaction,
@@ -332,14 +326,13 @@ namespace SqlKata.Execution
 
             using (multi)
             {
-                for (var i = 0; i < queries.Count(); i++)
+                for (var i = 0; i < queries.Length; i++)
                 {
                     list.Add(multi.Read<T>());
                 }
             }
 
             return list;
-
         }
 
         public bool Exists(Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -415,6 +408,7 @@ namespace SqlKata.Execution
         {
             return await this.AggregateAsync<T>(query, "avg", new[] { column });
         }
+
         public T Sum<T>(Query query, string column)
         {
             return this.Aggregate<T>(query, "sum", new[] { column });
@@ -439,6 +433,7 @@ namespace SqlKata.Execution
         {
             return this.Aggregate<T>(query, "max", new[] { column });
         }
+
         public async Task<T> MaxAsync<T>(Query query, string column)
         {
             return await this.AggregateAsync<T>(query, "max", new[] { column });
@@ -446,7 +441,6 @@ namespace SqlKata.Execution
 
         public PaginationResult<T> Paginate<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
         {
-
             if (page < 1)
             {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
@@ -478,12 +472,10 @@ namespace SqlKata.Execution
                 Count = count,
                 List = list
             };
-
         }
 
         public async Task<PaginationResult<T>> PaginateAsync<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
         {
-
             if (page < 1)
             {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
@@ -515,7 +507,6 @@ namespace SqlKata.Execution
                 Count = count,
                 List = list
             };
-
         }
 
         public void Chunk<T>(
@@ -523,8 +514,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Func<IEnumerable<T>, int, bool> func,
             IDbTransaction transaction = null,
-            int? timeout = null
-        )
+            int? timeout = null)
         {
             var result = this.Paginate<T>(query, 1, chunkSize, transaction, timeout);
 
@@ -541,7 +531,6 @@ namespace SqlKata.Execution
                     return;
                 }
             }
-
         }
 
         public async Task ChunkAsync<T>(
@@ -567,7 +556,6 @@ namespace SqlKata.Execution
                     return;
                 }
             }
-
         }
 
         public void Chunk<T>(Query query, int chunkSize, Action<IEnumerable<T>, int> action, IDbTransaction transaction = null, int? timeout = null)
@@ -600,7 +588,6 @@ namespace SqlKata.Execution
                 result = result.Next();
                 action(result.List, result.Page);
             }
-
         }
 
         public IEnumerable<T> Select<T>(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
@@ -694,7 +681,10 @@ namespace SqlKata.Execution
                         continue;
                     }
 
-                    var children = include.Query.WhereIn(include.ForeignKey, localIds).Get()
+                    var children = include
+                        .Query
+                        .WhereIn(include.ForeignKey, localIds)
+                        .Get()
                         .Cast<IDictionary<string, object>>()
                         .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
                         .GroupBy(x => x[include.ForeignKey].ToString())
@@ -714,7 +704,8 @@ namespace SqlKata.Execution
                     include.ForeignKey = include.Name + "Id";
                 }
 
-                var foreignIds = dynamicResult.Where(x => x[include.ForeignKey] != null)
+                var foreignIds = dynamicResult
+                    .Where(x => x[include.ForeignKey] != null)
                     .Select(x => x[include.ForeignKey].ToString())
                     .ToList();
 
@@ -723,7 +714,10 @@ namespace SqlKata.Execution
                     continue;
                 }
 
-                var related = include.Query.WhereIn(include.LocalKey, foreignIds).Get()
+                var related = include
+                    .Query
+                    .WhereIn(include.LocalKey, foreignIds)
+                    .Get()
                     .Cast<IDictionary<string, object>>()
                     .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
                     .ToDictionary(x => x[include.LocalKey].ToString());
@@ -736,7 +730,6 @@ namespace SqlKata.Execution
             }
 
             return dynamicResult.Cast<T>();
-
         }
 
         private static async Task<IEnumerable<T>> handleIncludesAsync<T>(Query query, IEnumerable<T> result)
@@ -760,7 +753,6 @@ namespace SqlKata.Execution
 
             foreach (var include in query.Includes)
             {
-
                 if (include.IsMany)
                 {
                     if (include.ForeignKey == null)
@@ -833,7 +825,6 @@ namespace SqlKata.Execution
 
             return dynamicResult.Cast<T>();
         }
-
 
         /// <summary>
         /// Compile and log query

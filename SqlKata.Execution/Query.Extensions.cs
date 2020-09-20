@@ -153,12 +153,12 @@ namespace SqlKata.Execution
             await ChunkAsync<dynamic>(query, chunkSize, action, transaction, timeout);
         }
 
-        public static int Insert(this Query query, IReadOnlyDictionary<string, object> values, IDbTransaction transaction = null, int? timeout = null)
+        public static int Insert(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null)
         {
             return CreateQueryFactory(query).Execute(query.AsInsert(values), transaction, timeout);
         }
 
-        public static async Task<int> InsertAsync(this Query query, IReadOnlyDictionary<string, object> values, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<int> InsertAsync(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null)
         {
             return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(values), transaction, timeout);
         }
@@ -205,26 +205,26 @@ namespace SqlKata.Execution
             return row.Id;
         }
 
-        public static T InsertGetId<T>(this Query query, IReadOnlyDictionary<string, object> data, IDbTransaction transaction = null, int? timeout = null)
+        public static T InsertGetId<T>(this Query query, IEnumerable<KeyValuePair<string, object>> data, IDbTransaction transaction = null, int? timeout = null)
         {
             var row = CreateQueryFactory(query).First<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout);
 
             return row.Id;
         }
 
-        public static async Task<T> InsertGetIdAsync<T>(this Query query, IReadOnlyDictionary<string, object> data, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> InsertGetIdAsync<T>(this Query query, IEnumerable<KeyValuePair<string, object>> data, IDbTransaction transaction = null, int? timeout = null)
         {
             var row = await CreateQueryFactory(query).FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout);
 
             return row.Id;
         }
 
-        public static int Update(this Query query, IReadOnlyDictionary<string, object> values, IDbTransaction transaction = null, int? timeout = null)
+        public static int Update(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null)
         {
             return CreateQueryFactory(query).Execute(query.AsUpdate(values), transaction, timeout);
         }
 
-        public static async Task<int> UpdateAsync(this Query query, IReadOnlyDictionary<string, object> values, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<int> UpdateAsync(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null)
         {
             return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(values), transaction, timeout);
         }
@@ -324,10 +324,15 @@ namespace SqlKata.Execution
             {
                 if (method == null)
                 {
-                    throw new InvalidOperationException($"Execution methods can only be used with `XQuery` instances, consider using the `QueryFactory.Query()` to create executable queries, check https://sqlkata.com/docs/execution/setup#xquery-class for more info");
+                    throw new InvalidOperationException(
+                        $"Execution methods can only be used with `{nameof(XQuery)}` instances, " +
+                        $"consider using the `{nameof(QueryFactory)}.{nameof(QueryFactory.Query)}()` to create executable queries, " +
+                        $"check https://sqlkata.com/docs/execution/setup#xquery-class for more info");
                 }
 
-                throw new InvalidOperationException($"The method ${method} can only be used with `XQuery` instances, consider using the `QueryFactory.Query()` to create executable queries, check https://sqlkata.com/docs/execution/setup#xquery-class for more info");
+                throw new InvalidOperationException($"The method '{method}()' can only be used with `{nameof(XQuery)}` instances, " +
+                    $"consider using the `{nameof(QueryFactory)}.{nameof(QueryFactory.Query)}()` to create executable queries, " +
+                    $"check https://sqlkata.com/docs/execution/setup#xquery-class for more info");
             }
 
             return xQuery;
@@ -346,6 +351,5 @@ namespace SqlKata.Execution
         {
             return CreateQueryFactory(CastToXQuery(query));
         }
-
     }
 }

@@ -77,7 +77,7 @@ namespace SqlKata
             return Where(dictionary);
         }
 
-        public Q Where(IReadOnlyDictionary<string, object> values)
+        public Q Where(IEnumerable<KeyValuePair<string, object>> values)
         {
             var query = (Q)this;
             var orFlag = GetOr();
@@ -526,7 +526,7 @@ namespace SqlKata
         {
             if (!query.HasComponent("from"))
             {
-                throw new ArgumentException("'FromClause' cannot be empty if used inside a 'WhereExists' condition");
+                throw new ArgumentException($"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
             }
 
             // remove unneeded components
@@ -572,8 +572,6 @@ namespace SqlKata
         {
             return Or().Not().WhereExists(callback);
         }
-
-
 
         #region date
         public Q WhereDatePart(string part, string column, string op, object value)
@@ -691,6 +689,5 @@ namespace SqlKata
         }
 
         #endregion
-
     }
 }

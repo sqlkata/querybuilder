@@ -45,7 +45,7 @@ namespace SqlKata
         {
             if (this == parent)
             {
-                throw new ArgumentException("Cannot set the same query as a parent of itself");
+                throw new ArgumentException($"Cannot set the same {nameof(AbstractQuery)} as a parent of itself");
             }
 
             this.Parent = parent;
