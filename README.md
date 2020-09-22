@@ -8,9 +8,15 @@
 
 <a href="https://twitter.com/ahmadmuzavi?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="false">Follow @ahmadmuzavi</a> for the latest updates about SqlKata.
 
-![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
+
+
 
 > **We are not accepting new compilers, if you want to add your own compiler, we recommend to create a separate repo starting like SqlKata-Oracle** 
+
+
+
+![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
+
 
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
