@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace SqlKata.SqlExpressions
 {
     public static class Common
@@ -17,6 +15,11 @@ namespace SqlKata.SqlExpressions
         public static StringValue StringValue(string value)
         {
             return new StringValue(value);
+        }
+
+        public static SelectAlias SelectAlias(SqlExpression value, string alias)
+        {
+            return new SelectAlias(value, alias);
         }
     }
 }

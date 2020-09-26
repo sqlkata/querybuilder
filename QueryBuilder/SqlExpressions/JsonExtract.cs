@@ -2,7 +2,7 @@ using System;
 
 namespace SqlKata.SqlExpressions
 {
-    public class JsonExtract : AbstractSqlExpression
+    public class JsonExtract : SqlExpression
     {
         public string Column { get; }
         public string Path { get; }

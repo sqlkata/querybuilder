@@ -2,11 +2,11 @@ using System.Collections.Generic;
 
 namespace SqlKata.SqlExpressions
 {
-    public class StringValue : SqlExpression, HasBinding
+    public class ParamValue : SqlExpression, HasBinding
     {
-        public string Value { get; }
+        public object Value { get; }
 
-        public StringValue(string value)
+        public ParamValue(object value)
         {
             Value = value;
         }

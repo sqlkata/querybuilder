@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
-using SqlKata.Compilers.Visitors;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -17,8 +18,6 @@ namespace SqlKata.Compilers
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
-
-        protected abstract SqlExpressionVisitorInterface ExpressionVisitor { get; }
 
         protected Compiler()
         {
@@ -424,13 +423,18 @@ namespace SqlKata.Compilers
 
         public virtual string CompileSqlExpression(SqlResult ctx, SelectSqlExpressionClause clause)
         {
+            if (clause.Expression is HasBinding hasBinding)
+            {
+                ctx.Bindings.AddRange(hasBinding.GetBindings());
+            }
+
             if (string.IsNullOrEmpty(clause.Alias))
             {
-                return ExpressionVisitor.Visit(clause.Expression);
+                return Visit(clause.Expression);
             }
             else
             {
-                return ExpressionVisitor.Visit(clause.Expression) + " as " + Wrap(clause.Alias);
+                return Visit(clause.Expression) + " as " + Wrap(clause.Alias);
             }
         }
 
@@ -438,12 +442,15 @@ namespace SqlKata.Compilers
         {
             if (string.IsNullOrEmpty(clause.Alias))
             {
-                return ExpressionVisitor.Visit(clause.Expression);
+                return Visit(clause.Expression);
             }
-            else
+
+            if (clause.Expression is HasBinding hasBinding)
             {
-                return ExpressionVisitor.Visit(clause.Expression) + " as " + Wrap(clause.Alias);
+                ctx.Bindings.AddRange(hasBinding.GetBindings());
             }
+
+            return Visit(clause.Expression) + " as " + Wrap(clause.Alias);
         }
 
         /// <summary>
@@ -959,5 +966,155 @@ namespace SqlKata.Compilers
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "[", this.OpeningIdentifier)
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "]", this.ClosingIdentifier);
         }
+
+
+        public virtual string Visit(Expression expression)
+        {
+            return Visit((dynamic)expression);
+        }
+
+        public virtual string Visit(JsonExtract expression)
+        {
+            return $"JSON_EXTRACT({expression.Column}, {expression.Path})";
+        }
+
+        public virtual string Visit(Cast expression)
+        {
+            return $"CAST {Visit(expression.Value)} AS {expression.TargetType}";
+        }
+
+        public virtual string Visit(Condition expression)
+        {
+            return $"{Visit(expression.Column)} {checkOperator(expression.Operator)} {Visit(expression.Value)}";
+        }
+
+        public virtual string Visit(ParamValue expression)
+        {
+            return "?";
+        }
+
+        public virtual string Visit(StringValue expression)
+        {
+            return "?";
+        }
+
+        public virtual string Visit(Literal expression)
+        {
+            return expression.Value;
+        }
+
+        public virtual string Visit(Raw expression)
+        {
+            return expression.Value;
+        }
+
+        public virtual string Visit(Function expression)
+        {
+            return $"{expression.Name}({string.Join(", ", expression.Values.Select(x => Visit(x)))})";
+        }
+
+        public virtual string Visit(Identifier expression)
+        {
+            return OpeningIdentifier + expression.Value.Replace(ClosingIdentifier, ClosingIdentifier + ClosingIdentifier) + ClosingIdentifier;
+        }
+
+        public virtual string Visit(SqlExpression expression)
+        {
+            return Visit((dynamic)expression);
+        }
+
+        public virtual string Visit(ConstantExpression expression)
+        {
+            if (expression.Value.GetType() == typeof(string))
+            {
+                return "'" + expression.Value.ToString() + "'";
+            }
+
+            return expression.Value.ToString();
+        }
+
+        public virtual string Visit(BinaryExpression expression)
+        {
+            var left = Visit(expression.Left);
+            var right = Visit(expression.Right);
+
+            switch (expression.NodeType)
+            {
+                case ExpressionType.Add:
+                    return $"{left} + {right}";
+                case ExpressionType.Subtract:
+                    return $"{left} - {right}";
+                case ExpressionType.Coalesce:
+                    return $"COALESCE({left}, {right})";
+                case ExpressionType.Divide:
+                    return $"{left} / {right}";
+                case ExpressionType.Multiply:
+                    return $"{left} * {right}";
+                case ExpressionType.AndAlso:
+                    return $"({left} AND {right})";
+                case ExpressionType.OrElse:
+                    return $"({left} OR {right})";
+                case ExpressionType.GreaterThan:
+                    return $"{left} > {right}";
+                case ExpressionType.GreaterThanOrEqual:
+                    return $"{left} >= {right}";
+                case ExpressionType.LessThan:
+                    return $"{left} < {right}";
+                case ExpressionType.LessThanOrEqual:
+                    return $"{left} <= {right}";
+                case ExpressionType.Equal:
+                    return $"{left} = {right}";
+                case ExpressionType.NotEqual:
+                    return $"{left} != {right}";
+                case ExpressionType.Modulo:
+                    return $"{left} % {right}";
+                case ExpressionType.Power:
+                    return $"POWER({left}, {right})";
+            }
+
+            return $"/* Unkown binary expression: {expression.ToString()} */";
+        }
+
+
+        public virtual string Visit(Wrap expression)
+        {
+            return $"({Visit(expression.Body)})";
+        }
+
+        public virtual string Visit(Case expression)
+        {
+            if (!expression.Cases.Any()) return "/* empty case */";
+
+            var result = new List<string> { };
+
+            if (expression.Test != null)
+            {
+                result.Add(Visit(expression.Test));
+            }
+
+            foreach (var item in expression.Cases)
+            {
+                result.Add($"WHEN {Visit(item.Key)} THEN {Visit(item.Value)}");
+            }
+
+            if (expression.ElseDefault != null)
+            {
+                result.Add($"ELSE {Visit(expression.ElseDefault)}");
+            }
+
+            return $"CASE {string.Join(" ", result)} END";
+
+        }
+
+        public virtual string Visit(BlockExpression expression)
+        {
+            return string.Join(" ", expression.Expressions.Select(x => Visit(x)));
+        }
+
+        public virtual string Visit(SelectAlias expression)
+        {
+            return Visit(expression.Value) + $" AS {Visit(new Identifier(expression.Alias))}";
+        }
+
     }
 }

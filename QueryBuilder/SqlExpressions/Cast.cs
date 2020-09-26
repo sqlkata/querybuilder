@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SqlKata.SqlExpressions
 {
     public enum CastType
@@ -13,12 +15,12 @@ namespace SqlKata.SqlExpressions
 
     }
 
-    public class Cast : AbstractSqlExpression
+    public class Cast : SqlExpression, HasBinding
     {
-        public AbstractSqlExpression Value { get; }
+        public SqlExpression Value { get; }
         public CastType TargetType { get; }
 
-        public Cast(AbstractSqlExpression expression, CastType targetType)
+        public Cast(SqlExpression expression, CastType targetType)
         {
             this.Value = expression;
             this.TargetType = targetType;
@@ -28,6 +30,11 @@ namespace SqlKata.SqlExpressions
         {
             this.Value = new Identifier(column);
             this.TargetType = targetType;
+        }
+
+        public IEnumerable<object> GetBindings()
+        {
+            return Value is HasBinding hasBinding ? hasBinding.GetBindings() : null;
         }
     }
 }

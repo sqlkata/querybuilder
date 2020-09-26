@@ -341,7 +341,7 @@ namespace SqlKata
 
     public class SqlExpressionCondition : AbstractCondition
     {
-        public AbstractSqlExpression Expression { get; set; }
+        public SqlExpression Expression { get; set; }
         public override AbstractClause Clone()
         {
             return new SqlExpressionCondition

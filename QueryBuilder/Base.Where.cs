@@ -694,14 +694,34 @@ namespace SqlKata
 
         #endregion
 
-
-        public Q Where(AbstractSqlExpression expression)
+        public Q Where(SqlExpression expression)
         {
             return AddComponent("where", new SqlExpressionCondition
             {
                 Expression = expression,
             });
         }
+
+        public Q Where(string column, string op, SqlExpression value)
+        {
+            return AddComponent("where", new SqlExpressionCondition
+            {
+                Expression = new Condition(column, op, value),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
+            });
+        }
+
+        public Q Where(string column, SqlExpression value)
+        {
+            return AddComponent("where", new SqlExpressionCondition
+            {
+                Expression = new Condition(column, "=", value),
+                IsOr = GetOr(),
+                IsNot = GetNot(),
+            });
+        }
+
         public Q Where(Expression expression)
         {
             return AddComponent("where", new ExpressionCondition

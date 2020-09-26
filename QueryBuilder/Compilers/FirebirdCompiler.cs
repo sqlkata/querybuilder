@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using SqlKata.Compilers.Visitors;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -10,7 +10,6 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.Firebird;
-        protected override SqlExpressionVisitorInterface ExpressionVisitor => new MySqlVisitor();
 
         protected override SqlResult CompileInsertQuery(Query query)
         {
@@ -114,6 +113,16 @@ namespace SqlKata.Compilers
         public override string CompileFalse()
         {
             return "0";
+        }
+
+        public override string Visit(JsonExtract expression)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override string Visit(Cast expression)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

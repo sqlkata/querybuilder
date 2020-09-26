@@ -15,31 +15,102 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)
         {
-            var clauseType = clause.GetType();
-
-            var name = clauseType.Name;
-
-            name = name.Substring(0, name.IndexOf("Condition"));
-
-            var methodName = "Compile" + name + "Condition";
-
-            var methodInfo = FindCompilerMethodInfo(clauseType, methodName);
-
-            try
+            if (clause is RawCondition rawCondition)
             {
-
-                var result = methodInfo.Invoke(this, new object[] {
-                    ctx,
-                    clause
-                });
-
-                return result as string;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Failed to invoke '{methodName}'", ex);
+                return CompileRawCondition(ctx, rawCondition);
             }
 
+            if (clause is SqlExpressionCondition sqlExpressionCondition)
+            {
+                return CompileSqlExpressionCondition(ctx, sqlExpressionCondition);
+            }
+
+            if (clause is ExpressionCondition expressionCondition)
+            {
+                return CompileExpressionCondition(ctx, expressionCondition);
+            }
+
+            if (clause is BasicStringCondition basicStringCondition)
+            {
+                return CompileBasicStringCondition(ctx, basicStringCondition);
+            }
+
+            if (clause is BasicDateCondition basicDateCondition)
+            {
+                return CompileBasicDateCondition(ctx, basicDateCondition);
+            }
+
+            if (clause is BasicCondition basicCondition)
+            {
+                return CompileBasicCondition(ctx, basicCondition);
+            }
+
+            if (clause is TwoColumnsCondition twoColumnsCondition)
+            {
+                return CompileTwoColumnsCondition(ctx, twoColumnsCondition);
+            }
+
+            if (clause is InQueryCondition inQueryCondition)
+            {
+                return CompileInQueryCondition(ctx, inQueryCondition);
+            }
+
+            if (clause is NullCondition nullCondition)
+            {
+                return CompileNullCondition(ctx, nullCondition);
+            }
+
+            if (clause is BooleanCondition booleanCondition)
+            {
+                return CompileBooleanCondition(ctx, booleanCondition);
+            }
+
+            if (clause is ExistsCondition existsCondition)
+            {
+                return CompileExistsCondition(ctx, existsCondition);
+            }
+
+            if (clause is QueryCondition<Query> queryCondition)
+            {
+                return CompileQueryCondition(ctx, queryCondition);
+            }
+
+            if (clause is QueryCondition<Join> joinCondition)
+            {
+                return CompileQueryCondition(ctx, joinCondition);
+            }
+
+            if (clause is SubQueryCondition<Query> subQueryCondition)
+            {
+                return CompileSubQueryCondition(ctx, subQueryCondition);
+            }
+
+            if (clause is SubQueryCondition<Join> subJoinCondition)
+            {
+                return CompileSubQueryCondition(ctx, subJoinCondition);
+            }
+
+            if (clause is NestedCondition<Query> nestedQueryCondition)
+            {
+                return CompileNestedCondition(ctx, nestedQueryCondition);
+            }
+
+            if (clause is NestedCondition<Join> nestedJoinCondition)
+            {
+                return CompileNestedCondition(ctx, nestedJoinCondition);
+            }
+
+            // check generic clause
+            var type = clause.GetType();
+
+            if (type.IsConstructedGenericType)
+            {
+                var name = type.Name.Substring(0, type.Name.IndexOf("Condition"));
+                var method = _compileConditionMethodsProvider.GetMethodInfo(clause.GetType(), $"Compile{name}Condition");
+                return (string)method.Invoke(this, new object[] { ctx, clause });
+            }
+
+            throw new InvalidOperationException($"Cannot compile the clause of type {clause.GetType()}");
         }
 
         protected virtual string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
@@ -70,16 +141,19 @@ namespace SqlKata.Compilers
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileSqlExpressionCondition(SqlResult ctx, SqlExpressionCondition x)
+        protected virtual string CompileSqlExpressionCondition(SqlResult ctx, SqlExpressionCondition clause)
         {
-            // ctx.Bindings.AddRange(x.Bindings);
-            return ExpressionVisitor.Visit(x.Expression);
+            if (clause.Expression is HasBinding hasBinding)
+            {
+                ctx.Bindings.AddRange(hasBinding.GetBindings());
+            }
+
+            return Visit(clause.Expression);
         }
 
         protected virtual string CompileExpressionCondition(SqlResult ctx, ExpressionCondition x)
         {
-            // ctx.Bindings.AddRange(x.Bindings);
-            return ExpressionVisitor.Visit(x.Expression);
+            return Visit(x.Expression);
         }
 
         protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>
@@ -100,17 +174,6 @@ namespace SqlKata.Compilers
             return "(" + subCtx.RawSql + ") " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
         }
 
-        protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
-        {
-            var sql = $"{Wrap(x.Column)} {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
-
-            if (x.IsNot)
-            {
-                return $"NOT ({sql})";
-            }
-
-            return sql;
-        }
 
         protected virtual string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
         {
@@ -182,7 +245,19 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
+        protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
+        {
+            var sql = $"{Wrap(x.Column)} {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
+
+            if (x.IsNot)
+            {
+                return $"NOT ({sql})";
+            }
+
+            return sql;
+        }
+
+        protected virtual string CompileNestedCondition<T>(SqlResult ctx, NestedCondition<T> x) where T : BaseQuery<T>
         {
             if (!x.Query.HasComponent("where", EngineCode))
             {

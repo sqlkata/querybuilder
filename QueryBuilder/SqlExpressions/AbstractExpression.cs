@@ -1,14 +1,12 @@
 using System;
 using System.Linq.Expressions;
-using SqlKata.Compilers.Visitors;
+using SqlKata.Compilers;
 
 namespace SqlKata.SqlExpressions
 {
-    public abstract class AbstractSqlExpression : Expression
+    public abstract class SqlExpression
     {
-        public override ExpressionType NodeType => ExpressionType.Extension;
-        public override Type Type => typeof(AbstractSqlExpression);
-        public string Accept(SqlExpressionVisitorInterface visitor)
+        public string Accept(Compiler visitor)
         {
             return visitor.Visit((dynamic)this);
         }

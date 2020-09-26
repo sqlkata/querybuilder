@@ -1,11 +1,11 @@
 namespace SqlKata.SqlExpressions
 {
-    public class BooleanExpression : AbstractSqlExpression
+    public class BooleanExpression : SqlExpression
     {
-        public AbstractSqlExpression Left { get; set; }
-        public AbstractSqlExpression Right { get; set; }
+        public SqlExpression Left { get; set; }
+        public SqlExpression Right { get; set; }
 
-        public BooleanExpression(AbstractSqlExpression left, AbstractSqlExpression right)
+        public BooleanExpression(SqlExpression left, SqlExpression right)
         {
             Left = left;
             Right = right;

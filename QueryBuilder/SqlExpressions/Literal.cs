@@ -1,6 +1,6 @@
 namespace SqlKata.SqlExpressions
 {
-    public class Literal : AbstractSqlExpression
+    public class Literal : SqlExpression
     {
         public string Value { get; }
 

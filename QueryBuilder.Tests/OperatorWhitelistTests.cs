@@ -20,7 +20,7 @@ namespace SqlKata.Tests
         {
             var compiler = new SqlServerCompiler();
 
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<InvalidOperationException>(() =>
             {
                 compiler.Compile(new Query("Table").Where("Id", op, 1));
                 compiler.Compile(new Query("Table").OrWhere("Id", op, 1));
@@ -40,7 +40,7 @@ namespace SqlKata.Tests
         {
             var compiler = new SqlServerCompiler();
 
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<InvalidOperationException>(() =>
             {
                 compiler.Compile(new Query("Table").Having("Id", op, 1));
                 compiler.Compile(new Query("Table").OrHaving("Id", op, 1));

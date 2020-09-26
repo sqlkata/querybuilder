@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.SqlExpressions;
 
 namespace SqlKata
 {
@@ -652,5 +653,12 @@ namespace SqlKata
         }
 
         #endregion
+        public Query Having(SqlExpression expression)
+        {
+            return AddComponent("having", new SqlExpressionCondition
+            {
+                Expression = expression,
+            });
+        }
     }
 }

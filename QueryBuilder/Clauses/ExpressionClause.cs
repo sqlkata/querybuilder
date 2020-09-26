@@ -6,7 +6,7 @@ namespace SqlKata
 
     public class ExpressionClause : AbstractClause
     {
-        public AbstractSqlExpression Expression { get; set; }
+        public SqlExpression Expression { get; set; }
         public override AbstractClause Clone()
         {
             return new ExpressionClause
@@ -24,7 +24,7 @@ namespace SqlKata
     /// <seealso cref="AbstractColumn" />
     public class ColumnExpressionClause : AbstractColumn
     {
-        public AbstractSqlExpression Expression { get; set; }
+        public SqlExpression Expression { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

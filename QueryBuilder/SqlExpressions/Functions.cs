@@ -4,12 +4,12 @@ namespace SqlKata.SqlExpressions
 {
     public static class Functions
     {
-        public static Function Function(string name, Expression body)
+        public static Function Function(string name, SqlExpression body)
         {
             return new Function(name.ToUpperInvariant(), body);
         }
 
-        public static Function Count(Expression body)
+        public static Function Count(SqlExpression body)
         {
             return Function("Count", body);
         }
@@ -19,7 +19,7 @@ namespace SqlKata.SqlExpressions
             return Count(new Identifier(column));
         }
 
-        public static Function Average(Expression body)
+        public static Function Average(SqlExpression body)
         {
             return Function("Avg", body);
         }
@@ -29,7 +29,7 @@ namespace SqlKata.SqlExpressions
             return Average(new Identifier(column));
         }
 
-        public static Function Min(Expression body)
+        public static Function Min(SqlExpression body)
         {
             return Function("Min", body);
         }
@@ -39,7 +39,7 @@ namespace SqlKata.SqlExpressions
             return Min(new Identifier(column));
         }
 
-        public static Function Max(Expression body)
+        public static Function Max(SqlExpression body)
         {
             return Function("Max", body);
         }
@@ -49,12 +49,12 @@ namespace SqlKata.SqlExpressions
             return Max(new Identifier(column));
         }
 
-        public static Case Case(Expression expression = null)
+        public static Case Case(SqlExpression expression = null)
         {
             return new Case(expression);
         }
 
-        public static Function Length(Expression expression)
+        public static Function Length(SqlExpression expression)
         {
             return new Function("Length", expression);
         }
@@ -64,7 +64,7 @@ namespace SqlKata.SqlExpressions
             return Length(new Identifier(column));
         }
 
-        public static Function Upper(Expression expression)
+        public static Function Upper(SqlExpression expression)
         {
             return new Function("Upper", expression);
         }
@@ -74,7 +74,7 @@ namespace SqlKata.SqlExpressions
             return Upper(new Identifier(column));
         }
 
-        public static Function Lower(Expression expression)
+        public static Function Lower(SqlExpression expression)
         {
             return new Function("Lower", expression);
         }
@@ -84,7 +84,7 @@ namespace SqlKata.SqlExpressions
             return Lower(new Identifier(column));
         }
 
-        public static Function Concat(params Expression[] expressions)
+        public static Function Concat(params SqlExpression[] expressions)
         {
             return new Function("Concat", expressions);
         }
@@ -92,6 +92,16 @@ namespace SqlKata.SqlExpressions
         public static Function Concat(params string[] expressions)
         {
             return new Function("Concat", expressions);
+        }
+
+        public static Condition Condition(string column, string op, object value)
+        {
+            if (value is string strValue)
+            {
+                return new Condition(column, op, new StringValue(strValue));
+            }
+
+            return new Condition(column, op, new ParamValue(value));
         }
 
     }

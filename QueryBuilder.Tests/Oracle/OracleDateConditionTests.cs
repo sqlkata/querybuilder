@@ -21,7 +21,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDate("STAMP", "=", "2018-04-01");
 
             // Act:
@@ -38,7 +37,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("date", "STAMP", "=", "2018-04-01");
 
             // Act:
@@ -55,7 +53,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereTime("STAMP", "=", "19:01:10");
 
             // Act:
@@ -72,7 +69,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("time", "STAMP", "=", "19:01:10");
 
             // Act:
@@ -89,7 +85,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereTime("STAMP", "=", "19:01");
 
             // Act:
@@ -106,7 +101,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("time", "STAMP", "=", "19:01");
 
             // Act:
@@ -123,7 +117,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("year", "STAMP", "=", "2018");
 
             // Act:
@@ -140,7 +133,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("month", "STAMP", "=", "9");
 
             // Act:
@@ -157,7 +149,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("day", "STAMP", "=", "15");
 
             // Act:
@@ -174,7 +165,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("hour", "STAMP", "=", "15");
 
             // Act:
@@ -191,7 +181,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("minute", "STAMP", "=", "25");
 
             // Act:
@@ -208,7 +197,6 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName)
-                .Select()
                 .WhereDatePart("second", "STAMP", "=", "59");
 
             // Act:

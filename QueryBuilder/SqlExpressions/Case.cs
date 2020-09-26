@@ -1,22 +1,21 @@
 using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace SqlKata.SqlExpressions
 {
-    public class Case : AbstractSqlExpression
+    public class Case : SqlExpression
     {
-        public Expression Test { get; set; }
-        public Dictionary<Expression, Expression> Cases { get; set; } = new Dictionary<Expression, Expression>();
-        public Expression ElseDefault { get; set; }
+        public SqlExpression Test { get; set; }
+        public Dictionary<SqlExpression, SqlExpression> Cases { get; set; } = new Dictionary<SqlExpression, SqlExpression>();
+        public SqlExpression ElseDefault { get; set; }
 
         public Case() { }
 
-        public Case(Expression test)
+        public Case(SqlExpression test)
         {
             Test = test;
         }
 
-        public Case When(Expression condition, Expression outcome)
+        public Case When(SqlExpression condition, SqlExpression outcome)
         {
             Cases.Add(condition, outcome);
             return this;
@@ -28,7 +27,7 @@ namespace SqlKata.SqlExpressions
             return this;
         }
 
-        public Case Otherwise(Expression expression)
+        public Case Otherwise(SqlExpression expression)
         {
             ElseDefault = expression;
             return this;

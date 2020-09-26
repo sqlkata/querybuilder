@@ -16,7 +16,6 @@ using System.IO;
 using SqlKata.SqlExpressions;
 using System.Linq.Expressions;
 using static SqlKata.SqlExpressions.Functions;
-using static SqlKata.SqlExpressions.Conditions;
 using static SqlKata.SqlExpressions.Common;
 
 namespace Program
@@ -40,6 +39,8 @@ namespace Program
         static void Main(string[] args)
         {
 
+            Console.WriteLine("where Name = ?".CountChar('?'));
+
             Expression amountIsBig = Expression.Condition(
                         Expression.GreaterThan(
                             Expression.Parameter(typeof(int), "Amount"),
@@ -51,19 +52,10 @@ namespace Program
 
 
             var query = new Query("Users").Where(
-                GreaterThan("Name", "5")
+                Condition("Name", "=", "Abc")
             ).Where(
-                LessThan(Length("Amount"), Literal(10))
-            )
-            .Select(Concat("Name", "Lname"))
-            .Select(
-                Case(Length("Name"))
-                    .When(Literal("10"), StringValue("NameIsBig"))
-                    .When(Literal("20"), StringValue("NameIsMedium"))
-                    .Otherwise(StringValue("Small")),
-                "NameIsBig2"
-            )
-            .Select(Lower("Name"), "Namelower");
+                Condition("Amount", "<", 10)
+            );
 
             log(new MySqlCompiler(), query);
             log(new SqlServerCompiler(), query);
@@ -114,7 +106,7 @@ namespace Program
         private static void log(Compiler compiler, Query query)
         {
             var compiled = compiler.Compile(query);
-            Console.WriteLine(compiled.ToString());
+            Console.WriteLine(compiled.RawSql);
             Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
         }
 
