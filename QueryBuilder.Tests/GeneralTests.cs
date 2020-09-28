@@ -1,5 +1,6 @@
 using SqlKata.Compilers;
 using SqlKata.Extensions;
+using SqlKata.SqlExpressions;
 using SqlKata.Tests.Infrastructure;
 using System;
 using System.Linq;
@@ -28,16 +29,16 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.WhereRaw("postgres = true"))
                 .ForSqlServer(q => q.WhereRaw("sqlsrv = 1"))
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
+
             var query = new Query("series").With("series", series);
 
             var c = Compile(query);
 
             Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1)\nSELECT * FROM [series]", c[EngineCodes.SqlServer]);
 
-            Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true)\nSELECT * FROM \"series\"",
-                c[EngineCodes.PostgreSql]);
-            Assert.Equal("WITH \"SERIES\" AS (SELECT * FROM \"TABLE\" WHERE firebird = 1)\nSELECT * FROM \"SERIES\"",
-                c[EngineCodes.Firebird]);
+            Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true)\nSELECT * FROM \"series\"", c[EngineCodes.PostgreSql]);
+
+            Assert.Equal("WITH \"SERIES\" AS (SELECT * FROM \"TABLE\" WHERE firebird = 1)\nSELECT * FROM \"SERIES\"", c[EngineCodes.Firebird]);
         }
 
         [Fact]
@@ -63,11 +64,11 @@ namespace SqlKata.Tests
             var compiler = new TestSqlServerCompiler();
 
             var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
+                typeof(BasicCondition), "CompileCondition"
             );
 
             var call2 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
+                typeof(BasicCondition), "CompileCondition"
             );
 
             Assert.Same(call1, call2);
@@ -252,10 +253,10 @@ namespace SqlKata.Tests
                 .Where("generic", "foo")
                 .ForSqlServer(q => q.Where("mssql", "foo"));
 
-            var where = query.GetOneComponent("where", engine) as BasicCondition;
+            var where = query.GetOneComponent("where", engine) as SqlExpressionCondition;
 
             Assert.NotNull(where);
-            Assert.Equal(column, where.Column);
+            Assert.Equal(column, ((where.Expression as Condition).Column as Identifier).Value);
         }
 
         [Fact]
