@@ -7,7 +7,7 @@ namespace SqlKata
     /// </summary>
     public class ColumnAttribute : Attribute
     {
-        public string Name { get; private set; }
+        public string Name { get; }
         public ColumnAttribute(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -27,8 +27,6 @@ namespace SqlKata
         public KeyAttribute([System.Runtime.CompilerServices.CallerMemberName] string name = "")
         : base(name)
         {
-
         }
-
     }
 }

@@ -10,17 +10,14 @@ namespace SqlKata
     {
         public static bool IsArray(object value)
         {
-            if(value is string)
+            switch (value)
             {
-                return false;
+                case string _:
+                case byte[] _:
+                    return false;
+                default:
+                    return value is IEnumerable;
             }
-
-            if (value is byte[])
-            {
-                return false;
-            }
-
-            return value is IEnumerable;
         }
 
         /// <summary>
@@ -34,7 +31,7 @@ namespace SqlKata
             {
                 if (IsArray(item))
                 {
-                    foreach (var sub in (item as IEnumerable))
+                    foreach (var sub in (IEnumerable) item)
                     {
                         yield return sub;
                     }
@@ -43,7 +40,6 @@ namespace SqlKata
                 {
                     yield return item;
                 }
-
             }
         }
 
@@ -60,11 +56,9 @@ namespace SqlKata
             }
 
             var index = 0;
-
             do
             {
                 index = str.IndexOf(value, index, StringComparison.Ordinal);
-
                 if (index == -1)
                 {
                     yield break;
@@ -94,13 +88,7 @@ namespace SqlKata
 
         public static string JoinArray(string glue, IEnumerable array)
         {
-            var result = new List<string>();
-
-            foreach (var item in array)
-            {
-                result.Add(item.ToString());
-            }
-
+            var result = (from object item in array select item.ToString()).ToList();
             return string.Join(glue, result);
         }
 
@@ -110,31 +98,18 @@ namespace SqlKata
             {
                 var parameter = bindings[i];
 
-                if (IsArray(parameter))
-                {
-                    var count = EnumerableCount(parameter as IEnumerable);
-                    return string.Join(",", placeholder.Repeat(count));
-                }
+                if (!IsArray(parameter)) return placeholder;
 
-                return placeholder.ToString();
+                var count = EnumerableCount(parameter as IEnumerable);
+                return string.Join(",", placeholder.Repeat(count));
             });
         }
 
-        public static int EnumerableCount(IEnumerable obj)
-        {
-            int count = 0;
-
-            foreach (var item in obj)
-            {
-                count++;
-            }
-
-            return count;
-        }
+        public static int EnumerableCount(IEnumerable obj) => obj.Cast<object>().Count();
 
         public static List<string> ExpandExpression(string expression)
         {
-            var regex = @"^(?:\w+\.){1,2}{(.*)}";
+            const string regex = @"^(?:\w+\.){1,2}{(.*)}";
             var match = Regex.Match(expression, regex);
 
             if (!match.Success)
@@ -143,7 +118,7 @@ namespace SqlKata
                 return new List<string> { expression };
             }
 
-            var table = expression.Substring(0, expression.IndexOf(".{"));
+            var table = expression.Substring(0, expression.IndexOf(".{", StringComparison.Ordinal));
 
             var captures = match.Groups[1].Value;
 

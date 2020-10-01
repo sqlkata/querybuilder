@@ -29,37 +29,13 @@ namespace SqlKata.Execution
             }
         }
 
-        public bool IsFirst
-        {
-            get
-            {
-                return Page == 1;
-            }
-        }
+        public bool IsFirst => Page == 1;
 
-        public bool IsLast
-        {
-            get
-            {
-                return Page == TotalPages;
-            }
-        }
+        public bool IsLast => Page == TotalPages;
 
-        public bool HasNext
-        {
-            get
-            {
-                return Page < TotalPages;
-            }
-        }
+        public bool HasNext => Page < TotalPages;
 
-        public bool HasPrevious
-        {
-            get
-            {
-                return Page > 1;
-            }
-        }
+        public bool HasPrevious => Page > 1;
 
         public Query NextQuery()
         {
@@ -91,16 +67,10 @@ namespace SqlKata.Execution
             return await this.Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout);
         }
 
-        public PaginationIterator<T> Each
-        {
-            get
+        public PaginationIterator<T> Each =>
+            new PaginationIterator<T>
             {
-                return new PaginationIterator<T>
-                {
-                    FirstPage = this
-                };
-            }
-        }
-
+                FirstPage = this
+            };
     }
 }

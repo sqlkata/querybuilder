@@ -9,7 +9,6 @@ namespace SqlKata
     {
         public Query Having(string column, string op, object value)
         {
-
             // If the value is "null", we will just assume the developer wants to add a
             // Having null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
@@ -24,7 +23,7 @@ namespace SqlKata
                 Operator = op,
                 Value = value,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -67,12 +66,8 @@ namespace SqlKata
         /// <returns></returns>
         public Query Having(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
-
-            foreach (var item in constraints.GetType().GetRuntimeProperties())
-            {
-                dictionary.Add(item.Name, item.GetValue(constraints));
-            }
+            var dictionary = constraints.GetType().GetRuntimeProperties()
+                                        .ToDictionary(item => item.Name, item => item.GetValue(constraints));
 
             return Having(dictionary);
         }
@@ -87,14 +82,14 @@ namespace SqlKata
             {
                 if (orFlag)
                 {
-                    query = query.Or();
+                    query.Or();
                 }
                 else
                 {
                     query.And();
                 }
 
-                query = this.Not(notFlag).Having(tuple.Key, tuple.Value);
+                query = Not(notFlag).Having(tuple.Key, tuple.Value);
             }
 
             return query;
@@ -107,7 +102,7 @@ namespace SqlKata
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -129,7 +124,7 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -156,7 +151,7 @@ namespace SqlKata
                 Second = second,
                 Operator = op,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -171,7 +166,7 @@ namespace SqlKata
             {
                 Column = column,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -195,7 +190,7 @@ namespace SqlKata
             return AddComponent("having", new BooleanCondition
             {
                 Column = column,
-                Value = true,
+                Value = true
             });
         }
 
@@ -209,7 +204,7 @@ namespace SqlKata
             return AddComponent("having", new BooleanCondition
             {
                 Column = column,
-                Value = false,
+                Value = false
             });
         }
 
@@ -228,7 +223,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -256,7 +251,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -285,7 +280,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -314,7 +309,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -382,8 +377,6 @@ namespace SqlKata
                 IsNot = GetNot(),
                 Values = values.Distinct().ToList()
             });
-
-
         }
 
         public Query OrHavingIn<T>(string column, IEnumerable<T> values)
@@ -401,7 +394,6 @@ namespace SqlKata
             return Or().Not().HavingIn(column, values);
         }
 
-
         public Query HavingIn(string column, Query query)
         {
             return AddComponent("having", new InQueryCondition
@@ -409,7 +401,7 @@ namespace SqlKata
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Query = query,
+                Query = query
             });
         }
         public Query HavingIn(string column, Func<Query, Query> callback)
@@ -448,7 +440,6 @@ namespace SqlKata
             return Or().Not().HavingIn(column, callback);
         }
 
-
         /// <summary>
         /// Perform a sub query Having clause
         /// </summary>
@@ -471,7 +462,7 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -500,7 +491,7 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
         public Query HavingExists(Func<Query, Query> callback)
@@ -546,7 +537,7 @@ namespace SqlKata
                 Value = value,
                 Part = part,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
         public Query HavingNotDatePart(string part, string column, string op, object value)
@@ -650,7 +641,6 @@ namespace SqlKata
         {
             return OrHavingNotTime(column, "=", value);
         }
-
         #endregion
     }
 }

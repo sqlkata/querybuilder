@@ -13,18 +13,17 @@ namespace SqlKata
     {
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
 
-        private bool orFlag = false;
-        private bool notFlag = false;
-        public string EngineScope = null;
+        private bool _orFlag;
+        private bool _notFlag;
+        public string EngineScope;
 
         public Q SetEngineScope(string engine)
         {
             this.EngineScope = engine;
-
             return (Q)this;
         }
 
-        public BaseQuery()
+        protected BaseQuery()
         {
         }
 
@@ -101,8 +100,6 @@ namespace SqlKata
 
             return AddComponent(component, clause, engineCode);
         }
-
-
 
         /// <summary>
         /// Get the list of clauses for a component.
@@ -209,7 +206,7 @@ namespace SqlKata
         /// <returns></returns>
         protected Q And()
         {
-            orFlag = false;
+            _orFlag = false;
             return (Q)this;
         }
 
@@ -219,7 +216,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q Or()
         {
-            orFlag = true;
+            _orFlag = true;
             return (Q)this;
         }
 
@@ -229,7 +226,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q Not(bool flag = true)
         {
-            notFlag = flag;
+            _notFlag = flag;
             return (Q)this;
         }
 
@@ -239,10 +236,10 @@ namespace SqlKata
         /// <returns></returns>
         protected bool GetOr()
         {
-            var ret = orFlag;
+            var ret = _orFlag;
 
             // reset the flag
-            orFlag = false;
+            _orFlag = false;
             return ret;
         }
 
@@ -252,10 +249,10 @@ namespace SqlKata
         /// <returns></returns>
         protected bool GetNot()
         {
-            var ret = notFlag;
+            var ret = _notFlag;
 
             // reset the flag
-            notFlag = false;
+            _notFlag = false;
             return ret;
         }
 
@@ -268,7 +265,7 @@ namespace SqlKata
         {
             return AddOrReplaceComponent("from", new FromClause
             {
-                Table = table,
+                Table = table
             });
         }
 
@@ -293,7 +290,7 @@ namespace SqlKata
             return AddOrReplaceComponent("from", new RawFromClause
             {
                 Expression = sql,
-                Bindings = bindings,
+                Bindings = bindings
             });
         }
 
@@ -305,6 +302,5 @@ namespace SqlKata
 
             return From(callback.Invoke(query), alias);
         }
-
     }
 }

@@ -5,8 +5,8 @@ namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
-        public bool IsOr { get; set; } = false;
-        public bool IsNot { get; set; } = false;
+        public bool IsOr { get; set; }
+        public bool IsNot { get; set; }
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace SqlKata
                 Value = Value,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -37,19 +37,19 @@ namespace SqlKata
     public class BasicStringCondition : BasicCondition
     {
 
-        public bool CaseSensitive { get; set; } = false;
+        public bool CaseSensitive { get; set; }
 
-        private string escapeCharacter = null;
+        private string _escapeCharacter;
         public string EscapeCharacter
         {
-            get => escapeCharacter;
+            get => _escapeCharacter;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                     value = null;
                 else if (value.Length > 1)
                     throw new ArgumentOutOfRangeException($"The {nameof(EscapeCharacter)} can only contain a single character!");
-                escapeCharacter = value;
+                _escapeCharacter = value;
             }
         }
         /// <inheritdoc />
@@ -65,7 +65,7 @@ namespace SqlKata
                 IsNot = IsNot,
                 CaseSensitive = CaseSensitive,
                 EscapeCharacter = EscapeCharacter,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -86,7 +86,7 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Part = Part,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -111,13 +111,13 @@ namespace SqlKata
                 Second = Second,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a full "subquery".
+    /// Represents a comparison between a column and a full "sub-query".
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
@@ -136,13 +136,13 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a comparison between a full "subquery" and a value.
+    /// Represents a comparison between a full "sub-query" and a value.
     /// </summary>
     public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
@@ -161,7 +161,7 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -182,14 +182,13 @@ namespace SqlKata
                 Values = new List<T>(Values),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
-
     }
 
     /// <summary>
-    /// Represents a "is in subquery" condition.
+    /// Represents a "is in sub-query" condition.
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
@@ -204,7 +203,7 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -227,7 +226,7 @@ namespace SqlKata
                 Lower = Lower,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -248,7 +247,7 @@ namespace SqlKata
                 Column = Column,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -271,7 +270,7 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,
-                Value = Value,
+                Value = Value
             };
         }
     }
@@ -291,7 +290,7 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -312,7 +311,7 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -332,7 +331,7 @@ namespace SqlKata
                 Bindings = Bindings,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }

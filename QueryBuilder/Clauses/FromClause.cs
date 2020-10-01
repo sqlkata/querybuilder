@@ -24,14 +24,10 @@ namespace SqlKata
         {
             get
             {
-                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) < 0) return Table;
+                var segments = Table.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    return segments[2];
-                }
-
-                return Table;
+                return segments[2];
             }
         }
 
@@ -43,25 +39,19 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Table = Table,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a "from subquery" clause.
+    /// Represents a "from sub-query" clause.
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
 
-        public override string Alias
-        {
-            get
-            {
-                return string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
-            }
-        }
+        public override string Alias => string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -71,7 +61,7 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Query = Query.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -90,7 +80,7 @@ namespace SqlKata
                 Alias = Alias,
                 Expression = Expression,
                 Bindings = Bindings,
-                Component = Component,
+                Component = Component
             };
         }
     }

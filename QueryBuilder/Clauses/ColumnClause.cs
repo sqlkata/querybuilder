@@ -25,7 +25,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Name = Name,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -49,7 +49,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Query = Query.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -73,7 +73,7 @@ namespace SqlKata
                 Engine = Engine,
                 Expression = Expression,
                 Bindings = Bindings,
-                Component = Component,
+                Component = Component
             };
         }
     }

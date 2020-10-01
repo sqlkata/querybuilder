@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace SqlKata
 {
@@ -42,7 +41,8 @@ namespace SqlKata
 
         public Query AsInsert(IEnumerable<KeyValuePair<string, object>> values, bool returnId = false)
         {
-            if (values == null || values.Any() == false)
+            var valuesList = values.ToList();
+            if (values == null || valuesList.Any() == false)
             {
                 throw new InvalidOperationException($"{values} argument cannot be null or empty");
             }
@@ -51,9 +51,9 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = values.Select(x=>x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList(),
-                ReturnId = returnId,
+                Columns = valuesList.Select(x=>x.Key).ToList(),
+                Values = valuesList.Select(x => x.Value).ToList(),
+                ReturnId = returnId
             });
 
             return this;
@@ -79,9 +79,8 @@ namespace SqlKata
 
             ClearComponent("insert");
 
-            foreach (var values in valuesCollectionList)
+            foreach (var valuesList in valuesCollectionList.Select(values => values.ToList()))
             {
-                var valuesList = values.ToList();
                 if (columnsList.Count != valuesList.Count)
                 {
                     throw new InvalidOperationException($"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
@@ -93,12 +92,11 @@ namespace SqlKata
                     Values = valuesList
                 });
             }
-
             return this;
         }
 
         /// <summary>
-        /// Produces insert from subquery
+        /// Produces insert from sub-query
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="query"></param>
@@ -110,7 +108,7 @@ namespace SqlKata
             ClearComponent("insert").AddComponent("insert", new InsertQueryClause
             {
                 Columns = columns.ToList(),
-                Query = query.Clone(),
+                Query = query.Clone()
             });
 
             return this;

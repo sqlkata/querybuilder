@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using SqlKata;
-using SqlKata.Compilers;
 
 namespace SqlKata.Compilers
 {
@@ -49,7 +47,7 @@ namespace SqlKata.Compilers
                 { "month", "%m" },
                 { "day", "%d" },
                 { "hour", "%H" },
-                { "minute", "%M" },
+                { "minute", "%M" }
             };
 
             if (!formatMap.ContainsKey(condition.Part))

@@ -32,7 +32,7 @@ namespace SqlKata
                 Engine = Engine,
                 Type = Type,
                 Columns = new List<string>(Columns),
-                Component = Component,
+                Component = Component
             };
         }
     }

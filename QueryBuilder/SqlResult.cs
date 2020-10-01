@@ -22,7 +22,7 @@ namespace SqlKata
             typeof(float),
             typeof(short),
             typeof(ushort),
-            typeof(ulong),
+            typeof(ulong)
         };
 
         public override string ToString()
@@ -42,7 +42,7 @@ namespace SqlKata
             });
         }
 
-        private string ChangeToSqlValue(object value)
+        private static string ChangeToSqlValue(object value)
         {
             if (value == null)
             {
@@ -59,28 +59,20 @@ namespace SqlKata
                 return value.ToString();
             }
 
-            if (value is DateTime date)
+            switch (value)
             {
-                if (date.Date == date)
-                {
+                case DateTime date when date.Date == date:
                     return "'" + date.ToString("yyyy-MM-dd") + "'";
-                }
-
-                return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                case DateTime date:
+                    return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                case bool vBool:
+                    return vBool ? "true" : "false";
+                case Enum vEnum:
+                    return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
+                default:
+                    // fallback to string
+                    return "'" + value + "'";
             }
-
-            if (value is bool vBool)
-            {
-                return vBool ? "true" : "false";
-            }
-
-            if (value is Enum vEnum)
-            {
-                return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
-            }
-
-            // fallback to string
-            return "'" + value.ToString() + "'";
         }
     }
 }

@@ -18,7 +18,7 @@ namespace SqlKata
         /// WARNING: don't pass user data directly to this method.
         /// </summary>
         /// <param name="value"></param>
-        /// <param name="replaceQuotes">if true it will esacpe single quotes</param>
+        /// <param name="replaceQuotes">if true it will escape single quotes</param>
         /// <returns></returns>
         public static UnsafeLiteral UnsafeLiteral(string value, bool replaceQuotes = true)
         {
