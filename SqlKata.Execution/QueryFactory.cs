@@ -107,12 +107,14 @@ namespace SqlKata.Execution
         {
             var compiled = CompileAndLog(query);
 
-            return this.Connection.Query(
+            var result = this.Connection.Query(
                 compiled.Sql,
                 compiled.NamedBindings,
                 transaction: transaction,
                 commandTimeout: timeout ?? this.QueryTimeout
-            ) as IEnumerable<IDictionary<string, object>>;
+            );
+
+            return result.Cast<IDictionary<string, object>>();
         }
 
         public async Task<IEnumerable<IDictionary<string, object>>> GetDictionaryAsync(Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -126,7 +128,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout
             );
 
-            return result as IEnumerable<IDictionary<string, object>>;
+            return result.Cast<IDictionary<string, object>>();
         }
 
         public IEnumerable<dynamic> Get(Query query, IDbTransaction transaction = null, int? timeout = null)
