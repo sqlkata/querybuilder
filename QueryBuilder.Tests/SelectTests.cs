@@ -679,6 +679,18 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void HavingComplex()
+        {
+            string having = "CASE WHEN Document.DateDue BETWEEN '2020-10-06' AND '9999-12-31' THEN Document.AmountDue ELSE 0 END";
+
+            var q = new Query("Document");
+            q.Having(having, ">", 2000);
+
+            var c = Compile(q);
+            Assert.Equal("SELECT * FROM [Document] HAVING CASE WHEN [Document].[DateDue] BETWEEN '2020-10-06' AND '9999-12-31' THEN [Document].[AmountDue] ELSE 0 END > 2000", c[EngineCodes.SqlServer]);
+        }
+        
+        [Fact]
         public void MultipleHaving()
         {
             var q = new Query("Table1")
