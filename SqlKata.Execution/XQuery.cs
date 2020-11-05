@@ -18,6 +18,18 @@ namespace SqlKata.Execution
             this.Compiler = compiler;
         }
 
+        public override Query NewQuery()
+        {
+            if (QueryFactory is QueryFactory qf)
+            {
+                return qf.Query();
+            }
+            else
+            {
+                return base.NewQuery();
+            }
+        }
+
         public override Query Clone()
         {
 
