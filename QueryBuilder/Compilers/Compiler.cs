@@ -58,9 +58,11 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+
         private Query TransformAggregateQuery(Query query)
         {
             var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+
             if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
 
             if (query.IsDistinct)
@@ -219,9 +221,22 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to delete");
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            if (!(from is FromClause))
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
@@ -233,7 +248,7 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            ctx.RawSql = "DELETE FROM " + CompileTableExpression(ctx, from) + where;
+            ctx.RawSql = $"DELETE FROM {table}{where}";
 
             return ctx;
         }
@@ -250,9 +265,22 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to update");
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            if (!(from is FromClause))
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
@@ -263,10 +291,8 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
-                parts.Add($"{Wrap(toUpdate.Columns[i])} = ?");
+                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
             }
-
-            ctx.Bindings.AddRange(toUpdate.Values);
 
             var where = CompileWheres(ctx);
 
@@ -275,9 +301,9 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            ctx.RawSql = "UPDATE " + CompileTableExpression(ctx, from)
-                + " SET " + string.Join(", ", parts)
-                + where;
+            var sets = string.Join(", ", parts);
+
+            ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
 
             return ctx;
         }
@@ -294,14 +320,30 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("No table set to insert");
             }
 
-            var fromClause = ctx.Query.GetOneComponent<FromClause>("from", EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             if (fromClause is null)
             {
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var table = Wrap(fromClause.Table);
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -348,6 +390,7 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
+
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
@@ -665,11 +708,11 @@ namespace SqlKata.Compilers
                 {
                     boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
-                    sql.Add(boolOperator + "HAVING " + compiled);
+                    sql.Add(boolOperator + compiled);
                 }
             }
 
-            return string.Join(", ", sql);
+            return $"HAVING {string.Join(" ", sql)}";
         }
 
         public virtual string CompileLimit(SqlResult ctx)
@@ -737,7 +780,7 @@ namespace SqlKata.Compilers
 
         protected string checkOperator(string op)
         {
-            op = op.ToLower();
+            op = op.ToLowerInvariant();
 
             var valid = operators.Contains(op) || userOperators.Contains(op);
 
@@ -756,9 +799,10 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual string Wrap(string value)
         {
-            if (value.ToLower().Contains(" as "))
+
+            if (value.ToLowerInvariant().Contains(" as "))
             {
-                var index = value.ToLower().IndexOf(" as ");
+                var index = value.ToLowerInvariant().IndexOf(" as ");
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
 
@@ -793,9 +837,56 @@ namespace SqlKata.Compilers
             return opening + value.Replace(closing, closing + closing) + closing;
         }
 
-        public virtual string Parameter<T>(SqlResult ctx, T value)
+        /// <summary>
+        /// Resolve a parameter
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual object Resolve(SqlResult ctx, object parameter)
         {
-            ctx.Bindings.Add(value);
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                return value;
+            }
+
+            return parameter;
+
+        }
+
+        /// <summary>
+        /// Resolve a parameter and add it to the binding list
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="parameter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual string Parameter(SqlResult ctx, object parameter)
+        {
+            // if we face a literal value we have to return it directly
+            if (parameter is UnsafeLiteral literal)
+            {
+                return literal.Value;
+            }
+
+            // if we face a variable we have to lookup the variable from the predefined variables
+            if (parameter is Variable variable)
+            {
+                var value = ctx.Query.FindVariable(variable.Name);
+                ctx.Bindings.Add(value);
+                return "?";
+            }
+
+            ctx.Bindings.Add(parameter);
             return "?";
         }
 

@@ -9,10 +9,12 @@ namespace SqlKata.Tests
 {
     public class GeneralTests : TestSupport
     {
-       [Fact]
+        [Fact]
         public void ColumnsEscaping()
         {
-            var q = new Query().From("users").Select("mycol[isthis]");
+            var q = new Query().From("users")
+                .Select("mycol[isthis]");
+
             var c = Compile(q);
 
             Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[EngineCodes.SqlServer]);
@@ -53,8 +55,8 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM (SELECT * FROM \"table\" WHERE postgres = true) AS \"series\"", c[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"", c[EngineCodes.Firebird]);
-        }      
-        
+        }
+
         [Fact]
         public void ItShouldCacheMethodInfoByType()
         {
@@ -125,7 +127,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[EngineCodes.PostgreSql]);
             Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"USERS\"", c[EngineCodes.Firebird]);
         }
-        
+
         [Fact]
         public void Raw_WrapIdentifiers_Escaped()
         {
@@ -289,7 +291,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("limit").Count());
+            Assert.Equal(2, query.GetComponents("limit").Count);
             Assert.Equal("SELECT TOP (5) * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM `mytable`", c[EngineCodes.MySql].ToString());
@@ -317,7 +319,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("offset").Count());
+            Assert.Equal(2, query.GetComponents("offset").Count);
             Assert.Equal("SELECT * FROM `mytable` LIMIT 18446744073709551615 OFFSET 5", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" OFFSET 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
@@ -383,6 +385,21 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c[EngineCodes.PostgreSql].ToString());
+        }
+
+        [Fact]
+        public void Where_Nested()
+        {
+            var query = new Query("table")
+            .Where(q => q.Where("a", 1).OrWhere("a", 2));
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }
     }
 }

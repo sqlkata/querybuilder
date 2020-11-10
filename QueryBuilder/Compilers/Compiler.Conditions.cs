@@ -43,17 +43,23 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
         {
-            var sql = conditions
-                .Select(x => CompileCondition(ctx, x))
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList()
-                .Select((x, i) =>
-                {
-                    var boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
-                    return boolOperator + x;
-                }).ToList();
+            var result = new List<string>();
 
-            return string.Join(" ", sql);
+            for (var i = 0; i < conditions.Count; i++)
+            {
+                var compiled = CompileCondition(ctx, conditions[i]);
+
+                if (string.IsNullOrEmpty(compiled))
+                {
+                    continue;
+                }
+
+                var boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
+
+                result.Add(boolOperator + compiled);
+            }
+
+            return string.Join(" ", result);
         }
 
         protected virtual string CompileRawCondition(SqlResult ctx, RawCondition x)
@@ -71,9 +77,18 @@ namespace SqlKata.Compilers
             return Wrap(x.Column) + " " + checkOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
+        protected virtual string CompileSubQueryCondition<T>(SqlResult ctx, SubQueryCondition<T> x) where T : BaseQuery<T>
+        {
+            var subCtx = CompileSelectQuery(x.Query);
+
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            return "(" + subCtx.RawSql + ") " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
+        }
+
         protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
         {
-            var sql = Wrap(x.Column) + " " + checkOperator(x.Operator) + " " + Parameter(ctx, x.Value);
+            var sql = $"{Wrap(x.Column)} {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
 
             if (x.IsNot)
             {
@@ -85,19 +100,14 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
         {
+
             var column = Wrap(x.Column);
 
-            var value = x.Value as string;
+            var value = Resolve(ctx, x.Value) as string;
 
             if (value == null)
             {
-                throw new ArgumentException("The value should be a non null value of type string");
-            }
-
-            if (!x.CaseSensitive)
-            {
-                x.Value = value.ToLower();
-                column = CompileLower(column);
+                throw new ArgumentException("Expecting a non nullable string");
             }
 
             var method = x.Operator;
@@ -107,43 +117,55 @@ namespace SqlKata.Compilers
 
                 method = "LIKE";
 
-                if (x.Operator == "starts")
+                switch (x.Operator)
                 {
-                    x.Value = x.Value + "%";
-                }
-                else if (x.Operator == "ends")
-                {
-                    x.Value = "%" + x.Value;
-                }
-                else if (x.Operator == "contains")
-                {
-                    x.Value = "%" + x.Value + "%";
-                }
-                else
-                {
-                    x.Value = x.Value;
+                    case "starts":
+                        value = $"{value}%";
+                        break;
+                    case "ends":
+                        value = $"%{value}";
+                        break;
+                    case "contains":
+                        value = $"%{value}%";
+                        break;
                 }
             }
 
-            var sql = column + " " + checkOperator(method) + " " + Parameter(ctx, x.Value);
+            string sql;
 
-            if (x.IsNot)
+
+            if (!x.CaseSensitive)
             {
-                return $"NOT ({sql})";
+                column = CompileLower(column);
+                value = value.ToLowerInvariant();
             }
 
-            return sql;
+            if (x.Value is UnsafeLiteral)
+            {
+                sql = $"{column} {checkOperator(method)} {value}";
+            }
+            else
+            {
+                sql = $"{column} {checkOperator(method)} {Parameter(ctx, value)}";
+            }
+
+            if (!string.IsNullOrEmpty(x.EscapeCharacter))
+            {
+                sql = $"{sql} ESCAPE '{x.EscapeCharacter}'";
+            }
+
+            return x.IsNot ? $"NOT ({sql})" : sql;
+
         }
 
         protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x)
         {
             var column = Wrap(x.Column);
+            var op = checkOperator(x.Operator);
 
-            var sql = $"{x.Part.ToUpperInvariant()}({column}) {checkOperator(x.Operator)} {Parameter(ctx, x.Value)}";
+            var sql = $"{x.Part.ToUpperInvariant()}({column}) {op} {Parameter(ctx, x.Value)}";
 
-            return x.IsNot
-                ? $"NOT ({sql})"
-                : sql;
+            return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
         protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
@@ -153,12 +175,11 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var sql = CompileConditions(ctx, x.Query.GetComponents<AbstractCondition>("where", EngineCode));
-            var op = x.IsNot ? "NOT " : "";
+            var clauses = x.Query.GetComponents<AbstractCondition>("where", EngineCode);
 
-            return string.IsNullOrEmpty(sql)
-                ? ""
-                : $"{op}({sql})";
+            var sql = CompileConditions(ctx, clauses);
+
+            return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
 
         protected string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
@@ -169,11 +190,11 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileBetweenCondition<T>(SqlResult ctx, BetweenCondition<T> item)
         {
-            ctx.Bindings.AddRange(new object[] { item.Lower, item.Higher });
-
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
+            var lower = Parameter(ctx, item.Lower);
+            var higher = Parameter(ctx, item.Higher);
 
-            return Wrap(item.Column) + $" {between} ? AND ?";
+            return Wrap(item.Column) + $" {between} {lower} AND {higher}";
         }
 
         protected virtual string CompileInCondition<T>(SqlResult ctx, InCondition<T> item)
@@ -182,7 +203,7 @@ namespace SqlKata.Compilers
 
             if (!item.Values.Any())
             {
-                return item.IsNot ? $"1 = 1 /* WhereNotIn({column}, [empty list]) */" : "1 = 0 /* WhereIn({column}, [empty list]) */";
+                return item.IsNot ? $"1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
             }
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
@@ -225,10 +246,10 @@ namespace SqlKata.Compilers
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
 
             var subCtx = CompileSelectQuery(item.Query);
+
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             return $"{op} ({subCtx.RawSql})";
         }
-
     }
 }

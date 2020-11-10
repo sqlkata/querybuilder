@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
         protected override string parameterPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
-        protected override string LastId { get; set; } = "select last_insert_rowid()";
+        protected override string LastId { get; set; } = "select last_insert_rowid() as id";
 
         public override string CompileTrue()
         {
@@ -43,13 +43,13 @@ namespace SqlKata.Compilers
             var value = Parameter(ctx, condition.Value);
 
             var formatMap = new Dictionary<string, string> {
-                {"date", "%Y-%m-%d"},
-                {"time", "%H:%M:%S"},
-                {"year", "%Y"},
-                {"month", "%m"},
-                {"day", "%d"},
-                {"hour", "%H"},
-                {"minute", "%M"},
+                { "date", "%Y-%m-%d" },
+                { "time", "%H:%M:%S" },
+                { "year", "%Y" },
+                { "month", "%m" },
+                { "day", "%d" },
+                { "hour", "%H" },
+                { "minute", "%M" },
             };
 
             if (!formatMap.ContainsKey(condition.Part))
@@ -66,6 +66,5 @@ namespace SqlKata.Compilers
 
             return sql;
         }
-
     }
 }
