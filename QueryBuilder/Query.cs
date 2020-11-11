@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -312,6 +313,8 @@ namespace SqlKata
         {
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
+        
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         /// <summary>
         /// Define a variable to be used within the query
@@ -355,7 +358,7 @@ namespace SqlKata
         private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
         {
             var dictionary = new Dictionary<string, object>();
-            var props = data.GetType().GetRuntimeProperties();
+            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
 
             foreach (var property in props)
             {
