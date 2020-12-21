@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace SqlKata
@@ -56,7 +57,7 @@ namespace SqlKata
 
             if (NumberTypes.Contains(value.GetType()))
             {
-                return value.ToString();
+                return Convert.ToString(value, CultureInfo.InvariantCulture);
             }
 
             if (value is DateTime date)
