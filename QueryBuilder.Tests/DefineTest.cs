@@ -2,6 +2,7 @@
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
+using System.Collections.Generic;
 
 namespace SqlKata.Tests
 {
@@ -330,7 +331,23 @@ namespace SqlKata.Tests
             Assert.Equal("WITH [prodCTE] AS (SELECT [Categories].[CategoryName], [Products].[UnitPrice] FROM [Products] \nINNER JOIN [Categories] ON [Categories].[CategoryID] = [Products].[CategoryID] WHERE [Products].[UnitPrice] > 10)\nSELECT * FROM [prodCTE]", c[EngineCodes.SqlServer]);
         }
 
+        [Fact]
+        public void Test_Define_With_Recursive()
+        {
 
+            var query = new Query("Products")
+                        .Define("@unit", 10)
+                        .Join("Categories", "Categories.CategoryID", "Products.CategoryID")
+                        .Select("Categories.CategoryName", "Products.UnitPrice")
+                        .Where("Products.UnitPrice", ">", Variable("@unit"));
+
+            var queryCTe = new Query("prodCTE")
+                            .With("prodCTE", query, true);
+
+            var c = Compile(new List<string>() { EngineCodes.PostgreSql }, queryCTe);
+
+            Assert.Equal("WITH RECURSIVE \"prodCTE\" AS (SELECT \"Categories\".\"CategoryName\", \"Products\".\"UnitPrice\" FROM \"Products\" \nINNER JOIN \"Categories\" ON \"Categories\".\"CategoryID\" = \"Products\".\"CategoryID\" WHERE \"Products\".\"UnitPrice\" > 10)\nSELECT * FROM \"prodCTE\"", c[EngineCodes.PostgreSql]);
+        }
 
         /*
         [Fact]

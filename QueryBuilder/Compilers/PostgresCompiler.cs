@@ -37,5 +37,10 @@ namespace SqlKata.Compilers
 
             return sql;
         }
+
+        protected override string GetCtePrefix(bool recursive = false)
+        {
+            return recursive ? "WITH RECURSIVE" : "WITH";
+        }
     }
 }

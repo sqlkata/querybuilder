@@ -81,7 +81,7 @@ namespace SqlKata
             return result;
         }
 
-        public Query With(Query query)
+        public Query With(Query query, bool recursive = false)
         {
             // Clear query alias and add it to the containing clause
             if (string.IsNullOrWhiteSpace(query.QueryAlias))
@@ -96,7 +96,9 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
+            string component = recursive ? "cte-rec" : "cte";
+
+            return AddComponent(component, new QueryFromClause
             {
                 Query = query,
                 Alias = alias,
@@ -108,9 +110,9 @@ namespace SqlKata
             return With(fn.Invoke(new Query()));
         }
 
-        public Query With(string alias, Query query)
+        public Query With(string alias, Query query, bool recursive = false)
         {
-            return With(query.As(alias));
+            return With(query.As(alias), recursive);
         }
 
         public Query With(string alias, Func<Query, Query> fn)
@@ -313,7 +315,7 @@ namespace SqlKata
         {
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
-        
+
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         /// <summary>

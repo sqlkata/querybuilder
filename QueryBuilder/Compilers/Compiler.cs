@@ -125,6 +125,10 @@ namespace SqlKata.Compilers
             {
                 ctx = CompileCteQuery(ctx, query);
             }
+            else if (query.HasComponent("cte-rec", EngineCode))
+            {
+                ctx = CompileCteQuery(ctx, query, true);
+            }
 
             ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, "?", ctx.Bindings.ToArray());
 
@@ -392,12 +396,12 @@ namespace SqlKata.Compilers
         }
 
 
-        protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
+        protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query, bool recursive = false)
         {
             var cteFinder = new CteFinder(query, EngineCode);
             var cteSearchResult = cteFinder.Find();
 
-            var rawSql = new StringBuilder("WITH ");
+            var rawSql = new StringBuilder($"{GetCtePrefix(recursive)} ");
             var cteBindings = new List<object>();
 
             foreach (var cte in cteSearchResult)
@@ -417,6 +421,11 @@ namespace SqlKata.Compilers
             ctx.RawSql = rawSql.ToString();
 
             return ctx;
+        }
+
+        protected virtual string GetCtePrefix(bool recursive = false)
+        {
+            return "WITH";
         }
 
         /// <summary>
@@ -670,18 +679,18 @@ namespace SqlKata.Compilers
             var columns = ctx.Query
                 .GetComponents<AbstractOrderBy>("order", EngineCode)
                 .Select(x =>
-            {
-
-                if (x is RawOrderBy raw)
                 {
-                    ctx.Bindings.AddRange(raw.Bindings);
-                    return WrapIdentifiers(raw.Expression);
-                }
 
-                var direction = (x as OrderBy).Ascending ? "" : " DESC";
+                    if (x is RawOrderBy raw)
+                    {
+                        ctx.Bindings.AddRange(raw.Bindings);
+                        return WrapIdentifiers(raw.Expression);
+                    }
 
-                return Wrap((x as OrderBy).Column) + direction;
-            });
+                    var direction = (x as OrderBy).Ascending ? "" : " DESC";
+
+                    return Wrap((x as OrderBy).Column) + direction;
+                });
 
             return "ORDER BY " + string.Join(", ", columns);
         }
