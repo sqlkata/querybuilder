@@ -108,7 +108,7 @@ namespace SqlKata.Compilers
 
             var isDateTime = (condition.Value is DateTime dt);
 
-            switch (condition.Part?.ToLowerInvariant())
+            switch (condition.Part)
             {
                 case "date": // assume YY-MM-DD format
                     if (isDateTime)
