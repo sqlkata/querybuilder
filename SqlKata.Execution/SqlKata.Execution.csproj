@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>SqlKata.Execution</PackageId>
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
@@ -14,7 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="dapper" Version="1.50.5" />
-    <PackageReference Include="Humanizer.Core" Version="2.6.2" />
+    <PackageReference Include="Humanizer.Core" Version="2.8.26" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
