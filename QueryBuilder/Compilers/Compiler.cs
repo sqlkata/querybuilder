@@ -209,7 +209,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileDeleteQuery(Query query)
+        protected virtual SqlResult CompileDeleteQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -253,7 +253,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private SqlResult CompileUpdateQuery(Query query)
+        protected virtual SqlResult CompileUpdateQuery(Query query)
         {
             var ctx = new SqlResult
             {
