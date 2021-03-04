@@ -789,5 +789,18 @@ namespace SqlKata.Tests
                     .HavingContains("Column1", @"TestString\%", false, @"\aa");
             });
         }
+
+        [Fact]
+        public void JoinEmptyQuery()
+        {
+            var left = new Query("Table1");
+            var right = new Query("Table2");
+
+            var joined = left.Join(right, join => join.On("Column1", "Column2"));
+
+            var compiled = Compile(joined);
+
+            Assert.Equal("SELECT * FROM \"Table1\" \nINNER JOIN \"Table2\" ON (\"Column1\" = \"Column2\")", compiled[EngineCodes.PostgreSql]);
+        }
     }
 }

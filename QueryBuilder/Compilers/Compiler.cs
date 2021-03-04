@@ -576,6 +576,11 @@ namespace SqlKata.Compilers
             {
                 var fromQuery = queryFromClause.Query;
 
+                if (fromQuery.Clauses.Count == 1 && fromQuery.Clauses[0] is FromClause emptyFromClause)
+                {
+                    return Wrap(emptyFromClause.Table);
+                }
+
                 var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : $" {TableAsKeyword}" + WrapValue(fromQuery.QueryAlias);
 
                 var subCtx = CompileSelectQuery(fromQuery);
