@@ -581,7 +581,7 @@ namespace SqlKata
                 Operator = op,
                 Column = column,
                 Value = value,
-                Part = part,
+                Part = part?.ToLowerInvariant(),
                 IsOr = GetOr(),
                 IsNot = GetNot(),
             });
