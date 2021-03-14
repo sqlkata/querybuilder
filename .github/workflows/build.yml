@@ -12,8 +12,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   # Project name to pack and publish
   PROJECT_NAME: SqlKata
-  # DOTNET_VERSION: 5.0.100
-  DOTNET_VERSION: 2.2.203
+  DOTNET_VERSION: 5.0.201
+  # DOTNET_VERSION: 2.2.203
   # GitHub Packages Feed settings
   GITHUB_FEED: https://nuget.pkg.github.com/sqlkata/
   GITHUB_USER: ahmad-moussawi
@@ -104,6 +104,6 @@ jobs:
           echo Clean Version: $VERSION
           dotnet pack -v normal -c Release --include-symbols --include-source -p:PackageVersion=$VERSION -o nupkg SqlKata.Execution/SqlKata.Execution.csproj
       - name: Push to GitHub Feed
-        run: dotnet nuget push ./nupkg/*.nupkg --source $GITHUB_FEED --skip-duplicate --api-key $GITHUB_TOKEN
+        run: dotnet nuget push ./nupkg/*.nupkg --skip-duplicate --source $GITHUB_FEED --api-key $GITHUB_TOKEN
       - name: Push to NuGet Feed
-        run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
+        run: dotnet nuget push ./nupkg/*.nupkg --skip-duplicate --source $NUGET_FEED --api-key $NUGET_KEY
