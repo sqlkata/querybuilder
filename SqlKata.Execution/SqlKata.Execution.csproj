@@ -6,7 +6,7 @@
     <Description>Adds the execution capabilities for SqlKata</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>SqlKata</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
@@ -16,7 +16,4 @@
     <PackageReference Include="dapper" Version="1.50.5" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
   </ItemGroup>
-  <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
-  </PropertyGroup>
 </Project>
