@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    <img src="https://github.com/sqlkata/querybuilder/actions/workflows/main.yml/badge.svg">
+    <img src="https://github.com/sqlkata/querybuilder/actions/workflows/build.yml/badge.svg">
     <a href="https://www.nuget.org/packages/SqlKata"><img src="https://img.shields.io/nuget/vpre/SqlKata.svg"></a>
     <a href="https://github.com/sqlkata/querybuilder/network/members"><img src="https://img.shields.io/github/forks/sqlkata/querybuilder"></a>
     <a href="https://github.com/sqlkata/querybuilder/stargazers"><img src="https://img.shields.io/github/stars/sqlkata/querybuilder"></a>
