@@ -3,9 +3,8 @@
 </p>
 
 <p align="center">
-    <a href="https://ci.appveyor.com/project/ahmad-moussawi/querybuilder"><img src="https://ci.appveyor.com/api/projects/status/bh022c0ol5u6s41p?svg=true"></a>
+    <img src="https://github.com/sqlkata/querybuilder/actions/workflows/build.yml/badge.svg">
     <a href="https://www.nuget.org/packages/SqlKata"><img src="https://img.shields.io/nuget/vpre/SqlKata.svg"></a>
-    <a href="https://www.myget.org/feed/sqlkata/package/nuget/SqlKata"><img src="https://img.shields.io/myget/sqlkata/v/SqlKata.svg?label=myget"></a>
     <a href="https://github.com/sqlkata/querybuilder/network/members"><img src="https://img.shields.io/github/forks/sqlkata/querybuilder"></a>
     <a href="https://github.com/sqlkata/querybuilder/stargazers"><img src="https://img.shields.io/github/stars/sqlkata/querybuilder"></a>
     <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=Tweet%20about%20SqlKata&style=social&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"></a>
