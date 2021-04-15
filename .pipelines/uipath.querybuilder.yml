@@ -1,0 +1,173 @@
+parameters:
+- name: DebugBuild
+  displayName: Produce a debug build
+  type: boolean
+  default: false
+- name: PublishPackage
+  displayName: Push package to VSTS feed
+  type: boolean
+  default: false
+
+
+# We trigger for build checks, but these won't actually publish packages to the feed
+trigger:
+  branches:
+    include:
+    - master
+    - feature/*
+    - bug/*
+
+
+stages:
+- stage: Build
+  jobs:
+  - job:
+    workspace:
+      clean: all
+    pool:
+      vmImage: ubuntu-latest
+
+    variables:
+      ${{ if parameters.DebugBuild }}:
+        BuildConfiguration: Debug
+      ${{ if not(parameters.DebugBuild) }}:
+        BuildConfiguration: Release
+
+    steps:
+    # This is (also) the _version number_ under which the package will be published.
+    - task: Bash@3
+      displayName: Set build number
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd "$(Build.SourcesDirectory)"
+          git describe --tags
+          VersionPrefix=$(git describe --tags --abbrev=0)
+          VersionSuffix=$(git describe --tags)
+          VersionSuffix="${VersionSuffix#${VersionPrefix}}"
+          VersionSuffix="uipath${VersionSuffix}"
+          VersionPrefix="${VersionPrefix#v}" # strip leading 'v'
+
+          VersionNumber="${VersionPrefix}-${VersionSuffix}"
+          echo "VersionNumber: ${VersionNumber}"
+          echo "##vso[build.updatebuildnumber]${VersionNumber}"
+
+    - task: Bash@3
+      displayName: Enable SourceLink
+      inputs:
+        targetType: 'inline'
+        script: |
+          find "$(Build.SourcesDirectory)" -name '*.csproj' | while read l ; do
+            sed -i '/<\/PropertyGroup>/s:\(.*\)\(</PropertyGroup>\):\1\1<PublishRepositoryUrl>true</PublishRepositoryUrl>\n&:' "${l}"
+            sed -i '/<\/PropertyGroup>/s:\(.*\)\(</PropertyGroup>\):\1\1<EmbedUntrackedSources>true</EmbedUntrackedSources>\n&:' "${l}"
+            sed -i '/<\/PropertyGroup>/s:\(.*\)\(</PropertyGroup>\):\1\1<IncludeSymbols>true</IncludeSymbols>\n&:' "${l}"
+            sed -i '/<\/PropertyGroup>/s:\(.*\)\(</PropertyGroup>\):\1\1<SymbolPackageFormat>snupkg</SymbolPackageFormat>\n&:' "${l}"
+            sed -i '/<\/ItemGroup>/s:\(.*\)\(</ItemGroup>\):\1\1<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>\n&:' "${l}"
+          done
+
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: build
+        arguments: --configuration $(BuildConfiguration) -p:Version=$(Build.BuildNumber)
+        projects: sqlkata.sln
+
+    - task: DotNetCoreCLI@2
+      displayName: This Is A Test (Extended Mix)
+      inputs:
+        command: 'test'
+
+    - template: templates/util/dotnet.nuget.pack.yml
+      parameters:
+        project: QueryBuilder/QueryBuilder.csproj
+        configuration: $(BuildConfiguration)
+        packageVersion: $(Build.BuildNumber)
+        outputDir: $(Build.ArtifactStagingDirectory)
+
+    - template: templates/util/dotnet.nuget.pack.yml
+      parameters:
+        project: SqlKata.Execution/SqlKata.Execution.csproj
+        configuration: $(BuildConfiguration)
+        packageVersion: $(Build.BuildNumber)
+        outputDir: $(Build.ArtifactStagingDirectory)
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      displayName: Publish packages
+      artifact: UiPath.QueryBuilder-$(Build.BuildNumber)
+
+
+###############################################################################
+
+
+# We don't seem to have a separate 'feature' environment yet, so everything
+# goes directly to alpha.
+- template: templates/util/push.to.feed.yml
+  parameters:
+    dependsOn: [Build]
+    condition: ${{ parameters.PublishPackage }}
+    environment: app-alpha
+    feed: ProcessMining-Cloud/ProcessMining # <project name>/<feed>
+    version: $(Build.BuildNumber)
+
+
+###############################################################################
+
+
+# Azure DevOps has declined to support .snupkg, so we have to publish the
+# symbols manually. To make things even more complicated the PublishSymbols@2
+# task is not compatible with Linux, and has to be run on Windows.
+- stage: PublishSymbolsToAzureDevops
+  displayName: Publish Symbols to Azure Devops
+  dependsOn: [Build]
+  condition: ${{ parameters.PublishPackage }}
+  jobs:
+  - job:
+    workspace:
+      clean: all
+    pool:
+      vmImage: windows-2019
+
+    steps:
+    - checkout: none
+    - download: current
+
+    # Built-in ExtractFiles@1 doesn't allow extracting each archive to its own folder.
+    - task: Bash@3
+      displayName: Extract Files
+      inputs:
+        targetType: 'inline'
+        script: |
+          # `` Predefined variables that contain file paths are translated to
+          #    the appropriate styling (Windows style C:\foo\ versus Unix style
+          #    /foo/) based on agent host type and shell type. ``
+          #    -- https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables
+          #
+          # Except that they're not. So we do it by hand.
+          BUILD_ARTIFACTSTAGINGDIRECTORY=$(readlink -f '$(Build.ArtifactStagingDirectory)')
+          PIPELINE_WORKSPACE=$(readlink -f '$(Pipeline.Workspace)')
+
+          find "${PIPELINE_WORKSPACE}" -name '*.snupkg' | while read l ; do
+            bn="${l}"
+            bn="${bn##*/}"
+            bn="${bn%.snupkg}"
+            7z x -o"${BUILD_ARTIFACTSTAGINGDIRECTORY}/${bn}" "${l}"
+          done
+
+    - task: PublishSymbols@2
+      displayName: Publish Symbols
+      inputs:
+        symbolServerType: TeamServices
+        symbolsFolder: $(Build.ArtifactStagingDirectory)
+        searchPattern: '**/*.pdb'
+        indexSources: false # done separately using SourceLink (above)
+        publishSymbols: true
+
+    - template: templates/util/set.build.retention.yml
+      parameters:
+        retainIndefinitely: true
+        reason: manual-build
+        condition: |
+          and(
+            succeeded(),
+            contains('Manual', variables['Build.Reason'])
+          )

@@ -1,0 +1,52 @@
+parameters:
+- name: condition
+  type: string
+  default: succeeded()
+- name: retainIndefinitely
+  type: boolean
+- name: reason
+  type: string
+
+steps:
+- template: check.missing.parameters.yml
+  parameters:
+    ${{ parameters }}
+
+- task: PowerShell@2
+  displayName: Format reason tag
+  condition: ${{ parameters.condition }}
+  inputs:
+    targetType: 'inline'
+    script: |
+      $reason = "${{ parameters.reason }}"
+      if ([string]::IsNullOrEmpty(${reason})) {
+        Write-Host "Reason not specified."
+        exit 1
+      }
+      Write-Host "##vso[task.setvariable variable=TagValue;]retention.reason.${reason}"
+
+- task: PowerShell@2
+  condition: ${{ parameters.condition }}
+  displayName: Setting build retention to ${{ parameters.retainIndefinitely }}
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  inputs:
+    targetType: 'inline'
+    script: |
+      $url = "${env:SYSTEM_COLLECTIONURI}${env:SYSTEM_TEAMPROJECTID}/_apis/build/builds/$(Build.BuildId)?api-version=5.1"
+      Write-Host "URL: ${url}"
+
+      $body = @{
+          keepforever='${{ parameters.retainIndefinitely }}'
+      } | ConvertTo-Json
+      Write-Host "body: ${body}"
+
+      $result = Invoke-RestMethod -Uri "${url}" -Method Patch -Body "${body}" -ContentType "application/json" -Headers @{
+          Authorization = "Bearer ${env:SYSTEM_ACCESSTOKEN}"
+      }
+      Write-Verbose "Result: $result" -Verbose
+
+- template: add.build.tag.yml
+  parameters:
+    condition: ${{ parameters.condition }}
+    value: $(TagValue)

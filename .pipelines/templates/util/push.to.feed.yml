@@ -1,0 +1,54 @@
+# Modelled after https://github.com/UiPath/ServiceCommon/blob/3f7b73831b9ac4106ad89e036c955220f96f5eb3/Ledger/.vsts-ci.yml
+
+parameters:
+- name: environment
+  type: string
+  default: # Empty, to force people to think about this
+- name: feed
+  type: string
+  default: # Empty, to force people to think about this
+- name: version
+  type: string
+  default: # Empty, to force people to think about this
+- name: condition
+  type: string
+  default: # Empty, to force people to think about this
+- name: dependsOn
+  type: object
+  default: # Empty, to force people to think about this
+
+
+stages:
+- stage: PublishTo${{ replace(parameters.environment, '-', '') }}
+  displayName: Publish packages to ${{ parameters.environment }} feed
+  dependsOn:
+    ${{ parameters.dependsOn }}
+  condition: and(succeeded(), ${{ parameters.condition }})
+  jobs:
+  - deployment:
+    environment: ${{ parameters.environment }}
+    workspace:
+        clean: all
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+
+          - template: check.missing.parameters.yml
+
+          - task: Bash@3
+            displayName: Set version number environment variable
+            inputs:
+              targetType: 'inline'
+              script: |
+                  echo "setting version to '${{ parameters.version }}'"
+                  echo "##vso[task.setvariable variable=NuGetVerionEnvVar]${{ parameters.version }}"
+
+          - task: NuGetCommand@2
+            inputs:
+              command: push
+              versioningScheme: byEnvVar
+              versionEnvVar: NuGetVerionEnvVar
+              packagesToPush: $(Pipeline.Workspace)/**/*.nupkg
+              publishVstsFeed: ${{ parameters.feed }}

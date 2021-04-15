@@ -1,0 +1,29 @@
+parameters:
+- name: project
+  type: string
+  default: # Empty
+- name: configuration
+  type: string
+  default: # Empty
+- name: packageVersion
+  type: string
+  default: # Empty
+- name: outputDir
+  type: string
+  default: # Empty
+
+
+steps:
+- template: check.missing.parameters.yml
+
+- task: DotNetCoreCLI@2
+  displayName: Package ${{ parameters.project }}
+  inputs:
+    command: custom # such convenience, much easy
+    custom: pack
+    arguments: ${{ parameters.project }} --verbosity Detailed --configuration ${{ parameters.configuration }} --output ${{ parameters.outputDir }} --no-build --no-restore --include-source --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ parameters.packageVersion }}
+    nobuild: true                             # ... None ...
+    includesource: true                       # ... of ...
+    includesymbols: true                      # ... these ...
+    outputDir: ${{ parameters.outputDir }}    # ... do ...
+    packagesToPack: ${{ parameters.project }} # ... anything. ...

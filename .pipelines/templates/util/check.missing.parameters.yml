@@ -1,0 +1,52 @@
+# Parameter handling in Azure pipelines leaves a lot to be desired. It is super
+# easy to accidentally forget to pass a parameter, or to pass an empty or null
+# value. The format can be helped somewhat by using long-form parameters, but
+# the latter can still (too) easily happen. This module attempts to help find
+# missing parameters early, rather than getting an obscure error somewhere down
+# the line because a null or empty value was passed along.
+#
+# The way this works is that it (ab)uses the parameter definition system. By
+# including this template as per below, this task gets access to the parameter
+# definitions of its the 'caller', i.e. parameters at the location where this
+# template is included.
+# ---8<---------
+# - template: check.missing.parameters.yml
+#   parameters:
+#     ${{ parameters }}
+# --->8---------
+#
+# For now, this allows no empty or null values in parameters. If you have a
+# truly optional parameter, it is probably best to add a separate flag (which
+# is again required), and a default value for the optional parameter.
+#
+# When defining parameters, always use the long-form syntax as that helps to
+# catch more errors.
+#
+
+steps:
+- task: Bash@3
+  displayName: Check if all parameters have a value
+  env:
+    ${{ each parameter in parameters }}:
+      ${{ format('parameter_validation_{0}', parameter.key) }}: ${{ convertToJson(parameter.value) }}
+  inputs:
+    targetType: 'inline'
+    script: |
+      parameters=$(env | while read l ; do
+        parameter="${l%%=*}"
+        if [ "${parameter:0:21}" = "parameter_validation_" ] ; then
+          echo "${parameter}"
+        fi
+      done)
+      echo "parameters: ${parameters}"
+      return=0
+      for parameter in ${parameters} ; do
+        key="${parameter:21}"
+        value="${!parameter}"
+        echo "${key}=${value}"
+        if [ -z "${value}" -o "${value}" = 'null' -o "${value}" = '""' -o "${value}" = '{}' ] ; then
+            echo "##vso[task.LogIssue type=error;]$(System.StageName).$(System.PhaseName): Missing a value for parameter '${key}'!"
+            return=1
+        fi
+      done
+      exit ${return}

@@ -1,0 +1,34 @@
+parameters:
+- name: condition
+  type: string
+  default: succeeded()
+- name: value
+  type: string
+
+steps:
+- template: check.missing.parameters.yml
+  parameters:
+    ${{ parameters }}
+
+- task: PowerShell@2
+  condition: ${{ parameters.condition }}
+  displayName: Adding build tag '${{ parameters.value }}'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  inputs:
+    targetType: 'inline'
+    script: |
+      $value = "${{ parameters.value }}"
+
+      if ([string]::IsNullOrEmpty(${value})) {
+        Write-Host "Tag not specified."
+        exit 1
+      }
+
+      $url = "${env:SYSTEM_COLLECTIONURI}${env:SYSTEM_TEAMPROJECTID}/_apis/build/builds/$(Build.BuildId)/tags/${value}?api-version=6.0"
+      Write-Host "URL: ${url}"
+
+      $result = Invoke-RestMethod -Uri "${url}" -Method Put -Headers @{
+          Authorization = "Bearer ${env:SYSTEM_ACCESSTOKEN}"
+      }
+      Write-Verbose "Result: ${result}" -Verbose
