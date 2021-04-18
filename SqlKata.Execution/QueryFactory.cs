@@ -527,7 +527,7 @@ namespace SqlKata.Execution
 
             while (result.HasNext)
             {
-                result = result.Next();
+                result = result.Next(transaction);
                 if (!func(result.List, result.Page))
                 {
                     return;
@@ -543,7 +543,7 @@ namespace SqlKata.Execution
             int? timeout = null
         )
         {
-            var result = await this.PaginateAsync<T>(query, 1, chunkSize);
+            var result = await this.PaginateAsync<T>(query, 1, chunkSize, transaction);
 
             if (!func(result.List, 1))
             {
@@ -552,7 +552,7 @@ namespace SqlKata.Execution
 
             while (result.HasNext)
             {
-                result = result.Next();
+                result = result.Next(transaction);
                 if (!func(result.List, result.Page))
                 {
                     return;
@@ -568,7 +568,7 @@ namespace SqlKata.Execution
 
             while (result.HasNext)
             {
-                result = result.Next();
+                result = result.Next(transaction);
                 action(result.List, result.Page);
             }
         }
@@ -587,7 +587,7 @@ namespace SqlKata.Execution
 
             while (result.HasNext)
             {
-                result = result.Next();
+                result = result.Next(transaction);
                 action(result.List, result.Page);
             }
         }
