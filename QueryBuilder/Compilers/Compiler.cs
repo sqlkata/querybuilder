@@ -834,6 +834,8 @@ namespace SqlKata.Compilers
             var opening = this.OpeningIdentifier;
             var closing = this.ClosingIdentifier;
 
+            if (string.IsNullOrWhiteSpace(opening) && string.IsNullOrWhiteSpace(closing)) return value;
+
             return opening + value.Replace(closing, closing + closing) + closing;
         }
 

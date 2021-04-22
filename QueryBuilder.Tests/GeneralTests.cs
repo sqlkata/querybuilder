@@ -90,6 +90,16 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void Custom_compiler_with_empty_identifier_overrides_should_remove_identifiers()
+        {
+            var compiler = new TestEmptyIdentifiersCompiler();
+
+            var wrappedValue = compiler.WrapValue("Table");
+
+            Assert.Equal("Table", wrappedValue);
+        }
+
+        [Fact]
         public void Should_Equal_AfterMultipleCompile()
         {
             var query = new Query()

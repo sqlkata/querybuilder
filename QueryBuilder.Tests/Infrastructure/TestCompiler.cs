@@ -48,4 +48,10 @@ namespace SqlKata.Tests.Infrastructure
             return FindCompilerMethodInfo(clauseType, methodName);
         }
     }
+
+    class TestEmptyIdentifiersCompiler : TestCompiler
+    {
+        protected override string OpeningIdentifier { get; set; } = "";
+        protected override string ClosingIdentifier { get; set; } = "";
+    }
 }
