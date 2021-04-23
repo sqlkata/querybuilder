@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
             var ctx = new SqlResult
             {
-                Query = query,
+                Query = query
             };
 
             var limit = query.GetLimit(EngineCode);

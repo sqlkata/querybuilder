@@ -4,19 +4,13 @@ using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using System.Data.SqlClient;
-using System.Threading.Tasks;
-using System.Linq;
 using Newtonsoft.Json;
-using Npgsql;
-using System.Data;
-using Dapper;
 using System.Data.SQLite;
-using static SqlKata.Expressions;
 using System.IO;
 
 namespace Program
 {
-    class Program
+    internal class Program
     {
         private class Loan
         {
@@ -49,7 +43,7 @@ namespace Program
             }
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static void Log(Compiler compiler, Query query)
         {
             var compiled = compiler.Compile(query);
             Console.WriteLine(compiled.ToString());
@@ -62,35 +56,30 @@ namespace Program
 
             var connection = new SQLiteConnection("Data Source=Demo.db");
 
-            var db = new QueryFactory(connection, compiler);
-
-            db.Logger = result =>
+            var db = new QueryFactory(connection, compiler)
             {
-                Console.WriteLine(result.ToString());
+                Logger = result => { Console.WriteLine(result.ToString()); }
             };
 
-            if (!File.Exists("Demo.db"))
+
+            if (File.Exists("Demo.db")) return db;
+            Console.WriteLine("db not exists creating db");
+
+            SQLiteConnection.CreateFile("Demo.db");
+
+            db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
+            for (var i = 0; i < 10; i++)
             {
-                Console.WriteLine("db not exists creating db");
-
-                SQLiteConnection.CreateFile("Demo.db");
-
-                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
-                for (var i = 0; i < 10; i++)
+                db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
                 {
-                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
-                    {
-                        name = $"Account {i}",
-                        currency = "USD",
-                        balance = 100 * i * 1.1,
-                        date = DateTime.UtcNow,
-                    });
-                }
-
+                    name = $"Account {i}",
+                    currency = "USD",
+                    balance = 100 * i * 1.1,
+                    date = DateTime.UtcNow,
+                });
             }
 
             return db;
-
         }
 
         private static QueryFactory SqlServerQueryFactory()
@@ -100,15 +89,12 @@ namespace Program
                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
            );
 
-            var db = new QueryFactory(connection, compiler);
-
-            db.Logger = result =>
+            var db = new QueryFactory(connection, compiler)
             {
-                Console.WriteLine(result.ToString());
+                Logger = result => { Console.WriteLine(result.ToString()); }
             };
 
             return db;
         }
-
     }
 }

@@ -5,16 +5,14 @@ namespace SqlKata
 {
     public partial class Query
     {
-
         public Query Select(params string[] columns)
         {
             Method = "select";
 
             columns = columns
-                .Select(x => Helper.ExpandExpression(x))
+                .Select(Helper.ExpandExpression)
                 .SelectMany(x => x)
                 .ToArray();
-
 
             foreach (var column in columns)
             {
@@ -23,7 +21,6 @@ namespace SqlKata
                     Name = column
                 });
             }
-
             return this;
         }
 
@@ -38,7 +35,7 @@ namespace SqlKata
             AddComponent("select", new RawColumn
             {
                 Expression = sql,
-                Bindings = bindings,
+                Bindings = bindings
             });
 
             return this;
@@ -52,7 +49,7 @@ namespace SqlKata
 
             AddComponent("select", new QueryColumn
             {
-                Query = query.As(alias),
+                Query = query.As(alias)
             });
 
             return this;

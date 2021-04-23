@@ -8,17 +8,11 @@ namespace SqlKata
 
         public string Type
         {
-            get
-            {
-                return _type;
-            }
-            set
-            {
-                _type = value.ToUpperInvariant();
-            }
+            get => _type;
+            set => _type = value.ToUpperInvariant();
         }
 
-        public Join() : base()
+        public Join()
         {
         }
 
@@ -61,7 +55,6 @@ namespace SqlKata
                 IsOr = GetOr(),
                 IsNot = GetNot()
             });
-
         }
 
         public Join OrOn(string first, string second, string op = "=")

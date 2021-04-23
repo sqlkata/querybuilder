@@ -9,7 +9,6 @@ namespace SqlKata
     {
         public Q Where(string column, string op, object value)
         {
-
             // If the value is "null", we will just assume the developer wants to add a
             // where null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
@@ -24,7 +23,7 @@ namespace SqlKata
                 Operator = op,
                 Value = value,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -67,12 +66,9 @@ namespace SqlKata
         /// <returns></returns>
         public Q Where(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
-
-            foreach (var item in constraints.GetType().GetRuntimeProperties())
-            {
-                dictionary.Add(item.Name, item.GetValue(constraints));
-            }
+            var dictionary = constraints.GetType()
+                                        .GetRuntimeProperties()
+                                        .ToDictionary(item => item.Name, item => item.GetValue(constraints));
 
             return Where(dictionary);
         }
@@ -87,7 +83,7 @@ namespace SqlKata
             {
                 if (orFlag)
                 {
-                    query = query.Or();
+                    query.Or();
                 }
                 else
                 {
@@ -107,7 +103,7 @@ namespace SqlKata
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -126,7 +122,7 @@ namespace SqlKata
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Where(x => x.Component == "where").Any())
+            if (query.Clauses.All(x => x.Component != "where"))
             {
                 return (Q)this;
             }
@@ -135,7 +131,7 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -162,7 +158,7 @@ namespace SqlKata
                 Second = second,
                 Operator = op,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -177,7 +173,7 @@ namespace SqlKata
             {
                 Column = column,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -203,7 +199,7 @@ namespace SqlKata
                 Column = column,
                 Value = true,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -219,7 +215,7 @@ namespace SqlKata
                 Column = column,
                 Value = false,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -238,7 +234,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -266,7 +262,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -295,7 +291,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -324,7 +320,7 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -393,8 +389,6 @@ namespace SqlKata
                 IsNot = GetNot(),
                 Values = values.Distinct().ToList()
             });
-
-
         }
 
         public Q OrWhereIn<T>(string column, IEnumerable<T> values)
@@ -412,7 +406,6 @@ namespace SqlKata
             return Or().Not().WhereIn(column, values);
         }
 
-
         public Q WhereIn(string column, Query query)
         {
             return AddComponent("where", new InQueryCondition
@@ -420,13 +413,13 @@ namespace SqlKata
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Query = query,
+                Query = query
             });
         }
+
         public Q WhereIn(string column, Func<Query, Query> callback)
         {
             var query = callback.Invoke(new Query().SetParent(this));
-
             return WhereIn(column, query);
         }
 
@@ -459,7 +452,6 @@ namespace SqlKata
             return Or().Not().WhereIn(column, callback);
         }
 
-
         /// <summary>
         /// Perform a sub query where clause
         /// </summary>
@@ -470,7 +462,6 @@ namespace SqlKata
         public Q Where(string column, string op, Func<Q, Q> callback)
         {
             var query = callback.Invoke(NewChild());
-
             return Where(column, op, query);
         }
 
@@ -482,7 +473,7 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -499,7 +490,7 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -537,7 +528,7 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
         public Q WhereExists(Func<Query, Query> callback)
@@ -583,7 +574,7 @@ namespace SqlKata
                 Value = value,
                 Part = part?.ToLowerInvariant(),
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
         public Q WhereNotDatePart(string part, string column, string op, object value)

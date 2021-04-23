@@ -7,14 +7,13 @@ namespace SqlKata
     {
         public Query AsAggregate(string type, string[] columns = null)
         {
-
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
+            ClearComponent("aggregate")
             .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
+                Columns = columns?.ToList() ?? new List<string>()
             });
 
             return this;

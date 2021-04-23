@@ -172,7 +172,7 @@ namespace SqlKata.Compilers
             var ctx = new SqlResult
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
-                Bindings = combinedBindings,
+                Bindings = combinedBindings
             };
 
             ctx = PrepareResult(ctx);
@@ -184,7 +184,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult
             {
-                Query = query.Clone(),
+                Query = query.Clone()
             };
 
             var results = new[] {
@@ -196,7 +196,7 @@ namespace SqlKata.Compilers
                     this.CompileHaving(ctx),
                     this.CompileOrders(ctx),
                     this.CompileLimit(ctx),
-                    this.CompileUnion(ctx),
+                    this.CompileUnion(ctx)
                 }
                .Where(x => x != null)
                .Where(x => !string.IsNullOrEmpty(x))

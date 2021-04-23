@@ -1,10 +1,7 @@
-using System.Linq;
-
 namespace SqlKata
 {
     public abstract class AbstractCombine : AbstractClause
     {
-
     }
 
     public class Combine : AbstractCombine
@@ -31,7 +28,7 @@ namespace SqlKata
         /// <value>
         ///   <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; set; } = false;
+        public bool All { get; set; }
 
         public override AbstractClause Clone()
         {
@@ -41,7 +38,7 @@ namespace SqlKata
                 Operation = Operation,
                 Component = Component,
                 Query = Query,
-                All = All,
+                All = All
             };
         }
     }
@@ -59,7 +56,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                Bindings = Bindings,
+                Bindings = Bindings
             };
         }
     }

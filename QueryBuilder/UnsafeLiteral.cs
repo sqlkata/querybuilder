@@ -18,6 +18,5 @@ namespace SqlKata
 
             this.Value = value;
         }
-
     }
 }

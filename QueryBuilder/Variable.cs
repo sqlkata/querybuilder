@@ -8,6 +8,5 @@ namespace SqlKata
         {
             this.Name = name;
         }
-
     }
 }

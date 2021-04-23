@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace SqlKata
 {
@@ -9,19 +8,21 @@ namespace SqlKata
     {
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true);
+            var dictionary = BuildKeyValuePairsFromObject(data, true);
 
             return AsUpdate(dictionary);
         }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            if ((columns?.Any() ?? false) == false || (values?.Any() ?? false) == false)
+            var columnsList = columns.ToList();
+            var valuesList = values.ToList();
+            if ((bool) columnsList?.Any() == false || (bool) valuesList?.Any() == false)
             {
                 throw new InvalidOperationException($"{columns} and {values} cannot be null or empty");
             }
 
-            if (columns.Count() != values.Count())
+            if (columnsList.Count() != valuesList.Count())
             {
                 throw new InvalidOperationException($"{columns} count should be equal to {values} count");
             }
@@ -30,8 +31,8 @@ namespace SqlKata
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = columns.ToList(),
-                Values = values.ToList()
+                Columns = columnsList.ToList(),
+                Values = valuesList.ToList()
             });
 
             return this;
@@ -39,7 +40,8 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> values)
         {
-            if (values == null || values.Any() == false)
+            var keyValuePairs = values.ToList();
+            if (values == null || keyValuePairs.Any() == false)
             {
                 throw new InvalidOperationException($"{values} cannot be null or empty");
             }
@@ -48,10 +50,9 @@ namespace SqlKata
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = values.Select(x => x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList(),
+                Columns = keyValuePairs.Select(x => x.Key).ToList(),
+                Values = keyValuePairs.Select(x => x.Value).ToList()
             });
-
             return this;
         }
     }

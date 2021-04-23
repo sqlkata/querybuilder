@@ -8,7 +8,7 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
-        public bool IsDistinct { get; set; } = false;
+        public bool IsDistinct { get; set; }
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
         public string QueryComment { get; set; }
@@ -41,7 +41,6 @@ namespace SqlKata
         {
             engineCode = engineCode ?? EngineScope;
             var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
-
             return limit?.Limit ?? 0;
         }
 
@@ -72,12 +71,10 @@ namespace SqlKata
         public Query For(string engine, Func<Query, Query> fn)
         {
             EngineScope = engine;
-
             var result = fn.Invoke(this);
 
             // reset the engine
             EngineScope = null;
-
             return result;
         }
 
@@ -99,7 +96,7 @@ namespace SqlKata
             return AddComponent("cte", new QueryFromClause
             {
                 Query = query,
-                Alias = alias,
+                Alias = alias
             });
         }
 
@@ -124,7 +121,7 @@ namespace SqlKata
             {
                 Alias = alias,
                 Expression = sql,
-                Bindings = bindings,
+                Bindings = bindings
             });
         }
 
@@ -215,12 +212,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query WhenNot(bool condition, Func<Query, Query> callback)
         {
-            if (!condition)
-            {
-                return callback.Invoke(this);
-            }
-
-            return this;
+            return !condition ? callback.Invoke(this) : this;
         }
 
         public Query OrderBy(params string[] columns)
@@ -283,7 +275,7 @@ namespace SqlKata
             AddComponent("group", new RawColumn
             {
                 Expression = expression,
-                Bindings = bindings,
+                Bindings = bindings
             });
 
             return this;
@@ -303,7 +295,7 @@ namespace SqlKata
                 LocalKey = localKey,
                 ForeignKey = foreignKey,
                 Query = query,
-                IsMany = isMany,
+                IsMany = isMany
             });
 
             return this;
@@ -325,7 +317,6 @@ namespace SqlKata
         public Query Define(string variable, object value)
         {
             Variables.Add(variable, value);
-
             return this;
         }
 
@@ -340,7 +331,7 @@ namespace SqlKata
 
             if (Parent != null)
             {
-                return (Parent as Query).FindVariable(variable);
+                return (Parent as Query)?.FindVariable(variable);
             }
 
             throw new Exception($"Variable '{variable}' not found");
@@ -375,12 +366,11 @@ namespace SqlKata
 
                 dictionary.Add(name, value);
 
-                if (considerKeys && colAttr != null)
+                if (!considerKeys || colAttr == null) continue;
+
+                if ((colAttr as KeyAttribute) != null)
                 {
-                    if ((colAttr as KeyAttribute) != null)
-                    {
-                        this.Where(name, value);
-                    }
+                    Where(name, value);
                 }
             }
 
