@@ -321,7 +321,6 @@ namespace SqlKata.Tests
                 .AsInsert(columns, data);
 
             var c = Compile(query);
-            var mysql = c[EngineCodes.MySql];
             
             Assert.Equal(
                 "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1))",
