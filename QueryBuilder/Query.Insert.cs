@@ -98,7 +98,23 @@ namespace SqlKata
             foreach (var values in valuesCollectionList)
             {
                 var valuesList = values.ToList();
-                if (columnsList.Count != valuesList.Count)
+                var valuesCount = 0;
+                foreach (var value in valuesList)
+                {
+                    if (value is Query query && query.Method == "select")
+                    {
+                        if (!(query.Clauses[0] is FromClause)) continue;
+                    
+                        valuesCount += query.Clauses.GetRange(1, query.Clauses.Count - 1)
+                            .OfType<Column>()
+                            .Count();
+                    }
+                    else
+                    {
+                        valuesCount++;
+                    }
+                }
+                if (columnsList.Count != valuesCount)
                 {
                     throw new InvalidOperationException($"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
                 }

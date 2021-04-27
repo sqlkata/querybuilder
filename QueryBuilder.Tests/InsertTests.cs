@@ -380,7 +380,6 @@ namespace SqlKata.Tests
                 .AsInsert(columns, data);
 
             var c = Compile(query);
-            var mysql = c[EngineCodes.SqlServer];
             
             Assert.Equal(
                 "INSERT INTO [Table] ([Name], [Age], [Gender], [Email], [CreatedAt]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user'))",
@@ -409,6 +408,37 @@ namespace SqlKata.Tests
                 new Query("Table")
                     .AsInsert(columns, data);
             });
+        }
+        
+        [Fact]
+        public void InsertMultipleAtOnceMixingSubQueryAndValues()
+        {
+            var columns = new[] {"Name", "Age", "Gender", "Email", "CreatedAt"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1),
+                "Male",
+                new Query("AnotherTable")
+                    .Select("Email", "CreatedAt") // 2 columns
+                    .Join("SomeTable", "SomeTable.Age", "AnotherTable.Age")
+                    .WhereLike("Name", "The User")
+            };
+
+            var query = new Query("Table")
+                .AsInsert(columns, new []
+                {
+                    data, 
+                    data
+                });
+
+            var c = Compile(query);
+            
+            Assert.Equal(
+                "INSERT INTO [Table] ([Name], [Age], [Gender], [Email], [CreatedAt]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user')), ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user'))",
+                c[EngineCodes.SqlServer]);
         }
     }
 }
