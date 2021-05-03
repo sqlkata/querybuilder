@@ -17,20 +17,47 @@ namespace SqlKata.Execution
         public Action<SqlResult> Logger = result => { };
         private bool disposedValue;
 
+        public TransactionWrapper TransactionWrapper { get; set; }
+        
+        public const int DEFAULT_TIMEOUT = 30;
+
+        public void BeginTransaction()
+        {
+            TransactionWrapper.BeginTransaction();
+        }
+
+        public void Rollback()
+        {
+            TransactionWrapper.Rollback();
+        }
+
+        public void Commit()
+        {
+            TransactionWrapper.Commit();
+        }
+
         public int QueryTimeout { get; set; } = 30;
 
         public QueryFactory() { }
 
-        public QueryFactory(IDbConnection connection, Compiler compiler, int timeout = 30)
+        public QueryFactory(IDbConnection connection, Compiler compiler, int timeout = 30, TransactionWrapper transaction = null)
+        //public QueryFactory(IDbConnection connection, Compiler compiler, int timeout = 30)
         {
             Connection = connection;
             Compiler = compiler;
             QueryTimeout = timeout;
+            TransactionWrapper = transaction;
+            
+            if (transaction == null)
+            {
+                TransactionWrapper = new TransactionWrapper(connection, compiler);
+            }
         }
 
         public Query Query()
         {
-            var query = new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(this.Connection, this.Compiler, this.TransactionWrapper);
+            //var query = new XQuery(this.Connection, this.Compiler);
 
             query.QueryFactory = this;
 
@@ -51,7 +78,8 @@ namespace SqlKata.Execution
         /// <returns></returns>
         public Query FromQuery(Query query)
         {
-            var xQuery = new XQuery(this.Connection, this.Compiler);
+            var xQuery = new XQuery(this.Connection, this.Compiler, this.TransactionWrapper);
+            //var xQuery = new XQuery(this.Connection, this.Compiler);
 
             xQuery.QueryFactory = this;
 

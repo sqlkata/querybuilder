@@ -34,19 +34,51 @@ namespace Program
 
         static void Main(string[] args)
         {
+            // With Transactions
             using (var db = SqlLiteQueryFactory())
             {
                 var query = db.Query("accounts")
                     .Where("balance", ">", 0)
                     .GroupBy("balance")
-                .Limit(10);
+                    .Where("id", 10)
+                    .Limit(10);
 
                 var accounts = query.Clone().Get();
                 Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
+                db.BeginTransaction();
+
+                var update = db.Query("accounts")
+                    .Where("id", 10)
+                    .Update(new
+                    {
+                        balance = 890 + new Random().Next(1, 1000)
+                    });
+
+                accounts = query.Clone().Get();
+
+                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+
+                db.Rollback();
+
+                accounts = query.Clone().Get();
+
+                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+
+                var exists = query.Clone().Exists();
+
+                Console.WriteLine(exists);
+            }
+
+            // Without Transactions
+            /*
+            using (var db = SqlLiteQueryFactory())
+            {
+                var query = db.Query("accounts")
                 var exists = query.Clone().Exists();
                 Console.WriteLine(exists);
             }
+            */
         }
 
         private static void log(Compiler compiler, Query query)
