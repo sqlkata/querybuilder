@@ -19,6 +19,7 @@ namespace SqlKata.Tests.Infrastructure
             [EngineCodes.MySql] = new MySqlCompiler(),
             [EngineCodes.Oracle] = new OracleCompiler(),
             [EngineCodes.PostgreSql] = new PostgresCompiler(),
+            [EngineCodes.Snowflake] = new SnowflakeCompiler(),
             [EngineCodes.Sqlite] = new SqliteCompiler(),
             [EngineCodes.SqlServer] = new SqlServerCompiler()
         };
