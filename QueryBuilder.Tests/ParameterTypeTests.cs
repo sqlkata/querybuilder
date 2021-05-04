@@ -27,7 +27,7 @@ namespace SqlKata.Tests
                 new object[] {Convert.ToSingle("-2.8", CultureInfo.InvariantCulture).ToString(), -2.8},
                 new object[] {"true", true},
                 new object[] {"false", false},
-                new object[] {"'2018-10-28 19:22:00'", new DateTime(2018, 10, 28, 19, 22, 0)},
+                new object[] {"'2018-10-28 19:22:00'", new DateTime(2018, 10, 28, 19, 22, 0, DateTimeKind.Utc)},
                 new object[] {"0 /* First */", EnumExample.First},
                 new object[] {"1 /* Second */", EnumExample.Second},
                 new object[] {"'a string'", "a string"},
