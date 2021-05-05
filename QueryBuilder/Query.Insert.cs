@@ -51,7 +51,7 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = values.Select(x=>x.Key).ToList(),
+                Columns = values.Select(x => x.Key).ToList(),
                 Values = values.Select(x => x.Value).ToList(),
                 ReturnId = returnId,
             });

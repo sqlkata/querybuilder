@@ -29,11 +29,11 @@ namespace SqlKata.Tests
         [Fact]
         public void CanCompileSelectively()
         {
-            var desiredEngines = new[] {EngineCodes.SqlServer, EngineCodes.MySql};
+            var desiredEngines = new[] { EngineCodes.SqlServer, EngineCodes.MySql };
             var results = Compilers.Compile(desiredEngines, new Query("Table"));
 
             Assert.Equal(desiredEngines.Length, results.Count);
-            Assert.Contains(results, a =>a.Key == EngineCodes.SqlServer);
+            Assert.Contains(results, a => a.Key == EngineCodes.SqlServer);
             Assert.Contains(results, a => a.Key == EngineCodes.MySql);
         }
 
