@@ -10,7 +10,7 @@ namespace SqlKata
     {
         public static bool IsArray(object value)
         {
-            if(value is string)
+            if (value is string)
             {
                 return false;
             }
