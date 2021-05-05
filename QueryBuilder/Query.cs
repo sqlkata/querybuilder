@@ -321,7 +321,7 @@ namespace SqlKata
         {
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
-        
+
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         /// <summary>
