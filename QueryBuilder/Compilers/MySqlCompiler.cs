@@ -24,7 +24,7 @@ namespace SqlKata.Compilers
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return "LIMIT ?";
+                return $"LIMIT {parameterPlaceholder}";
             }
 
             if (limit == 0)
@@ -34,7 +34,7 @@ namespace SqlKata.Compilers
                 // to avoid this error.
 
                 ctx.Bindings.Add(offset);
-                return "LIMIT 18446744073709551615 OFFSET ?";
+                return $"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}";
             }
 
             // We have both values
@@ -42,7 +42,7 @@ namespace SqlKata.Compilers
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
 
-            return "LIMIT ? OFFSET ?";
+            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
 
         }
     }

@@ -8,6 +8,13 @@ namespace SqlKata
 {
     public class SqlResult
     {
+        private string ParameterPlaceholder { get; set; }
+        private string EscapeCharacter { get; set; }
+        public SqlResult(string parameterPlaceholder, string escapeCharacter)
+        {
+            ParameterPlaceholder = parameterPlaceholder;
+            EscapeCharacter = escapeCharacter;
+        }
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
@@ -30,7 +37,7 @@ namespace SqlKata
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
 
-            return Helper.ReplaceAll(RawSql, "?", i =>
+            var subject = Helper.ReplaceAll(RawSql, ParameterPlaceholder, EscapeCharacter, i =>
             {
                 if (i >= deepParameters.Count)
                 {
@@ -41,6 +48,8 @@ namespace SqlKata
                 var value = deepParameters[i];
                 return ChangeToSqlValue(value);
             });
+
+            return Helper.RemoveEscapeCharacter(subject, ParameterPlaceholder, EscapeCharacter);
         }
 
         private string ChangeToSqlValue(object value)

@@ -57,13 +57,13 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET ? ROWS";
+                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
         }
 
         internal void ApplyLegacyLimit(SqlResult ctx)
@@ -79,17 +79,17 @@ namespace SqlKata.Compilers
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {parameterPlaceholder}";
                 ctx.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }

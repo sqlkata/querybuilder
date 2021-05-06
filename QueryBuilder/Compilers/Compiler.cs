@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
         protected SqlResult PrepareResult(SqlResult ctx)
         {
             ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPrefix + i);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => parameterPrefix + i);
             return ctx;
         }
 
@@ -126,7 +126,7 @@ namespace SqlKata.Compilers
                 ctx = CompileCteQuery(ctx, query);
             }
 
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, "?", ctx.Bindings.ToArray());
+            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
 
             return ctx;
         }
@@ -169,7 +169,7 @@ namespace SqlKata.Compilers
                 combinedBindings.AddRange(cb);
             }
 
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings,
@@ -182,7 +182,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = query.Clone(),
             };
@@ -211,7 +211,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = query
             };
@@ -255,7 +255,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileUpdateQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = query
             };
@@ -310,7 +310,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = query
             };
@@ -456,7 +456,7 @@ namespace SqlKata.Compilers
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter);
 
             if (null == cte)
             {
@@ -728,19 +728,19 @@ namespace SqlKata.Compilers
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return "LIMIT ?";
+                return $"LIMIT {parameterPlaceholder}";
             }
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return "OFFSET ?";
+                return $"OFFSET {parameterPlaceholder}";
             }
 
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
 
-            return "LIMIT ? OFFSET ?";
+            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
         }
 
         /// <summary>
@@ -883,11 +883,11 @@ namespace SqlKata.Compilers
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
-                return "?";
+                return parameterPlaceholder;
             }
 
             ctx.Bindings.Add(parameter);
-            return "?";
+            return parameterPlaceholder;
         }
 
         /// <summary>

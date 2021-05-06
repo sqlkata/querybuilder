@@ -38,7 +38,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return "ROWS ? TO ?";
+                return $"ROWS {parameterPlaceholder} TO {parameterPlaceholder}";
             }
 
             return null;
@@ -58,7 +58,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("limit");
 
-                return "SELECT FIRST ?" + compiled.Substring(6);
+                return $"SELECT FIRST {parameterPlaceholder}" + compiled.Substring(6);
             }
             else if (limit == 0 && offset > 0)
             {
@@ -66,7 +66,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("offset");
 
-                return "SELECT SKIP ?" + compiled.Substring(6);
+                return $"SELECT SKIP {parameterPlaceholder}" + compiled.Substring(6);
             }
 
             return compiled;

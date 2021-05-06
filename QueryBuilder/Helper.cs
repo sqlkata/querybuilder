@@ -75,21 +75,24 @@ namespace SqlKata
             } while ((index += value.Length) < str.Length);
         }
 
-        public static string ReplaceAll(string subject, string match, Func<int, string> callback)
+        public static string ReplaceAll(string subject, string match, string escapeCharacter, Func<int, string> callback)
         {
             if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
             {
                 return subject;
             }
 
-            var splitted = subject.Split(
-                new[] { match },
-                StringSplitOptions.None
-            );
+            var splitted = Regex.Split(subject, $@"(?<!{Regex.Escape(escapeCharacter)})[{Regex.Escape(match)}]", RegexOptions.None);
 
             return splitted.Skip(1)
                 .Select((item, index) => callback(index) + item)
                 .Aggregate(splitted.First(), (left, right) => left + right);
+        }
+
+        public static string RemoveEscapeCharacter(string subject, string match, string escapeCharacter)
+        {
+            var escapedRegex = new Regex($@"{Regex.Escape(escapeCharacter)}{Regex.Escape(match)}");
+            return escapedRegex.Replace(subject, match);
         }
 
         public static string JoinArray(string glue, IEnumerable array)
@@ -104,9 +107,9 @@ namespace SqlKata
             return string.Join(glue, result);
         }
 
-        public static string ExpandParameters(string sql, string placeholder, object[] bindings)
+        public static string ExpandParameters(string sql, string placeholder, string escapeCharacter, object[] bindings)
         {
-            return ReplaceAll(sql, placeholder, i =>
+            return ReplaceAll(sql, placeholder, escapeCharacter ,i =>
             {
                 var parameter = bindings[i];
 
