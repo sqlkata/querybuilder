@@ -22,6 +22,32 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void SelectAs()
+        {
+            var query = new Query().SelectAs(("Row", "Alias")).From("Table");
+
+            var c = Compile(query);
+            Assert.Equal("SELECT [Row] AS [Alias] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `Row` AS `Alias` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"Row\" AS \"Alias\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ROW\" AS \"ALIAS\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"Row\" \"Alias\" FROM \"Table\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
+        public void SelectAsMultipleColumns()
+        {
+            var query = new Query().SelectAs(("Row1", "Alias1"), ("Row2", "Alias2")).From("Table");
+
+            var c = Compile(query);
+            Assert.Equal("SELECT [Row1] AS [Alias1], [Row2] AS [Alias2] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `Row1` AS `Alias1`, `Row2` AS `Alias2` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"Row1\" AS \"Alias1\", \"Row2\" AS \"Alias2\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ROW1\" AS \"ALIAS1\", \"ROW2\" AS \"ALIAS2\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"Row1\" \"Alias1\", \"Row2\" \"Alias2\" FROM \"Table\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
         public void BasicSelectWhereBindingIsEmptyOrNull()
         {
             var q = new Query()
@@ -58,6 +84,21 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT [users].[id], [users].[name], [users].[age] FROM [users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `users`.`id`, `users`.`name`, `users`.`age` FROM `users`", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
+        public void ExpandedSelectAs()
+        {
+            var q = new Query().From("users").SelectAs(("users.{id,name, age}", "Alias"));
+            var c = Compile(q);
+
+            // This result is weird (but valid syntax), and at least it works in
+            // a somewhat explainable way, as opposed to regular Select() when
+            // combining the expanded syntax and the 'as' SQLKata keyword support
+            // which simply silently stops working when the {...} expansion is
+            // applied.
+            Assert.Equal("SELECT [users].[id] AS [Alias], [users].[name] AS [Alias], [users].[age] AS [Alias] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `users`.`id` AS `Alias`, `users`.`name` AS `Alias`, `users`.`age` AS `Alias` FROM `users`", c[EngineCodes.MySql]);
         }
 
         [Fact]
