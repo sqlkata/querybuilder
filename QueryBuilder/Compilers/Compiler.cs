@@ -472,6 +472,12 @@ namespace SqlKata.Compilers
                 return "(" + subCtx.RawSql + $"){alias}";
             }
 
+            if (!string.IsNullOrWhiteSpace(column.Alias))
+            {
+                return $"{Wrap((column as Column).Name)} {ColumnAsKeyword}{Wrap(column.Alias)}";
+
+            }
+
             return Wrap((column as Column).Name);
 
         }
