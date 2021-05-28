@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SqlKata.Execution
@@ -71,9 +72,9 @@ namespace SqlKata.Execution
             return this.Query.Paginate<T>(Page + 1, PerPage, transaction, timeout);
         }
 
-        public async Task<PaginationResult<T>> NextAsync(IDbTransaction transaction = null, int? timeout = null)
+        public async Task<PaginationResult<T>> NextAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page + 1, PerPage, transaction, timeout);
+            return await this.Query.PaginateAsync<T>(Page + 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public Query PreviousQuery()
@@ -86,9 +87,9 @@ namespace SqlKata.Execution
             return this.Query.Paginate<T>(Page - 1, PerPage, transaction, timeout);
         }
 
-        public async Task<PaginationResult<T>> PreviousAsync(IDbTransaction transaction = null, int? timeout = null)
+        public async Task<PaginationResult<T>> PreviousAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout);
+            return await this.Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public PaginationIterator<T> Each
