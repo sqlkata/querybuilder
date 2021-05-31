@@ -401,5 +401,21 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }
+
+        [Fact]
+        public void DebugSqlViaToString_ShouldNotAllowSqlInjection()
+        {
+            var query = new Query("table")
+                .Join("foo", j => j.On("foo.id", "table.foo_id").Where("foo.id", "' OR 1=1; --"))
+                .Where(q => q.Where("a", "a'aa").OrWhere("a", "b'b'b'"));
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [table] \nINNER JOIN [foo] ON ([foo].[id] = [table].[foo_id] AND [foo].[id] = ''' OR 1=1; --') WHERE ([a] = 'a''aa' OR [a] = 'b''b''b''')", c[EngineCodes.SqlServer].ToString());
+        }
     }
 }

@@ -162,3 +162,10 @@ int affected = db.Query("Users").Where("Id", 1).Update(new {
 ```cs
 int affected = db.Query("Users").Where("Id", 1).Delete();
 ```
+
+## Previewing Generated SQL
+
+If you want a quick preview of the SQL statement that would be generated, you can call `SqlResult.ToString()`.
+
+Note that the SQL generated from `ToString()` is for debugging purposes only, and contains inline parameter substitution rather than parameterized SQL. It is meant for readability and should not be used in a production scenario. Proper execution of the SQL queries parameterizes all variables.
+
