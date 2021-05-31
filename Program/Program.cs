@@ -11,6 +11,8 @@ using Npgsql;
 using System.Data;
 using Dapper;
 using System.Data.SQLite;
+using static SqlKata.Expressions;
+using System.IO;
 
 namespace Program
 {
@@ -32,50 +34,80 @@ namespace Program
 
         static void Main(string[] args)
         {
+            using (var db = SqlLiteQueryFactory())
+            {
+                var query = db.Query("accounts")
+                    .Where("balance", ">", 0)
+                    .GroupBy("balance")
+                .Limit(10);
 
-            IDbConnection connection = new SqlConnection(
-                "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-            );
+                var accounts = query.Clone().Get();
+                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
-            // SQLiteConnection.CreateFile("Demo.db");
+                var exists = query.Clone().Exists();
+                Console.WriteLine(exists);
+            }
+        }
 
-            // connection = new SQLiteConnection("Data Source=Demo.db");
+        private static void log(Compiler compiler, Query query)
+        {
+            var compiled = compiler.Compile(query);
+            Console.WriteLine(compiled.ToString());
+            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
+        }
 
-            var db = new QueryFactory(connection, new SqlServerCompiler());
+        private static QueryFactory SqlLiteQueryFactory()
+        {
+            var compiler = new SqliteCompiler();
+
+            var connection = new SQLiteConnection("Data Source=Demo.db");
+
+            var db = new QueryFactory(connection, compiler);
 
             db.Logger = result =>
             {
                 Console.WriteLine(result.ToString());
             };
 
-            /*
-            var accounts = db.Query("Accounts")
-                .WhereNotNull("BankId")
-                .Include("bank",
-                    db.Query("Banks").Include("Country", db.Query("Countries"))
-                        .Select("Id", "Name", "CountryId")
-                )
-                .Select("Id", "Name", "BankId")
-                .OrderByDesc("Id").Limit(10).Get();
-            */
+            if (!File.Exists("Demo.db"))
+            {
+                Console.WriteLine("db not exists creating db");
 
-            var includedAccountsQuery = db.Query("Accounts").Limit(2)
-                .IncludeMany("Transactions", db.Query("Transactions"))
-                .Include("Company", db.Query("Companies"));
+                SQLiteConnection.CreateFile("Demo.db");
 
-            var bank = db.Query("Banks as Icon")
-                .IncludeMany("Accounts", includedAccountsQuery, "BankId")
-                .WhereExists(q => q.From("Accounts").WhereColumns("Accounts.BankId", "=", "Icon.Id"))
-                .Limit(1)
-                .Get();
+                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
+                for (var i = 0; i < 10; i++)
+                {
+                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
+                    {
+                        name = $"Account {i}",
+                        currency = "USD",
+                        balance = 100 * i * 1.1,
+                        date = DateTime.UtcNow,
+                    });
+                }
 
-            Console.WriteLine(JsonConvert.SerializeObject(bank, Formatting.Indented));
+            }
+
+            return db;
 
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static QueryFactory SqlServerQueryFactory()
         {
-            Console.WriteLine(compiler.Compile(query).ToString());
+            var compiler = new PostgresCompiler();
+            var connection = new SqlConnection(
+               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+           );
+
+            var db = new QueryFactory(connection, compiler);
+
+            db.Logger = result =>
+            {
+                Console.WriteLine(result.ToString());
+            };
+
+            return db;
         }
 
     }

@@ -5,60 +5,25 @@ using System.Reflection;
 
 namespace SqlKata
 {
-
     public partial class Query
     {
-
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildDictionaryOnUpdate(data);
+            var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true);
+
             return AsUpdate(dictionary);
-        }
-
-
-        private static Dictionary<Type, List<PropertyInfo>> CacheDictionaryProperties = new Dictionary<Type, List<PropertyInfo>>(); 
-
-
-        private Dictionary<string, object> BuildDictionaryOnUpdate(object data)
-        {
-
-            var dictionary = new Dictionary<string, object>();
-            var props = data.GetType().GetRuntimeProperties();
-
-            foreach (PropertyInfo property in props)
-            {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null){
-                    continue;
-                }
-
-                var value = property.GetValue(data);
-
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-                var name = colAttr?.Name ?? property.Name;
-                if(colAttr != null)
-                {
-                    if((colAttr as KeyAttribute) != null)
-                    {
-                        this.Where(name, value);
-                    }
-                } 
-                dictionary.Add(name, value);
-            }
-
-            return dictionary;
         }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-
-            if ((columns?.Count() ?? 0) == 0 || (values?.Count() ?? 0) == 0)
+            if ((columns?.Any() ?? false) == false || (values?.Any() ?? false) == false)
             {
-                throw new InvalidOperationException("Columns and Values cannot be null or empty");
+                throw new InvalidOperationException($"{columns} and {values} cannot be null or empty");
             }
 
             if (columns.Count() != values.Count())
             {
-                throw new InvalidOperationException("Columns count should be equal to Values count");
+                throw new InvalidOperationException($"{columns} count should be equal to {values} count");
             }
 
             Method = "update";
@@ -72,24 +37,22 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsUpdate(IReadOnlyDictionary<string, object> data)
+        public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> values)
         {
-
-            if (data == null || data.Count == 0)
+            if (values == null || values.Any() == false)
             {
-                throw new InvalidOperationException("Values dictionary cannot be null or empty");
+                throw new InvalidOperationException($"{values} cannot be null or empty");
             }
 
             Method = "update";
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = data.Keys.ToList(),
-                Values = data.Values.ToList(),
+                Columns = values.Select(x => x.Key).ToList(),
+                Values = values.Select(x => x.Value).ToList(),
             });
 
             return this;
         }
-
     }
 }

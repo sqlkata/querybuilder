@@ -6,7 +6,7 @@ namespace SqlKata
 {
     public abstract class AbstractQuery
     {
-        protected AbstractQuery Parent;
+        public AbstractQuery Parent;
     }
 
     public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q>
@@ -45,7 +45,7 @@ namespace SqlKata
         {
             if (this == parent)
             {
-                throw new ArgumentException("Cannot set the same query as a parent of itself");
+                throw new ArgumentException($"Cannot set the same {nameof(AbstractQuery)} as a parent of itself");
             }
 
             this.Parent = parent;
@@ -84,7 +84,7 @@ namespace SqlKata
 
         /// <summary>
         /// If the query already contains a clause for the given component
-        /// and engine, replace it with the specified clause. Otherwise, just 
+        /// and engine, replace it with the specified clause. Otherwise, just
         /// add the clause.
         /// </summary>
         /// <param name="component"></param>
@@ -99,7 +99,7 @@ namespace SqlKata
             if (current != null)
                 Clauses.Remove(current);
 
-            return AddComponent(component, clause, engineCode);            
+            return AddComponent(component, clause, engineCode);
         }
 
 

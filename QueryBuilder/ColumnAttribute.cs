@@ -12,13 +12,12 @@ namespace SqlKata
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentNullException("Name parameter is required");
+                throw new ArgumentNullException(nameof(name));
             }
+
             Name = name;
         }
-
     }
-
 
     /// <summary>
     /// This class is used as metadata on a property to determine if it is a primary key
