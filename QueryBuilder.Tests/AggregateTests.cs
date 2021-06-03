@@ -1,11 +1,18 @@
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
+using System;
 using Xunit;
 
 namespace SqlKata.Tests
 {
     public class AggregateTests : TestSupport
     {
+        [Fact]
+        public void AggregateAsEmpty()
+        {
+            Assert.Throws<ArgumentException>(() => new Query("A").AggregateAs("aggregate", new string[] { }));
+        }
+
         [Fact]
         public void CountAs()
         {
