@@ -279,13 +279,13 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            return db.ExecuteScalar<T>(query.AsAggregate(aggregateOperation, columns), transaction, timeout);
+            return db.ExecuteScalar<T>(query.AggregateAs(aggregateOperation, columns), transaction, timeout);
         }
 
         public static async Task<T> AggregateAsync<T>(this Query query, string aggregateOperation, string[] columns, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var db = CreateQueryFactory(query);
-            return await db.ExecuteScalarAsync<T>(query.AsAggregate(aggregateOperation, columns), transaction, timeout, cancellationToken);
+            return await db.ExecuteScalarAsync<T>(query.AggregateAs(aggregateOperation, columns), transaction, timeout, cancellationToken);
         }
 
         public static T Count<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)

@@ -29,7 +29,7 @@ namespace SqlKata.Tests
         {
 
             var subquery = new Query("Products")
-                .AsAverage("unitprice")
+                .AverageAs("unitprice")
                 .Define("@UnitsInSt", 10)
                 .Where("UnitsInStock", ">", Variable("@UnitsInSt"));
 
