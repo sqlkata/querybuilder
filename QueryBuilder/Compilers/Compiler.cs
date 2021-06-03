@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -69,7 +70,7 @@ namespace SqlKata.Compilers
             {
                 query.ClearComponent("aggregate", EngineCode);
                 query.ClearComponent("select", EngineCode);
-                query.Select(clause.Columns.ToArray());
+                query.SelectAs(clause.Columns.Select(x => (x, null as string)).ToArray());
             }
             else
             {
@@ -82,12 +83,14 @@ namespace SqlKata.Compilers
             var outerClause = new AggregateClause()
             {
                 Columns = new List<string> { "*" },
-                Type = clause.Type
+                Type = clause.Type,
+                Alias = clause.Alias,
             };
 
             return new Query()
                 .AddComponent("aggregate", outerClause)
-                .From(query, $"{clause.Type}Query");
+                // Use alias + capitalized type + 'query' as alias
+                .From(query, $"{clause.Alias}{clause.Type.First().ToString().ToUpperInvariant()}{clause.Type.Substring(1)}Query");
         }
 
         protected virtual SqlResult CompileRaw(Query query)
@@ -511,9 +514,12 @@ namespace SqlKata.Compilers
                         sql = "DISTINCT " + sql;
                     }
 
-                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
+                    return $"SELECT {aggregate.Type.ToUpperInvariant()}({sql}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
                 }
 
+                // Counts of multiple columns are implemented by a sub-query
+                // which selects 1 from every non-null record. E.g.
+                // SELECT COUNT(*) FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL)
                 return "SELECT 1";
             }
 

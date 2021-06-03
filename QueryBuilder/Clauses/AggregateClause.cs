@@ -17,6 +17,11 @@ namespace SqlKata
         public List<string> Columns { get; set; }
 
         /// <summary>
+        /// Gets or sets the alias of the result column.
+        /// </summary>
+        public string Alias { get; set; }
+
+        /// <summary>
         /// Gets or sets the type of aggregate function.
         /// </summary>
         /// <value>
@@ -32,6 +37,7 @@ namespace SqlKata
                 Engine = Engine,
                 Type = Type,
                 Columns = new List<string>(Columns),
+                Alias = Alias,
                 Component = Component,
             };
         }
