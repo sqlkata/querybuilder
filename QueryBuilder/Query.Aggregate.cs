@@ -30,18 +30,6 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsCount(string[] columns = null)
-        {
-            var cols = columns?.ToList() ?? new List<string> { };
-
-            if (!cols.Any())
-            {
-                cols.Add("*");
-            }
-
-            return AsAggregate("count", cols.ToArray());
-        }
-
         public Query CountAs(string column = null, string alias = null)
         {
             return CountAs(new[] { column ?? "*" }, alias);

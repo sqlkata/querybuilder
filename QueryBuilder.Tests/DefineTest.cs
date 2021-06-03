@@ -252,7 +252,7 @@ namespace SqlKata.Tests
                .Where(q =>
                    q.Where("ShipRegion", "!=", Variable("@shipReg"))
                 //    .WhereRaw("1 = @one")
-                ).AsCount();
+                ).CountAs();
 
             var c = Compile(query);
 

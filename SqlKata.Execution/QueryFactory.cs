@@ -285,7 +285,7 @@ namespace SqlKata.Execution
         public async Task<SqlMapper.GridReader> GetMultipleAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default)
         {
             var compiled = this.Compiler.Compile(queries);
@@ -324,7 +324,7 @@ namespace SqlKata.Execution
         public async Task<IEnumerable<IEnumerable<T>>> GetAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -388,7 +388,7 @@ namespace SqlKata.Execution
             string aggregateOperation,
             string[] columns = null,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -403,7 +403,7 @@ namespace SqlKata.Execution
         public T Count<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             return this.ExecuteScalar<T>(
-                query.AsCount(columns),
+                query.CountAs(columns),
                 transaction,
                 timeout
             );
@@ -411,7 +411,7 @@ namespace SqlKata.Execution
 
         public async Task<T> CountAsync<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout, cancellationToken);
+            return await this.ExecuteScalarAsync<T>(query.CountAs(columns), transaction, timeout, cancellationToken);
         }
 
         public T Average<T>(Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -553,7 +553,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Func<IEnumerable<T>, int, bool> func,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -592,7 +592,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Action<IEnumerable<T>, int> action,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {

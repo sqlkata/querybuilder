@@ -7,19 +7,6 @@ namespace SqlKata.Tests
     public class AggregateTests : TestSupport
     {
         [Fact]
-        public void AsCount()
-        {
-            var query = new Query("A").AsCount();
-
-            var c = Compile(query);
-
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM [A]", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT COUNT(*) AS `count` FROM `A`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT COUNT(*) AS \"count\" FROM \"A\"", c[EngineCodes.PostgreSql]);
-            Assert.Equal("SELECT COUNT(*) AS \"COUNT\" FROM \"A\"", c[EngineCodes.Firebird]);
-        }
-
-        [Fact]
         public void CountAs()
         {
             var query = new Query("A").CountAs();
@@ -63,13 +50,13 @@ namespace SqlKata.Tests
         {
             {
                 var columns = new string[] { };
-                var query = new Query("A").AsCount(columns);
+                var query = new Query("A").CountAs(columns);
                 Compile(query);
                 Assert.Equal(columns, new string[] { });
             }
             {
                 var columns = new[] { "ColumnA", "ColumnB" };
-                var query = new Query("A").AsCount(columns);
+                var query = new Query("A").CountAs(columns);
                 Compile(query);
                 Assert.Equal(columns, new[] { "ColumnA", "ColumnB" });
             }
@@ -78,7 +65,7 @@ namespace SqlKata.Tests
         [Fact]
         public void CountMultipleColumns()
         {
-            var query = new Query("A").AsCount(new[] { "ColumnA", "ColumnB" });
+            var query = new Query("A").CountAs(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
@@ -98,7 +85,7 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCount()
         {
-            var query = new Query("A").Distinct().AsCount();
+            var query = new Query("A").Distinct().CountAs();
 
             var c = Compile(query);
 
@@ -108,7 +95,7 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCountMultipleColumns()
         {
-            var query = new Query("A").Distinct().AsCount(new[] { "ColumnA", "ColumnB" });
+            var query = new Query("A").Distinct().CountAs(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
