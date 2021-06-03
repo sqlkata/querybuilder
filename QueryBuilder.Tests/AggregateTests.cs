@@ -14,6 +14,58 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void AggregateAs()
+        {
+            var query = new Query("A").AggregateAs("aggregate", new[] { "Column" });
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT AGGREGATE([Column]) AS [aggregate] FROM [A]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT AGGREGATE(`Column`) AS `aggregate` FROM `A`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT AGGREGATE(\"Column\") AS \"aggregate\" FROM \"A\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT AGGREGATE(\"COLUMN\") AS \"AGGREGATE\" FROM \"A\"", c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void AggregateAsAlias()
+        {
+            var query = new Query("A").AggregateAs("aggregate", new[] { "Column" }, "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT AGGREGATE([Column]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT AGGREGATE(`Column`) AS `Alias` FROM `A`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT AGGREGATE(\"Column\") AS \"Alias\" FROM \"A\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT AGGREGATE(\"COLUMN\") AS \"ALIAS\" FROM \"A\"", c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void AggregateAsMultipleColumns()
+        {
+            var query = new Query("A").AggregateAs("aggregate", new[] { "Column1", "Column2" });
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT AGGREGATE(*) AS [aggregate] FROM (SELECT 1 FROM [A] WHERE [Column1] IS NOT NULL AND [Column2] IS NOT NULL) AS [AggregateQuery]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT AGGREGATE(*) AS `aggregate` FROM (SELECT 1 FROM `A` WHERE `Column1` IS NOT NULL AND `Column2` IS NOT NULL) AS `AggregateQuery`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT AGGREGATE(*) AS \"AGGREGATE\" FROM (SELECT 1 FROM \"A\" WHERE \"COLUMN1\" IS NOT NULL AND \"COLUMN2\" IS NOT NULL) AS \"AGGREGATEQUERY\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT AGGREGATE(*) AS \"aggregate\" FROM (SELECT 1 FROM \"A\" WHERE \"Column1\" IS NOT NULL AND \"Column2\" IS NOT NULL) AS \"AggregateQuery\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void AggregateAsMultipleColumnsAlias()
+        {
+            var query = new Query("A").AggregateAs("aggregate", new[] { "Column1", "Column2" }, "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT AGGREGATE(*) AS [Alias] FROM (SELECT 1 FROM [A] WHERE [Column1] IS NOT NULL AND [Column2] IS NOT NULL) AS [AliasAggregateQuery]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT AGGREGATE(*) AS `Alias` FROM (SELECT 1 FROM `A` WHERE `Column1` IS NOT NULL AND `Column2` IS NOT NULL) AS `AliasAggregateQuery`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT AGGREGATE(*) AS \"ALIAS\" FROM (SELECT 1 FROM \"A\" WHERE \"COLUMN1\" IS NOT NULL AND \"COLUMN2\" IS NOT NULL) AS \"ALIASAGGREGATEQUERY\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT AGGREGATE(*) AS \"Alias\" FROM (SELECT 1 FROM \"A\" WHERE \"Column1\" IS NOT NULL AND \"Column2\" IS NOT NULL) AS \"AliasAggregateQuery\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void CountAs()
         {
             var query = new Query("A").CountAs();
@@ -112,7 +164,7 @@ namespace SqlKata.Tests
         [Fact]
         public void Average()
         {
-            var query = new Query("A").AsAverage("TTL");
+            var query = new Query("A").AverageAs("TTL");
 
             var c = Compile(query);
 
@@ -120,9 +172,19 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void AverageAlias()
+        {
+            var query = new Query("A").AverageAs("TTL", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT AVG([TTL]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
         public void Sum()
         {
-            var query = new Query("A").AsSum("PacketsDropped");
+            var query = new Query("A").SumAs("PacketsDropped");
 
             var c = Compile(query);
 
@@ -130,9 +192,19 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void SumAlias()
+        {
+            var query = new Query("A").SumAs("PacketsDropped", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT SUM([PacketsDropped]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
         public void Max()
         {
-            var query = new Query("A").AsMax("LatencyMs");
+            var query = new Query("A").MaxAs("LatencyMs");
 
             var c = Compile(query);
 
@@ -140,13 +212,33 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void MaxAlias()
+        {
+            var query = new Query("A").MaxAs("LatencyMs", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MAX([LatencyMs]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
         public void Min()
         {
-            var query = new Query("A").AsMin("LatencyMs");
+            var query = new Query("A").MinAs("LatencyMs");
 
             var c = Compile(query);
 
             Assert.Equal("SELECT MIN([LatencyMs]) AS [min] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MinAlias()
+        {
+            var query = new Query("A").MinAs("LatencyMs", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([LatencyMs]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
         }
     }
 }
