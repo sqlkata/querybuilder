@@ -5,7 +5,7 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsAggregate(string type, string[] columns = null)
+        public Query AsAggregate(string type, IEnumerable<string> columns, string alias = null)
         {
             if (columns.Count() == 0)
             {
@@ -18,15 +18,16 @@ namespace SqlKata
             .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
+                Columns = columns.ToList(),
+                Alias = alias
             });
 
             return this;
         }
 
-        public Query AsCount(string[] columns = null)
+        public Query AsCount(params string[] columns)
         {
-            var cols = columns?.ToList() ?? new List<string> { };
+            var cols = columns.ToList();
 
             if (!cols.Any())
             {
@@ -35,6 +36,12 @@ namespace SqlKata
 
             return AsAggregate("count", cols.ToArray());
         }
+
+        public Query AsCountAs(string column, string alias) =>
+            AsAggregate("count", new string[] { column }, alias);
+
+        public Query AsCountAs(IEnumerable<string> columns, string alias) =>
+            AsAggregate("count", columns, alias);
 
         public Query AsAvg(string column)
         {

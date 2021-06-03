@@ -27,13 +27,66 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void CountAsStarAlias()
+        {
+            var query = new Query("A").AsCountAs("*", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(*) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS `Alias` FROM `A`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT COUNT(*) AS \"Alias\" FROM \"A\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT COUNT(*) AS \"ALIAS\" FROM \"A\"", c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void CountAsColumnAlias()
+        {
+            var query = new Query("A").AsCountAs("Column", "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT([Column]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(`Column`) AS `Alias` FROM `A`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT COUNT(\"Column\") AS \"Alias\" FROM \"A\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT COUNT(\"COLUMN\") AS \"ALIAS\" FROM \"A\"", c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void CountDoesntModifyColumns()
+        {
+            {
+                var columns = new string[] { };
+                var query = new Query("A").AsCount(columns);
+                Compile(query);
+                Assert.Equal(columns, new string[] { });
+            }
+            {
+                var columns = new[] { "ColumnA", "ColumnB" };
+                var query = new Query("A").AsCount(columns);
+                Compile(query);
+                Assert.Equal(columns, new[] { "ColumnA", "ColumnB" });
+            }
+        }
+
+        [Fact]
         public void CountMultipleColumns()
         {
             var query = new Query("A").AsCount(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [countQuery]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [CountQuery]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void CountAsMultipleColumns()
+        {
+            var query = new Query("A").AsCountAs(new[] { "ColumnA", "ColumnB" }, "Alias");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(*) AS [Alias] FROM (SELECT 1 FROM [A] WHERE [ColumnA] IS NOT NULL AND [ColumnB] IS NOT NULL) AS [AliasCountQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -43,7 +96,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT * FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT * FROM [A]) AS [CountQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -53,7 +106,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [countQuery]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [CountQuery]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
