@@ -14,8 +14,12 @@ namespace SqlKata
             );
         }
 
-        public Query AggregateAs(string type, IEnumerable<string> columns, string alias)
+        public Query AggregateAs(string type, IEnumerable<string> columns, string alias = null)
         {
+            if (columns.Count() == 0)
+            {
+                throw new System.ArgumentException("Cannot aggregate without columns");
+            }
 
             Method = "aggregate";
 
@@ -32,12 +36,12 @@ namespace SqlKata
 
         public Query CountAs(string column = null, string alias = null)
         {
-            return CountAs(new[] { column ?? "*" }, alias);
+            return CountAs(column != null ? new[] { column } : new string[] { }, alias);
         }
 
         public Query CountAs(IEnumerable<string> columns, string alias = null)
         {
-            return AggregateAs("count", columns, alias);
+            return AggregateAs("count", columns.Count() == 0 ? new[] { "*" } : columns, alias);
         }
 
         public Query AsAvg(string column)
