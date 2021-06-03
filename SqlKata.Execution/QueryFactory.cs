@@ -390,7 +390,7 @@ namespace SqlKata.Execution
         public T Count<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             return this.ExecuteScalar<T>(
-                query.AsCount(columns),
+                query.CountAs(columns),
                 transaction,
                 timeout
             );
@@ -398,7 +398,7 @@ namespace SqlKata.Execution
 
         public async Task<T> CountAsync<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
-            return await this.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout);
+            return await this.ExecuteScalarAsync<T>(query.CountAs(columns), transaction, timeout);
         }
 
         public T Average<T>(Query query, string column, IDbTransaction transaction = null, int? timeout = null)

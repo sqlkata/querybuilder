@@ -192,7 +192,7 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").CountAs();
 
             var query = new Query("Table").WhereSub(subQuery, 1);
 
@@ -206,7 +206,7 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").CountAs();
 
             var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
 

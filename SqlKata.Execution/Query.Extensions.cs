@@ -266,14 +266,14 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            return db.ExecuteScalar<T>(query.AsCount(columns), transaction, timeout);
+            return db.ExecuteScalar<T>(query.CountAs(columns), transaction, timeout);
         }
 
         public static async Task<T> CountAsync<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
-            return await db.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout);
+            return await db.ExecuteScalarAsync<T>(query.CountAs(columns), transaction, timeout);
         }
 
         public static T Average<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
