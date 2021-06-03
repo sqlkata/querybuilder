@@ -7,6 +7,15 @@ namespace SqlKata
     {
         public Query AsAggregate(string type, string[] columns = null)
         {
+            return AggregateAs(
+                type,
+                columns ?? new string[] { },
+                null // old interface always uses 'type' as alias name
+            );
+        }
+
+        public Query AggregateAs(string type, IEnumerable<string> columns, string alias)
+        {
 
             Method = "aggregate";
 
@@ -14,7 +23,8 @@ namespace SqlKata
             .AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
+                Columns = columns.ToList(),
+                Alias = alias
             });
 
             return this;
@@ -30,6 +40,16 @@ namespace SqlKata
             }
 
             return AsAggregate("count", cols.ToArray());
+        }
+
+        public Query CountAs(string column = null, string alias = null)
+        {
+            return CountAs(new[] { column ?? "*" }, alias);
+        }
+
+        public Query CountAs(IEnumerable<string> columns, string alias = null)
+        {
+            return AggregateAs("count", columns, alias);
         }
 
         public Query AsAvg(string column)
