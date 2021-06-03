@@ -7,6 +7,10 @@ namespace SqlKata
     {
         public Query AsAggregate(string type, string[] columns = null)
         {
+            if (columns.Count() == 0)
+            {
+                throw new System.ArgumentException("Cannot aggregate without columns");
+            }
 
             Method = "aggregate";
 
