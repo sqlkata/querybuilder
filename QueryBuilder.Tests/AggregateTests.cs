@@ -42,27 +42,17 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectAggregateMultipleColumns()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" });
-
-            var c = Compile(query);
-
-            Assert.Equal("SELECT AGGREGATE(*) AS [aggregate] FROM (SELECT 1 FROM [A] WHERE [Column1] IS NOT NULL AND [Column2] IS NOT NULL) AS [AggregateQuery]", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT AGGREGATE(*) AS `aggregate` FROM (SELECT 1 FROM `A` WHERE `Column1` IS NOT NULL AND `Column2` IS NOT NULL) AS `AggregateQuery`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT AGGREGATE(*) AS \"AGGREGATE\" FROM (SELECT 1 FROM \"A\" WHERE \"COLUMN1\" IS NOT NULL AND \"COLUMN2\" IS NOT NULL) AS \"AGGREGATEQUERY\"", c[EngineCodes.Firebird]);
-            Assert.Equal("SELECT AGGREGATE(*) AS \"aggregate\" FROM (SELECT 1 FROM \"A\" WHERE \"Column1\" IS NOT NULL AND \"Column2\" IS NOT NULL) AS \"AggregateQuery\"", c[EngineCodes.PostgreSql]);
+            Assert.Throws<ArgumentException>(() =>
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" })
+            );
         }
 
         [Fact]
         public void SelectAggregateMultipleColumnsAlias()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, "Alias");
-
-            var c = Compile(query);
-
-            Assert.Equal("SELECT AGGREGATE(*) AS [Alias] FROM (SELECT 1 FROM [A] WHERE [Column1] IS NOT NULL AND [Column2] IS NOT NULL) AS [AliasAggregateQuery]", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT AGGREGATE(*) AS `Alias` FROM (SELECT 1 FROM `A` WHERE `Column1` IS NOT NULL AND `Column2` IS NOT NULL) AS `AliasAggregateQuery`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT AGGREGATE(*) AS \"ALIAS\" FROM (SELECT 1 FROM \"A\" WHERE \"COLUMN1\" IS NOT NULL AND \"COLUMN2\" IS NOT NULL) AS \"ALIASAGGREGATEQUERY\"", c[EngineCodes.Firebird]);
-            Assert.Equal("SELECT AGGREGATE(*) AS \"Alias\" FROM (SELECT 1 FROM \"A\" WHERE \"Column1\" IS NOT NULL AND \"Column2\" IS NOT NULL) AS \"AliasAggregateQuery\"", c[EngineCodes.PostgreSql]);
+            Assert.Throws<ArgumentException>(() =>
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, "Alias")
+            );
         }
 
         [Fact]
