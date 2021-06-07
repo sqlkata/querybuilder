@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace SqlKata
@@ -55,6 +56,23 @@ namespace SqlKata
                 Query = Query.Clone(),
                 Component = Component,
                 Alias = Alias,
+            };
+        }
+    }
+
+    public class AggregateColumn : AbstractColumn
+    {
+        public string Type { get; set; } // Min, Max, etc.
+        public string Column { get; set; } // Aggregate functions accept only a single 'value expression' (for now we implement only column name)
+        public override AbstractClause Clone()
+        {
+            return new AggregateColumn
+            {
+                Engine = Engine,
+                Component = Component,
+                Alias = Alias,
+                Type = Type,
+                Column = Column,
             };
         }
     }

@@ -106,10 +106,9 @@ namespace SqlKata.Tests
             var c = Compile(q);
 
             // This result is weird (but valid syntax), and at least it works in
-            // a somewhat explainable way, as opposed to regular Select() when
-            // combining the expanded syntax and the 'as' SQLKata keyword support
-            // which simply silently stops working when the {...} expansion is
-            // applied.
+            // a somewhat explainable way. The regular 'as' keyword support in
+            // Select() does not work when combined with the {...}-expansion
+            // syntax (the alias will be lost).
             Assert.Equal("SELECT [users].[id] AS [Alias], [users].[name] AS [Alias], [users].[age] AS [Alias] FROM [users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `users`.`id` AS `Alias`, `users`.`name` AS `Alias`, `users`.`age` AS `Alias` FROM `users`", c[EngineCodes.MySql]);
         }
