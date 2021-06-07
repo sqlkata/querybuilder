@@ -56,6 +56,57 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void MultipleAggregatesPerQuery()
+        {
+            var query = new Query()
+                .SelectMin("MinColumn")
+                .SelectMax("MaxColumn")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([MinColumn]) AS [min], MAX([MaxColumn]) AS [max] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT MIN(`MinColumn`) AS `min`, MAX(`MaxColumn`) AS `max` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT MIN(\"MINCOLUMN\") AS \"MIN\", MAX(\"MAXCOLUMN\") AS \"MAX\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT MIN(\"MinColumn\") AS \"min\", MAX(\"MaxColumn\") AS \"max\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void AggregatesAndNonAggregatesCanBeMixedInQueries1()
+        {
+            var query = new Query()
+                .Select("ColumnA")
+                .SelectMax("ColumnB")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT [ColumnA], MAX([ColumnB]) AS [max] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `ColumnA`, MAX(`ColumnB`) AS `max` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"COLUMNA\", MAX(\"COLUMNB\") AS \"MAX\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"ColumnA\", MAX(\"ColumnB\") AS \"max\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void AggregatesAndNonAggregatesCanBeMixedInQueries2()
+        {
+            var query = new Query()
+                .SelectMax("ColumnA")
+                .Select("ColumnB")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MAX([ColumnA]) AS [max], [ColumnB] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT MAX(`ColumnA`) AS `max`, `ColumnB` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT MAX(\"COLUMNA\") AS \"MAX\", \"COLUMNB\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT MAX(\"ColumnA\") AS \"max\", \"ColumnB\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void SelectCount()
         {
             var query = new Query("A").SelectCount();

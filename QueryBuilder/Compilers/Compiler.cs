@@ -453,6 +453,16 @@ namespace SqlKata.Compilers
                 return "(" + subCtx.RawSql + $"){alias}";
             }
 
+            if (column is AggregateColumn aggregate)
+            {
+                var columns = string.Join(
+                    ", ",
+                    aggregate.Columns
+                       .Select(x => CompileColumn(ctx, new Column { Name = x }))
+                );
+                return $"{aggregate.Type.ToUpperInvariant()}({columns}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
+            }
+
             if (!string.IsNullOrWhiteSpace(column.Alias))
             {
                 return $"{Wrap((column as Column).Name)} {ColumnAsKeyword}{Wrap(column.Alias)}";

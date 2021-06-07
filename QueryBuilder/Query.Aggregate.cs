@@ -24,19 +24,30 @@ namespace SqlKata
                 throw new System.ArgumentException("Cannot aggregate more than one column at once");
             }
 
-            Method = "aggregate";
-
-            if (this.HasComponent("aggregate"))
+            if (type != "count" || (columns.Count() == 1 && !this.IsDistinct))
             {
-                throw new System.InvalidOperationException("Cannot add more than one aggregate");
+                Method = "select";
+                this.AddComponent("select", new AggregateColumn
+                {
+                    Alias = alias,
+                    Type = type,
+                    Columns = columns.ToList(),
+                });
             }
-
-            this.AddComponent("aggregate", new AggregateClause
+            else
             {
-                Type = type,
-                Columns = columns.ToList(),
-                Alias = alias
-            });
+                if (this.HasComponent("aggregate"))
+                {
+                    throw new System.InvalidOperationException("Cannot add more than one top-level aggregate clause");
+                }
+                Method = "aggregate";
+                this.AddComponent("aggregate", new AggregateClause
+                {
+                    Alias = alias,
+                    Type = type,
+                    Columns = columns.ToList(),
+                });
+            }
 
             return this;
         }
