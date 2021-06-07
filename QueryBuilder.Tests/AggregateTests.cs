@@ -107,6 +107,57 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void AggregatesCanHaveALimit()
+        {
+            var query = new Query()
+                .SelectMin("ColumnA", "MinValue")
+                .SelectMax("ColumnB", "MaxValue")
+                .From("Table")
+                .Limit(100)
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT TOP (100) MIN([ColumnA]) AS [MinValue], MAX([ColumnB]) AS [MaxValue] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT FIRST 100 MIN(\"COLUMNA\") AS \"MINVALUE\", MAX(\"COLUMNB\") AS \"MAXVALUE\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT MIN(`ColumnA`) AS `MinValue`, MAX(`ColumnB`) AS `MaxValue` FROM `Table` LIMIT 100", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
+        public void AggregatesCanHaveAnOrderBy()
+        {
+            var query = new Query()
+                .SelectMin("ColumnA", "MinValue")
+                .SelectMax("ColumnB", "MaxValue")
+                .From("Table")
+                .OrderBy("MinValue")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([ColumnA]) AS [MinValue], MAX([ColumnB]) AS [MaxValue] FROM [Table] ORDER BY [MinValue]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT MIN(\"COLUMNA\") AS \"MINVALUE\", MAX(\"COLUMNB\") AS \"MAXVALUE\" FROM \"TABLE\" ORDER BY \"MINVALUE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT MIN(`ColumnA`) AS `MinValue`, MAX(`ColumnB`) AS `MaxValue` FROM `Table` ORDER BY `MinValue`", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
+        public void AggregatesCanHaveAGroupBy()
+        {
+            var query = new Query()
+                .SelectMin("ColumnA", "MinValue")
+                .SelectMax("ColumnB", "MaxValue")
+                .From("Table")
+                .GroupBy("MinValue")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([ColumnA]) AS [MinValue], MAX([ColumnB]) AS [MaxValue] FROM [Table] GROUP BY [MinValue]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT MIN(\"COLUMNA\") AS \"MINVALUE\", MAX(\"COLUMNB\") AS \"MAXVALUE\" FROM \"TABLE\" GROUP BY \"MINVALUE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT MIN(`ColumnA`) AS `MinValue`, MAX(`ColumnB`) AS `MaxValue` FROM `Table` GROUP BY `MinValue`", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
         public void SelectCount()
         {
             var query = new Query("A").SelectCount();
