@@ -15,6 +15,15 @@ namespace SqlKata
                 throw new System.ArgumentException("Cannot aggregate without columns");
             }
 
+            // According to ISO/IEC 9075:2016 all aggregates take only a single
+            // value expression argument (i.e. one column). However, for the
+            // special case of count(...), SqlKata implements a transform to
+            // a sub query.
+            if (columns.Count() > 1 && type != "count")
+            {
+                throw new System.ArgumentException("Cannot aggregate more than one column at once");
+            }
+
             Method = "aggregate";
 
             if (this.HasComponent("aggregate"))
