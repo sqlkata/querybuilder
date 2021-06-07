@@ -14,6 +14,7 @@ namespace SqlKata.Compilers
         protected virtual string OpeningIdentifier { get; set; } = "\"";
         protected virtual string ClosingIdentifier { get; set; } = "\"";
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
+        protected virtual string DistinctKeyword { get; set; } = "DISTINCT ";
         protected virtual string TableAsKeyword { get; set; } = "AS ";
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
@@ -511,7 +512,7 @@ namespace SqlKata.Compilers
 
                     if (ctx.Query.IsDistinct)
                     {
-                        sql = "DISTINCT " + sql;
+                        sql = $"{DistinctKeyword}{sql}";
                     }
 
                     return $"SELECT {aggregate.Type.ToUpperInvariant()}({sql}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
@@ -528,7 +529,7 @@ namespace SqlKata.Compilers
                 .Select(x => CompileColumn(ctx, x))
                 .ToList();
 
-            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+            var distinct = ctx.Query.IsDistinct ? DistinctKeyword : "";
 
             var select = columns.Any() ? string.Join(", ", columns) : "*";
 
