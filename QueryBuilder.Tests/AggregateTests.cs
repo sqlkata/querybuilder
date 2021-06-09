@@ -8,15 +8,15 @@ namespace SqlKata.Tests
     public class AggregateTests : TestSupport
     {
         [Fact]
-        public void AggregateAsEmpty()
+        public void SelectAggregateEmpty()
         {
-            Assert.Throws<ArgumentException>(() => new Query("A").AggregateAs("aggregate", new string[] { }));
+            Assert.Throws<ArgumentException>(() => new Query("A").SelectAggregate("aggregate", new string[] { }));
         }
 
         [Fact]
-        public void AggregateAs()
+        public void SelectAggregate()
         {
-            var query = new Query("A").AggregateAs("aggregate", new[] { "Column" });
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" });
 
             var c = Compile(query);
 
@@ -27,9 +27,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void AggregateAsAlias()
+        public void SelectAggregateAlias()
         {
-            var query = new Query("A").AggregateAs("aggregate", new[] { "Column" }, "Alias");
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, "Alias");
 
             var c = Compile(query);
 
@@ -40,9 +40,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void AggregateAsMultipleColumns()
+        public void SelectAggregateMultipleColumns()
         {
-            var query = new Query("A").AggregateAs("aggregate", new[] { "Column1", "Column2" });
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" });
 
             var c = Compile(query);
 
@@ -53,9 +53,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void AggregateAsMultipleColumnsAlias()
+        public void SelectAggregateMultipleColumnsAlias()
         {
-            var query = new Query("A").AggregateAs("aggregate", new[] { "Column1", "Column2" }, "Alias");
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, "Alias");
 
             var c = Compile(query);
 
@@ -66,9 +66,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void CountAs()
+        public void SelectCount()
         {
-            var query = new Query("A").CountAs();
+            var query = new Query("A").SelectCount();
 
             var c = Compile(query);
 
@@ -79,9 +79,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void CountAsStarAlias()
+        public void SelectCountStarAlias()
         {
-            var query = new Query("A").CountAs("*", "Alias");
+            var query = new Query("A").SelectCount("*", "Alias");
 
             var c = Compile(query);
 
@@ -92,9 +92,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void CountAsColumnAlias()
+        public void SelectCountColumnAlias()
         {
-            var query = new Query("A").CountAs("Column", "Alias");
+            var query = new Query("A").SelectCount("Column", "Alias");
 
             var c = Compile(query);
 
@@ -105,17 +105,17 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void CountAsDoesntModifyColumns()
+        public void SelectCountDoesntModifyColumns()
         {
             {
                 var columns = new string[] { };
-                var query = new Query("A").CountAs(columns);
+                var query = new Query("A").SelectCount(columns);
                 Compile(query);
                 Assert.Equal(columns, new string[] { });
             }
             {
                 var columns = new[] { "ColumnA", "ColumnB" };
-                var query = new Query("A").CountAs(columns);
+                var query = new Query("A").SelectCount(columns);
                 Compile(query);
                 Assert.Equal(columns, new[] { "ColumnA", "ColumnB" });
             }
@@ -124,7 +124,7 @@ namespace SqlKata.Tests
         [Fact]
         public void CountMultipleColumns()
         {
-            var query = new Query("A").CountAs(new[] { "ColumnA", "ColumnB" });
+            var query = new Query("A").SelectCount(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
@@ -132,9 +132,9 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void CountAsMultipleColumns()
+        public void SelectCountMultipleColumns()
         {
-            var query = new Query("A").CountAs(new[] { "ColumnA", "ColumnB" }, "Alias");
+            var query = new Query("A").SelectCount(new[] { "ColumnA", "ColumnB" }, "Alias");
 
             var c = Compile(query);
 
@@ -144,7 +144,7 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCount()
         {
-            var query = new Query("A").Distinct().CountAs();
+            var query = new Query("A").Distinct().SelectCount();
 
             var c = Compile(query);
 
@@ -154,7 +154,7 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCountMultipleColumns()
         {
-            var query = new Query("A").Distinct().CountAs(new[] { "ColumnA", "ColumnB" });
+            var query = new Query("A").Distinct().SelectCount(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
@@ -164,7 +164,7 @@ namespace SqlKata.Tests
         [Fact]
         public void Average()
         {
-            var query = new Query("A").AverageAs("TTL");
+            var query = new Query("A").SelectAverage("TTL");
 
             var c = Compile(query);
 
@@ -174,7 +174,7 @@ namespace SqlKata.Tests
         [Fact]
         public void AverageAlias()
         {
-            var query = new Query("A").AverageAs("TTL", "Alias");
+            var query = new Query("A").SelectAverage("TTL", "Alias");
 
             var c = Compile(query);
 
@@ -184,7 +184,7 @@ namespace SqlKata.Tests
         [Fact]
         public void Sum()
         {
-            var query = new Query("A").SumAs("PacketsDropped");
+            var query = new Query("A").SelectSum("PacketsDropped");
 
             var c = Compile(query);
 
@@ -194,7 +194,7 @@ namespace SqlKata.Tests
         [Fact]
         public void SumAlias()
         {
-            var query = new Query("A").SumAs("PacketsDropped", "Alias");
+            var query = new Query("A").SelectSum("PacketsDropped", "Alias");
 
             var c = Compile(query);
 
@@ -204,7 +204,7 @@ namespace SqlKata.Tests
         [Fact]
         public void Max()
         {
-            var query = new Query("A").MaxAs("LatencyMs");
+            var query = new Query("A").SelectMax("LatencyMs");
 
             var c = Compile(query);
 
@@ -214,7 +214,7 @@ namespace SqlKata.Tests
         [Fact]
         public void MaxAlias()
         {
-            var query = new Query("A").MaxAs("LatencyMs", "Alias");
+            var query = new Query("A").SelectMax("LatencyMs", "Alias");
 
             var c = Compile(query);
 
@@ -224,7 +224,7 @@ namespace SqlKata.Tests
         [Fact]
         public void Min()
         {
-            var query = new Query("A").MinAs("LatencyMs");
+            var query = new Query("A").SelectMin("LatencyMs");
 
             var c = Compile(query);
 
@@ -234,7 +234,7 @@ namespace SqlKata.Tests
         [Fact]
         public void MinAlias()
         {
-            var query = new Query("A").MinAs("LatencyMs", "Alias");
+            var query = new Query("A").SelectMin("LatencyMs", "Alias");
 
             var c = Compile(query);
 

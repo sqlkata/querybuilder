@@ -29,7 +29,7 @@ namespace SqlKata.Tests
         {
 
             var subquery = new Query("Products")
-                .AverageAs("unitprice")
+                .SelectAverage("unitprice")
                 .Define("@UnitsInSt", 10)
                 .Where("UnitsInStock", ">", Variable("@UnitsInSt"));
 
@@ -252,7 +252,7 @@ namespace SqlKata.Tests
                .Where(q =>
                    q.Where("ShipRegion", "!=", Variable("@shipReg"))
                 //    .WhereRaw("1 = @one")
-                ).CountAs();
+                ).SelectCount();
 
             var c = Compile(query);
 

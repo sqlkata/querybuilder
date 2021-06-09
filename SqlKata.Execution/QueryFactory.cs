@@ -372,7 +372,7 @@ namespace SqlKata.Execution
             return rows.Any();
         }
 
-        public T Aggregate<T>(
+        public T SelectAggregate<T>(
             Query query,
             string aggregateOperation,
             string[] columns = null,
@@ -380,10 +380,10 @@ namespace SqlKata.Execution
             int? timeout = null
         )
         {
-            return this.ExecuteScalar<T>(query.AggregateAs(aggregateOperation, columns), transaction, timeout ?? this.QueryTimeout);
+            return this.ExecuteScalar<T>(query.SelectAggregate(aggregateOperation, columns), transaction, timeout ?? this.QueryTimeout);
         }
 
-        public async Task<T> AggregateAsync<T>(
+        public async Task<T> SelectAggregateAsync<T>(
             Query query,
             string aggregateOperation,
             string[] columns = null,
@@ -393,65 +393,65 @@ namespace SqlKata.Execution
         )
         {
             return await this.ExecuteScalarAsync<T>(
-                query.AggregateAs(aggregateOperation, columns),
+                query.SelectAggregate(aggregateOperation, columns),
                 transaction,
                 timeout,
                 cancellationToken
             );
         }
 
-        public T Count<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
+        public T SelectCount<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             return this.ExecuteScalar<T>(
-                query.CountAs(columns),
+                query.SelectCount(columns),
                 transaction,
                 timeout
             );
         }
 
-        public async Task<T> CountAsync<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        public async Task<T> SelectCountAsync<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.ExecuteScalarAsync<T>(query.CountAs(columns), transaction, timeout, cancellationToken);
+            return await this.ExecuteScalarAsync<T>(query.SelectCount(columns), transaction, timeout, cancellationToken);
         }
 
-        public T Average<T>(Query query, string column, IDbTransaction transaction = null, int? timeout = null)
+        public T SelectAverage<T>(Query query, string column, IDbTransaction transaction = null, int? timeout = null)
         {
-            return this.Aggregate<T>(query, "avg", new[] { column });
+            return this.SelectAggregate<T>(query, "avg", new[] { column });
         }
 
-        public async Task<T> AverageAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
+        public async Task<T> SelectAverageAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "avg", new[] { column }, cancellationToken: cancellationToken);
+            return await this.SelectAggregateAsync<T>(query, "avg", new[] { column }, cancellationToken: cancellationToken);
         }
 
-        public T Sum<T>(Query query, string column)
+        public T SelectSum<T>(Query query, string column)
         {
-            return this.Aggregate<T>(query, "sum", new[] { column });
+            return this.SelectAggregate<T>(query, "sum", new[] { column });
         }
 
-        public async Task<T> SumAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
+        public async Task<T> SelectSumAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "sum", new[] { column }, cancellationToken: cancellationToken);
+            return await this.SelectAggregateAsync<T>(query, "sum", new[] { column }, cancellationToken: cancellationToken);
         }
 
-        public T Min<T>(Query query, string column)
+        public T SelectMin<T>(Query query, string column)
         {
-            return this.Aggregate<T>(query, "min", new[] { column });
+            return this.SelectAggregate<T>(query, "min", new[] { column });
         }
 
-        public async Task<T> MinAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
+        public async Task<T> SelectMinAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "min", new[] { column }, cancellationToken: cancellationToken);
+            return await this.SelectAggregateAsync<T>(query, "min", new[] { column }, cancellationToken: cancellationToken);
         }
 
-        public T Max<T>(Query query, string column)
+        public T SelectMax<T>(Query query, string column)
         {
-            return this.Aggregate<T>(query, "max", new[] { column });
+            return this.SelectAggregate<T>(query, "max", new[] { column });
         }
 
-        public async Task<T> MaxAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
+        public async Task<T> SelectMaxAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "max", new[] { column }, cancellationToken: cancellationToken);
+            return await this.SelectAggregateAsync<T>(query, "max", new[] { column }, cancellationToken: cancellationToken);
         }
 
         public PaginationResult<T> Paginate<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
@@ -466,7 +466,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var count = Count<long>(query.Clone(), null, transaction, timeout);
+            var count = SelectCount<long>(query.Clone(), null, transaction, timeout);
 
             IEnumerable<T> list;
 
@@ -501,7 +501,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var count = await CountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken);
+            var count = await SelectCountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken);
 
             IEnumerable<T> list;
 
