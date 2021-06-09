@@ -274,6 +274,27 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void DistinctCountDistinctMultipleCounts()
+        {
+            // Cannot add more than one top-level aggregate clause:
+            // Because the query itself is SELECT DISTINCT, a COUNT() will
+            // be compiled to a sub-query (see DistinctCountDistinct() test).
+            // This can only be done once, as we would need to generate multiple
+            // sub-queries other wise.
+            // Idea: this might still be possible to emulate in some cases (i.e.
+            // when not already having a JOIN using several WITH clauses which
+            // SELECT ROW_NUMBER based on the conditions from the original
+            // query).
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query()
+                    .Distinct()
+                    .SelectCountDistinct("ColumnA")
+                    .SelectCountDistinct("ColumnB")
+                    .From("Table")
+            );
+        }
+
+        [Fact]
         public void DistinctCountMultipleColumns()
         {
             var query = new Query("A").Distinct().SelectCount(new[] { "ColumnA", "ColumnB" });
