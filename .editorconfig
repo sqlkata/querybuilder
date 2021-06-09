@@ -3,3 +3,26 @@ root = true
 [*]
 charset = utf-8
 end_of_line = lf
+# Note: the trim_trailing_whitespace option is br0ken in visualstudio, it
+# simply does not follow the EditorConfig specification. Therefor you are
+# strongly encouraged to not rely on this setting alone, but please install
+# the following extension too: https://marketplace.visualstudio.com/items?itemName=MadsKristensen.TrailingWhitespaceVisualizer
+#
+# References:
+#   https://developercommunity.visualstudio.com/t/EditorConfig:-trim_trailing_whitespace-d/1240174?space=8&q=trim_trailing_whitespace
+#   https://developercommunity.visualstudio.com/t/editorconfig-trim_trailing_whitespace-on/134457?space=8&q=trim_trailing_whitespace
+#   https://developercommunity.visualstudio.com/t/trim_trailing_whitespace-in-editorconfi/1351034?space=8&q=trim_trailing_whitespace
+#   https://developercommunity.visualstudio.com/t/BUG:-editorconfig-trim_trailing_whitespa/953937?space=8&q=trim_trailing_whitespace
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = tab
+indent_size = 2
+
+
+[*.cs] # To match existing style
+indent_style = space
+indent_size = 4
+
+
+[*.yml]
+indent_style = space
