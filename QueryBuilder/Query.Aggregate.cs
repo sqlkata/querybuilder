@@ -17,8 +17,12 @@ namespace SqlKata
 
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
-            .AddComponent("aggregate", new AggregateClause
+            if (this.HasComponent("aggregate"))
+            {
+                throw new System.InvalidOperationException("Cannot add more than one aggregate");
+            }
+
+            this.AddComponent("aggregate", new AggregateClause
             {
                 Type = type,
                 Columns = columns.ToList(),
