@@ -455,12 +455,7 @@ namespace SqlKata.Compilers
 
             if (column is AggregateColumn aggregate)
             {
-                var columns = string.Join(
-                    ", ",
-                    aggregate.Columns
-                       .Select(x => CompileColumn(ctx, new Column { Name = x }))
-                );
-                return $"{aggregate.Type.ToUpperInvariant()}({(aggregate.IsDistinct ? DistinctKeyword : "")}{columns}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
+                return $"{aggregate.Type.ToUpperInvariant()}({(aggregate.IsDistinct ? DistinctKeyword : "")}{CompileColumn(ctx, new Column { Name = aggregate.Column })}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
             }
 
             if (!string.IsNullOrWhiteSpace(column.Alias))

@@ -63,7 +63,7 @@ namespace SqlKata
     public class AggregateColumn : AbstractColumn
     {
         public string Type { get; set; } // Min, Max, etc.
-        public List<string> Columns { get; set; } // Count can do multiple (?)
+        public string Column { get; set; } // Aggregate functions accept only a single 'value expression' (for now we implement only column name)
         public enum AggregateDistinct
         {
             aggregateNonDistinct,
@@ -79,7 +79,7 @@ namespace SqlKata
                 Component = Component,
                 Alias = Alias,
                 Type = Type,
-                Columns = Columns,
+                Column = Column,
                 Distinct = Distinct,
             };
         }

@@ -31,7 +31,7 @@ namespace SqlKata
                 {
                     Alias = alias,
                     Type = type,
-                    Columns = columns.ToList(),
+                    Column = columns.First(),
                     Distinct = distinct,
                 });
             }
