@@ -8,7 +8,7 @@ namespace SqlKata
         /**********************************************************************
          ** Generic aggregate                                                **
          **********************************************************************/
-        public Query AggregateAs(string type, IEnumerable<string> columns, string alias = null)
+        public Query SelectAggregate(string type, IEnumerable<string> columns, string alias = null)
         {
             if (columns.Count() == 0)
             {
@@ -32,55 +32,55 @@ namespace SqlKata
         /**********************************************************************
          ** Count                                                            **
          **********************************************************************/
-        public Query CountAs(string column = null, string alias = null)
+        public Query SelectCount(string column = null, string alias = null)
         {
-            return CountAs(column != null ? new[] { column } : new string[] { }, alias);
+            return SelectCount(column != null ? new[] { column } : new string[] { }, alias);
         }
 
-        public Query CountAs(IEnumerable<string> columns, string alias = null)
+        public Query SelectCount(IEnumerable<string> columns, string alias = null)
         {
-            return AggregateAs("count", columns.Count() == 0 ? new[] { "*" } : columns, alias);
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, alias);
         }
 
 
         /**********************************************************************
          ** Average                                                          **
          **********************************************************************/
-        public Query AvgAs(string column, string alias = null)
+        public Query SelectAvg(string column, string alias = null)
         {
-            return AggregateAs("avg", new[] { column }, alias);
+            return SelectAggregate("avg", new[] { column }, alias);
         }
 
-        public Query AverageAs(string column, string alias = null)
+        public Query SelectAverage(string column, string alias = null)
         {
-            return AvgAs(column, alias);
+            return SelectAvg(column, alias);
         }
 
 
         /**********************************************************************
          ** Sum                                                              **
          **********************************************************************/
-        public Query SumAs(string column, string alias = null)
+        public Query SelectSum(string column, string alias = null)
         {
-            return AggregateAs("sum", new[] { column }, alias);
+            return SelectAggregate("sum", new[] { column }, alias);
         }
 
 
         /**********************************************************************
          ** Maximum                                                          **
          **********************************************************************/
-        public Query MaxAs(string column, string alias = null)
+        public Query SelectMax(string column, string alias = null)
         {
-            return AggregateAs("max", new[] { column }, alias);
+            return SelectAggregate("max", new[] { column }, alias);
         }
 
 
         /**********************************************************************
          ** Minimum                                                          **
          **********************************************************************/
-        public Query MinAs(string column, string alias = null)
+        public Query SelectMin(string column, string alias = null)
         {
-            return AggregateAs("min", new[] { column }, alias);
+            return SelectAggregate("min", new[] { column }, alias);
         }
     }
 }

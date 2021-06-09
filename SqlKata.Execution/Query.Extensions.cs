@@ -253,27 +253,27 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            return db.ExecuteScalar<T>(query.AggregateAs(aggregateOperation, columns), transaction, timeout);
+            return db.ExecuteScalar<T>(query.SelectAggregate(aggregateOperation, columns), transaction, timeout);
         }
 
-        public static async Task<T> AggregateAsync<T>(this Query query, string aggregateOperation, string[] columns, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectAggregateAsync<T>(this Query query, string aggregateOperation, string[] columns, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
-            return await db.ExecuteScalarAsync<T>(query.AggregateAs(aggregateOperation, columns), transaction, timeout);
+            return await db.ExecuteScalarAsync<T>(query.SelectAggregate(aggregateOperation, columns), transaction, timeout);
         }
 
         public static T Count<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
-            return db.ExecuteScalar<T>(query.CountAs(columns), transaction, timeout);
+            return db.ExecuteScalar<T>(query.SelectCount(columns), transaction, timeout);
         }
 
-        public static async Task<T> CountAsync<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectCountAsync<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
-            return await db.ExecuteScalarAsync<T>(query.CountAs(columns), transaction, timeout);
+            return await db.ExecuteScalarAsync<T>(query.SelectCount(columns), transaction, timeout);
         }
 
         public static T Average<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -281,9 +281,9 @@ namespace SqlKata.Execution
             return query.Aggregate<T>("avg", new[] { column }, transaction, timeout);
         }
 
-        public static async Task<T> AverageAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectAverageAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
         {
-            return await query.AggregateAsync<T>("avg", new[] { column }, transaction, timeout);
+            return await query.SelectAggregateAsync<T>("avg", new[] { column }, transaction, timeout);
         }
 
         public static T Sum<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -291,9 +291,9 @@ namespace SqlKata.Execution
             return query.Aggregate<T>("sum", new[] { column }, transaction, timeout);
         }
 
-        public static async Task<T> SumAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectSumAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
         {
-            return await query.AggregateAsync<T>("sum", new[] { column }, transaction, timeout);
+            return await query.SelectAggregateAsync<T>("sum", new[] { column }, transaction, timeout);
         }
 
         public static T Min<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -301,9 +301,9 @@ namespace SqlKata.Execution
             return query.Aggregate<T>("min", new[] { column }, transaction, timeout);
         }
 
-        public static async Task<T> MinAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectMinAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
         {
-            return await query.AggregateAsync<T>("min", new[] { column }, transaction, timeout);
+            return await query.SelectAggregateAsync<T>("min", new[] { column }, transaction, timeout);
         }
 
         public static T Max<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -311,9 +311,9 @@ namespace SqlKata.Execution
             return query.Aggregate<T>("max", new[] { column }, transaction, timeout);
         }
 
-        public static async Task<T> MaxAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<T> SelectMaxAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
         {
-            return await query.AggregateAsync<T>("max", new[] { column }, transaction, timeout);
+            return await query.SelectAggregateAsync<T>("max", new[] { column }, transaction, timeout);
         }
 
         internal static XQuery CastToXQuery(Query query, string method = null)
