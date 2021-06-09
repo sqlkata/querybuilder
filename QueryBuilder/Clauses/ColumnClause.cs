@@ -64,6 +64,13 @@ namespace SqlKata
     {
         public string Type { get; set; } // Min, Max, etc.
         public List<string> Columns { get; set; } // Count can do multiple (?)
+        public enum AggregateDistinct
+        {
+            aggregateNonDistinct,
+            aggregateDistinct,
+        };
+        public AggregateDistinct Distinct { get; set; }
+        public bool IsDistinct { get { return this.Distinct == AggregateDistinct.aggregateDistinct; } }
         public override AbstractClause Clone()
         {
             return new AggregateColumn
@@ -73,6 +80,7 @@ namespace SqlKata
                 Alias = Alias,
                 Type = Type,
                 Columns = Columns,
+                Distinct = Distinct,
             };
         }
     }

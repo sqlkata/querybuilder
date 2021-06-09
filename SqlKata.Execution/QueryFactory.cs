@@ -369,7 +369,7 @@ namespace SqlKata.Execution
             int? timeout = null
         )
         {
-            return this.ExecuteScalar<T>(query.SelectAggregate(aggregateOperation, columns), transaction, timeout ?? this.QueryTimeout);
+            return this.ExecuteScalar<T>(query.SelectAggregate(aggregateOperation, columns, AggregateColumn.AggregateDistinct.aggregateNonDistinct), transaction, timeout ?? this.QueryTimeout);
         }
 
         public async Task<T> SelectAggregateAsync<T>(
@@ -381,7 +381,7 @@ namespace SqlKata.Execution
         )
         {
             return await this.ExecuteScalarAsync<T>(
-                query.SelectAggregate(aggregateOperation, columns),
+                query.SelectAggregate(aggregateOperation, columns, AggregateColumn.AggregateDistinct.aggregateNonDistinct),
                 transaction,
                 timeout
             );

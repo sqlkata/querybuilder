@@ -10,13 +10,13 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectAggregateEmpty()
         {
-            Assert.Throws<ArgumentException>(() => new Query("A").SelectAggregate("aggregate", new string[] { }));
+            Assert.Throws<ArgumentException>(() => new Query("A").SelectAggregate("aggregate", new string[] { }, AggregateColumn.AggregateDistinct.aggregateNonDistinct));
         }
 
         [Fact]
         public void SelectAggregate()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" });
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct);
 
             var c = Compile(query);
 
@@ -29,7 +29,7 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectAggregateAlias()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, "Alias");
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias");
 
             var c = Compile(query);
 
@@ -43,7 +43,7 @@ namespace SqlKata.Tests
         public void SelectAggregateMultipleColumns()
         {
             Assert.Throws<ArgumentException>(() =>
-                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" })
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct)
             );
         }
 
@@ -51,7 +51,7 @@ namespace SqlKata.Tests
         public void SelectAggregateMultipleColumnsAlias()
         {
             Assert.Throws<ArgumentException>(() =>
-                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, "Alias")
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias")
             );
         }
 
@@ -193,6 +193,36 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void CountDistinct() // Different from DistinctCount()
+        {
+            var query = new Query()
+                .SelectCountDistinct("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(DISTINCT [Column]) AS [count] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(DISTINCT `Column`) AS `count` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT COUNT(DISTINCT \"COLUMN\") AS \"COUNT\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT COUNT(DISTINCT \"Column\") AS \"count\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void DistinctCountDistinct()
+        {
+            var query = new Query()
+                .Distinct()
+                .SelectCountDistinct("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [Column] FROM [Table]) AS [CountQuery]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
         public void DistinctCountMultipleColumns()
         {
             var query = new Query("A").Distinct().SelectCount(new[] { "ColumnA", "ColumnB" });
@@ -200,6 +230,63 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT DISTINCT [ColumnA], [ColumnB] FROM [A]) AS [CountQuery]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void CountDistinctMultipleColumns()
+        {
+            Assert.Throws<NotImplementedException>(() =>
+                new Query("A").SelectCountDistinct(new[] { "ColumnA", "ColumnB" })
+            );
+        }
+
+        [Fact]
+        public void DistinctCountDistinctMultipleColumns()
+        {
+            Assert.Throws<NotImplementedException>(() =>
+                new Query("A").Distinct().SelectCountDistinct(new[] { "ColumnA", "ColumnB" })
+            );
+        }
+
+        [Fact]
+        public void DistinctMax()
+        {
+            var query = new Query()
+                .Distinct()
+                .SelectMax("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT DISTINCT MAX([Column]) AS [max] FROM [Table]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void MaxDistinct() // Different from DistinctCount()
+        {
+            var query = new Query()
+                .SelectMaxDistinct("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MAX(DISTINCT [Column]) AS [max] FROM [Table]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void DistinctMaxDistinct()
+        {
+            var query = new Query()
+                .Distinct()
+                .SelectMaxDistinct("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT DISTINCT MAX(DISTINCT [Column]) AS [max] FROM [Table]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]

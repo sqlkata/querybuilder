@@ -460,7 +460,7 @@ namespace SqlKata.Compilers
                     aggregate.Columns
                        .Select(x => CompileColumn(ctx, new Column { Name = x }))
                 );
-                return $"{aggregate.Type.ToUpperInvariant()}({columns}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
+                return $"{aggregate.Type.ToUpperInvariant()}({(aggregate.IsDistinct ? DistinctKeyword : "")}{columns}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
             }
 
             if (!string.IsNullOrWhiteSpace(column.Alias))

@@ -8,7 +8,7 @@ namespace SqlKata
         /**********************************************************************
          ** Generic aggregate                                                **
          **********************************************************************/
-        public Query SelectAggregate(string type, IEnumerable<string> columns, string alias = null)
+        public Query SelectAggregate(string type, IEnumerable<string> columns, AggregateColumn.AggregateDistinct distinct, string alias = null)
         {
             if (columns.Count() == 0)
             {
@@ -32,6 +32,7 @@ namespace SqlKata
                     Alias = alias,
                     Type = type,
                     Columns = columns.ToList(),
+                    Distinct = distinct,
                 });
             }
             else
@@ -39,6 +40,10 @@ namespace SqlKata
                 if (this.HasComponent("aggregate"))
                 {
                     throw new System.InvalidOperationException("Cannot add more than one top-level aggregate clause");
+                }
+                if (columns.Count() > 1 && distinct == AggregateColumn.AggregateDistinct.aggregateDistinct)
+                {
+                    throw new System.NotImplementedException("Count distinct over multiple columns is not implemented");
                 }
                 Method = "aggregate";
                 this.AddComponent("aggregate", new AggregateClause
@@ -61,9 +66,19 @@ namespace SqlKata
             return SelectCount(column != null ? new[] { column } : new string[] { }, alias);
         }
 
+        public Query SelectCountDistinct(string column = null, string alias = null)
+        {
+            return SelectCountDistinct(column != null ? new[] { column } : new string[] { }, alias);
+        }
+
         public Query SelectCount(IEnumerable<string> columns, string alias = null)
         {
-            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, alias);
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectCountDistinct(IEnumerable<string> columns, string alias = null)
+        {
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
 
 
@@ -72,10 +87,20 @@ namespace SqlKata
          **********************************************************************/
         public Query SelectAvg(string column, string alias = null)
         {
-            return SelectAggregate("avg", new[] { column }, alias);
+            return SelectAggregate("avg", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectAvgDistinct(string column, string alias = null)
+        {
+            return SelectAggregate("avg", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
 
         public Query SelectAverage(string column, string alias = null)
+        {
+            return SelectAvg(column, alias);
+        }
+
+        public Query SelectAverageDistinct(string column, string alias = null)
         {
             return SelectAvg(column, alias);
         }
@@ -86,7 +111,12 @@ namespace SqlKata
          **********************************************************************/
         public Query SelectSum(string column, string alias = null)
         {
-            return SelectAggregate("sum", new[] { column }, alias);
+            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectSumDistinct(string column, string alias = null)
+        {
+            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
 
 
@@ -95,7 +125,12 @@ namespace SqlKata
          **********************************************************************/
         public Query SelectMax(string column, string alias = null)
         {
-            return SelectAggregate("max", new[] { column }, alias);
+            return SelectAggregate("max", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectMaxDistinct(string column, string alias = null)
+        {
+            return SelectAggregate("max", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
 
 
@@ -104,7 +139,12 @@ namespace SqlKata
          **********************************************************************/
         public Query SelectMin(string column, string alias = null)
         {
-            return SelectAggregate("min", new[] { column }, alias);
+            return SelectAggregate("min", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectMinDistinct(string column, string alias = null)
+        {
+            return SelectAggregate("min", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
     }
 }
