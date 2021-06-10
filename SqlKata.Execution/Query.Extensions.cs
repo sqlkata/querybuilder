@@ -169,9 +169,9 @@ namespace SqlKata.Execution
             return CreateQueryFactory(query).Execute(query.AsInsert(columns, valuesCollection), transaction, timeout);
         }
 
-        public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IDbTransaction transaction = null, int? timeout = null)
+        public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, valuesCollection), transaction, timeout);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, valuesCollection), transaction, timeout, cancellationToken);
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery, IDbTransaction transaction = null, int? timeout = null)
