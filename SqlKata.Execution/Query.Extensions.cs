@@ -245,6 +245,26 @@ namespace SqlKata.Execution
             return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(data), transaction, timeout, cancellationToken);
         }
 
+        public static int Increment(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return CreateQueryFactory(query).Execute(query.AsIncrement(column, value), transaction, timeout);
+        }
+
+        public static async Task<int> IncrementAsync(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsIncrement(column, value), transaction, timeout, cancellationToken);
+        }
+
+        public static int Decrement(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return CreateQueryFactory(query).Execute(query.AsDecrement(column, value), transaction, timeout);
+        }
+
+        public static async Task<int> DecrementAsync(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsDecrement(column, value), transaction, timeout, cancellationToken);
+        }
+
         public static int Delete(this Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             return CreateQueryFactory(query).Execute(query.AsDelete(), transaction, timeout);
