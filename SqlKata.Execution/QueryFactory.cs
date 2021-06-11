@@ -698,7 +698,8 @@ namespace SqlKata.Execution
                     }
 
                     var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
-                    .Select(x => x[include.LocalKey].ToString())
+                   // .Select(x => x[include.LocalKey].ToString())
+                    .Select(x => x[include.LocalKey])
                     .ToList();
 
                     if (!localIds.Any())
@@ -799,7 +800,8 @@ namespace SqlKata.Execution
                     }
 
                     var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
-                    .Select(x => x[include.LocalKey].ToString())
+                   // .Select(x => x[include.LocalKey].ToString())
+                    .Select(x => x[include.LocalKey])
                     .ToList();
 
                     if (!localIds.Any())

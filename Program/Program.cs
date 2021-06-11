@@ -32,20 +32,40 @@ namespace Program
             public int DaysCount { get; set; }
         }
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            using (var db = SqlLiteQueryFactory())
+            using (var db = SqlServerQueryFactory())
             {
-                var query = db.Query("accounts")
-                    .Where("balance", ">", 0)
-                    .GroupBy("balance")
-                .Limit(10);
 
-                var accounts = query.Clone().Get();
+                //var readZoneStorages = db.Query("ReadZoneStorages").Join("ReadZones", "ReadZones.Id", "ReadZoneStorages.ReadZoneId")
+                //                       .Select("ReadZones.FacilityId", "ReadZoneStorages.ReadZoneId", "ReadZones.Name as ReadZoneName", "ReadZones.Status", "ReadZones.DisplayOnDashboard", "ReadZoneStorages.GTINItemRef", "ReadZoneStorages.GRAIAssetType", "ReadZoneStorages.GIAIIndAssetRef", "ReadZoneStorages.SSCCSerialRef");
+                //var facilityReadzones = db.Query("Facilities").Join(
+                //            readZoneStorages.As("ReadZoneStorages"),
+                //            j => j.On("ReadZoneStorages.FacilityId", "Facilities.Id")
+                //            );
+                //var gtinItemsInReadZones =  db.Query("Companies").Join(
+                //                                facilityReadzones.As("FacilityReadzones"),
+                //                                j => j.On("FacilityReadzones.CompanyId", "Companies.Id")
+                //                                ).Select("ReadZoneName", "FacilityReadzones.Name as FacilityName", "Companies.Name as CompanyName", "ReadZoneId", "FacilityId", "Companies.Id as CompanyId").SelectRaw("count(1) as [Count]").GroupBy("Companies.Id", "FacilityId", "ReadZoneId", "ReadZoneName", "FacilityName", "CompanyName")
+                //                                .WhereNotNull("FacilityReadzones.GTINItemRef")
+                //                                .Where("FacilityReadzones.Status", "A")
+                //                                .Where("FacilityReadzones.DisplayOnDashboard", "A")
+                //                                 .Where("Companies.Id", 1);
+
+                //var query = db.Query("accounts")
+                //    .Where("balance", ">", 0)
+                //    .GroupBy("balance")
+                //.Limit(10);
+                var companies = db.Query("Companies").Select("Id", "Name");
+                var facilities = db.Query("Facilities").Select("CompanyId", "Name");
+                var result = companies
+                                .IncludeMany("Facilities", facilities, "CompanyId", "Id");
+
+                var accounts = result.Clone().Get();
                 Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
-                var exists = query.Clone().Exists();
-                Console.WriteLine(exists);
+              //  var exists = gtinItemsInReadZones.Clone().Exists();
+               // Console.WriteLine(exists);
             }
         }
 
@@ -96,10 +116,10 @@ namespace Program
         private static QueryFactory SqlServerQueryFactory()
         {
             var compiler = new PostgresCompiler();
-            var connection = new SqlConnection(
-               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
+            var connection = new NpgsqlConnection(
+               "Server=localhost;Port=5432;Database=ItemsScanLocalDb;User Id=chrisgate;Password=Dink01@secure!;"
            );
-
+ 
             var db = new QueryFactory(connection, compiler);
 
             db.Logger = result =>
