@@ -283,5 +283,37 @@ namespace SqlKata.Tests
                 "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
                 c[EngineCodes.SqlServer]);
         }
+
+        [Fact]
+        public void IncrementUpdate()
+        {
+            var query = new Query("Table").AsIncrement("Total");
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void IncrementUpdateWithValue()
+        {
+            var query = new Query("Table").AsIncrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void IncrementUpdateWithWheres()
+        {
+            var query = new Query("Table").Where("Name", "A").AsIncrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void DecrementUpdate()
+        {
+            var query = new Query("Table").Where("Name", "A").AsDecrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
+        }
     }
 }
