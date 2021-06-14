@@ -59,30 +59,6 @@ namespace SqlKata
 
 
         /**********************************************************************
-         ** Count                                                            **
-         **********************************************************************/
-        public Query SelectCount(string column = null, string alias = null)
-        {
-            return SelectCount(column != null ? new[] { column } : new string[] { }, alias);
-        }
-
-        public Query SelectCountDistinct(string column = null, string alias = null)
-        {
-            return SelectCountDistinct(column != null ? new[] { column } : new string[] { }, alias);
-        }
-
-        public Query SelectCount(IEnumerable<string> columns, string alias = null)
-        {
-            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
-        }
-
-        public Query SelectCountDistinct(IEnumerable<string> columns, string alias = null)
-        {
-            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
-        }
-
-
-        /**********************************************************************
          ** Average                                                          **
          **********************************************************************/
         public Query SelectAvg(string column, string alias = null)
@@ -103,20 +79,6 @@ namespace SqlKata
         public Query SelectAverageDistinct(string column, string alias = null)
         {
             return SelectAvg(column, alias);
-        }
-
-
-        /**********************************************************************
-         ** Sum                                                              **
-         **********************************************************************/
-        public Query SelectSum(string column, string alias = null)
-        {
-            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
-        }
-
-        public Query SelectSumDistinct(string column, string alias = null)
-        {
-            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
 
 
@@ -145,6 +107,44 @@ namespace SqlKata
         public Query SelectMinDistinct(string column, string alias = null)
         {
             return SelectAggregate("min", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
+        }
+
+
+        /**********************************************************************
+         ** Count                                                            **
+         **********************************************************************/
+        public Query SelectCount(string column = null, string alias = null)
+        {
+            return SelectCount(column != null ? new[] { column } : new string[] { }, alias);
+        }
+
+        public Query SelectCountDistinct(string column = null, string alias = null)
+        {
+            return SelectCountDistinct(column != null ? new[] { column } : new string[] { }, alias);
+        }
+
+        public Query SelectCount(IEnumerable<string> columns, string alias = null)
+        {
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectCountDistinct(IEnumerable<string> columns, string alias = null)
+        {
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
+        }
+
+
+        /**********************************************************************
+         ** Sum                                                              **
+         **********************************************************************/
+        public Query SelectSum(string column, string alias = null)
+        {
+            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, alias);
+        }
+
+        public Query SelectSumDistinct(string column, string alias = null)
+        {
+            return SelectAggregate("sum", new[] { column }, AggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
     }
 }
