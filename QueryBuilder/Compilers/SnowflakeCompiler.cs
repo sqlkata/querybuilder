@@ -42,24 +42,64 @@ namespace SqlKata.Compilers
             }
         }
 
+        private class SnowflakeAggregatePercentileApproxColumn : SqlKata.AggregatePercentileApproxColumn
+        {
+            public SnowflakeAggregatePercentileApproxColumn() : base() { }
+
+            public SnowflakeAggregatePercentileApproxColumn(SnowflakeAggregatePercentileApproxColumn other)
+                : base(other)
+            {
+            }
+
+            public override AbstractClause Clone()
+            {
+                return new SnowflakeAggregatePercentileApproxColumn(this);
+            }
+
+            public override string Compile(SqlResult ctx)
+            {
+                return $"APPROX_PERCENTILE({new Column { Name = Column }.Compile(ctx)}, {Percentile}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
+            }
+        }
+
         protected override string CompileColumns(SqlResult ctx)
         {
-            /**
-             * Snowflake supports the ANY_VALUE function natively
-             */
             ctx.Query.Clauses = ctx.Query.Clauses.Select(clause =>
             {
-                if (clause is AggregateAnyValueColumn column)
                 {
-                    return new AggregateGenericColumn
+                    /**
+                     * Snowflake supports the ANY_VALUE function natively
+                     */
+                    if (clause is AggregateAnyValueColumn column)
                     {
-                        Engine = column.Engine,
-                        Component = column.Component,
-                        Type = column.Type,
-                        Column = column.Column,
-                        Alias = column.Alias,
-                        Distinct = column.Distinct,
-                    };
+                        return new AggregateGenericColumn
+                        {
+                            Alias = column.Alias,
+                            Column = column.Column,
+                            Component = column.Component,
+                            Distinct = column.Distinct,
+                            Engine = column.Engine,
+                            Type = column.Type,
+                        };
+                    }
+                }
+
+                {
+                    /**
+                     * Snowflake supports the APPROX_PERCENTILE function natively
+                     */
+                    if (clause is SqlKata.AggregatePercentileApproxColumn column)
+                    {
+                        return new SnowflakeAggregatePercentileApproxColumn
+                        {
+                            Alias = column.Alias,
+                            Column = column.Column,
+                            Component = column.Component,
+                            Distinct = column.Distinct,
+                            Engine = column.Engine,
+                            Percentile = column.Percentile,
+                        };
+                    }
                 }
                 return clause;
             }).ToList();

@@ -174,5 +174,31 @@ namespace SqlKata
         {
             return SelectAggregate("sum", new[] { column }, AbstractAggregateColumn.AggregateDistinct.aggregateDistinct, alias);
         }
+
+
+        /**********************************************************************
+         ** Percentile                                                       **
+         **                                                                  **
+         ** Notes:                                                           **
+         **  * There are also the standard SQL functions PERCENTILE_CONT     **
+         **    and PERCENTILE_DISC, but the syntax for these functions is    **
+         **    quite complicated (with nested ORDER BY and PARTITION BY      **
+         *     sub expressions), and not well captured in a single function  **
+         **    like is done here for all other aggregate functions.          **
+         **    Therefor we don't implement those yet.                        **
+         **  * APPROX_PERCENTILE (in Snowflake) cannot be combined with the  **
+         **    DISTINCT keyword, so no ...Distinct() variant is offered.     **
+         **********************************************************************/
+        public Query SelectPercentileApprox(double percentile, string column, string alias = null)
+        {
+            Method = "select";
+            this.AddComponent("select", new AggregatePercentileApproxColumn
+            {
+                Alias = alias,
+                Column = column,
+                Percentile = percentile,
+            });
+            return this;
+        }
     }
 }

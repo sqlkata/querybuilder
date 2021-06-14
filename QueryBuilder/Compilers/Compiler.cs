@@ -26,7 +26,6 @@ namespace SqlKata.Compilers
 
         public virtual string EngineCode { get; }
 
-
         /// <summary>
         /// A list of white-listed operators
         /// </summary>
@@ -125,9 +124,9 @@ namespace SqlKata.Compilers
             }
 
             // handle CTEs
-            if (query.HasComponent("cte", EngineCode))
+            if (ctx.Query.HasComponent("cte", EngineCode))
             {
-                ctx = CompileCteQuery(ctx, query);
+                ctx = CompileCteQuery(ctx, ctx.Query);
             }
 
             ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, "?", ctx.Bindings.ToArray());
@@ -881,6 +880,11 @@ namespace SqlKata.Compilers
         public virtual List<string> WrapArray(List<string> values)
         {
             return values.Select(x => Wrap(x)).ToList();
+        }
+
+        protected virtual string InternalIdentifier(string identifier)
+        {
+            return $"__generated__SqlKata_{this.GetType().Name}_{identifier}";
         }
 
         public virtual string WrapIdentifiers(string input)

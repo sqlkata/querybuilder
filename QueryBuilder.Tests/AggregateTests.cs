@@ -1,6 +1,8 @@
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -526,6 +528,371 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT MIN([LatencyMs]) AS [Alias] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void SelectPercentileApproxGeneralSupport()
+        {
+            var query = new Query()
+                .SelectPercentileApprox(0.9, "column")
+                .From("table")
+            ;
+
+            // The approximate percentile is not supported by all compilers
+            Assert.Throws<NotSupportedException>(() => Compile(query));
+        }
+
+        [Fact]
+        public void SelectPercentileApprox()
+        {
+            var query = new Query()
+                .SelectPercentileApprox(0.9, "column")
+                .From("table")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                            PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [column]) OVER() AS [value_0]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                    MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [percentileapprox]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                    APPROX_PERCENTILE(""column"", 0.9) AS ""percentileapprox""
+                FROM
+                    ""table""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxAlias()
+        {
+            var query = new Query()
+                .SelectPercentileApprox(0.9, "column", "Alias")
+                .From("table")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                            PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [column]) OVER() AS [value_0]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                    MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [Alias]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                    APPROX_PERCENTILE(""column"", 0.9) AS ""Alias""
+                FROM
+                    ""table""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxMultiple()
+        {
+            // Note: expressly using the same column w/ different percentile.
+            // There is a potential performance improvement here for snowflake
+            // using APPROX_PERCENTILE_ESTIMATE (not implemented).
+            var query = new Query()
+                .SelectPercentileApprox(0.1, "c1")
+                .SelectPercentileApprox(0.9, "c1")
+                .From("table")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                              PERCENTILE_CONT(0.1) WITHIN GROUP(ORDER BY [c1]) OVER() AS [value_0]
+                            , PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [c1]) OVER() AS [value_1]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                      MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [percentileapprox]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1]) AS [percentileapprox]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                      APPROX_PERCENTILE(""c1"", 0.1) AS ""percentileapprox""
+                    , APPROX_PERCENTILE(""c1"", 0.9) AS ""percentileapprox""
+                FROM
+                    ""table""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxRegularColumns()
+        {
+            var query = new Query()
+                .Select("c1")
+                .SelectAs(("c2", "Alias"))
+                .SelectPercentileApprox(0.9, "c3")
+                .From("table")
+                .GroupBy("c1")
+                .GroupBy("c2")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                              [c1] AS [value_0]
+                            , [c2] AS [value_1]
+                            , PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [c3]) OVER(PARTITION BY [c1], [c2]) AS [value_2]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                      [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0] AS [c1]
+                    , [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1] AS [Alias]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_2]) AS [percentileapprox]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+                GROUP BY
+                      [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]
+                    , [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                      ""c1""
+                    , ""c2"" AS ""Alias""
+                    , APPROX_PERCENTILE(""c3"", 0.9) AS ""percentileapprox""
+                FROM
+                    ""table""
+                GROUP BY
+                      ""c1""
+                    , ""c2""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxAggregateColumns()
+        {
+            var query = new Query()
+                .SelectAvg("c1")
+                .SelectPercentileApprox(0.9, "c2")
+                .From("table")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                              [c1] AS [value_0]
+                            , PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [c2]) OVER() AS [value_1]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                      AVG([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [avg]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1]) AS [percentileapprox]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                      AVG(""c1"") AS ""avg""
+                    , APPROX_PERCENTILE(""c2"", 0.9) AS ""percentileapprox""
+                FROM
+                    ""table""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileGroupByOrderBy()
+        {
+            var query = new Query()
+                .Select("c1")
+                .SelectPercentileApprox(0.9, "c2")
+                .From("table")
+                .GroupBy("c1")
+                .OrderByDesc("c1")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                              [c1] AS [value_0]
+                            , PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY [c2]) OVER(PARTITION BY [c1]) AS [value_1]
+                        FROM
+                            [table]
+                    )
+                SELECT
+                      [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0] AS [c1]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1]) AS [percentileapprox]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+                GROUP BY
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]
+                ORDER BY
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0] DESC
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                SELECT
+                      ""c1""
+                    , APPROX_PERCENTILE(""c2"", 0.9) AS ""percentileapprox""
+                FROM
+                    ""table""
+                GROUP BY
+                    ""c1""
+                ORDER BY
+                    ""c1"" DESC
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxInSubquery()
+        {
+            var query = new Query()
+                .With("SubQuery1", q => q
+                    .SelectAs(("Column", "Alias"))
+                    .From("Table")
+                )
+                .With("SubQuery2", q => q
+                    .SelectPercentileApprox(0.75, "Alias")
+                    .From("SubQuery1")
+                )
+                .Select("percentileapprox")
+                .From("SubQuery2")
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                      [SubQuery1] AS (
+                        SELECT
+                            [Column] AS [Alias]
+                        FROM
+                            [Table]
+                    )
+                    , [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                            PERCENTILE_CONT(0.75) WITHIN GROUP(ORDER BY [Alias]) OVER() AS [value_0]
+                        FROM
+                            [SubQuery1]
+                    )
+                    , [SubQuery2] AS (
+                        SELECT
+                            MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [percentileapprox]
+                        FROM
+                            [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+                    )
+                SELECT
+                    [percentileapprox]
+                FROM
+                    [SubQuery2]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                WITH
+                      ""SubQuery1"" AS (
+                        SELECT
+                            ""Column"" AS ""Alias""
+                        FROM
+                            ""Table""
+                    )
+                    , ""SubQuery2"" AS (
+                        SELECT
+                            APPROX_PERCENTILE(""Alias"", 0.75) AS ""percentileapprox""
+                        FROM
+                            ""SubQuery1""
+                    )
+                SELECT
+                    ""percentileapprox""
+                FROM
+                    ""SubQuery2""
+            ");
+        }
+
+        [Fact]
+        public void SelectPercentileApproxComplex()
+        {
+            var query = new Query()
+                .With("filter", q => q
+                    .SelectAs(("PurchaseOrderItems.ItemID", "CaseId"))
+                    .From("PurchaseOrderItems")
+                    .WhereIn("PurchaseOrderItems.Plant", new List<string> { "dummy" })
+                )
+                .SelectMin("PurchaseOrderItems.ValueOrdered", "MinValue")
+                .SelectMax("PurchaseOrderItems.ValueOrdered", "MaxValue")
+                .SelectPercentileApprox(0.03, "PurchaseOrderItems.ValueOrdered", "LowPercentile")
+                .SelectPercentileApprox(0.97, "PurchaseOrderItems.ValueOrdered", "HighPercentile")
+                .From("PurchaseOrderItems")
+                .Join("filter", "filter.CaseId", "PurchaseOrderItems.ItemID")
+                .Limit(1)
+            ;
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                      [filter] AS (
+                        SELECT
+                            [PurchaseOrderItems].[ItemID] AS [CaseId]
+                        FROM
+                            [PurchaseOrderItems]
+                        WHERE
+                            [PurchaseOrderItems].[Plant] IN (?)
+                    )
+                    , [__generated__SqlKata_SqlServerCompiler_percentileapprox] AS (
+                        SELECT
+                              [PurchaseOrderItems].[ValueOrdered] AS [value_0]
+                            , [PurchaseOrderItems].[ValueOrdered] AS [value_1]
+                            , PERCENTILE_CONT(0.03) WITHIN GROUP(ORDER BY [PurchaseOrderItems].[ValueOrdered]) OVER() AS [value_2]
+                            , PERCENTILE_CONT(0.97) WITHIN GROUP(ORDER BY [PurchaseOrderItems].[ValueOrdered]) OVER() AS [value_3]
+                        FROM
+                            [PurchaseOrderItems]
+                            INNER JOIN [filter] ON [filter].[CaseId] = [PurchaseOrderItems].[ItemID]
+                    )
+                SELECT TOP (?)
+                      MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_0]) AS [MinValue]
+                    , MAX([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_1]) AS [MaxValue]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_2]) AS [LowPercentile]
+                    , MIN([__generated__SqlKata_SqlServerCompiler_percentileapprox].[value_3]) AS [HighPercentile]
+                FROM
+                    [__generated__SqlKata_SqlServerCompiler_percentileapprox]
+            ");
+
+            CheckCompileResult(query, EngineCodes.Snowflake, @"
+                WITH
+                      ""filter"" AS (
+                        SELECT
+                            ""PurchaseOrderItems"".""ItemID"" AS ""CaseId""
+                        FROM
+                            ""PurchaseOrderItems""
+                        WHERE
+                            ""PurchaseOrderItems"".""Plant"" IN (?)
+                    )
+                SELECT
+                      MIN(""PurchaseOrderItems"".""ValueOrdered"") AS ""MinValue""
+                    , MAX(""PurchaseOrderItems"".""ValueOrdered"") AS ""MaxValue""
+                    , APPROX_PERCENTILE(""PurchaseOrderItems"".""ValueOrdered"", 0.03) AS ""LowPercentile""
+                    , APPROX_PERCENTILE(""PurchaseOrderItems"".""ValueOrdered"", 0.97) AS ""HighPercentile""
+                FROM
+                    ""PurchaseOrderItems""
+                    INNER JOIN ""filter"" ON ""filter"".""CaseId"" = ""PurchaseOrderItems"".""ItemID""
+                LIMIT ?
+            ");
         }
     }
 }

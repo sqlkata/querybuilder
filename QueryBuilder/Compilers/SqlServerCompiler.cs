@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -60,8 +65,178 @@ namespace SqlKata.Compilers
             return result;
         }
 
+        private class SqlServerAggregatePercentileApproxColumn : SqlKata.AggregatePercentileApproxColumn
+        {
+            public SqlServerAggregatePercentileApproxColumn() : base() { }
+
+            public SqlServerAggregatePercentileApproxColumn(SqlServerAggregatePercentileApproxColumn other)
+                : base(other)
+            {
+                GroupByClauses = other.GroupByClauses;
+            }
+
+            public override AbstractClause Clone()
+            {
+                return new SqlServerAggregatePercentileApproxColumn(this);
+            }
+
+            public override string Compile(SqlResult ctx)
+            {
+                // percentile_cont(0.9) within group (order by "value") over (partition by ...)
+                var column = new Column { Name = Column }.Compile(ctx);
+                var partition = String.Join(", ", GroupByClauses.Select(clause => clause.Compile(ctx)));
+                partition = partition.Length > 0 ? "PARTITION BY " + partition : "";
+                return $"PERCENTILE_CONT({Percentile}) WITHIN GROUP(ORDER BY {column}) OVER({partition}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
+            }
+
+            public IEnumerable<Column> GroupByClauses { get; set; } = new List<Column>();
+        }
+
+        /**
+         * This transforms an APPROX_PERCENTILE column in a SELECT clause to a
+         * sub-query with an PERCENTILE_CONT column. Groupings in the original
+         * query are repeated in the PARTITION BY of the PERCENTILE_CONT
+         * function.
+         */
+        private void TransformPercentileApprox(Query query)
+        {
+            // A bit of an optimization for compatibility; we only want to
+            // perform the 'real' transform if there is a percentile-approx
+            // column in the _current_ query's list of clauses. Otherwise we
+            // return the original query as-is, so that there are less total
+            // queries that we need to transform and potentially hit an
+            // 'unknown' clause type on (c.f. NotImplementedException() below).
+            bool hasPercentileApproxColumn = false;
+            foreach (var clause in query.Clauses)
+            {
+                // Expressly only match not-previously-replaced percentiles
+                if (clause.GetType() == typeof(SqlKata.AggregatePercentileApproxColumn))
+                    hasPercentileApproxColumn = true;
+
+                if (clause is SqlKata.QueryFromClause queryFrom)
+                    TransformPercentileApprox(queryFrom.Query);
+            }
+            if (!hasPercentileApproxColumn)
+            {
+                return;
+            }
+
+            string subqueryAlias = InternalIdentifier(
+                query.Clauses
+                    .Where(x => x is SqlKata.AggregatePercentileApproxColumn)
+                    .Cast<SqlKata.AggregatePercentileApproxColumn>()
+                    .First()
+                    .Type
+            );
+
+            var clauses = query.Clauses
+                .OrderBy(clause =>
+                {
+                    // to ensure selects are added to sub queries before they
+                    // are used in group-by or order-by clauses, so that we can
+                    // be sure to find them in the alias map.
+                    switch (clause.Component)
+                    {
+                        case "select": return 0;
+                        case "group": return 1;
+                        case "order": return 2;
+                        default: return 999;
+                    }
+                })
+                .ToList();
+            query.Clauses = new List<AbstractClause>();
+            query.With(subqueryAlias, subQuery =>
+            {
+                int valueId = 0;
+                var aliasMap = new Dictionary<string, string>();
+                foreach (var clause in clauses)
+                {
+                    switch (clause)
+                    {
+                        case Column column:
+                            {
+                                switch (column.Component)
+                                {
+                                    case "select":
+                                        {
+                                            var clone = column.Clone() as Column;
+                                            clone.Alias = $"value_{valueId}";
+                                            aliasMap[clone.Name] = clone.Alias;
+                                            subQuery.Clauses.Add(clone);
+                                            query.SelectAs(($"{subqueryAlias}.value_{valueId}", column.Alias ?? column.Name));
+                                            ++valueId;
+                                        }; break;
+                                    case "group":
+                                        {
+                                            var clone = clause.Clone() as Column;
+                                            clone.Name = $"{subqueryAlias}.{aliasMap[clone.Name]}";
+                                            query.Clauses.Add(clone);
+                                        }; break;
+                                    default: throw new NotImplementedException($"Unhandled column Component: {column.Component}");
+                                }
+                            }; break;
+                        case AbstractAggregateColumn column:
+                            {
+                                switch (column)
+                                {
+                                    case AggregatePercentileApproxColumn approxColumn:
+                                        {
+                                            subQuery.Clauses.Add(
+                                                 new SqlServerAggregatePercentileApproxColumn
+                                                 {
+                                                     Alias = $"value_{valueId}",
+                                                     Column = approxColumn.Column,
+                                                     Component = approxColumn.Component,
+                                                     Distinct = approxColumn.Distinct,
+                                                     Engine = approxColumn.Engine,
+                                                     Percentile = approxColumn.Percentile,
+                                                     GroupByClauses = clauses.Where(x => x is Column group && group.Component == "group").Cast<Column>(),
+                                                 }
+                                            );
+                                            query
+                                                .SelectAnyValue($"{subqueryAlias}.value_{valueId}", approxColumn.Alias ?? approxColumn.Type)
+                                                .From(subqueryAlias)
+                                            ;
+                                        }; break;
+                                    default:
+                                        {
+                                            var clone = column.Clone() as AbstractAggregateColumn;
+                                            clone.Column = $"{subqueryAlias}.value_{valueId}";
+                                            subQuery.SelectAs((column.Column, $"value_{valueId}"));
+                                            query.Clauses.Add(clone);
+                                        }; break;
+                                }
+                                ++valueId;
+                            }; break;
+                        case AbstractFrom from:
+                            {
+                                subQuery.Clauses.Add(clause.Clone());
+                            }; break;
+                        case OrderBy orderBy:
+                            {
+                                var clone = clause.Clone() as OrderBy;
+                                clone.Column = $"{subqueryAlias}.{aliasMap[clone.Column]}";
+                                query.Clauses.Add(clone);
+                            }; break;
+                        case AbstractJoin join:
+                            {
+                                subQuery.Clauses.Add(clause.Clone());
+                            }; break;
+                        case LimitClause limit:
+                            {
+                                query.Clauses.Add(clause.Clone());
+                            }; break;
+                        default: throw new NotImplementedException($"Unhandled clause type: {clause.GetType()}");
+                    }
+                }
+                return subQuery;
+            });
+        }
+
         protected override string CompileColumns(SqlResult ctx)
         {
+            TransformPercentileApprox(ctx.Query);
+
             var compiled = base.CompileColumns(ctx);
 
             if (!UseLegacyPagination)
