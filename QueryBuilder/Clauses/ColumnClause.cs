@@ -6,6 +6,14 @@ namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
     {
+        public AbstractColumn() { }
+
+        public AbstractColumn(AbstractColumn other)
+            : base(other)
+        {
+            Alias = other.Alias;
+        }
+
         public string Alias { get; set; }
 
         /// <summary>
@@ -29,16 +37,18 @@ namespace SqlKata
         /// </value>
         public string Name { get; set; }
 
+        public Column() { }
+
+        public Column(Column other)
+            : base(other)
+        {
+            Name = other.Name;
+        }
+
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new Column
-            {
-                Engine = Engine,
-                Name = Name,
-                Component = Component,
-                Alias = Alias,
-            };
+            return new Column(this);
         }
 
         public override string Compile(SqlResult ctx)
@@ -66,15 +76,19 @@ namespace SqlKata
         /// The query for column value calculation.
         /// </value>
         public Query Query { get; set; }
+
+        public QueryColumn() { }
+
+        public QueryColumn(QueryColumn other)
+            : base(other)
+        {
+            Query = other.Query.Clone();
+        }
+
+        /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new QueryColumn
-            {
-                Engine = Engine,
-                Query = Query.Clone(),
-                Component = Component,
-                Alias = Alias,
-            };
+            return new QueryColumn(this);
         }
 
         public override string Compile(SqlResult ctx)
@@ -105,17 +119,21 @@ namespace SqlKata
         };
         public AggregateDistinct Distinct { get; set; }
         public bool IsDistinct { get { return this.Distinct == AggregateDistinct.aggregateDistinct; } }
+
+        public AggregateColumn() { }
+
+        public AggregateColumn(AggregateColumn other)
+            : base(other)
+        {
+            Type = other.Type;
+            Column = other.Column;
+            Distinct = other.Distinct;
+        }
+
         public override AbstractClause Clone()
         {
-            return new AggregateColumn
-            {
-                Engine = Engine,
-                Component = Component,
-                Alias = Alias,
-                Type = Type,
-                Column = Column,
-                Distinct = Distinct,
-            };
+            return new AggregateColumn(this);
+        }
 
         public override string Compile(SqlResult ctx)
         {
@@ -134,17 +152,20 @@ namespace SqlKata
         public string Expression { get; set; }
         public object[] Bindings { set; get; }
 
+        public RawColumn() { }
+
+        public RawColumn(RawColumn other)
+            : base(other)
+        {
+            Expression = other.Expression;
+            Bindings = other.Bindings;
+        }
+
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
             Debug.Assert(string.IsNullOrEmpty(Alias), "Raw columns cannot have an alias");
-            return new RawColumn
-            {
-                Engine = Engine,
-                Expression = Expression,
-                Bindings = Bindings,
-                Component = Component,
-            };
+            return new RawColumn(this);
         }
 
         public override string Compile(SqlResult ctx)
