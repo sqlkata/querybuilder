@@ -18,7 +18,7 @@ namespace SqlKata.Tests.SqlServer
         public void NoLimitNorOffset()
         {
             var query = new Query("Table");
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.Null(compiler.CompileLimit(ctx));
         }
@@ -27,7 +27,7 @@ namespace SqlKata.Tests.SqlServer
         public void LimitOnly()
         {
             var query = new Query("Table").Limit(10);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
             Assert.Equal(2, ctx.Bindings.Count);
@@ -39,7 +39,7 @@ namespace SqlKata.Tests.SqlServer
         public void OffsetOnly()
         {
             var query = new Query("Table").Offset(20);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
 
@@ -51,7 +51,7 @@ namespace SqlKata.Tests.SqlServer
         public void LimitAndOffset()
         {
             var query = new Query("Table").Limit(5).Offset(20);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
 

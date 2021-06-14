@@ -17,7 +17,7 @@ namespace SqlKata.Tests.MySql
         public void WithNoLimitNorOffset()
         {
             var query = new Query("Table");
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.Null(compiler.CompileLimit(ctx));
         }
@@ -26,7 +26,7 @@ namespace SqlKata.Tests.MySql
         public void WithNoOffset()
         {
             var query = new Query("Table").Limit(10);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.Equal("LIMIT ?", compiler.CompileLimit(ctx));
             Assert.Equal(10, ctx.Bindings[0]);
@@ -36,7 +36,7 @@ namespace SqlKata.Tests.MySql
         public void WithNoLimit()
         {
             var query = new Query("Table").Offset(20);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.Equal("LIMIT 18446744073709551615 OFFSET ?", compiler.CompileLimit(ctx));
             Assert.Equal(20, ctx.Bindings[0]);
@@ -47,7 +47,7 @@ namespace SqlKata.Tests.MySql
         public void WithLimitAndOffset()
         {
             var query = new Query("Table").Limit(5).Offset(20);
-            var ctx = new SqlResult { Query = query };
+            var ctx = new SqlResult(compiler) { Query = query };
 
             Assert.Equal("LIMIT ? OFFSET ?", compiler.CompileLimit(ctx));
             Assert.Equal(5, ctx.Bindings[0]);

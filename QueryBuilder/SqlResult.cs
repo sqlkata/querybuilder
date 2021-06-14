@@ -1,3 +1,4 @@
+using SqlKata.Compilers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,11 +9,17 @@ namespace SqlKata
 {
     public class SqlResult
     {
+        public Compiler Compiler { get; }
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
         public string Sql { get; set; } = "";
         public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
+
+        public SqlResult(Compiler compiler)
+        {
+            Compiler = compiler;
+        }
 
         private static readonly Type[] NumberTypes =
         {

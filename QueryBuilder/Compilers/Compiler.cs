@@ -96,7 +96,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileRaw(Query query)
         {
-            SqlResult ctx;
+            var ctx = new SqlResult(this);
 
             if (query.Method == "insert")
             {
@@ -173,7 +173,7 @@ namespace SqlKata.Compilers
                 combinedBindings.AddRange(cb);
             }
 
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings,
@@ -184,9 +184,9 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileSelectQuery(Query query)
+        public /* friend */ virtual SqlResult CompileSelectQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query.Clone(),
             };
@@ -215,7 +215,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -259,7 +259,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileUpdateQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -314,7 +314,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -423,55 +423,9 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        /// <summary>
-        /// Compile a single column clause
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="column"></param>
-        /// <returns></returns>
-        public virtual string CompileColumn(SqlResult ctx, AbstractColumn column)
-        {
-            if (column is RawColumn raw)
-            {
-                ctx.Bindings.AddRange(raw.Bindings);
-                return WrapIdentifiers(raw.Expression);
-            }
-
-            if (column is QueryColumn queryColumn)
-            {
-                var alias = "";
-
-                if (!string.IsNullOrWhiteSpace(queryColumn.Query.QueryAlias))
-                {
-                    alias = $" {ColumnAsKeyword}{WrapValue(queryColumn.Query.QueryAlias)}";
-                }
-
-                var subCtx = CompileSelectQuery(queryColumn.Query);
-
-                ctx.Bindings.AddRange(subCtx.Bindings);
-
-                return "(" + subCtx.RawSql + $"){alias}";
-            }
-
-            if (column is AggregateColumn aggregate)
-            {
-                return $"{aggregate.Type.ToUpperInvariant()}({(aggregate.IsDistinct ? DistinctKeyword : "")}{CompileColumn(ctx, new Column { Name = aggregate.Column })}) {ColumnAsKeyword}{WrapValue(aggregate.Alias ?? aggregate.Type)}";
-            }
-
-            if (!string.IsNullOrWhiteSpace(column.Alias))
-            {
-                return $"{Wrap((column as Column).Name)} {ColumnAsKeyword}{Wrap(column.Alias)}";
-
-            }
-
-            return Wrap((column as Column).Name);
-
-        }
-
-
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(this);
 
             if (null == cte)
             {
@@ -506,7 +460,7 @@ namespace SqlKata.Compilers
                 var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
 
                 var aggregateColumns = aggregate.Columns
-                    .Select(x => CompileColumn(ctx, new Column { Name = x }))
+                    .Select(x => new Column { Name = x }.Compile(ctx))
                     .ToList();
 
                 string sql = string.Empty;
@@ -531,7 +485,7 @@ namespace SqlKata.Compilers
 
             var columns = ctx.Query
                 .GetComponents<AbstractColumn>("select", EngineCode)
-                .Select(x => CompileColumn(ctx, x))
+                .Select(x => x.Compile(ctx))
                 .ToList();
 
             var distinct = ctx.Query.IsDistinct ? DistinctKeyword : "";
@@ -673,7 +627,7 @@ namespace SqlKata.Compilers
 
             var columns = ctx.Query
                 .GetComponents<AbstractColumn>("group", EngineCode)
-                .Select(x => CompileColumn(ctx, x));
+                .Select(x => x.Compile(ctx));
 
             return "GROUP BY " + string.Join(", ", columns);
         }

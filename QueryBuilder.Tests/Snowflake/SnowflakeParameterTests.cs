@@ -25,7 +25,7 @@ namespace SqlKata.Tests.Snowflake
                     .From("Table")
                     .Where("Column", "<", dt)
                 ;
-                var ctx = new SqlResult { Query = query };
+                var ctx = new SqlResult(compiler) { Query = query };
 
                 Assert.Equal("WHERE \"Column\" < ?", compiler.CompileWheres(ctx));
                 Assert.Equal(new List<object>() { "1997-04-13 07:30:00Z" }, ctx.Bindings);
@@ -40,7 +40,7 @@ namespace SqlKata.Tests.Snowflake
                         .From("Table")
                         .Where("Column", "<", dt)
                     ;
-                    var ctx = new SqlResult { Query = query };
+                    var ctx = new SqlResult(compiler) { Query = query };
                     compiler.CompileWheres(ctx);
                 })
                 .InnerException.InnerException
@@ -55,7 +55,7 @@ namespace SqlKata.Tests.Snowflake
                         .From("Table")
                         .Where("Column", "<", dt)
                     ;
-                    var ctx = new SqlResult { Query = query };
+                    var ctx = new SqlResult(compiler) { Query = query };
                     compiler.CompileWheres(ctx);
                 })
                 .InnerException.InnerException
@@ -72,7 +72,7 @@ namespace SqlKata.Tests.Snowflake
                     .From("Table")
                     .Where("Column", "<", dt)
                 ;
-                var ctx = new SqlResult { Query = query };
+                var ctx = new SqlResult(compiler) { Query = query };
 
                 Assert.Equal("WHERE \"Column\" < ?", compiler.CompileWheres(ctx));
                 Assert.Equal(new List<object>() { "1234-05-06 07:08:09Z" }, ctx.Bindings);
@@ -87,7 +87,7 @@ namespace SqlKata.Tests.Snowflake
                     .From("Table")
                     .Where("Column", "<", dt)
                 ;
-                var ctx = new SqlResult { Query = query };
+                var ctx = new SqlResult(compiler) { Query = query };
 
                 Assert.Equal("WHERE \"Column\" < ?", compiler.CompileWheres(ctx));
                 Assert.Equal(new List<object>() { "1234-05-06 07:08:09Z" }, ctx.Bindings);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -6,6 +7,12 @@ namespace SqlKata
     public abstract class AbstractColumn : AbstractClause
     {
         public string Alias { get; set; }
+
+        /// <summary>
+        /// This is the first introduced Compile() on columns, only
+        /// AggregateColumn implements this at this time.
+        /// </summary>
+        public abstract string Compile(SqlResult ctx);
     }
 
     /// <summary>
@@ -33,6 +40,17 @@ namespace SqlKata
                 Alias = Alias,
             };
         }
+
+        public override string Compile(SqlResult ctx)
+        {
+            if (!string.IsNullOrWhiteSpace(Alias))
+            {
+                return $"{ctx.Compiler.Wrap(Name)} {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.Wrap(Alias)}";
+
+            }
+
+            return ctx.Compiler.Wrap(Name);
+        }
     }
 
     /// <summary>
@@ -58,6 +76,22 @@ namespace SqlKata
                 Alias = Alias,
             };
         }
+
+        public override string Compile(SqlResult ctx)
+        {
+            var alias = "";
+
+            if (!string.IsNullOrWhiteSpace(Query.QueryAlias))
+            {
+                alias = $" {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Query.QueryAlias)}";
+            }
+
+            var subCtx = ctx.Compiler.CompileSelectQuery(Query);
+
+            ctx.Bindings.AddRange(subCtx.Bindings);
+
+            return "(" + subCtx.RawSql + $"){alias}";
+        }
     }
 
     public class AggregateColumn : AbstractColumn
@@ -82,6 +116,10 @@ namespace SqlKata
                 Column = Column,
                 Distinct = Distinct,
             };
+
+        public override string Compile(SqlResult ctx)
+        {
+            return $"{Type.ToUpperInvariant()}({(IsDistinct ? ctx.Compiler.DistinctKeyword : "")}{new Column { Name = Column }.Compile(ctx)}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
         }
     }
 
@@ -107,6 +145,12 @@ namespace SqlKata
                 Bindings = Bindings,
                 Component = Component,
             };
+        }
+
+        public override string Compile(SqlResult ctx)
+        {
+            ctx.Bindings.AddRange(Bindings);
+            return ctx.Compiler.WrapIdentifiers(Expression);
         }
     }
 }

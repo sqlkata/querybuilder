@@ -18,7 +18,7 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
 
-        protected override SqlResult CompileSelectQuery(Query query)
+        public /* friend */ override SqlResult CompileSelectQuery(Query query)
         {
             if (!UseLegacyPagination)
             {
