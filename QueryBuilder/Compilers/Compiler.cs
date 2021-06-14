@@ -9,15 +9,15 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
-        protected virtual string parameterPlaceholder { get; set; } = "?";
-        protected virtual string parameterPrefix { get; set; } = "@p";
-        protected virtual string OpeningIdentifier { get; set; } = "\"";
-        protected virtual string ClosingIdentifier { get; set; } = "\"";
-        protected virtual string ColumnAsKeyword { get; set; } = "AS ";
-        protected virtual string DistinctKeyword { get; set; } = "DISTINCT ";
-        protected virtual string TableAsKeyword { get; set; } = "AS ";
-        protected virtual string LastId { get; set; } = "";
-        protected virtual string EscapeCharacter { get; set; } = "\\";
+        public virtual string parameterPlaceholder { get; } = "?";
+        public virtual string parameterPrefix { get; } = "@p";
+        public virtual string OpeningIdentifier { get; } = "\"";
+        public virtual string ClosingIdentifier { get; } = "\"";
+        public virtual string ColumnAsKeyword { get; } = "AS ";
+        public virtual string DistinctKeyword { get; } = "DISTINCT ";
+        public virtual string TableAsKeyword { get; } = "AS ";
+        public virtual string LastId { get; } = "";
+        public virtual string EscapeCharacter { get; } = "\\";
 
         protected Compiler()
         {

@@ -2,11 +2,12 @@ namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
+        public override string OpeningIdentifier => "[";
+        public override string ClosingIdentifier => "]";
+        public override string LastId => "SELECT scope_identity() as Id";
+
         public SqlServerCompiler()
         {
-            OpeningIdentifier = "[";
-            ClosingIdentifier = "]";
-            LastId = "SELECT scope_identity() as Id";
         }
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;

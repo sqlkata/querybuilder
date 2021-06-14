@@ -7,11 +7,11 @@ namespace SqlKata.Compilers
     public class SqliteCompiler : Compiler
     {
         public override string EngineCode { get; } = EngineCodes.Sqlite;
-        protected override string parameterPlaceholder { get; set; } = "?";
-        protected override string parameterPrefix { get; set; } = "@p";
-        protected override string OpeningIdentifier { get; set; } = "\"";
-        protected override string ClosingIdentifier { get; set; } = "\"";
-        protected override string LastId { get; set; } = "select last_insert_rowid() as id";
+        public override string parameterPlaceholder { get; } = "?";
+        public override string parameterPrefix { get; } = "@p";
+        public override string OpeningIdentifier { get; } = "\"";
+        public override string ClosingIdentifier { get; } = "\"";
+        public override string LastId { get; } = "select last_insert_rowid() as id";
 
         public override string CompileTrue()
         {

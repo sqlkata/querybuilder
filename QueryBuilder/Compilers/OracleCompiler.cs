@@ -7,11 +7,12 @@ namespace SqlKata.Compilers
 {
     public class OracleCompiler : Compiler
     {
+        public override string ColumnAsKeyword => "";
+        public override string TableAsKeyword => "";
+        public override string parameterPrefix => ":p";
+
         public OracleCompiler()
         {
-            ColumnAsKeyword = "";
-            TableAsKeyword = "";
-            parameterPrefix = ":p";
         }
 
         public override string EngineCode { get; } = EngineCodes.Oracle;

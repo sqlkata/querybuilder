@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
     {
         public override string EngineCode { get; } = EngineCodes.Snowflake;
 
-        protected override string LastId =>
+        public override string LastId =>
             throw new NotSupportedException($"LastId not supported in {EngineCode} compiler");
 
         public override string Parameter(SqlResult ctx, object parameter)
