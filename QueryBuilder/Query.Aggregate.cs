@@ -59,6 +59,36 @@ namespace SqlKata
 
 
         /**********************************************************************
+         ** AnyValue                                                         **
+         **********************************************************************/
+        public Query SelectAnyValue(string column, string alias = null)
+        {
+            Method = "select";
+            this.AddComponent("select", new AggregateAnyValueColumn
+            {
+                Alias = alias,
+                Type = "any_value",
+                Column = column,
+                Distinct = AggregateColumn.AggregateDistinct.aggregateNonDistinct,
+            });
+            return this;
+        }
+
+        public Query SelectAnyValueDistinct(string column, string alias = null)
+        {
+            Method = "select";
+            this.AddComponent("select", new AggregateAnyValueColumn
+            {
+                Alias = alias,
+                Type = "any_value",
+                Column = column,
+                Distinct = AggregateColumn.AggregateDistinct.aggregateDistinct,
+            });
+            return this;
+        }
+
+
+        /**********************************************************************
          ** Average                                                          **
          **********************************************************************/
         public Query SelectAvg(string column, string alias = null)

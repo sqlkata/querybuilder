@@ -362,6 +362,93 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void AnyValue()
+        {
+            var query = new Query()
+                .SelectAnyValue("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([Column]) AS [any_value] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COALESCE(NULL, \"Column\") AS \"any_value\" FROM \"Table\" GROUP BY \"\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT ANY_VALUE(\"Column\") AS \"any_value\" FROM \"Table\"", c[EngineCodes.Snowflake]);
+        }
+
+        [Fact]
+        public void AnyValueWithAlias()
+        {
+            var query = new Query()
+                .SelectAnyValue("Column", "Alias")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([Column]) AS [Alias] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COALESCE(NULL, \"Column\") AS \"Alias\" FROM \"Table\" GROUP BY \"\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT ANY_VALUE(\"Column\") AS \"Alias\" FROM \"Table\"", c[EngineCodes.Snowflake]);
+        }
+
+        [Fact]
+        public void AnyValueDistinct()
+        {
+            var query = new Query()
+                .SelectAnyValueDistinct("Column")
+                .From("Table")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN(DISTINCT [Column]) AS [any_value] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COALESCE(NULL, \"Column\") AS \"any_value\" FROM \"Table\" GROUP BY \"\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT ANY_VALUE(DISTINCT \"Column\") AS \"any_value\" FROM \"Table\"", c[EngineCodes.Snowflake]);
+        }
+
+        [Fact]
+        public void AnyValueWithGroupBy()
+        {
+            var query = new Query()
+                .SelectAnyValue("Column")
+                .From("Table")
+                .GroupBy("ColumnB")
+                ;
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT MIN([Column]) AS [any_value] FROM [Table] GROUP BY [ColumnB]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COALESCE(NULL, \"Column\") AS \"any_value\" FROM \"Table\" GROUP BY \"ColumnB\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT ANY_VALUE(\"Column\") AS \"any_value\" FROM \"Table\" GROUP BY \"ColumnB\"", c[EngineCodes.Snowflake]);
+        }
+
+        [Fact]
+        public void AnyValueComplexExample()
+        {
+            var query = new Query()
+                .Select("customer.id")
+                .SelectAnyValue("customer.name")
+                .SelectSum("orders.value")
+                .From("customer")
+                .Join("orders", "customer.id", "orders.customer_id")
+                .GroupBy("customer.id")
+                ;
+
+            var c = Compile(query);
+
+            /**
+             * SELECT customer.id , ANY_VALUE(customer.name) , SUM(orders.value)
+             * FROM customer
+             * JOIN orders ON customer.id = orders.customer_id
+             * GROUP BY customer.id;
+             *
+             * From https://docs.snowflake.com/en/sql-reference/functions/any_value.html
+             */
+            Assert.Equal("SELECT \"customer\".\"id\", ANY_VALUE(\"customer\".\"name\") AS \"any_value\", SUM(\"orders\".\"value\") AS \"sum\" FROM \"customer\" \nINNER JOIN \"orders\" ON \"customer\".\"id\" = \"orders\".\"customer_id\" GROUP BY \"customer\".\"id\"", c[EngineCodes.Snowflake]);
+        }
+
+
+        [Fact]
         public void Average()
         {
             var query = new Query("A").SelectAverage("TTL");

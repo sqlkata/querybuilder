@@ -141,6 +141,26 @@ namespace SqlKata
         }
     }
 
+    public class AggregateAnyValueColumn : AggregateColumn
+    {
+        public AggregateAnyValueColumn() { }
+
+        public AggregateAnyValueColumn(AggregateAnyValueColumn other)
+            : base(other)
+        { }
+
+        public override AbstractClause Clone()
+        {
+            return new AggregateAnyValueColumn(this);
+        }
+
+        public override string Compile(SqlResult ctx)
+        {
+            // The minimum is a perfectly good "any" value
+            return $"{"min".ToUpperInvariant()}({(IsDistinct ? ctx.Compiler.DistinctKeyword : "")}{new Column { Name = Column }.Compile(ctx)}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
+        }
+    }
+
     public class RawColumn : AbstractColumn
     {
         /// <summary>

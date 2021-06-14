@@ -42,6 +42,31 @@ namespace SqlKata.Compilers
             }
         }
 
+        protected override string CompileColumns(SqlResult ctx)
+        {
+            /**
+             * Snowflake supports the ANY_VALUE function natively
+             */
+            ctx.Query.Clauses = ctx.Query.Clauses.Select(clause =>
+            {
+                if (clause is AggregateAnyValueColumn column)
+                {
+                    return new AggregateColumn
+                    {
+                        Engine = column.Engine,
+                        Component = column.Component,
+                        Type = column.Type,
+                        Column = column.Column,
+                        Alias = column.Alias,
+                        Distinct = column.Distinct,
+                    };
+                }
+                return clause;
+            }).ToList();
+
+            return base.CompileColumns(ctx);
+        }
+
         private static SqlResult PrepareResultForSnowflake(SqlResult ctx)
         {
             ctx.NamedBindings = ctx.Bindings

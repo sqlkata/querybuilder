@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using SqlKata;
 using SqlKata.Compilers;
 
@@ -65,6 +66,44 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        private class AggregateAnyValueColumn: SqlKata.AggregateAnyValueColumn
+        {
+            public override string Compile(SqlResult ctx)
+            {
+                return $"COALESCE(NULL, {new Column { Name = Column }.Compile(ctx)}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
+            }
+        }
+
+        protected override string CompileColumns(SqlResult ctx)
+        {
+            /**
+             * This replaces all "anyvalue" aggregates by the COALESCE function
+             * but this requires a group by clause (anything will do).
+             */
+            if (!ctx.Query.HasComponent("group") && ctx.Query.Clauses.Any(clause => clause is SqlKata.AggregateAnyValueColumn aggregate))
+            {
+                ctx.Query.GroupByRaw("\"\"");
+            }
+            ctx.Query.Clauses = ctx.Query.Clauses.Select(clause =>
+            {
+                if (clause is SqlKata.AggregateAnyValueColumn column)
+                {
+                    return new AggregateAnyValueColumn
+                    {
+                        Engine = column.Engine,
+                        Component = column.Component,
+                        Type = column.Type,
+                        Column = column.Column,
+                        Alias = column.Alias,
+                        Distinct = column.Distinct,
+                    };
+                }
+                return clause;
+            }).ToList();
+
+            return base.CompileColumns(ctx);
         }
     }
 }
