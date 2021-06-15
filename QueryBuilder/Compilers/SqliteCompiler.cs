@@ -68,8 +68,17 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        private class AggregateAnyValueColumn: SqlKata.AggregateAnyValueColumn
+        private class AggregateAnyValueColumn : SqlKata.AggregateAnyValueColumn
         {
+            public AggregateAnyValueColumn(SqlKata.AggregateAnyValueColumn other)
+            {
+                Engine = other.Engine;
+                Component = other.Component;
+                Column = other.Column;
+                Alias = other.Alias;
+                Distinct = other.Distinct;
+            }
+
             public override string Compile(SqlResult ctx)
             {
                 return $"COALESCE(NULL, {new Column { Name = Column }.Compile(ctx)}) {ctx.Compiler.ColumnAsKeyword}{ctx.Compiler.WrapValue(Alias ?? Type)}";
@@ -90,14 +99,7 @@ namespace SqlKata.Compilers
             {
                 if (clause is SqlKata.AggregateAnyValueColumn column)
                 {
-                    return new AggregateAnyValueColumn
-                    {
-                        Engine = column.Engine,
-                        Component = column.Component,
-                        Column = column.Column,
-                        Alias = column.Alias,
-                        Distinct = column.Distinct,
-                    };
+                    return new AggregateAnyValueColumn(column);
                 }
                 return clause;
             }).ToList();
