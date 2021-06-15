@@ -79,7 +79,7 @@ namespace SqlKata.Compilers
         protected override string CompileColumns(SqlResult ctx)
         {
             /**
-             * This replaces all "anyvalue" aggregates by the COALESCE function
+             * This replaces all "any_value" aggregates by the COALESCE function
              * but this requires a group by clause (anything will do).
              */
             if (!ctx.Query.HasComponent("group") && ctx.Query.Clauses.Any(clause => clause is SqlKata.AggregateAnyValueColumn aggregate))
@@ -94,7 +94,6 @@ namespace SqlKata.Compilers
                     {
                         Engine = column.Engine,
                         Component = column.Component,
-                        Type = column.Type,
                         Column = column.Column,
                         Alias = column.Alias,
                         Distinct = column.Distinct,

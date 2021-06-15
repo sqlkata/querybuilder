@@ -10,13 +10,13 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectAggregateEmpty()
         {
-            Assert.Throws<ArgumentException>(() => new Query("A").SelectAggregate("aggregate", new string[] { }, AggregateColumn.AggregateDistinct.aggregateNonDistinct));
+            Assert.Throws<ArgumentException>(() => new Query("A").SelectAggregate("aggregate", new string[] { }, AbstractAggregateColumn.AggregateDistinct.aggregateNonDistinct));
         }
 
         [Fact]
         public void SelectAggregate()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct);
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AbstractAggregateColumn.AggregateDistinct.aggregateNonDistinct);
 
             var c = Compile(query);
 
@@ -29,7 +29,7 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectAggregateAlias()
         {
-            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias");
+            var query = new Query("A").SelectAggregate("aggregate", new[] { "Column" }, AbstractAggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias");
 
             var c = Compile(query);
 
@@ -43,7 +43,7 @@ namespace SqlKata.Tests
         public void SelectAggregateMultipleColumns()
         {
             Assert.Throws<ArgumentException>(() =>
-                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct)
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AbstractAggregateColumn.AggregateDistinct.aggregateNonDistinct)
             );
         }
 
@@ -51,7 +51,7 @@ namespace SqlKata.Tests
         public void SelectAggregateMultipleColumnsAlias()
         {
             Assert.Throws<ArgumentException>(() =>
-                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias")
+                new Query("A").SelectAggregate("aggregate", new[] { "Column1", "Column2" }, AbstractAggregateColumn.AggregateDistinct.aggregateNonDistinct, "Alias")
             );
         }
 

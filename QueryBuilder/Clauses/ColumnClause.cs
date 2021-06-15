@@ -108,9 +108,8 @@ namespace SqlKata
         }
     }
 
-    public class AggregateColumn : AbstractColumn
+    public abstract class AbstractAggregateColumn : AbstractColumn
     {
-        public string Type { get; set; } // Min, Max, etc.
         public string Column { get; set; } // Aggregate functions accept only a single 'value expression' (for now we implement only column name)
         public enum AggregateDistinct
         {
@@ -120,19 +119,31 @@ namespace SqlKata
         public AggregateDistinct Distinct { get; set; }
         public bool IsDistinct { get { return this.Distinct == AggregateDistinct.aggregateDistinct; } }
 
-        public AggregateColumn() { }
+        public AbstractAggregateColumn() { }
 
-        public AggregateColumn(AggregateColumn other)
+        public AbstractAggregateColumn(AbstractAggregateColumn other)
+            : base(other)
+        {
+            Column = other.Column;
+            Distinct = other.Distinct;
+        }
+    }
+
+    public class AggregateGenericColumn : AbstractAggregateColumn
+    {
+        public string Type { get; set; } // Min, Max, etc.
+
+        public AggregateGenericColumn() { }
+
+        public AggregateGenericColumn(AggregateGenericColumn other)
             : base(other)
         {
             Type = other.Type;
-            Column = other.Column;
-            Distinct = other.Distinct;
         }
 
         public override AbstractClause Clone()
         {
-            return new AggregateColumn(this);
+            return new AggregateGenericColumn(this);
         }
 
         public override string Compile(SqlResult ctx)
@@ -141,8 +152,10 @@ namespace SqlKata
         }
     }
 
-    public class AggregateAnyValueColumn : AggregateColumn
+    public class AggregateAnyValueColumn : AbstractAggregateColumn
     {
+        public string Type { get { return "any_value"; } }
+
         public AggregateAnyValueColumn() { }
 
         public AggregateAnyValueColumn(AggregateAnyValueColumn other)

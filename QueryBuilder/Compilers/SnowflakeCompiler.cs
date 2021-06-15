@@ -51,7 +51,7 @@ namespace SqlKata.Compilers
             {
                 if (clause is AggregateAnyValueColumn column)
                 {
-                    return new AggregateColumn
+                    return new AggregateGenericColumn
                     {
                         Engine = column.Engine,
                         Component = column.Component,
