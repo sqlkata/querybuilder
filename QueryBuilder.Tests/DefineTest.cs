@@ -1,4 +1,4 @@
-﻿using static SqlKata.Expressions;
+using static SqlKata.Expressions;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
