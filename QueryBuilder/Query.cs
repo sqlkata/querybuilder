@@ -8,10 +8,11 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
+        private string comment;
+
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-        public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
@@ -24,6 +25,8 @@ namespace SqlKata
             From(table);
             Comment(comment);
         }
+
+        public string GetComment() => comment ?? "";
 
         public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
@@ -63,9 +66,14 @@ namespace SqlKata
             return this;
         }
 
+        /// <summary>
+        /// Sets a comment for the query.
+        /// </summary>
+        /// <param name="comment">The comment.</param>
+        /// <returns></returns>
         public Query Comment(string comment)
         {
-            QueryComment = comment;
+            this.comment = comment;
             return this;
         }
 

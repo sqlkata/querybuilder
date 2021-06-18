@@ -289,8 +289,31 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+            // check for increment statements
+            var clause = ctx.Query.GetOneComponent("update", EngineCode);
 
+            string wheres;
+
+            if (clause != null && clause is IncrementClause increment)
+            {
+                var column = Wrap(increment.Column);
+                var value = Parameter(ctx, Math.Abs(increment.Value));
+                var sign = increment.Value >= 0 ? "+" : "-";
+
+                wheres = CompileWheres(ctx);
+
+                if (!string.IsNullOrEmpty(wheres))
+                {
+                    wheres = " " + wheres;
+                }
+
+                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}";
+
+                return ctx;
+            }
+
+
+            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
@@ -298,16 +321,16 @@ namespace SqlKata.Compilers
                 parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
             }
 
-            var where = CompileWheres(ctx);
-
-            if (!string.IsNullOrEmpty(where))
-            {
-                where = " " + where;
-            }
-
             var sets = string.Join(", ", parts);
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
+            wheres = CompileWheres(ctx);
+
+            if (!string.IsNullOrEmpty(wheres))
+            {
+                wheres = " " + wheres;
+            }
+
+            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
 
             return ctx;
         }

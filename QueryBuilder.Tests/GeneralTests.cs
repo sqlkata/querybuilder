@@ -401,5 +401,39 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }
+
+        [Fact]
+        public void UnsafeLiteral_Insert()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Count = new UnsafeLiteral("Count + 1")
+            });
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("INSERT INTO [Table] ([Count]) VALUES (Count + 1)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void UnsafeLiteral_Update()
+        {
+            var query = new Query("Table").AsUpdate(new
+            {
+                Count = new UnsafeLiteral("Count + 1")
+            });
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("UPDATE [Table] SET [Count] = Count + 1", c[EngineCodes.SqlServer].ToString());
+        }
     }
 }

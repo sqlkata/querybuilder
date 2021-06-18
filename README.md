@@ -89,11 +89,11 @@ var books = db.Query("Books")
 ```
 
 This will include the property "Author" on each "Book"
-```json
+```jsonc
 [{
     "Id": 1,
     "PublishedAt": "2019-01-01",
-    "AuthorId": 2
+    "AuthorId": 2,
     "Author": { // <-- included property
         "Id": 2,
         "...": ""
