@@ -56,13 +56,19 @@ namespace Program
                 //    .Where("balance", ">", 0)
                 //    .GroupBy("balance")
                 //.Limit(10);
-                var companies = db.Query("Companies").Select("Id", "Name");
-                var facilities = db.Query("Facilities").Select("CompanyId", "Name");
+                var companies = db.Query("Companies");
+                var includeManyEntity = db.Query("DeviceModels");
                 var result = companies
-                                .IncludeMany("Facilities", facilities, "CompanyId", "Id");
+                                .IncludeMany("DeviceModels", includeManyEntity, "CompanyId", "Id");
+                var deviceModels = db.Query("DeviceModels");
+                var includeEntity = db.Query("Companies");
+                var result2 = deviceModels
+                                .Include("Company", includeEntity);
 
-                var accounts = result.Clone().Get();
-                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+                var run1 = result.Clone().Get();
+                var run2 = result2.Clone().Get();
+                Console.WriteLine(JsonConvert.SerializeObject(run1, Formatting.Indented));
+                Console.WriteLine(JsonConvert.SerializeObject(run2, Formatting.Indented));
 
               //  var exists = gtinItemsInReadZones.Clone().Exists();
                // Console.WriteLine(exists);

@@ -731,7 +731,8 @@ namespace SqlKata.Execution
 
                 var foreignIds = dynamicResult
                     .Where(x => x[include.ForeignKey] != null)
-                    .Select(x => x[include.ForeignKey].ToString())
+                   // .Select(x => x[include.ForeignKey].ToString())
+                    .Select(x => x[include.ForeignKey])
                     .ToList();
 
                 if (!foreignIds.Any())
@@ -828,7 +829,8 @@ namespace SqlKata.Execution
                 }
 
                 var foreignIds = dynamicResult.Where(x => x[include.ForeignKey] != null)
-                    .Select(x => x[include.ForeignKey].ToString())
+                   // .Select(x => x[include.ForeignKey].ToString())
+                    .Select(x => x[include.ForeignKey])
                     .ToList();
 
                 if (!foreignIds.Any())
