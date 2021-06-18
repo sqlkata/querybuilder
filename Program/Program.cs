@@ -123,7 +123,7 @@ namespace Program
         {
             var compiler = new PostgresCompiler();
             var connection = new NpgsqlConnection(
-               "Server=localhost;Port=5432;Database=ItemsScanLocalDb;User Id=chrisgate;Password=Dink01@secure!;"
+               "Server=localhost;Port=5432;Database=ItemsScanLocalDb;User Id=chrisgate;Password=Demo@secure!;"
            );
  
             var db = new QueryFactory(connection, compiler);
