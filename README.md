@@ -54,7 +54,7 @@ PM> Install-Package SqlKata
 
 ```cs
 var connection = new SqlConnection("...");
-var compiler = new SqlCompiler();
+var compiler = new SqlKata.Compilers.SqlServerCompiler();
 
 var db = new QueryFactory(connection, compiler)
 ```
