@@ -1,4 +1,4 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;

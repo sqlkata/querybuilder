@@ -1,4 +1,4 @@
-﻿namespace SqlKata.Compilers
+namespace SqlKata.Compilers
 {
     public static class EngineCodes
     {
