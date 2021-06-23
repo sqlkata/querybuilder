@@ -1,3 +1,5 @@
+using System;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -11,6 +13,7 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = true;
+        public bool UseNoLock { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
@@ -167,6 +170,12 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        public override string CompileTableExpression(SqlResult ctx, AbstractFrom from)
+        {
+            var suffix = UseNoLock ? " WITH (NOLOCK)" : String.Empty;
+            return base.CompileTableExpression(ctx, from) + suffix;
         }
     }
 }
