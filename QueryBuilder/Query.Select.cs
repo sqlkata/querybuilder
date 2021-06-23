@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SqlKata
@@ -7,6 +8,11 @@ namespace SqlKata
     {
 
         public Query Select(params string[] columns)
+        {
+            return Select(columns.AsEnumerable());
+        }
+
+        public Query Select(IEnumerable<string> columns)
         {
             Method = "select";
 
