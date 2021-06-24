@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SqlKata
@@ -88,8 +89,9 @@ namespace SqlKata
             );
 
             return splitted.Skip(1)
-                .Select((item, index) => callback(index) + item)
-                .Aggregate(splitted.First(), (left, right) => left + right);
+              .Select((item, index) => callback(index) + item)
+              .Aggregate(new StringBuilder(splitted.First()), (prev, right) => prev.Append(right))
+              .ToString();
         }
 
         public static string JoinArray(string glue, IEnumerable array)
