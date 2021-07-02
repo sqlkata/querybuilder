@@ -5,6 +5,9 @@ namespace SqlKata
 {
     public partial class Query
     {
+        /**********************************************************************
+         ** Generic aggregate                                                **
+         **********************************************************************/
         public Query AsAggregate(string type, IEnumerable<string> columns, string alias = null)
         {
             if (columns.Count() == 0)
@@ -25,6 +28,9 @@ namespace SqlKata
             return this;
         }
 
+        /**********************************************************************
+         ** Count                                                            **
+         **********************************************************************/
         public Query AsCount(params string[] columns)
         {
             var cols = columns.ToList();
@@ -43,28 +49,50 @@ namespace SqlKata
         public Query AsCountAs(IEnumerable<string> columns, string alias) =>
             AsAggregate("count", columns, alias);
 
-        public Query AsAvg(string column)
-        {
-            return AsAggregate("avg", new string[] { column });
-        }
-        public Query AsAverage(string column)
-        {
-            return AsAvg(column);
-        }
 
-        public Query AsSum(string column)
-        {
-            return AsAggregate("sum", new[] { column });
-        }
+        /**********************************************************************
+         ** Average                                                          **
+         **********************************************************************/
+        public Query AsAvg(string column) =>
+            AsAverage(column);
 
-        public Query AsMax(string column)
-        {
-            return AsAggregate("max", new[] { column });
-        }
+        public Query AsAverage(string column) =>
+            AsAggregate("avg", new[] { column }, null);
 
-        public Query AsMin(string column)
-        {
-            return AsAggregate("min", new[] { column });
-        }
+        public Query AsAvgAs(string column, string alias) =>
+            AsAverageAs(column, alias);
+
+        public Query AsAverageAs(string column, string alias) =>
+            AsAggregate("avg", new[] { column }, alias);
+
+
+        /**********************************************************************
+         ** Sum                                                              **
+         **********************************************************************/
+        public Query AsSum(string column) =>
+            AsAggregate("sum", new[] { column }, null);
+
+        public Query AsSumAs(string column, string alias = null) =>
+            AsAggregate("sum", new[] { column }, alias);
+
+
+        /**********************************************************************
+         ** Maximum                                                          **
+         **********************************************************************/
+        public Query AsMax(string column) =>
+            AsAggregate("max", new[] { column }, null);
+
+        public Query AsMaxAs(string column, string alias = null) =>
+            AsAggregate("max", new[] { column }, alias);
+
+
+        /**********************************************************************
+         ** Minimum                                                          **
+         **********************************************************************/
+        public Query AsMin(string column) =>
+            AsAggregate("min", new[] { column }, null);
+
+        public Query AsMinAs(string column, string alias = null) =>
+            AsAggregate("min", new[] { column }, alias);
     }
 }
