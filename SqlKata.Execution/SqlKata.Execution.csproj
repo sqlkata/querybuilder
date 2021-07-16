@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Title>SqlKata The C# Sql Query Builder</Title>
     <Description>Adds the execution capabilities for SqlKata</Description>

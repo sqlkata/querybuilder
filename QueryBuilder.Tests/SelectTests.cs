@@ -1,7 +1,8 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -12,6 +13,19 @@ namespace SqlKata.Tests
         public void BasicSelect()
         {
             var q = new Query().From("users").Select("id", "name");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
+        public void BasicSelectEnumerable()
+        {
+            var q = new Query().From("users").Select(new List<string>() { "id", "name" });
             var c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
