@@ -35,5 +35,10 @@ namespace SqlKata.Extensions
             return src.For(EngineCodes.SqlServer, fn);
         }
 
+        public static Query ForSnowflake(this Query src, Func<Query, Query> fn)
+        {
+            return src.For(EngineCodes.Snowflake, fn);
+        }
+
     }
 }

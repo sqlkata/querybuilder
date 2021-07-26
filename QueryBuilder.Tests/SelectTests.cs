@@ -364,6 +364,7 @@ namespace SqlKata.Tests
                 .ForPostgreSql(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
                 .ForMySql(scope => scope.IntersectAll(q => q.From("Watches").Where("Os", "Android")))
                 .ForFirebird(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
+                .ForSnowflake(scope => scope.Union(q => q.From("Speakers").Where("Woofer", "No")))
                 .UnionAll(q => q.From("Tablets").Where("Price", "<", 100));
 
             var c = Compile(mobiles);
@@ -383,6 +384,10 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 300 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" < 800 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" < 100",
                 c[EngineCodes.Firebird]);
+
+            Assert.Equal(
+                "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION SELECT * FROM \"Speakers\" WHERE \"Woofer\" = 'No' UNION ALL SELECT * FROM \"Tablets\" WHERE \"Price\" < 100",
+                c[EngineCodes.Snowflake]);
         }
 
         [Fact]
