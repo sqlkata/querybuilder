@@ -1,4 +1,4 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -56,7 +56,7 @@ namespace SqlKata.Tests.SqlServer
             // var q = new Query().From("Foo").Where("C", "c").WhereExists(n).Where("A", "a");
 
             var actual = compiler.Compile(q).ToString();
-            Assert.Contains("SELECT * FROM [Foo] WHERE [x] = true AND NOT EXISTS (SELECT 1 FROM [Bar])",
+            Assert.Contains("SELECT * FROM [Foo] WHERE [x] = cast(1 as bit) AND NOT EXISTS (SELECT 1 FROM [Bar])",
                 actual);
             // Assert.Contains("SELECT * FROM [Foo] WHERE [C] = 'c' AND EXISTS (SELECT TOP (1) 1 FROM [Bar]) AND [A] = 'a'", actual);
         }

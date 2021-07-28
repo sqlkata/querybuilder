@@ -435,5 +435,61 @@ namespace SqlKata.Tests
 
             Assert.Equal("UPDATE [Table] SET [Count] = Count + 1", c[EngineCodes.SqlServer].ToString());
         }
+
+        [Fact]
+        public void Passing_Boolean_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", true);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] = cast(1 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Boolean_False_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", false);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] = cast(0 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Negative_Boolean_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", "!=", true);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] != cast(1 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Negative_Boolean_False_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", "!=", false);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] != cast(0 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
     }
 }

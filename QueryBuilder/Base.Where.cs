@@ -18,6 +18,16 @@ namespace SqlKata
                 return Not(op != "=").WhereNull(column);
             }
 
+            if (value is bool boolValue)
+            {
+                if (op != "=")
+                {
+                    Not();
+                }
+
+                return boolValue ? WhereTrue(column) : WhereFalse(column);
+            }
+
             return AddComponent("where", new BasicCondition
             {
                 Column = column,

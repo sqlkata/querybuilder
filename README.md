@@ -12,7 +12,7 @@
 
 
 
-> **WE ARE NOT ACCEPTING NEW COMPILERS, if you want to add your own compiler, we recommend to create a separate repo like SqlKata-Oracle** 
+> **WE ARE NOT ACCEPTING NEW COMPILERS, if you want to add your own compiler, we recommend to create a separate repo like SqlKata-Oracle**
 
 Follow <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=%40ahmadmuzavi&style=social&url=https%3A%2F%2Ftwitter.com%2Fahmadmuzavi"></a> for the latest updates about SqlKata.
 
