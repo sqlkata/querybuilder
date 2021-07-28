@@ -515,6 +515,55 @@ namespace SqlKata.Tests
                 c[EngineCodes.Firebird]);
         }
 
+        [Fact]
+        public void NestedCtes()
+        {
+            var query = new Query()
+                .With("SubQuery1", q => q
+                    .SelectAs(("Column", "Alias"))
+                    .From("Table")
+                )
+                .With("SubQuery2", q => q
+                    .With("SubQuery3", q => q
+                        .Select("Alias")
+                        .From("SubQuery1")
+                    )
+                    .Select("Alias")
+                    .From("SubQuery3")
+                )
+                .Select("Alias")
+                .From("SubQuery2")
+            ;
+
+            var c = Compile(query);
+
+            CheckCompileResult(query, EngineCodes.SqlServer, @"
+                WITH
+                      [SubQuery1] AS (
+                        SELECT
+                            [Column] AS [Alias]
+                        FROM
+                            [Table]
+                    )
+                    , [SubQuery3] AS (
+                        SELECT
+                            [Alias]
+                        FROM
+                            [SubQuery1]
+                    )
+                    , [SubQuery2] AS (
+                        SELECT
+                            [Alias]
+                        FROM
+                            [SubQuery3]
+                    )
+                SELECT
+                    [Alias]
+                FROM
+                    [SubQuery2]
+            ");
+        }
+
         // test for issue #50
         [Fact]
         public void CascadedCteAndBindings()

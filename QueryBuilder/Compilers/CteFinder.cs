@@ -42,12 +42,11 @@ namespace SqlKata.Compilers
                     continue;
 
                 namesOfPreviousCtes.Add(cte.Alias);
-                resultList.Add(cte);
-
                 if (cte is QueryFromClause queryFromClause)
                 {
-                    resultList.InsertRange(0, findInternal(queryFromClause.Query));
+                    resultList.InsertRange(resultList.Count, findInternal(queryFromClause.Query));
                 }
+                resultList.Add(cte);
             }
 
             return resultList;
