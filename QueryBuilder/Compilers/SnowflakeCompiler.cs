@@ -14,34 +14,6 @@ namespace SqlKata.Compilers
         public override string LastId =>
             throw new NotSupportedException($"LastId not supported in {EngineCode} compiler");
 
-        public override string Parameter(SqlResult ctx, object parameter)
-        {
-            switch (parameter)
-            {
-                case DateTimeOffset dto:
-                    {
-                        // DateTimeOffset is always w.r.t. UTC
-                        ctx.Bindings.Add(dto.ToUniversalTime().ToString("u", CultureInfo.InvariantCulture));
-                        return "?";
-                    }
-
-                case DateTime dt:
-                    {
-                        if (dt.Kind != DateTimeKind.Utc)
-                        {
-                            throw new ArgumentException("Unsupported DateTime kind for Snowflake compiler (must be UTC)");
-                        }
-                        ctx.Bindings.Add(dt.ToUniversalTime().ToString("u", CultureInfo.InvariantCulture));
-                        return "?";
-                    }
-
-                default:
-                    {
-                        return base.Parameter(ctx, parameter);
-                    }
-            }
-        }
-
         private class SnowflakeAggregatePercentileApproxColumn : SqlKata.AggregatePercentileApproxColumn
         {
             public SnowflakeAggregatePercentileApproxColumn() : base() { }
