@@ -16,6 +16,7 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
+        protected override string SingleRowDummyTableName => "DUAL";
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
