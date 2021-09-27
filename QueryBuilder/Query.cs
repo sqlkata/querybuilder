@@ -126,6 +126,40 @@ namespace SqlKata
             return With(alias, fn.Invoke(new Query()));
         }
 
+        /// <summary>
+        /// Constructs an ad-hoc table of the given data as a CTE.
+        /// </summary>
+        public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        {
+            var columnsList = columns?.ToList();
+            var valuesCollectionList = valuesCollection?.ToList();
+
+            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
+            {
+                throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
+            }
+
+            var clause = new AdHocTableFromClause()
+            {
+                Alias = alias,
+                Columns = columnsList,
+                Values = new List<object>(),
+            };
+
+            foreach (var values in valuesCollectionList)
+            {
+                var valuesList = values.ToList();
+                if (columnsList.Count != valuesList.Count)
+                {
+                    throw new InvalidOperationException("Columns count should be equal to each Values count");
+                }
+
+                clause.Values.AddRange(valuesList);
+            }
+
+            return AddComponent("cte", clause);
+        }
+
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
             return AddComponent("cte", new RawFromClause
