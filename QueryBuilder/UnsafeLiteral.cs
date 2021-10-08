@@ -2,21 +2,20 @@ namespace SqlKata
 {
     public class UnsafeLiteral
     {
-        private string _value;
-        public string Value
-        {
-            get
-            {
-                return _value;
-            }
-            set
-            {
-                _value = value.Replace("'", "''");
-            }
-        }
+        public string Value { get; set; }
 
-        public UnsafeLiteral(string value)
+        public UnsafeLiteral(string value, bool replaceQuotes = true)
         {
+            if (value == null)
+            {
+                value = "";
+            }
+
+            if (replaceQuotes)
+            {
+                value = value.Replace("'", "''");
+            }
+
             this.Value = value;
         }
 

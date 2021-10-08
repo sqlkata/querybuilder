@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
-using SqlKata;
 
 namespace SqlKata.Execution
 {
@@ -66,14 +67,14 @@ namespace SqlKata.Execution
             return this.Query.ForPage(Page + 1, PerPage);
         }
 
-        public PaginationResult<T> Next()
+        public PaginationResult<T> Next(IDbTransaction transaction = null, int? timeout = null)
         {
-            return this.Query.Paginate<T>(Page + 1, PerPage);
+            return this.Query.Paginate<T>(Page + 1, PerPage, transaction, timeout);
         }
 
-        public async Task<PaginationResult<T>> NextAsync()
+        public async Task<PaginationResult<T>> NextAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page + 1, PerPage);
+            return await this.Query.PaginateAsync<T>(Page + 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public Query PreviousQuery()
@@ -81,14 +82,14 @@ namespace SqlKata.Execution
             return this.Query.ForPage(Page - 1, PerPage);
         }
 
-        public PaginationResult<T> Previous()
+        public PaginationResult<T> Previous(IDbTransaction transaction = null, int? timeout = null)
         {
-            return this.Query.Paginate<T>(Page - 1, PerPage);
+            return this.Query.Paginate<T>(Page - 1, PerPage, transaction, timeout);
         }
 
-        public async Task<PaginationResult<T>> PreviousAsync()
+        public async Task<PaginationResult<T>> PreviousAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page - 1, PerPage);
+            return await this.Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public PaginationIterator<T> Each

@@ -1,22 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>SqlKata.Execution</PackageId>
-    <PackageTags>sql;query-builder;dynamic-query</PackageTags>
     <Title>SqlKata The C# Sql Query Builder</Title>
     <Description>Adds the execution capabilities for SqlKata</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>SqlKata</RootNamespace>
+
+    <!-- NuGet settings -->
+    <PackageId>SqlKata.Execution</PackageId>
+    <PackageTags>sql;query-builder;dynamic-query</PackageTags>
+    <PackageReleaseNotes>https://github.com/sqlkata/querybuilder</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/sqlkata/querybuilder</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/sqlkata/querybuilder/licence</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
+
+    <!-- SourceLink settings -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="dapper" Version="1.50.5" />
-    <PackageReference Include="Humanizer.Core" Version="2.6.2" />
+    <PackageReference Include="Humanizer.Core" Version="2.8.26" />
   </ItemGroup>
-  <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net451</TargetFrameworks>
-  </PropertyGroup>
 </Project>

@@ -48,7 +48,7 @@ namespace SqlKata
                 if (string.IsNullOrWhiteSpace(value))
                     value = null;
                 else if (value.Length > 1)
-                    throw new ArgumentOutOfRangeException("The EscapeCharacter can only contain a single character!");
+                    throw new ArgumentOutOfRangeException($"The {nameof(EscapeCharacter)} can only contain a single character!");
                 escapeCharacter = value;
             }
         }

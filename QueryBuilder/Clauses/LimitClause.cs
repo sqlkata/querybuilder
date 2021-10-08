@@ -3,7 +3,7 @@ namespace SqlKata
     public class LimitClause : AbstractClause
     {
         private int _limit;
-        
+
         public int Limit
         {
             get => _limit;

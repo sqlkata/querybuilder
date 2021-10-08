@@ -11,6 +11,7 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.Firebird;
+        protected override string SingleRowDummyTableName => "RDB$DATABASE";
 
         protected override SqlResult CompileInsertQuery(Query query)
         {

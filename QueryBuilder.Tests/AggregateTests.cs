@@ -1,4 +1,4 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -22,7 +22,7 @@ namespace SqlKata.Tests
         [Fact]
         public void CountMultipleColumns()
         {
-            var query = new Query("A").AsCount("ColumnA", "ColumnB");
+            var query = new Query("A").AsCount(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 
@@ -42,7 +42,7 @@ namespace SqlKata.Tests
         [Fact]
         public void DistinctCountMultipleColumns()
         {
-            var query = new Query("A").Distinct().AsCount("ColumnA", "ColumnB");
+            var query = new Query("A").Distinct().AsCount(new[] { "ColumnA", "ColumnB" });
 
             var c = Compile(query);
 

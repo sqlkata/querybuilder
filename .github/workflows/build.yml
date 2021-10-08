@@ -1,0 +1,115 @@
+name: .NET Core
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - published
+env:
+  # Stop wasting time caching packages
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Disable sending usage data to Microsoft
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Project name to pack and publish
+  PROJECT_NAME: SqlKata
+  DOTNET_VERSION: 5.0.201
+  # DOTNET_VERSION: 2.2.203
+  # GitHub Packages Feed settings
+  GITHUB_FEED: https://nuget.pkg.github.com/sqlkata/
+  GITHUB_USER: ahmad-moussawi
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Official NuGet Feed settings
+  NUGET_FEED: https://api.nuget.org/v3/index.json
+  NUGET_KEY: ${{ secrets.NUGET_KEY }}
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Checking release
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ env.RELEASE_VERSION }}
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build -c Release --no-restore
+      - name: Test
+        run: dotnet test -c Release
+      - name: Pack QueryBuilder
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID QueryBuilder/QueryBuilder.csproj
+      - name: Pack SqlKata.Execution
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID SqlKata.Execution/SqlKata.Execution.csproj
+      - name: Upload QueryBuilder Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: nupkg
+          path: ./QueryBuilder/bin/Release/*.nupkg
+      - name: Upload SqlKata.Execution Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: nupkg
+          path: ./SqlKata.Execution/bin/Release/*.nupkg
+  prerelease:
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: nupkg
+      - name: Push to GitHub Feed
+        run: |
+          for f in ./nupkg/*.nupkg
+          do
+            if [[ ${f} != *".symbols."* ]];then
+              echo "Uploading package $f" to $GITHUB_FEED
+              dotnet nuget push $f --api-key=$GITHUB_TOKEN --source=$GITHUB_FEED
+            fi
+            # curl -X PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
+          done
+  deploy:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Create Release NuGet package (QueryBuilder)
+        run: |
+          arrTag=(${GITHUB_REF//\// })
+          VERSION="${arrTag[2]}"
+          echo Version: $VERSION
+          VERSION="${VERSION//v}"
+          echo Clean Version: $VERSION
+          dotnet pack -v normal -c Release --include-symbols --include-source -p:Version=$VERSION -p:PackageVersion=$VERSION -o nupkg QueryBuilder/QueryBuilder.csproj
+      - name: Create Release NuGet package (SqlKata.Execution)
+        run: |
+          arrTag=(${GITHUB_REF//\// })
+          VERSION="${arrTag[2]}"
+          echo Version: $VERSION
+          VERSION="${VERSION//v}"
+          echo Clean Version: $VERSION
+          dotnet pack -v normal -c Release --include-symbols --include-source -p:Version=$VERSION -p:PackageVersion=$VERSION -o nupkg SqlKata.Execution/SqlKata.Execution.csproj
+      - name: Push to GitHub Feed
+        run: dotnet nuget push ./nupkg/*.nupkg --skip-duplicate --source $GITHUB_FEED --api-key $GITHUB_TOKEN
+      - name: Push to NuGet Feed
+        run: dotnet nuget push ./nupkg/*.nupkg --skip-duplicate --source $NUGET_FEED --api-key $NUGET_KEY

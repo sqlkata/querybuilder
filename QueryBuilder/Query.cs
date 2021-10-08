@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,10 +8,11 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
+        private string comment;
+
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-        public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
@@ -24,6 +26,7 @@ namespace SqlKata
             Comment(comment);
         }
 
+        public string GetComment() => comment ?? "";
 
         public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
@@ -63,9 +66,14 @@ namespace SqlKata
             return this;
         }
 
+        /// <summary>
+        /// Sets a comment for the query.
+        /// </summary>
+        /// <param name="comment">The comment.</param>
+        /// <returns></returns>
         public Query Comment(string comment)
         {
-            QueryComment = comment;
+            this.comment = comment;
             return this;
         }
 
@@ -116,6 +124,40 @@ namespace SqlKata
         public Query With(string alias, Func<Query, Query> fn)
         {
             return With(alias, fn.Invoke(new Query()));
+        }
+
+        /// <summary>
+        /// Constructs an ad-hoc table of the given data as a CTE.
+        /// </summary>
+        public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        {
+            var columnsList = columns?.ToList();
+            var valuesCollectionList = valuesCollection?.ToList();
+
+            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
+            {
+                throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
+            }
+
+            var clause = new AdHocTableFromClause()
+            {
+                Alias = alias,
+                Columns = columnsList,
+                Values = new List<object>(),
+            };
+
+            foreach (var values in valuesCollectionList)
+            {
+                var valuesList = values.ToList();
+                if (columnsList.Count != valuesList.Count)
+                {
+                    throw new InvalidOperationException("Columns count should be equal to each Values count");
+                }
+
+                clause.Values.AddRange(valuesList);
+            }
+
+            return AddComponent("cte", clause);
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
@@ -314,6 +356,8 @@ namespace SqlKata
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
 
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
+
         /// <summary>
         /// Define a variable to be used within the query
         /// </summary>
@@ -345,19 +389,18 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Build a dictionary from plain object, intended to be used with Insert and Update queries
+        /// Gather a list of key-values representing the properties of the object and their values.
         /// </summary>
-        /// <param name="data">the plain C# object</param>
+        /// <param name="data">The plain C# object</param>
         /// <param name="considerKeys">
         /// When true it will search for properties with the [Key] attribute
-        /// and add it automatically to the Where clause
+        /// and will add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private Dictionary<string, object> BuildDictionaryFromObject(object data, bool considerKeys = false)
+        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
         {
-
             var dictionary = new Dictionary<string, object>();
-            var props = data.GetType().GetRuntimeProperties();
+            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
 
             foreach (var property in props)
             {
@@ -381,11 +424,9 @@ namespace SqlKata
                         this.Where(name, value);
                     }
                 }
-
             }
 
             return dictionary;
         }
-
     }
 }

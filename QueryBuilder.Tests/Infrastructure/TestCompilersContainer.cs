@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlKata.Compilers;
@@ -52,7 +52,7 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public TCompiler Get<TCompiler>(string engineCode) where TCompiler : Compiler
         {
-            return (TCompiler) Get(engineCode);
+            return (TCompiler)Get(engineCode);
         }
 
         /// <summary>

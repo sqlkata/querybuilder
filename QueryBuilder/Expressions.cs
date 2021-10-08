@@ -18,10 +18,11 @@ namespace SqlKata
         /// WARNING: don't pass user data directly to this method.
         /// </summary>
         /// <param name="value"></param>
+        /// <param name="replaceQuotes">if true it will esacpe single quotes</param>
         /// <returns></returns>
-        public static UnsafeLiteral UnsafeLiteral(string value)
+        public static UnsafeLiteral UnsafeLiteral(string value, bool replaceQuotes = true)
         {
-            return new UnsafeLiteral(value);
+            return new UnsafeLiteral(value, replaceQuotes);
         }
     }
 }

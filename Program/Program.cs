@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using SqlKata;
 using SqlKata.Compilers;
@@ -34,21 +34,19 @@ namespace Program
 
         static void Main(string[] args)
         {
-
-            var db = SqlLiteQueryFactory();
-
-            var id = db.Query("accounts").InsertGetId<int>(new
+            using (var db = SqlLiteQueryFactory())
             {
-                name = "new Account",
-                currency_id = "USD",
-                created_at = DateTime.UtcNow
-            });
+                var query = db.Query("accounts")
+                    .Where("balance", ">", 0)
+                    .GroupBy("balance")
+                .Limit(10);
 
-            var id2 = db.Select<int>("insert into accounts(name, currency_id, created_at) values ('account 2','usd','2019-01-01 20:00:00');select last_insert_rowid();");
+                var accounts = query.Clone().Get();
+                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
-            Console.WriteLine($"last id is: {id}");
-            Console.WriteLine($"last id2 is: {id2.First()}");
-
+                var exists = query.Clone().Exists();
+                Console.WriteLine(exists);
+            }
         }
 
         private static void log(Compiler compiler, Query query)
@@ -77,11 +75,22 @@ namespace Program
 
                 SQLiteConnection.CreateFile("Demo.db");
 
-                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, created_at datetime);");
+                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
+                for (var i = 0; i < 10; i++)
+                {
+                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
+                    {
+                        name = $"Account {i}",
+                        currency = "USD",
+                        balance = 100 * i * 1.1,
+                        date = DateTime.UtcNow,
+                    });
+                }
 
             }
 
             return db;
+
         }
 
         private static QueryFactory SqlServerQueryFactory()

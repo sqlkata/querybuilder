@@ -1,14 +1,24 @@
-# SqlKata Query Builder
+<p align="center">
+    <strong>SqlKata Query Builder</strong>
+</p>
 
-[![Build status](https://ci.appveyor.com/api/projects/status/bh022c0ol5u6s41p?svg=true)](https://ci.appveyor.com/project/ahmad-moussawi/querybuilder)
+<p align="center">
+    <img src="https://github.com/sqlkata/querybuilder/actions/workflows/build.yml/badge.svg">
+    <a href="https://www.nuget.org/packages/SqlKata"><img src="https://img.shields.io/nuget/vpre/SqlKata.svg"></a>
+    <a href="https://github.com/sqlkata/querybuilder/network/members"><img src="https://img.shields.io/github/forks/sqlkata/querybuilder"></a>
+    <a href="https://github.com/sqlkata/querybuilder/stargazers"><img src="https://img.shields.io/github/stars/sqlkata/querybuilder"></a>
+    <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=Tweet%20about%20SqlKata&style=social&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"></a>
+</p>
 
-[![SqlKata on Nuget](https://img.shields.io/nuget/vpre/SqlKata.svg)](https://www.nuget.org/packages/SqlKata)
 
-[![SqlKata on MyGet](https://img.shields.io/myget/sqlkata/v/SqlKata.svg?label=myget)](https://www.myget.org/feed/sqlkata/package/nuget/SqlKata)
 
-<a href="https://twitter.com/ahmadmuzavi?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="false">Follow @ahmadmuzavi</a> for the latest updates about SqlKata.
+> **WE ARE NOT ACCEPTING NEW COMPILERS, if you want to add your own compiler, we recommend to create a separate repo like SqlKata-Oracle**
+
+Follow <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=%40ahmadmuzavi&style=social&url=https%3A%2F%2Ftwitter.com%2Fahmadmuzavi"></a> for the latest updates about SqlKata.
+
 
 ![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
+
 
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
@@ -20,6 +30,8 @@ SqlKata has an expressive API. it follows a clean naming convention, which is ve
 By providing a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
 SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql, PostgreSql and Firebird.
+
+The SqlKata.Execution package provides the ability to submit the queries to the database, using [Dapper](https://github.com/StackExchange/Dapper) under the covers.
 
 Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
@@ -46,6 +58,8 @@ var compiler = new SqlCompiler();
 
 var db = new QueryFactory(connection, compiler)
 ```
+
+> `QueryFactory` is provided by the SqlKata.Execution package.
 
 ### Retrieve all records
 ```cs
@@ -75,11 +89,11 @@ var books = db.Query("Books")
 ```
 
 This will include the property "Author" on each "Book"
-```json
+```jsonc
 [{
     "Id": 1,
     "PublishedAt": "2019-01-01",
-    "AuthorId": 2
+    "AuthorId": 2,
     "Author": { // <-- included property
         "Id": 2,
         "...": ""
