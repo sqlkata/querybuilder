@@ -54,5 +54,22 @@ namespace SqlKata
 
             return this;
         }
+
+        public Query AsIncrement(string column, int value = 1)
+        {
+            Method = "update";
+            AddOrReplaceComponent("update", new IncrementClause
+            {
+                Column = column,
+                Value = value
+            });
+
+            return this;
+        }
+
+        public Query AsDecrement(string column, int value = 1)
+        {
+            return AsIncrement(column, -value);
+        }
     }
 }

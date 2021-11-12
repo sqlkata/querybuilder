@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SqlKata
 {
@@ -90,6 +91,27 @@ namespace SqlKata
                 Alias = Alias,
                 Expression = Expression,
                 Bindings = Bindings,
+                Component = Component,
+            };
+        }
+    }
+
+    /// <summary>
+    /// Represents a FROM clause that is an ad-hoc table built with predefined values.
+    /// </summary>
+    public class AdHocTableFromClause : AbstractFrom
+    {
+        public List<string> Columns { get; set; }
+        public List<object> Values { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new AdHocTableFromClause
+            {
+                Engine = Engine,
+                Alias = Alias,
+                Columns = Columns,
+                Values = Values,
                 Component = Component,
             };
         }

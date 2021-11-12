@@ -8,11 +8,12 @@ namespace SqlKata
     {
         public Query Select(params string[] columns)
         {
-            return SelectAs(
-                columns
-                .Select(x => (x, null as string))
-                .ToArray()
-            );
+            return Select(columns.AsEnumerable());
+        }
+
+        public Query Select(IEnumerable<string> columns)
+        {
+            return SelectAs(columns.Select(x => (x, null as string)));
         }
 
         /// <summary>
@@ -20,6 +21,11 @@ namespace SqlKata
         /// </summary>
         /// <returns></returns>
         public Query SelectAs(params (string, string)[] columns)
+        {
+            return SelectAs(columns.AsEnumerable());
+        }
+
+        public Query SelectAs(IEnumerable<(string, string)> columns)
         {
             Method = "select";
 
