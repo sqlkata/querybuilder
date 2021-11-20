@@ -803,5 +803,40 @@ namespace SqlKata.Tests
                     .HavingContains("Column1", @"TestString\%", false, @"\aa");
             });
         }
+
+
+        [Fact]
+        public void BasicSelectRaw_WithNoTable()
+        {
+            var q = new Query().SelectRaw("somefunction() as c1");                
+
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT somefunction() as c1", c.ToString());
+        }
+
+        [Fact]
+        public void BasicSelect_WithNoTable()
+        {
+            var q = new Query().Select("c1");
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1]", c.ToString());
+        }
+
+        [Fact]
+        public void CrossApply_Column_Reusability()
+        {
+            var q = new Query("users").Select("name", "salary", "taxbracket", "taxamount", "grosspay")
+                .CrossApply(new Query().SelectRaw("case when salary < 5000 then 10 when salary < 10000 then 20 else 30 end as taxbracket").As("t1"), j => j)
+                .CrossApply(new Query().SelectRaw("salary * taxbracket as taxamount").As("t2"), j => j)
+                .CrossApply(new Query().SelectRaw("salary - taxamount as grosspay").As("t3"), j => j);
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+
+            Assert.Equal(string.Join("\n", new[] {
+                "SELECT [name], [salary], [taxbracket], [taxamount], [grosspay] FROM [users] ",
+                "CROSS APPLY (SELECT case when salary < 5000 then 10 when salary < 10000 then 20 else 30 end as taxbracket) AS [t1]",
+                "CROSS APPLY (SELECT salary * taxbracket as taxamount) AS [t2]",
+                "CROSS APPLY (SELECT salary - taxamount as grosspay) AS [t3]",
+            }), c.ToString());
+        }
     }
 }

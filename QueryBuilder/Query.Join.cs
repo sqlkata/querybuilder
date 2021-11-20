@@ -71,5 +71,45 @@ namespace SqlKata
             return Join(j => j.JoinWith(table).AsCross());
         }
 
+        public Query CrossApply(string table, string first, string second, string op = "=")
+        {
+            return Join(table, first, second, op, "cross apply");
+        }
+
+        public Query CrossApply(string table, Func<Join, Join> callback)
+        {
+            return Join(table, callback, "cross apply");
+        }
+
+        public Query CrossApply(Query query, Func<Join, Join> onCallback)
+        {
+            return Join(query, onCallback, "cross apply");
+        }
+
+        public Query CrossApply(Query query)
+        {
+            return Join(query, j => j, "cross apply");
+        }
+
+        public Query OuterApply(string table, string first, string second, string op = "=")
+        {
+            return Join(table, first, second, op, "outer apply");
+        }
+
+        public Query OuterApply(string table, Func<Join, Join> callback)
+        {
+            return Join(table, callback, "outer apply");
+        }
+
+        public Query OuterApply(Query query, Func<Join, Join> onCallback)
+        {
+            return Join(query, onCallback, "outer apply");
+        }
+
+        public Query OuterApply(Query query)
+        {
+            return Join(query, j => j, "outer apply");
+        }
+
     }
 }
