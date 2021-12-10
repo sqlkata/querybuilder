@@ -701,6 +701,17 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void ShouldUseILikeOnPostgresWhenNonCaseSensitive()
+        {
+            var q = new Query("Table1")
+                .WhereLike("Column1", "%Upper Word%", false);
+            var c = Compile(q);
+
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%upper word%'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Table1\" WHERE \"Column1\" ilike '%Upper Word%'", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void EscapedWhereLike()
         {
             var q = new Query("Table1")
