@@ -13,14 +13,14 @@ namespace SqlKata.Tests.Infrastructure
             public const string ERR_INVALID_ENGINECODES = "Invalid engine codes supplied '{0}'";
         }
 
-        protected readonly IDictionary<string, Compiler> Compilers = new Dictionary<string, Compiler>
+        protected readonly IDictionary<string, Func<Compiler>> Compilers = new Dictionary<string, Func<Compiler>>
         {
-            [EngineCodes.Firebird] = new FirebirdCompiler(),
-            [EngineCodes.MySql] = new MySqlCompiler(),
-            [EngineCodes.Oracle] = new OracleCompiler(),
-            [EngineCodes.PostgreSql] = new PostgresCompiler(),
-            [EngineCodes.Sqlite] = new SqliteCompiler(),
-            [EngineCodes.SqlServer] = new SqlServerCompiler()
+            [EngineCodes.Firebird] = () => new FirebirdCompiler(),
+            [EngineCodes.MySql] = () => new MySqlCompiler(),
+            [EngineCodes.Oracle] = () => new OracleCompiler(),
+            [EngineCodes.PostgreSql] = () => new PostgresCompiler(),
+            [EngineCodes.Sqlite] = () => new SqliteCompiler(),
+            [EngineCodes.SqlServer] = () => new SqlServerCompiler { UseLegacyPagination = true }
         };
 
         public IEnumerable<string> KnownEngineCodes
@@ -40,7 +40,7 @@ namespace SqlKata.Tests.Infrastructure
                 throw new InvalidOperationException(string.Format(Messages.ERR_INVALID_ENGINECODE, engineCode));
             }
 
-            return Compilers[engineCode];
+            return Compilers[engineCode]();
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace SqlKata.Tests.Infrastructure
 
             var results = Compilers
                 .Where(w => codes.Contains(w.Key))
-                .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
+                .ToDictionary(k => k.Key, v => v.Value().Compile(query.Clone()));
 
             if (results.Count != codes.Count)
             {
@@ -99,7 +99,7 @@ namespace SqlKata.Tests.Infrastructure
         public TestSqlResultContainer Compile(Query query)
         {
             var resultKeyValues = Compilers
-                .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
+                .ToDictionary(k => k.Key, v => v.Value().Compile(query.Clone()));
             return new TestSqlResultContainer(resultKeyValues);
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Extensions;
 
 namespace SqlKata
 {
@@ -16,12 +17,15 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            if ((columns?.Any() ?? false) == false || (values?.Any() ?? false) == false)
+            var columnsList = columns?.ToList();
+            var valuesList = values?.ToList();
+
+            if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
             {
                 throw new InvalidOperationException($"{columns} and {values} cannot be null or empty");
             }
 
-            if (columns.Count() != values.Count())
+            if (columnsList.Count != valuesList.Count)
             {
                 throw new InvalidOperationException($"{columns} count should be equal to {values} count");
             }
@@ -30,8 +34,7 @@ namespace SqlKata
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = columns.ToList(),
-                Values = values.ToList()
+                Data = columnsList.MergeKeysAndValues(valuesList)
             });
 
             return this;
@@ -48,8 +51,7 @@ namespace SqlKata
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = values.Select(x => x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList(),
+                Data = values.CreateDictionary()
             });
 
             return this;

@@ -100,6 +100,30 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertMultiRecordsByDictionary()
+        {
+            var data = new List<Dictionary<string, object>>
+            {
+                new() { { "name", "Chiron" }, { "brand", "Bugatti" }, { "year", null } },
+                new() { { "name", "Huayra" }, { "brand", "Pagani" }, { "year", 2012 } },
+                new() { { "name", "Reventon roadster" }, { "brand", "Lamborghini" }, { "year", 2009 } }
+            };
+
+            var query = new Query("expensive_cars")
+                .AsInsert(data);
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO [expensive_cars] ([name], [brand], [year]) VALUES ('Chiron', 'Bugatti', NULL), ('Huayra', 'Pagani', 2012), ('Reventon roadster', 'Lamborghini', 2009)",
+                c[EngineCodes.SqlServer]);
+
+            Assert.Equal(
+                "INSERT INTO \"EXPENSIVE_CARS\" (\"NAME\", \"BRAND\", \"YEAR\") SELECT 'Chiron', 'Bugatti', NULL FROM RDB$DATABASE UNION ALL SELECT 'Huayra', 'Pagani', 2012 FROM RDB$DATABASE UNION ALL SELECT 'Reventon roadster', 'Lamborghini', 2009 FROM RDB$DATABASE",
+                c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
         public void InsertWithNullValues()
         {
             var query = new Query("Books")

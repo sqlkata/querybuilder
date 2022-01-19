@@ -332,15 +332,17 @@ namespace SqlKata.Compilers
 
 
             var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
-            var parts = new List<string>();
+            var parts = new StringBuilder(toUpdate.Data.Count);
 
-            for (var i = 0; i < toUpdate.Columns.Count; i++)
+            var separator = ", ";
+
+            foreach (var item in toUpdate.Data)
             {
-                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                parts.Append(Wrap(item.Key) + " = " + Parameter(ctx, item.Value) + separator);
             }
 
-            var sets = string.Join(", ", parts);
-
+            parts.Length -= separator.Length;
+            
             wheres = CompileWheres(ctx);
 
             if (!string.IsNullOrEmpty(wheres))
@@ -348,7 +350,7 @@ namespace SqlKata.Compilers
                 wheres = " " + wheres;
             }
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
+            ctx.RawSql = $"UPDATE {table} SET {parts}{wheres}".Trim();
 
             return ctx;
         }
@@ -392,16 +394,18 @@ namespace SqlKata.Compilers
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
+            var sql = new StringBuilder(inserts.Count + 1);
+
             if (inserts[0] is InsertClause insertClause)
             {
-                var columns = string.Join(", ", WrapArray(insertClause.Columns));
-                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
+                var columns = string.Join(", ", WrapArray(insertClause.Data.Keys));
+                var values = string.Join(", ", Parameterize(ctx, insertClause.Data.Values));
 
-                ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
+                sql.Append($"INSERT INTO {table} ({columns}) VALUES ({values})");
 
                 if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
                 {
-                    ctx.RawSql += ";" + LastId;
+                    sql.Append(";" + LastId);
                 }
             }
             else
@@ -418,7 +422,7 @@ namespace SqlKata.Compilers
                 var subCtx = CompileSelectQuery(clause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
-                ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
+                sql.Append($"INSERT INTO {table}{columns}{subCtx.RawSql}");
             }
 
             if (inserts.Count > 1)
@@ -427,11 +431,11 @@ namespace SqlKata.Compilers
                 {
                     var clause = insert as InsertClause;
 
-                    ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
-
+                    sql.Append(", (" + string.Join(", ", Parameterize(ctx, clause.Data.Values)) + ")");
                 }
             }
 
+            ctx.RawSql = sql.ToString().Trim();
 
             return ctx;
         }
@@ -442,7 +446,7 @@ namespace SqlKata.Compilers
             var cteFinder = new CteFinder(query, EngineCode);
             var cteSearchResult = cteFinder.Find();
 
-            var rawSql = new StringBuilder("WITH ");
+            var rawSql = new StringBuilder("WITH ", cteSearchResult.Count * 2 + 3);
             var cteBindings = new List<object>();
 
             foreach (var cte in cteSearchResult)
@@ -459,7 +463,7 @@ namespace SqlKata.Compilers
             rawSql.Append(ctx.RawSql);
 
             ctx.Bindings.InsertRange(0, cteBindings);
-            ctx.RawSql = rawSql.ToString();
+            ctx.RawSql = rawSql.ToString().Trim();
 
             return ctx;
         }
@@ -585,7 +589,7 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var combinedQueries = new List<string>();
+            var combinedQueries = new StringBuilder();
 
             var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
 
@@ -599,7 +603,7 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
-                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
+                    combinedQueries.Append($"{combineOperator}{subCtx.RawSql} ");
                 }
                 else
                 {
@@ -607,13 +611,11 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
 
-                    combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
-
+                    combinedQueries.Append(WrapIdentifiers(combineRawClause.Expression) + " ");
                 }
             }
 
-            return string.Join(" ", combinedQueries);
-
+            return combinedQueries.ToString().Trim();
         }
 
         public virtual string CompileTableExpression(SqlResult ctx, AbstractFrom from)
@@ -745,7 +747,7 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var sql = new List<string>();
+            var sql = new StringBuilder();
             string boolOperator;
 
             var having = ctx.Query.GetComponents("having", EngineCode)
@@ -760,11 +762,11 @@ namespace SqlKata.Compilers
                 {
                     boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
-                    sql.Add(boolOperator + compiled);
+                    sql.Append(boolOperator + compiled + " ");
                 }
             }
 
-            return $"HAVING {string.Join(" ", sql)}";
+            return $"HAVING {sql}".Trim();
         }
 
         public virtual string CompileLimit(SqlResult ctx)
@@ -958,9 +960,9 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public virtual List<string> WrapArray(List<string> values)
+        public virtual IEnumerable<string> WrapArray(IEnumerable<string> values)
         {
-            return values.Select(x => Wrap(x)).ToList();
+            return values.Select(Wrap);
         }
 
         public virtual string WrapIdentifiers(string input)
