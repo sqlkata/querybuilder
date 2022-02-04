@@ -21,6 +21,9 @@ namespace SqlKata.Tests.Infrastructure
             [EngineCodes.PostgreSql] = new PostgresCompiler(),
             [EngineCodes.Sqlite] = new SqliteCompiler(),
             [EngineCodes.SqlServer] = new SqlServerCompiler()
+            {
+                UseLegacyPagination = true
+            }
         };
 
         public IEnumerable<string> KnownEngineCodes
