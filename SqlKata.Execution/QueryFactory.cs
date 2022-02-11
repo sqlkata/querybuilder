@@ -98,9 +98,9 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            var result = (await this.Connection.QueryAsync<T>(commandDefinition)).ToList();
+            var result = (await this.Connection.QueryAsync<T>(commandDefinition).ConfigureAwait(false)).ToList();
 
-            result = (await handleIncludesAsync(query, result, cancellationToken)).ToList();
+            result = (await handleIncludesAsync(query, result, cancellationToken).ConfigureAwait(false)).ToList();
 
             return result;
         }
@@ -129,7 +129,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            var result = await this.Connection.QueryAsync(commandDefinition);
+            var result = await this.Connection.QueryAsync(commandDefinition).ConfigureAwait(false);
 
             return result.Cast<IDictionary<string, object>>();
         }
@@ -141,7 +141,7 @@ namespace SqlKata.Execution
 
         public async Task<IEnumerable<dynamic>> GetAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await GetAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await GetAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public T FirstOrDefault<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -153,7 +153,7 @@ namespace SqlKata.Execution
 
         public async Task<T> FirstOrDefaultAsync<T>(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            var list = await GetAsync<T>(query.Limit(1), transaction, timeout, cancellationToken);
+            var list = await GetAsync<T>(query.Limit(1), transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             return list.ElementAtOrDefault(0);
         }
@@ -165,7 +165,7 @@ namespace SqlKata.Execution
 
         public async Task<dynamic> FirstOrDefaultAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await FirstOrDefaultAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await FirstOrDefaultAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public T First<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -182,7 +182,7 @@ namespace SqlKata.Execution
 
         public async Task<T> FirstAsync<T>(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            var item = await FirstOrDefaultAsync<T>(query, transaction, timeout, cancellationToken);
+            var item = await FirstOrDefaultAsync<T>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             if (item == null)
             {
@@ -199,7 +199,7 @@ namespace SqlKata.Execution
 
         public async Task<dynamic> FirstAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await FirstAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await FirstAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public int Execute(
@@ -233,7 +233,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            return await this.Connection.ExecuteAsync(commandDefinition);
+            return await this.Connection.ExecuteAsync(commandDefinition).ConfigureAwait(false);
         }
 
         public T ExecuteScalar<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -263,7 +263,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            return await this.Connection.ExecuteScalarAsync<T>(commandDefinition);
+            return await this.Connection.ExecuteScalarAsync<T>(commandDefinition).ConfigureAwait(false);
         }
 
         public SqlMapper.GridReader GetMultiple<T>(
@@ -296,7 +296,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            return await this.Connection.QueryMultipleAsync(commandDefinition);
+            return await this.Connection.QueryMultipleAsync(commandDefinition).ConfigureAwait(false);
         }
 
         public IEnumerable<IEnumerable<T>> Get<T>(
@@ -333,7 +333,7 @@ namespace SqlKata.Execution
                 transaction,
                 timeout,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
 
             var list = new List<IEnumerable<T>>();
 
@@ -367,7 +367,7 @@ namespace SqlKata.Execution
                 .SelectRaw("1 as [Exists]")
                 .Limit(1);
 
-            var rows = await GetAsync(clone, transaction, timeout, cancellationToken);
+            var rows = await GetAsync(clone, transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             return rows.Any();
         }
@@ -397,7 +397,7 @@ namespace SqlKata.Execution
                 transaction,
                 timeout,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
         }
 
         public T Count<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
@@ -411,7 +411,7 @@ namespace SqlKata.Execution
 
         public async Task<T> CountAsync<T>(Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout, cancellationToken);
+            return await this.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public T Average<T>(Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -421,7 +421,7 @@ namespace SqlKata.Execution
 
         public async Task<T> AverageAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "avg", new[] { column }, cancellationToken: cancellationToken);
+            return await this.AggregateAsync<T>(query, "avg", new[] { column }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         public T Sum<T>(Query query, string column)
@@ -431,7 +431,7 @@ namespace SqlKata.Execution
 
         public async Task<T> SumAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "sum", new[] { column }, cancellationToken: cancellationToken);
+            return await this.AggregateAsync<T>(query, "sum", new[] { column }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         public T Min<T>(Query query, string column)
@@ -441,7 +441,7 @@ namespace SqlKata.Execution
 
         public async Task<T> MinAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "min", new[] { column }, cancellationToken: cancellationToken);
+            return await this.AggregateAsync<T>(query, "min", new[] { column }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         public T Max<T>(Query query, string column)
@@ -451,7 +451,7 @@ namespace SqlKata.Execution
 
         public async Task<T> MaxAsync<T>(Query query, string column, CancellationToken cancellationToken = default)
         {
-            return await this.AggregateAsync<T>(query, "max", new[] { column }, cancellationToken: cancellationToken);
+            return await this.AggregateAsync<T>(query, "max", new[] { column }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         public PaginationResult<T> Paginate<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
@@ -501,13 +501,13 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var count = await CountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken);
+            var count = await CountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             IEnumerable<T> list;
 
             if (count > 0)
             {
-                list = await GetAsync<T>(query.Clone().ForPage(page, perPage), transaction, timeout, cancellationToken);
+                list = await GetAsync<T>(query.Clone().ForPage(page, perPage), transaction, timeout, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -557,7 +557,7 @@ namespace SqlKata.Execution
             CancellationToken cancellationToken = default
         )
         {
-            var result = await this.PaginateAsync<T>(query, 1, chunkSize, transaction, cancellationToken: cancellationToken);
+            var result = await this.PaginateAsync<T>(query, 1, chunkSize, transaction, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (!func(result.List, 1))
             {
@@ -596,7 +596,7 @@ namespace SqlKata.Execution
             CancellationToken cancellationToken = default
         )
         {
-            var result = await this.PaginateAsync<T>(query, 1, chunkSize, transaction, timeout, cancellationToken);
+            var result = await this.PaginateAsync<T>(query, 1, chunkSize, transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             action(result.List, 1);
 
@@ -626,7 +626,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
 
-            return await this.Connection.QueryAsync<T>(commandDefinition);
+            return await this.Connection.QueryAsync<T>(commandDefinition).ConfigureAwait(false);
         }
 
         public IEnumerable<dynamic> Select(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
@@ -636,7 +636,7 @@ namespace SqlKata.Execution
 
         public async Task<IEnumerable<dynamic>> SelectAsync(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.SelectAsync<dynamic>(sql, param, transaction, timeout, cancellationToken);
+            return await this.SelectAsync<dynamic>(sql, param, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public int Statement(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
@@ -652,7 +652,7 @@ namespace SqlKata.Execution
                 transaction: transaction,
                 commandTimeout: timeout ?? this.QueryTimeout,
                 cancellationToken: cancellationToken);
-            return await this.Connection.ExecuteAsync(commandDefinition);
+            return await this.Connection.ExecuteAsync(commandDefinition).ConfigureAwait(false);
         }
 
         private static IEnumerable<T> handleIncludes<T>(Query query, IEnumerable<T> result)
@@ -807,7 +807,7 @@ namespace SqlKata.Execution
                         continue;
                     }
 
-                    var children = (await include.Query.WhereIn(include.ForeignKey, localIds).GetAsync(cancellationToken: cancellationToken))
+                    var children = (await include.Query.WhereIn(include.ForeignKey, localIds).GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false))
                         .Cast<IDictionary<string, object>>()
                         .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
                         .GroupBy(x => x[include.ForeignKey].ToString())
@@ -836,7 +836,7 @@ namespace SqlKata.Execution
                     continue;
                 }
 
-                var related = (await include.Query.WhereIn(include.LocalKey, foreignIds).GetAsync(cancellationToken: cancellationToken))
+                var related = (await include.Query.WhereIn(include.LocalKey, foreignIds).GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false))
                     .Cast<IDictionary<string, object>>()
                     .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
                     .ToDictionary(x => x[include.LocalKey].ToString());
