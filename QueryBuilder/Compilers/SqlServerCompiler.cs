@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -229,7 +230,6 @@ namespace SqlKata.Compilers
             var alias = Wrap(fromClause.Alias);
             return $"DELETE {alias} FROM ";
         }
-    }
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
