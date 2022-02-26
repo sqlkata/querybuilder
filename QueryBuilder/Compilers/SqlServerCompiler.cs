@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
-        public bool UseLegacyPagination { get; set; } = true;
+        public bool UseLegacyPagination { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)
         {

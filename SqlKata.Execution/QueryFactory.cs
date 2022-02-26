@@ -749,8 +749,8 @@ namespace SqlKata.Execution
 
                 foreach (var item in dynamicResult)
                 {
-                    var foreignValue = item[include.ForeignKey].ToString();
-                    item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    var foreignValue = item[include.ForeignKey]?.ToString();
+                    item[include.Name] = foreignValue != null && related.ContainsKey(foreignValue) ? related[foreignValue] : null;
                 }
             }
 
@@ -843,8 +843,8 @@ namespace SqlKata.Execution
 
                 foreach (var item in dynamicResult)
                 {
-                    var foreignValue = item[include.ForeignKey].ToString();
-                    item[include.Name] = related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    var foreignValue = item[include.ForeignKey]?.ToString();
+                    item[include.Name] = foreignValue != null && related.ContainsKey(foreignValue) ? related[foreignValue] : null;
                 }
             }
 
