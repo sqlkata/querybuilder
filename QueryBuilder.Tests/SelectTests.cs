@@ -832,6 +832,22 @@ namespace SqlKata.Tests
             var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
             Assert.Equal("SELECT [c1]", c.ToString());
         }
+
+        [Fact]
+        public void BasicSelect_WithNoTableAndWhereClause()
+        {
+            var q = new Query().Select("c1").Where("p", 1);
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1] WHERE [p] = 1", c.ToString());
+        }
+
+        [Fact]
+        public void BasicSelect_WithNoTableWhereRawClause()
+        {
+            var q = new Query().Select("c1").WhereRaw("1 = 1");
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1] WHERE 1 = 1", c.ToString());
+        }
         
     }
 }

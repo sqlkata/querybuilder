@@ -687,7 +687,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode) || !ctx.Query.HasComponent("where", EngineCode))
+            if (!ctx.Query.HasComponent("where", EngineCode))
             {
                 return null;
             }
