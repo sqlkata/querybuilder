@@ -304,5 +304,140 @@ namespace SqlKata.Tests
                 "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
                 c[EngineCodes.Firebird]);
         }
+
+        [Fact]
+        public void InsertMixSingleQueryAndValues()
+        {
+            var columns = new[] {"Name", "Age"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1)
+            };
+
+            var query = new Query("Table")
+                .AsInsert(columns, data);
+
+            var c = Compile(query);
+            
+            Assert.Equal(
+                "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1))",
+                c[EngineCodes.SqlServer]);
+            
+            Assert.Equal(
+                "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', (SELECT \"AGE\" FROM \"SOMETABLE\" WHERE \"SPECIAL\" = 1))",
+                c[EngineCodes.Firebird]);
+        }
+        
+        [Fact]
+        public void InsertMixMultipleQueriesAndValues()
+        {
+            var columns = new[] {"Name", "Age", "Gender", "Email"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1),
+                "Male",
+                new Query("AnotherTable")
+                    .Select("Email")
+                    .Join("SomeTable", "SomeTable.Age", "AnotherTable.Age")
+                    .WhereLike("Name", "The User")
+            };
+
+            var query = new Query("Table")
+                .AsInsert(columns, data);
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO [Table] ([Name], [Age], [Gender], [Email]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user'))",
+                c[EngineCodes.SqlServer]);
+        }
+        
+        [Fact]
+        public void InsertAllowMultipleColumnsFromSubQuery()
+        {
+            var columns = new[] {"Name", "Age", "Gender", "Email", "CreatedAt"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1),
+                "Male",
+                new Query("AnotherTable")
+                    .Select("Email", "CreatedAt") // 2 columns
+                    .Join("SomeTable", "SomeTable.Age", "AnotherTable.Age")
+                    .WhereLike("Name", "The User")
+            };
+
+            var query = new Query("Table")
+                .AsInsert(columns, data);
+
+            var c = Compile(query);
+            
+            Assert.Equal(
+                "INSERT INTO [Table] ([Name], [Age], [Gender], [Email], [CreatedAt]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user'))",
+                c[EngineCodes.SqlServer]);
+        }
+        
+        [Fact]
+        public void InsertFailIfAmountOfValuesDoesntMatchColumnsWithSubQueries()
+        {
+            var columns = new[] {"Name", "Age", "Gender", "Email"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1),
+                "Male",
+                new Query("AnotherTable")
+                    .Select("Email", "CreatedAt") // 2 columns
+                    .Join("SomeTable", "SomeTable.Age", "AnotherTable.Age")
+                    .WhereLike("Name", "The User")
+            };
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                new Query("Table")
+                    .AsInsert(columns, data);
+            });
+        }
+        
+        [Fact]
+        public void InsertMultipleAtOnceMixingSubQueryAndValues()
+        {
+            var columns = new[] {"Name", "Age", "Gender", "Email", "CreatedAt"};
+            var data = new object[]
+            {
+                "The User",
+                new Query("SomeTable")
+                    .Select("Age")
+                    .Where("Special", 1),
+                "Male",
+                new Query("AnotherTable")
+                    .Select("Email", "CreatedAt") // 2 columns
+                    .Join("SomeTable", "SomeTable.Age", "AnotherTable.Age")
+                    .WhereLike("Name", "The User")
+            };
+
+            var query = new Query("Table")
+                .AsInsert(columns, new []
+                {
+                    data, 
+                    data
+                });
+
+            var c = Compile(query);
+            
+            Assert.Equal(
+                "INSERT INTO [Table] ([Name], [Age], [Gender], [Email], [CreatedAt]) VALUES ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user')), ('The User', (SELECT [Age] FROM [SomeTable] WHERE [Special] = 1), 'Male', (SELECT [Email], [CreatedAt] FROM [AnotherTable] \nINNER JOIN [SomeTable] ON [SomeTable].[Age] = [AnotherTable].[Age] WHERE LOWER([Name]) like 'the user'))",
+                c[EngineCodes.SqlServer]);
+        }
     }
 }

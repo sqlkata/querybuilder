@@ -353,6 +353,28 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        protected virtual string CompileInsertClause(SqlResult ctx, InsertClause insertClause)
+        {
+            var valueArray = new string[insertClause.Values.Count];
+            for (var i = 0; i < insertClause.Values.Count; i++)
+            {
+                var value = insertClause.Values[i];
+                if (value is Query valueQuery)
+                {
+                    var subCtx = CompileSelectQuery(valueQuery);
+
+                    valueArray[i] = $"({subCtx.RawSql})";
+                    ctx.Bindings.AddRange(subCtx.Bindings);
+                }
+                else
+                {
+                    valueArray[i] = Parameter(ctx, value);
+                }
+            }
+            
+            return string.Join(", ", valueArray);
+        }
+        
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
             var ctx = new SqlResult
@@ -391,12 +413,11 @@ namespace SqlKata.Compilers
             }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
-
             if (inserts[0] is InsertClause insertClause)
             {
                 var columns = string.Join(", ", WrapArray(insertClause.Columns));
-                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
-
+                var values = CompileInsertClause(ctx, insertClause);
+      
                 ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
 
                 if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
@@ -425,10 +446,9 @@ namespace SqlKata.Compilers
             {
                 foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
                 {
-                    var clause = insert as InsertClause;
+                    var values = CompileInsertClause(ctx, insert as InsertClause);
 
-                    ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
-
+                    ctx.RawSql += $", ({values})";
                 }
             }
 
