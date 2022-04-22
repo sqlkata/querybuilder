@@ -48,10 +48,10 @@ jobs:
         run: dotnet test -c Release
       - name: Pack QueryBuilder
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID QueryBuilder/QueryBuilder.csproj
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_NUMBER QueryBuilder/QueryBuilder.csproj
       - name: Pack SqlKata.Execution
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID SqlKata.Execution/SqlKata.Execution.csproj
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_NUMBER SqlKata.Execution/SqlKata.Execution.csproj
       - name: Upload QueryBuilder Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
