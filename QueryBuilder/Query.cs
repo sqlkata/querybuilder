@@ -411,19 +411,16 @@ namespace SqlKata
 
                 var value = property.GetValue(data);
 
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
+                var colAttrs = property.GetCustomAttributes<ColumnAttribute>().ToArray();
+                var isKey = colAttrs.Any(c => c is KeyAttribute);
+                var name = colAttrs.FirstOrDefault(c => !(c is KeyAttribute))?.Name ?? colAttrs.FirstOrDefault()?.Name ?? property.Name;
 
-                var name = colAttr?.Name ?? property.Name;
-
-                dictionary.Add(name, value);
-
-                if (considerKeys && colAttr != null)
+                if (isKey && considerKeys)
                 {
-                    if ((colAttr as KeyAttribute) != null)
-                    {
-                        this.Where(name, value);
-                    }
+                    this.Where(name, value);
+                    continue;
                 }
+                dictionary.Add(name, value);
             }
 
             return dictionary;

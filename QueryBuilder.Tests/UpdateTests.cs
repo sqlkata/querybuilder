@@ -243,7 +243,7 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
+                "UPDATE [OrderProductComposite] SET [Quantity] = 20, [Faa] = 'baz' WHERE [OrdId] = 'ORD01' AND [ProductId] = 'PROD02'",
                 c[EngineCodes.SqlServer]);
         }
 
@@ -263,8 +263,8 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
+              "UPDATE \"ORDERPRODUCTCOMPOSITE\" SET \"QUANTITY\" = 20, \"FAA\" = 'baz' WHERE \"ORDID\" = 'ORD01' AND \"PRODUCTID\" = 'PROD02'",
+              c[EngineCodes.Firebird]);
         }
 
         [Fact]
