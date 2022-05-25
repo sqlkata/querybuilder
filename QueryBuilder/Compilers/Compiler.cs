@@ -649,14 +649,14 @@ namespace SqlKata.Compilers
 
         public virtual string CompileFrom(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            if (ctx.Query.HasComponent("from", EngineCode))
             {
-                throw new InvalidOperationException("No table is set");
+                var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+
+                return "FROM " + CompileTableExpression(ctx, from);
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            return "FROM " + CompileTableExpression(ctx, from);
+            return string.Empty;
         }
 
         public virtual string CompileJoins(SqlResult ctx)
@@ -689,7 +689,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode) || !ctx.Query.HasComponent("where", EngineCode))
+            if (!ctx.Query.HasComponent("where", EngineCode))
             {
                 return null;
             }
