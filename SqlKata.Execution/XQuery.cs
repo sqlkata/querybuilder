@@ -31,6 +31,7 @@ namespace SqlKata.Execution
             query.Method = Method;
             query.Includes = Includes;
             query.Variables = Variables;
+            query.QueryFactory = QueryFactory;
 
             query.SetEngineScope(EngineScope);
 
