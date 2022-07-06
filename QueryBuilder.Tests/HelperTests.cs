@@ -1,3 +1,5 @@
+using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using System.Collections;
 using System.Linq;
 using Xunit;
@@ -226,11 +228,26 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(@"\{ text {", @"\", "{", "[", "{ text [")]
-        [InlineData(@"{ text {", @"\", "{", "[", "[ text [")]
-        public void WrapIdentifiers(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
+        [InlineData(@"\{ text {", @"\", "{", "[", "{ text [")]  // Escaped test
+        [InlineData(@"{ text {", @"\", "{", "[", "[ text [")]   // Not Escaped
+        public void ReplaceIdentifierUnlessEscaped(string input, string escapeCharacter, string identifier, string newIdentifier, string expected)
         {
             var result = input.ReplaceIdentifierUnlessEscaped(escapeCharacter, identifier, newIdentifier);
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(@"{ text }", EngineCodes.SqlServer, "[ text ]")] //Non-Escaped Tests
+        [InlineData(@"{ text }", EngineCodes.MySql, "` text `")]
+        [InlineData(@"{ text }", EngineCodes.Oracle, "\" text \"")]
+        [InlineData(@"\{ text \}", EngineCodes.SqlServer, @"{ text }")] //Escaped Tests (Drops the escape char, doesn't wrap)
+        [InlineData(@"\{ text \}", EngineCodes.MySql, @"{ text }")]
+        [InlineData(@"\{ text \}", EngineCodes.Oracle, @"{ text }")]
+        public void WrapIdentifiers(string input, string engineCode, string expected)
+        {
+            var compiler = new TestCompilersContainer().Get(engineCode);
+            
+            var result = compiler.WrapIdentifiers(input);
             Assert.Equal(expected, result);
         }
     }

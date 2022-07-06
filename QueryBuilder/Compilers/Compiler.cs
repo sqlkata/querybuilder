@@ -8,13 +8,21 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
+        /// <summary>  </summary>
         protected virtual string parameterPlaceholder { get; set; } = "?";
+        /// <summary>  </summary>
         protected virtual string parameterPrefix { get; set; } = "@p";
+        /// <summary> Character used to identify the start of a keyword ( such as a column or table name ) </summary>
         protected virtual string OpeningIdentifier { get; set; } = "\"";
+        /// <summary> Character used to identify the end of a keyword ( such as a column or table name ) </summary>
         protected virtual string ClosingIdentifier { get; set; } = "\"";
+        /// <summary> Keyword used to indicate a column alias </summary>
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
+        /// <summary> Keyword used to indicate a table alias </summary>
         protected virtual string TableAsKeyword { get; set; } = "AS ";
+        /// <summary>  </summary>
         protected virtual string LastId { get; set; } = "";
+        /// <summary> Character used to escape special characters to allow interpreting them as their literal value </summary>
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
         protected Compiler()
@@ -41,6 +49,10 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
+        /// <summary>
+        /// A list of white-listed operators specific to this compiler
+        /// </summary>
+        /// <value></value>
         protected HashSet<string> userOperators = new HashSet<string>
         {
 
@@ -963,6 +975,16 @@ namespace SqlKata.Compilers
             return values.Select(x => Wrap(x)).ToList();
         }
 
+        /// <summary>
+        /// Replaces opening/closing braces and brackets if the character is not preceeded by the <see cref="EscapeCharacter"/>
+        /// <br/> { [   --> Replaced by <see cref="OpeningIdentifier"/>
+        /// <br/> } ]   --> Replaced by <see cref="ClosingIdentifier"/>
+        /// </summary>
+        /// <param name="input">string to wrap with <see cref="OpeningIdentifier"/> and <see cref="ClosingIdentifier"/></param>
+        /// <returns>
+        /// {text}  --> <see cref="OpeningIdentifier"/> + "text" + <see cref="ClosingIdentifier"/>
+        /// <br/> [text]  --> <see cref="OpeningIdentifier"/> + "text" + <see cref="ClosingIdentifier"/>
+        /// </returns>
         public virtual string WrapIdentifiers(string input)
         {
             return input
