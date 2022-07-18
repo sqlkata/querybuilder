@@ -891,7 +891,17 @@ namespace SqlKata.Compilers
             var opening = this.OpeningIdentifier;
             var closing = this.ClosingIdentifier;
 
-            return opening + value.Replace(closing, closing + closing) + closing;
+            // If value is already wrapped with opening and closing quotes, remove the quotes to allow escaping of the
+            // remaining quotes the value will be quoted again before returning.
+            if ((value.Substring(0, 1) == opening && value.Substring(value.Length - 1, 1) == closing) ||
+                (value.Substring(0, 1) == OpeningIdentifierPlaceholder && value.Substring(value.Length - 1, 1) == ClosingIdentifierPlaceholder))
+            {
+                value = value.Substring(1, value.Length - 2);
+            }
+
+            var escaped = value.Replace(closing, closing + closing);
+
+            return opening + escaped + closing;
         }
 
         /// <summary>
