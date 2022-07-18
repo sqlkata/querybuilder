@@ -7,6 +7,11 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
+        // As defined [here](https://sqlkata.com/docs/select#identify-columns-and-tables-inside-raw)
+        // the library allows quoting identifiers with `[]` regardless of compiler used.
+        private const string OpeningIdentifierPlaceholder = "[";
+        private const string ClosingIdentifierPlaceholder = "]";
+
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
@@ -971,8 +976,8 @@ namespace SqlKata.Compilers
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "{", this.OpeningIdentifier)
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "}", this.ClosingIdentifier)
 
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "[", this.OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "]", this.ClosingIdentifier);
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, OpeningIdentifierPlaceholder, this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, ClosingIdentifierPlaceholder, this.ClosingIdentifier);
         }
     }
 }
