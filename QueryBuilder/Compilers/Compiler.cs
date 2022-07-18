@@ -893,10 +893,13 @@ namespace SqlKata.Compilers
 
             // If value is already wrapped with opening and closing quotes, remove the quotes to allow escaping of the
             // remaining quotes the value will be quoted again before returning.
-            if ((value.Substring(0, 1) == opening && value.Substring(value.Length - 1, 1) == closing) ||
-                (value.Substring(0, 1) == OpeningIdentifierPlaceholder && value.Substring(value.Length - 1, 1) == ClosingIdentifierPlaceholder))
+            foreach (var (open, close) in new[] { (OpeningIdentifierPlaceholder, ClosingIdentifierPlaceholder), (opening, closing) })
             {
-                value = value.Substring(1, value.Length - 2);
+                if (value.StartsWith(open) && value.EndsWith(close))
+                {
+                    value = value.Substring(1, value.Length - 2);
+                    break;
+                }
             }
 
             var escaped = value.Replace(closing, closing + closing);
