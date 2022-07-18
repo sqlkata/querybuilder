@@ -2,6 +2,7 @@ using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -590,6 +591,54 @@ namespace SqlKata.Tests
             var c = Compilers.Compile(engines, query);
 
             Assert.Equal("SELECT * FROM [Table] WHERE [Col] != cast(0 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void AllowQuotesAlways()
+        {
+            var expected = new Dictionary<string, string>
+            {
+                [EngineCodes.PostgreSql] = "SELECT \"ColumnA\" AS \"A\", \"ColumnB\" AS \"B\", \"ColumnC\" AS \"C\", \"ColumnD\" AS \"D\", \"ColumnE\" AS \"E\", ColumnF AS F, \"ColumnG\", \"ColumnH\", \"ColumnI\", \"ColumnJ\", \"ColumnK\", ColumnL FROM \"Table\"",
+                [EngineCodes.SqlServer] = "SELECT [ColumnA] AS [A], [ColumnB] AS [B], [ColumnC] AS [C], [ColumnD] AS [D], [ColumnE] AS [E], ColumnF AS F, [ColumnG], [ColumnH], [ColumnI], [ColumnJ], [ColumnK], ColumnL FROM [Table]",
+                [EngineCodes.MySql] = "SELECT `ColumnA` AS `A`, `ColumnB` AS `B`, `ColumnC` AS `C`, `ColumnD` AS `D`, `ColumnE` AS `E`, ColumnF AS F, `ColumnG`, `ColumnH`, `ColumnI`, `ColumnJ`, `ColumnK`, ColumnL FROM `Table`",
+            };
+
+            foreach (var engineCode in new [] {EngineCodes.PostgreSql, EngineCodes.SqlServer, EngineCodes.MySql})
+            {
+                var compiled = Compilers.Compile(new[] { engineCode }, WithQuotedColumns(engineCode));
+
+                Assert.Equal(compiled[engineCode].ToString(), expected[engineCode]);
+            }
+
+            Query WithQuotedColumns(string engineCode)
+            {
+                var quotes = engineCode switch
+                {
+                    EngineCodes.PostgreSql => (open: "\"", close: "\""),
+                    EngineCodes.SqlServer => (open: "[", close: "]"),
+                    EngineCodes.MySql => (open: "`", close: "`"),
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
+
+                // Return a query `SELECT`ing a combination of columns aliased or not, wrapped with the compiler specific quote or with `[]`
+                return new Query("Table")
+                    // `Select` with `AS`
+                    .Select("[ColumnA] AS [A]")
+                    .Select($"{quotes.open}ColumnB{quotes.close} AS {quotes.open}B{quotes.close}")
+                    .Select("ColumnC AS C")
+                    // `SelectRaw` with `AS`
+                    .SelectRaw("[ColumnD] AS [D]")
+                    .SelectRaw($"{quotes.open}ColumnE{quotes.close} AS {quotes.open}E{quotes.close}")
+                    .SelectRaw("ColumnF AS F")
+                    // `Select`
+                    .Select("[ColumnG]")
+                    .Select($"{quotes.open}ColumnH{quotes.close}")
+                    .Select("ColumnI")
+                    // `SelectRaw`
+                    .SelectRaw("[ColumnJ]")
+                    .SelectRaw($"{quotes.open}ColumnK{quotes.close}")
+                    .SelectRaw("ColumnL");
+            }
         }
     }
 }
