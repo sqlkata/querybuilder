@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "mnsrulz",
+      "name": "mnsrulz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1809086?v=4",
+      "profile": "https://github.com/mnsrulz",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "querybuilder",
+  "projectOwner": "sqlkata",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
