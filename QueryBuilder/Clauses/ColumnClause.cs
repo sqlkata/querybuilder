@@ -1,7 +1,11 @@
+using System.Collections.Generic;
+using System.Diagnostics;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
     {
+        public string Alias { get; set; }
     }
 
     /// <summary>
@@ -26,6 +30,7 @@ namespace SqlKata
                 Engine = Engine,
                 Name = Name,
                 Component = Component,
+                Alias = Alias,
             };
         }
     }
@@ -50,6 +55,24 @@ namespace SqlKata
                 Engine = Engine,
                 Query = Query.Clone(),
                 Component = Component,
+                Alias = Alias,
+            };
+        }
+    }
+
+    public class AggregateColumn : AbstractColumn
+    {
+        public string Type { get; set; } // Min, Max, etc.
+        public string Column { get; set; } // Aggregate functions accept only a single 'value expression' (for now we implement only column name)
+        public override AbstractClause Clone()
+        {
+            return new AggregateColumn
+            {
+                Engine = Engine,
+                Component = Component,
+                Alias = Alias,
+                Type = Type,
+                Column = Column,
             };
         }
     }
@@ -68,6 +91,7 @@ namespace SqlKata
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
+            Debug.Assert(string.IsNullOrEmpty(Alias), "Raw columns cannot have an alias");
             return new RawColumn
             {
                 Engine = Engine,

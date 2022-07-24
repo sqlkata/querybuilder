@@ -35,6 +35,31 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.Oracle]);
         }
 
+        public void SelectAs()
+        {
+            var query = new Query().SelectAs(("Row", "Alias")).From("Table");
+
+            var c = Compile(query);
+            Assert.Equal("SELECT [Row] AS [Alias] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `Row` AS `Alias` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"Row\" AS \"Alias\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ROW\" AS \"ALIAS\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"Row\" \"Alias\" FROM \"Table\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
+        public void SelectAsMultipleColumns()
+        {
+            var query = new Query().SelectAs(("Row1", "Alias1"), ("Row2", "Alias2")).From("Table");
+
+            var c = Compile(query);
+            Assert.Equal("SELECT [Row1] AS [Alias1], [Row2] AS [Alias2] FROM [Table]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `Row1` AS `Alias1`, `Row2` AS `Alias2` FROM `Table`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"Row1\" AS \"Alias1\", \"Row2\" AS \"Alias2\" FROM \"Table\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ROW1\" AS \"ALIAS1\", \"ROW2\" AS \"ALIAS2\" FROM \"TABLE\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"Row1\" \"Alias1\", \"Row2\" \"Alias2\" FROM \"Table\"", c[EngineCodes.Oracle]);
+        }
+
         [Fact]
         public void BasicSelectWhereBindingIsEmptyOrNull()
         {
@@ -72,6 +97,20 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT [users].[id], [users].[name], [users].[age] FROM [users]", c[EngineCodes.SqlServer]);
             Assert.Equal("SELECT `users`.`id`, `users`.`name`, `users`.`age` FROM `users`", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
+        public void ExpandedSelectAs()
+        {
+            var q = new Query().From("users").SelectAs(("users.{id,name, age}", "Alias"));
+            var c = Compile(q);
+
+            // This result is weird (but valid syntax), and at least it works in
+            // a somewhat explainable way. The regular 'as' keyword support in
+            // Select() does not work when combined with the {...}-expansion
+            // syntax (the alias will be lost).
+            Assert.Equal("SELECT [users].[id] AS [Alias], [users].[name] AS [Alias], [users].[age] AS [Alias] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `users`.`id` AS `Alias`, `users`.`name` AS `Alias`, `users`.`age` AS `Alias` FROM `users`", c[EngineCodes.MySql]);
         }
 
         [Fact]
@@ -165,7 +204,7 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").SelectCount();
 
             var query = new Query("Table").WhereSub(subQuery, 1);
 
@@ -179,7 +218,7 @@ namespace SqlKata.Tests
         [Fact]
         public void OrWhereSub()
         {
-            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+            var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").SelectCount();
 
             var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
 

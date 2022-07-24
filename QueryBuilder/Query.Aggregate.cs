@@ -5,55 +5,106 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsAggregate(string type, string[] columns = null)
+        /**********************************************************************
+         ** Generic aggregate                                                **
+         **********************************************************************/
+        public Query SelectAggregate(string type, IEnumerable<string> columns, string alias = null)
         {
-
-            Method = "aggregate";
-
-            this.ClearComponent("aggregate")
-            .AddComponent("aggregate", new AggregateClause
+            if (columns.Count() == 0)
             {
-                Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
-            });
+                throw new System.ArgumentException("Cannot aggregate without columns");
+            }
+
+            // According to ISO/IEC 9075:2016 all aggregates take only a single
+            // value expression argument (i.e. one column). However, for the
+            // special case of count(...), SqlKata implements a transform to
+            // a sub query.
+            if (columns.Count() > 1 && type != "count")
+            {
+                throw new System.ArgumentException("Cannot aggregate more than one column at once");
+            }
+
+            if (type != "count" || (columns.Count() == 1 && !this.IsDistinct))
+            {
+                Method = "select";
+                this.AddComponent("select", new AggregateColumn
+                {
+                    Alias = alias,
+                    Type = type,
+                    Column = columns.First(),
+                });
+            }
+            else
+            {
+                if (this.HasComponent("aggregate"))
+                {
+                    throw new System.InvalidOperationException("Cannot add more than one top-level aggregate clause");
+                }
+                Method = "aggregate";
+                this.AddComponent("aggregate", new AggregateClause
+                {
+                    Alias = alias,
+                    Type = type,
+                    Columns = columns.ToList(),
+                });
+            }
 
             return this;
         }
 
-        public Query AsCount(string[] columns = null)
+
+        /**********************************************************************
+         ** Count                                                            **
+         **********************************************************************/
+        public Query SelectCount(string column = null, string alias = null)
         {
-            var cols = columns?.ToList() ?? new List<string> { };
-
-            if (!cols.Any())
-            {
-                cols.Add("*");
-            }
-
-            return AsAggregate("count", cols.ToArray());
+            return SelectCount(column != null ? new[] { column } : new string[] { }, alias);
         }
 
-        public Query AsAvg(string column)
+        public Query SelectCount(IEnumerable<string> columns, string alias = null)
         {
-            return AsAggregate("avg", new string[] { column });
-        }
-        public Query AsAverage(string column)
-        {
-            return AsAvg(column);
+            return SelectAggregate("count", columns.Count() == 0 ? new[] { "*" } : columns, alias);
         }
 
-        public Query AsSum(string column)
+
+        /**********************************************************************
+         ** Average                                                          **
+         **********************************************************************/
+        public Query SelectAvg(string column, string alias = null)
         {
-            return AsAggregate("sum", new[] { column });
+            return SelectAggregate("avg", new[] { column }, alias);
         }
 
-        public Query AsMax(string column)
+        public Query SelectAverage(string column, string alias = null)
         {
-            return AsAggregate("max", new[] { column });
+            return SelectAvg(column, alias);
         }
 
-        public Query AsMin(string column)
+
+        /**********************************************************************
+         ** Sum                                                              **
+         **********************************************************************/
+        public Query SelectSum(string column, string alias = null)
         {
-            return AsAggregate("min", new[] { column });
+            return SelectAggregate("sum", new[] { column }, alias);
+        }
+
+
+        /**********************************************************************
+         ** Maximum                                                          **
+         **********************************************************************/
+        public Query SelectMax(string column, string alias = null)
+        {
+            return SelectAggregate("max", new[] { column }, alias);
+        }
+
+
+        /**********************************************************************
+         ** Minimum                                                          **
+         **********************************************************************/
+        public Query SelectMin(string column, string alias = null)
+        {
+            return SelectAggregate("min", new[] { column }, alias);
         }
     }
 }
