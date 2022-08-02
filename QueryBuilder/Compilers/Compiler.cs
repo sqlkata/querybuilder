@@ -127,7 +127,7 @@ namespace SqlKata.Compilers
                 ctx = CompileCteQuery(ctx, query);
             }
 
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, "?", ctx.Bindings.ToArray());
+            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, ctx.Bindings.ToArray());
 
             return ctx;
         }
@@ -214,7 +214,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult();
 
-            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {Wrap(col)}"));
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} AS {Wrap(col)}"));
 
             var fromTable = SingleRowDummyTableName;
 
@@ -780,19 +780,19 @@ namespace SqlKata.Compilers
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return "LIMIT ?";
+                return $"LIMIT {parameterPlaceholder}";
             }
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return "OFFSET ?";
+                return $"OFFSET {parameterPlaceholder}";
             }
 
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
 
-            return "LIMIT ? OFFSET ?";
+            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
         }
 
         /// <summary>
@@ -935,11 +935,11 @@ namespace SqlKata.Compilers
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
-                return "?";
+                return parameterPlaceholder;
             }
 
             ctx.Bindings.Add(parameter);
-            return "?";
+            return parameterPlaceholder;
         }
 
         /// <summary>
