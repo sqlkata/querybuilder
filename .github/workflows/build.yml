@@ -22,21 +22,18 @@ env:
   # Official NuGet Feed settings
   NUGET_FEED: https://api.nuget.org/v3/index.json
   NUGET_KEY: ${{ secrets.NUGET_KEY }}
+
+  DB_MYSQL_DATABASE: test_sqlkata
+  DB_MYSQL_USER: root
+  DB_MYSQL_PASSWORD: 'root'
+  DB_MYSQL_HOST: localhost
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: test_sqlkata
-        ports:
-          - 3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        os: [ubuntu-latest]    
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -60,16 +57,20 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
-      - name: Test
-        run: mysql -h 127.0.0.1 --port 3306 -u root -e 'CREATE DATABASE IF NOT EXISTS test_sqlkata;'
+      - name: Start MySql
+        run: |
+          sudo /etc/init.d/mysql start
+          mysqladmin -u ${{ env.DB_MYSQL_USER }} -p${{ env.DB_MYSQL_PASSWORD }} password ''
+          mysql -e 'CREATE DATABASE ${{ env.DB_MYSQL_DATABASE }};' -u${{ env.DB_MYSQL_USER }}
+          mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
+          mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
 
       - name: Test
         run: dotnet test -c Release
         env:
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_USER: root
-          MYSQL_DB: test_sqlkata
-          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+          MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
+          MYSQL_USER: ${{ env.DB_MYSQL_USER }}
+          MYSQL_DB: ${{ env.DB_MYSQL_DATABASE }}
 
       - name: Pack QueryBuilder
         if: matrix.os == 'ubuntu-latest'
