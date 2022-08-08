@@ -27,6 +27,15 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
+    services:
+      mysql:
+          image: mysql:5.7
+          env:
+              MYSQL_ALLOW_EMPTY_PASSWORD: yes
+              MYSQL_DATABASE: test_sqlkata
+          ports:
+              - 3306
+          options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3        
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -46,6 +55,11 @@ jobs:
         run: dotnet build -c Release --no-restore
       - name: Test
         run: dotnet test -c Release
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_USER: root
+          MYSQL_DB: ${{ job.services.mysql.env.MYSQL_DATABASE }}
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}          
       - name: Pack QueryBuilder
         if: matrix.os == 'ubuntu-latest'
         run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID QueryBuilder/QueryBuilder.csproj
