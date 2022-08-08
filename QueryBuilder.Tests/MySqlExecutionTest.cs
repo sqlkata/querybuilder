@@ -60,8 +60,10 @@ namespace SqlKata.Tests
             var host = System.Environment.GetEnvironmentVariable("MYSQL_HOST");
             var user = System.Environment.GetEnvironmentVariable("MYSQL_USER");
             var dbName = System.Environment.GetEnvironmentVariable("MYSQL_DB");
+            var cs = $"server={host};user={user};database={dbName}";
+            Console.WriteLine($"Using cs: {cs}");
 
-            var connection = new MySqlConnection($"server={host};user={user};database={dbName}");
+            var connection = new MySqlConnection(cs);
 
             var db = new QueryFactory(connection, new MySqlCompiler());
 
