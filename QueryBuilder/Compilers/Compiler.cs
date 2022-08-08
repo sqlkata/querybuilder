@@ -894,7 +894,6 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
-        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public virtual object Resolve(SqlResult ctx, object parameter)
         {
@@ -920,7 +919,6 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
-        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public virtual string Parameter(SqlResult ctx, object parameter)
         {
