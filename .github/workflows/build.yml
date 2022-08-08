@@ -12,7 +12,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   # Project name to pack and publish
   PROJECT_NAME: SqlKata
-  DOTNET_VERSION: 5.0.201
+  DOTNET_VERSION: 6.0.202
+#   DOTNET_VERSION: 5.0.201
   # DOTNET_VERSION: 2.2.203
   # GitHub Packages Feed settings
   GITHUB_FEED: https://nuget.pkg.github.com/sqlkata/
