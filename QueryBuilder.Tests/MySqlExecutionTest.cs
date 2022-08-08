@@ -50,7 +50,7 @@ namespace SqlKata.Tests
 
             var rows = db.Query("Cars").Get().ToList();
 
-            Assert.Equal(rows.Count(), 1);
+            Assert.Equal(1, rows.Count());
 
             db.Statement("DROP TABLE IF EXISTS `Cars`");
         }
