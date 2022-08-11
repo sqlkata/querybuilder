@@ -182,11 +182,9 @@ namespace SqlKata.Compilers
                 combinedBindings.AddRange(cb);
             }
 
-            var ctx = new SqlResult
-            {
-                RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
-                Bindings = combinedBindings,
-            };
+            var ctx = GetNewSqlResult();
+            ctx.RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b);
+            ctx.Bindings = combinedBindings;
 
             ctx = PrepareResult(ctx);
 
@@ -195,10 +193,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query.Clone(),
-            };
+            var ctx = GetNewSqlResult(query.Clone());
 
             var results = new[] {
                     this.CompileColumns(ctx),
@@ -224,7 +219,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = GetNewSqlResult();
 
             var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {Wrap(col)}"));
 
@@ -245,10 +240,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
@@ -289,10 +281,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileUpdateQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
@@ -367,10 +356,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
@@ -513,7 +499,7 @@ namespace SqlKata.Compilers
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
-            var ctx = new SqlResult();
+            var ctx = GetNewSqlResult();
 
             if (null == cte)
             {
@@ -952,6 +938,27 @@ namespace SqlKata.Compilers
 
             ctx.Bindings.Add(parameter);
             return "?";
+        }
+
+        /// <summary>
+        /// Create a new <see cref="SqlResult"/> object
+        /// </summary>
+        /// <returns></returns>
+        public virtual SqlResult GetNewSqlResult()
+        {
+            return new SqlResult();
+        }
+
+        /// <summary>
+        /// Create a new <see cref="SqlResult"/> object via <see cref="GetNewSqlResult()"/>, then assign the <paramref name="query"/> to it
+        /// </summary>
+        /// <param name="query">The query to assign to the object</param>
+        /// <returns></returns>
+        public SqlResult GetNewSqlResult(Query query)
+        {
+            SqlResult ctx = GetNewSqlResult();
+            ctx.Query = query;
+            return ctx;
         }
 
         /// <summary>

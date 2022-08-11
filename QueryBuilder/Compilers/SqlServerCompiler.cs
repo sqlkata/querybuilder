@@ -23,10 +23,7 @@ namespace SqlKata.Compilers
 
             query = query.Clone();
 
-            var ctx = new SqlResult
-            {
-                Query = query,
-            };
+            var ctx = GetNewSqlResult(query);
 
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -173,7 +170,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = GetNewSqlResult();
 
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
 
