@@ -57,18 +57,10 @@ namespace SqlKata.Tests
 
         public QueryFactory SetupDb()
         {
-            var host = System.Environment.GetEnvironmentVariable("MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
-            Console.WriteLine($"Using cs: {cs}");
-
-            var connection = new MySqlConnection(cs);
-
+            Console.WriteLine($"Using cs: {MySqlInitialization.DbTestContainer.ConnectionString}");
+            var connection = new MySqlConnection(MySqlInitialization.DbTestContainer.ConnectionString);
             var db = new QueryFactory(connection, new MySqlCompiler());
-
             db.Statement("DROP TABLE IF EXISTS `Cars`");
-
             return db;
         }
     }
