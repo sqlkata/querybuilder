@@ -15,7 +15,7 @@ namespace SqlKata.Execution
 
         public async static Task<bool> ExistsAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static bool NotExist(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -25,7 +25,7 @@ namespace SqlKata.Execution
 
         public async static Task<bool> NotExistAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return !(await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout, cancellationToken));
+            return !(await CreateQueryFactory(query).ExistsAsync(query, transaction, timeout, cancellationToken).ConfigureAwait(false));
         }
 
         public static IEnumerable<T> Get<T>(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -35,7 +35,7 @@ namespace SqlKata.Execution
 
         public static async Task<IEnumerable<T>> GetAsync<T>(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).GetAsync<T>(query, transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).GetAsync<T>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static IEnumerable<dynamic> Get(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -45,7 +45,7 @@ namespace SqlKata.Execution
 
         public static async Task<IEnumerable<dynamic>> GetAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await GetAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await GetAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T FirstOrDefault<T>(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -55,7 +55,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> FirstOrDefaultAsync<T>(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).FirstOrDefaultAsync<T>(query, transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).FirstOrDefaultAsync<T>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static dynamic FirstOrDefault(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -65,7 +65,7 @@ namespace SqlKata.Execution
 
         public static async Task<dynamic> FirstOrDefaultAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await FirstOrDefaultAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await FirstOrDefaultAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T First<T>(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -75,7 +75,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> FirstAsync<T>(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).FirstAsync<T>(query, transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).FirstAsync<T>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static dynamic First(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -85,7 +85,7 @@ namespace SqlKata.Execution
 
         public static async Task<dynamic> FirstAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await FirstAsync<dynamic>(query, transaction, timeout, cancellationToken);
+            return await FirstAsync<dynamic>(query, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
@@ -99,7 +99,7 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            return await db.PaginateAsync<T>(query, page, perPage, transaction, timeout, cancellationToken);
+            return await db.PaginateAsync<T>(query, page, perPage, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static PaginationResult<dynamic> Paginate(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
@@ -109,7 +109,7 @@ namespace SqlKata.Execution
 
         public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await PaginateAsync<dynamic>(query, page, perPage, transaction, timeout, cancellationToken);
+            return await PaginateAsync<dynamic>(query, page, perPage, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func, IDbTransaction transaction = null, int? timeout = null)
@@ -120,7 +120,7 @@ namespace SqlKata.Execution
         }
         public static async Task ChunkAsync<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, func, transaction, timeout, cancellationToken);
+            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, func, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func, IDbTransaction transaction = null, int? timeout = null)
@@ -129,7 +129,7 @@ namespace SqlKata.Execution
         }
         public static async Task ChunkAsync(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await ChunkAsync<dynamic>(query, chunkSize, func, transaction, timeout, cancellationToken);
+            await ChunkAsync<dynamic>(query, chunkSize, func, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static void Chunk<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action, IDbTransaction transaction = null, int? timeout = null)
@@ -141,7 +141,7 @@ namespace SqlKata.Execution
 
         public static async Task ChunkAsync<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, action, transaction, timeout, cancellationToken);
+            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, action, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action, IDbTransaction transaction = null, int? timeout = null)
@@ -151,7 +151,7 @@ namespace SqlKata.Execution
 
         public static async Task ChunkAsync(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await ChunkAsync<dynamic>(query, chunkSize, action, transaction, timeout, cancellationToken);
+            await ChunkAsync<dynamic>(query, chunkSize, action, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Insert(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null)
@@ -161,7 +161,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(values), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(values), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IDbTransaction transaction = null, int? timeout = null)
@@ -171,7 +171,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, valuesCollection), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, valuesCollection), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery, IDbTransaction transaction = null, int? timeout = null)
@@ -181,7 +181,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, Query fromQuery, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, fromQuery), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, fromQuery), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Insert(this Query query, object data, IDbTransaction transaction = null, int? timeout = null)
@@ -191,7 +191,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> InsertAsync(this Query query, object data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(data), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(data), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T InsertGetId<T>(this Query query, object data, IDbTransaction transaction = null, int? timeout = null)
@@ -206,7 +206,7 @@ namespace SqlKata.Execution
         public static async Task<T> InsertGetIdAsync<T>(this Query query, object data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var row = await CreateQueryFactory(query)
-                .FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout, cancellationToken);
+                .FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             return row.Id;
         }
@@ -220,7 +220,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> InsertGetIdAsync<T>(this Query query, IEnumerable<KeyValuePair<string, object>> data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            var row = await CreateQueryFactory(query).FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout, cancellationToken);
+            var row = await CreateQueryFactory(query).FirstAsync<InsertGetIdRow<T>>(query.AsInsert(data, true), transaction, timeout, cancellationToken).ConfigureAwait(false);
 
             return row.Id;
         }
@@ -232,7 +232,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> UpdateAsync(this Query query, IEnumerable<KeyValuePair<string, object>> values, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(values), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(values), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Update(this Query query, object data, IDbTransaction transaction = null, int? timeout = null)
@@ -242,7 +242,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> UpdateAsync(this Query query, object data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(data), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsUpdate(data), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Increment(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null)
@@ -252,7 +252,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> IncrementAsync(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsIncrement(column, value), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsIncrement(column, value), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Decrement(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null)
@@ -262,7 +262,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> DecrementAsync(this Query query, string column, int value = 1, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsDecrement(column, value), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsDecrement(column, value), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static int Delete(this Query query, IDbTransaction transaction = null, int? timeout = null)
@@ -272,7 +272,7 @@ namespace SqlKata.Execution
 
         public static async Task<int> DeleteAsync(this Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await CreateQueryFactory(query).ExecuteAsync(query.AsDelete(), transaction, timeout, cancellationToken);
+            return await CreateQueryFactory(query).ExecuteAsync(query.AsDelete(), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Aggregate<T>(this Query query, string aggregateOperation, string[] columns, IDbTransaction transaction = null, int? timeout = null)
@@ -285,7 +285,7 @@ namespace SqlKata.Execution
         public static async Task<T> AggregateAsync<T>(this Query query, string aggregateOperation, string[] columns, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var db = CreateQueryFactory(query);
-            return await db.ExecuteScalarAsync<T>(query.AsAggregate(aggregateOperation, columns), transaction, timeout, cancellationToken);
+            return await db.ExecuteScalarAsync<T>(query.AsAggregate(aggregateOperation, columns), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Count<T>(this Query query, string[] columns = null, IDbTransaction transaction = null, int? timeout = null)
@@ -299,7 +299,7 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            return await db.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout, cancellationToken);
+            return await db.ExecuteScalarAsync<T>(query.AsCount(columns), transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Average<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -309,7 +309,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> AverageAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await query.AggregateAsync<T>("avg", new[] { column }, transaction, timeout, cancellationToken);
+            return await query.AggregateAsync<T>("avg", new[] { column }, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Sum<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -319,7 +319,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> SumAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await query.AggregateAsync<T>("sum", new[] { column }, transaction, timeout, cancellationToken);
+            return await query.AggregateAsync<T>("sum", new[] { column }, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Min<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -329,7 +329,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> MinAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await query.AggregateAsync<T>("min", new[] { column }, transaction, timeout, cancellationToken);
+            return await query.AggregateAsync<T>("min", new[] { column }, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         public static T Max<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null)
@@ -339,7 +339,7 @@ namespace SqlKata.Execution
 
         public static async Task<T> MaxAsync<T>(this Query query, string column, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await query.AggregateAsync<T>("max", new[] { column }, transaction, timeout, cancellationToken);
+            return await query.AggregateAsync<T>("max", new[] { column }, transaction, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         internal static XQuery CastToXQuery(Query query, string method = null)
