@@ -10,6 +10,13 @@
     <AssemblyOriginatorKeyFile>SqlKata.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="ConfigureAwait.Fody" Version="3.3.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Fody" Version="6.6.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.0" />
     <PackageReference Include="MySql.Data" Version="8.0.30" />
     <PackageReference Include="xunit" Version="2.3.1" />
@@ -20,3 +27,4 @@
     <ProjectReference Include="..\SqlKata.Execution\SqlKata.Execution.csproj" />
   </ItemGroup>
 </Project>
+
