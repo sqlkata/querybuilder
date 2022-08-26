@@ -23,6 +23,10 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <NoWarn>CS1591</NoWarn>
+
+    <!-- StrongName settings -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>SqlKata.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
     <DocumentationFile>bin\Debug\netstandard2.0\SqlKata.xml</DocumentationFile>
@@ -33,4 +37,7 @@
   <ItemGroup>
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
   </ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="QueryBuilder.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001001dc6e179fa8e12b3e616ebb96efdec1b6fe6393a3c778fb1765d0cec3572a09245ae4ad68c04e068c7e25a88ef51f55c8540123ba710436a6b3c81a7a8a3a670d31ded970e63bc7f8fb563adced937f485e314915b715234069b89c5f855d04d3482eb296f1e9c7ccaee2c1133472355190eaa71a8be4ddbb32a7c9fd42f128f" />
+	</ItemGroup>
 </Project>
