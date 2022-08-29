@@ -23,6 +23,7 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <TargetFramework>net6.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
 </Project>

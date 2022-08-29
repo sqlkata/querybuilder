@@ -4,6 +4,7 @@
     <OutputType>Library</OutputType>
     <IsPackable>false</IsPackable>
     <RootNamespace>SqlKata.Tests</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <!-- StrongName settings -->
     <SignAssembly>true</SignAssembly>
