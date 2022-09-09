@@ -54,12 +54,11 @@ namespace SqlKata.Tests
 
             db.Statement("DROP TABLE IF EXISTS `Cars`");
         }
-
         public QueryFactory SetupDb()
         {
-            var host = System.Environment.GetEnvironmentVariable("MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("MYSQL_DB");
+            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
+            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
+            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
             var cs = $"server={host};user={user};database={dbName}";
             Console.WriteLine($"Using cs: {cs}");
 
