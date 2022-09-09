@@ -10,16 +10,15 @@
 </p>
 
 
-
-
-
-> **WE ARE NOT ACCEPTING NEW COMPILERS, if you want to add your own compiler, we recommend to create a separate repo like SqlKata-Oracle**
-
-Follow <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=%40ahmadmuzavi&style=social&url=https%3A%2F%2Ftwitter.com%2Fahmadmuzavi"></a> for the latest updates about SqlKata.
+<p align="center">
+<strong>Follow and Upvote SqlKata on Product Hunt to encourage the development of this project</strong>
+</p>
+<p align="center">
+<a href="https://www.producthunt.com/products/sqlkata?utm_source=badge-follow&utm_medium=badge&utm_souce=badge-sqlkata" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?post_id=398417&theme=light" alt="SqlKata - Dynamic&#0032;Sql&#0032;query&#0032;builder&#0032;for&#0032;dotnet | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+</p>
 
 
 ![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
-
 
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
@@ -38,14 +37,9 @@ Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
 ## Installation
 
-using dotnet cli
 ```sh
 $ dotnet add package SqlKata
-```
-
-using Nuget Package Manager
-```sh
-PM> Install-Package SqlKata
+$ dotnet add package SqlKata.Execution # (optional) If you want the execution support
 ```
 
 
@@ -163,3 +157,18 @@ int affected = db.Query("Users").Where("Id", 1).Update(new {
 ```cs
 int affected = db.Query("Users").Where("Id", 1).Delete();
 ```
+
+## FAQ
+### How to know when a new release or a feature is available?
+I announce updates on My [Twitter Account](https://twitter.com/ahmadmuzavi), and you can subscribe to our news letters from the website https://sqlkata.com
+
+### The database that I want is not supported why?
+Usually it's impossible to support all available database vendors, this why we focus on the major ones, and we are encourage you to create your own compiler for your database
+
+### Do you accept new compilers?
+Unfortunetly no, the reason is this will add overhead for the project contributors, we prefer to improve the quality of the existing compilers instead
+
+### How can I support the project?
+- Star the project here in Github, and share it with your friends
+- Follow and upvote it on Product Hunt <a href="https://www.producthunt.com/products/sqlkata?utm_source=badge-follow&utm_medium=badge&utm_souce=badge-sqlkata" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?post_id=398417&theme=light&size=small" alt="SqlKata - Dynamic&#0032;Sql&#0032;query&#0032;builder&#0032;for&#0032;dotnet | Product Hunt" style="width: 86px; height: 32px;" width="250" height="54" /></a>
+- You can also donate to support the project financily on open collection.
