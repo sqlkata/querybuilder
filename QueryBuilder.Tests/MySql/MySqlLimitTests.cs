@@ -39,7 +39,7 @@ namespace SqlKata.Tests.MySql
             var ctx = new SqlResult { Query = query };
 
             Assert.Equal("LIMIT 18446744073709551615 OFFSET ?", compiler.CompileLimit(ctx));
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Single(ctx.Bindings);
         }
 
@@ -51,7 +51,7 @@ namespace SqlKata.Tests.MySql
 
             Assert.Equal("LIMIT ? OFFSET ?", compiler.CompileLimit(ctx));
             Assert.Equal(5, ctx.Bindings[0]);
-            Assert.Equal(20, ctx.Bindings[1]);
+            Assert.Equal(20L, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);
         }
     }

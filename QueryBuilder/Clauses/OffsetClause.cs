@@ -2,9 +2,9 @@ namespace SqlKata
 {
     public class OffsetClause : AbstractClause
     {
-        private int _offset;
+        private long _offset;
 
-        public int Offset
+        public long Offset
         {
             get => _offset;
             set => _offset = value > 0 ? value : _offset;
