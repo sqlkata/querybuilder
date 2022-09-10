@@ -164,6 +164,42 @@ namespace SqlKata.Tests
             db.Drop("Transaction");
         }
 
+        [Fact]
+        public void ExistsShouldReturnFalseForEmptyTable()
+        {
+            var db = DB().Create("Transaction", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Amount int NOT NULL",
+                    "Date DATE NOT NULL",
+            });
+
+            var exists = db.Query("Transaction").Exists();
+            Assert.Equal(false, exists);
+
+            db.Drop("Transaction");
+        }
+
+        [Fact]
+        public void ExistsShouldReturnTrueForNonEmptyTable()
+        {
+            var db = DB().Create("Transaction", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Amount int NOT NULL",
+                    "Date DATE NOT NULL",
+            });
+
+            db.Query("Transaction").Insert(new
+            {
+                Date = "2022-01-01",
+                Amount = 10
+            });
+
+            var exists = db.Query("Transaction").Exists();
+            Assert.Equal(true, exists);
+
+            db.Drop("Transaction");
+        }
+
         QueryFactory DB()
         {
             var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
