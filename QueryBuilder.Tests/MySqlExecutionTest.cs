@@ -43,7 +43,7 @@ namespace SqlKata.Tests
 
             var rows = db.Query("Cars").Get().ToList();
 
-            Assert.Equal(1, rows.Count());
+            Assert.Single(rows);
 
             db.Drop("Cars");
         }
@@ -158,7 +158,7 @@ namespace SqlKata.Tests
                 .SelectRaw("Transaction.Amount * Rates.Rate as AmountConverted")
                 .Get();
 
-            Assert.Equal(1, rows.Count());
+            Assert.Single(rows);
             Assert.Equal(5, rows.First().AmountConverted);
 
             db.Drop("Transaction");
