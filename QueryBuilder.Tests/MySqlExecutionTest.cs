@@ -4,6 +4,8 @@ using SqlKata.Execution;
 using MySql.Data.MySqlClient;
 using System;
 using System.Linq;
+using static SqlKata.Expressions;
+using System.Collections.Generic;
 
 namespace SqlKata.Tests
 {
@@ -13,38 +15,29 @@ namespace SqlKata.Tests
         public void EmptySelect()
         {
 
-            var db = SetupDb();
-            var sql = @"
-                CREATE TABLE Cars(
-                    Id INT PRIMARY KEY AUTO_INCREMENT,
-                    Brand TEXT NOT NULL,
-                    Year INT NOT NULL,
-                    Color TEXT NULL
-                )
-            ";
-            db.Statement(sql);
+            var db = DB().Create("Cars", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+                    "Color TEXT NULL",
+            });
 
             var rows = db.Query("Cars").Get();
 
             Assert.Empty(rows);
 
-            db.Statement("DROP TABLE IF EXISTS `Cars`");
+            db.Drop("Cars");
         }
 
         [Fact]
         public void SelectWithLimit()
         {
-
-            var db = SetupDb();
-            var sql = @"
-                CREATE TABLE Cars(
-                    Id INT PRIMARY KEY AUTO_INCREMENT,
-                    Brand TEXT NOT NULL,
-                    Year INT NOT NULL,
-                    Color TEXT NULL
-                )
-            ";
-            db.Statement(sql);
+            var db = DB().Create("Cars", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+                    "Color TEXT NULL",
+            });
 
             db.Statement("INSERT INTO `Cars`(Brand, Year) VALUES ('Honda', 2020)");
 
@@ -52,22 +45,18 @@ namespace SqlKata.Tests
 
             Assert.Equal(1, rows.Count());
 
-            db.Statement("DROP TABLE IF EXISTS `Cars`");
+            db.Drop("Cars");
         }
 
         [Fact]
         public void Count()
         {
-            var db = SetupDb();
-            var sql = @"
-                CREATE TABLE Cars(
-                    Id INT PRIMARY KEY AUTO_INCREMENT,
-                    Brand TEXT NOT NULL,
-                    Year INT NOT NULL,
-                    Color TEXT NULL
-                )
-            ";
-            db.Statement(sql);
+            var db = DB().Create("Cars", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+                    "Color TEXT NULL",
+            });
 
             db.Statement("INSERT INTO `Cars`(Brand, Year) VALUES ('Honda', 2020)");
             var count = db.Query("Cars").Count<int>();
@@ -83,22 +72,18 @@ namespace SqlKata.Tests
             count = db.Query("Cars").Count<int>();
             Assert.Equal(0, count);
 
-            db.Statement("DROP TABLE IF EXISTS `Cars`");
+            db.Drop("Cars");
         }
 
         [Fact]
         public void CloneThenCount()
         {
-            var db = SetupDb();
-            var sql = @"
-                CREATE TABLE Cars(
-                    Id INT PRIMARY KEY AUTO_INCREMENT,
-                    Brand TEXT NOT NULL,
-                    Year INT NOT NULL,
-                    Color TEXT NULL
-                )
-            ";
-            db.Statement(sql);
+            var db = DB().Create("Cars", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+                    "Color TEXT NULL",
+            });
 
             for (int i = 0; i < 10; i++)
             {
@@ -116,23 +101,98 @@ namespace SqlKata.Tests
             Assert.Equal(4, count);
             Assert.Equal(4, cloneCount);
 
-            db.Statement("DROP TABLE IF EXISTS `Cars`");
+            db.Drop("Cars");
         }
 
-        public QueryFactory SetupDb()
+        [Fact]
+        public void QueryWithVariable()
+        {
+            var db = DB().Create("Cars", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+                    "Color TEXT NULL",
+            });
+
+            for (int i = 0; i < 10; i++)
+            {
+                db.Query("Cars").Insert(new
+                {
+                    Brand = "Brand " + i,
+                    Year = "2020",
+                });
+            }
+
+
+            var count = db.Query("Cars")
+                .Define("Threshold", 5)
+                .Where("Id", "<", SqlKata.Expressions.Variable("Threshold"))
+                .Count<int>();
+
+            Assert.Equal(4, count);
+
+            db.Drop("Cars");
+        }
+
+        [Fact]
+        public void InlineTable()
+        {
+            var db = DB().Create("Transaction", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Amount int NOT NULL",
+                    "Date DATE NOT NULL",
+            });
+
+            db.Query("Transaction").Insert(new
+            {
+                Date = "2022-01-01",
+                Amount = 10
+            });
+
+
+            var rows = db.Query("Transaction")
+                .With("Rates", new[] { "Date", "Rate" }, new object[][] {
+                    new object[] {"2022-01-01", 0.5},
+                })
+                .Join("Rates", "Rates.Date", "Transaction.Date")
+                .SelectRaw("Transaction.Amount * Rates.Rate as AmountConverted")
+                .Get();
+
+            Assert.Equal(1, rows.Count());
+            Assert.Equal(5, rows.First().AmountConverted);
+
+            db.Drop("Transaction");
+        }
+
+        QueryFactory DB()
         {
             var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
             var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
             var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
             var cs = $"server={host};user={user};database={dbName}";
-            Console.WriteLine($"Using cs: {cs}");
 
             var connection = new MySqlConnection(cs);
 
             var db = new QueryFactory(connection, new MySqlCompiler());
 
-            db.Statement("DROP TABLE IF EXISTS `Cars`");
+            return db;
+        }
 
+
+
+    }
+    static class QueryFactoryExtensions
+    {
+        public static QueryFactory Create(this QueryFactory db, string table, IEnumerable<string> cols)
+        {
+            db.Drop(table);
+            db.Statement($"CREATE TABLE `{table}`({string.Join(", ", cols)})");
+            return db;
+        }
+
+        public static QueryFactory Drop(this QueryFactory db, string table)
+        {
+            db.Statement($"DROP TABLE IF EXISTS `{table}`");
             return db;
         }
     }
