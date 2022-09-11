@@ -7,6 +7,11 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
+        // As defined [here](https://sqlkata.com/docs/select#identify-columns-and-tables-inside-raw)
+        // the library allows quoting identifiers with `[]` regardless of compiler used.
+        private const string OpeningIdentifierPlaceholder = "[";
+        private const string ClosingIdentifierPlaceholder = "]";
+
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
@@ -886,7 +891,20 @@ namespace SqlKata.Compilers
             var opening = this.OpeningIdentifier;
             var closing = this.ClosingIdentifier;
 
-            return opening + value.Replace(closing, closing + closing) + closing;
+            // If value is already wrapped with opening and closing quotes, remove the quotes to allow escaping of the
+            // remaining quotes the value will be quoted again before returning.
+            foreach (var (open, close) in new[] { (OpeningIdentifierPlaceholder, ClosingIdentifierPlaceholder), (opening, closing) })
+            {
+                if (value.StartsWith(open) && value.EndsWith(close))
+                {
+                    value = value.Substring(1, value.Length - 2);
+                    break;
+                }
+            }
+
+            var escaped = value.Replace(closing, closing + closing);
+
+            return opening + escaped + closing;
         }
 
         /// <summary>
@@ -969,8 +987,8 @@ namespace SqlKata.Compilers
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "{", this.OpeningIdentifier)
                 .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "}", this.ClosingIdentifier)
 
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "[", this.OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, "]", this.ClosingIdentifier);
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, OpeningIdentifierPlaceholder, this.OpeningIdentifier)
+                .ReplaceIdentifierUnlessEscaped(this.EscapeCharacter, ClosingIdentifierPlaceholder, this.ClosingIdentifier);
         }
     }
 }
