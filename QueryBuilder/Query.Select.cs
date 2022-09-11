@@ -6,27 +6,42 @@ namespace SqlKata
 {
     public partial class Query
     {
+        public Query Select(params string[] columns) =>
+            Select(columns.AsEnumerable());
 
-        public Query Select(params string[] columns)
-        {
-            return Select(columns.AsEnumerable());
-        }
+        public Query Select(IEnumerable<string> columns) =>
+            SelectAs(
+                columns
+                .Select(x => (x, null as string))
+                .ToArray()
+            );
 
-        public Query Select(IEnumerable<string> columns)
+        /// <summary>
+        /// Select a column with an alias
+        /// </summary>
+        /// <returns></returns>
+        public Query SelectAs(string column, string alias) =>
+            SelectAs((column, alias));
+
+        /// <summary>
+        /// Select columns with an alias
+        /// </summary>
+        /// <returns></returns>
+        public Query SelectAs(params (string, string)[] columns)
         {
             Method = "select";
 
             columns = columns
-                .Select(x => Helper.ExpandExpression(x))
+                .Select(x => Helper.ExpandExpression(x.Item1).Select(y => (y, x.Item2)))
                 .SelectMany(x => x)
                 .ToArray();
-
 
             foreach (var column in columns)
             {
                 AddComponent("select", new Column
                 {
-                    Name = column
+                    Name = column.Item1,
+                    Alias = column.Item2
                 });
             }
 
