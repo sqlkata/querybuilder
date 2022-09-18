@@ -16,6 +16,7 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
+        public bool UseUppercaseColumnName { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -151,6 +152,13 @@ namespace SqlKata.Compilers
 
             return sql;
 
+        }
+
+        public override string Wrap(string value)
+        {
+            return UseUppercaseColumnName
+                ? base.Wrap(value.ToUpperInvariant())
+                : base.Wrap(value);
         }
     }
 }
