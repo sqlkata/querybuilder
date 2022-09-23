@@ -1,4 +1,4 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -58,7 +58,7 @@ namespace SqlKata.Tests.Oracle
 
             // Assert:
             Assert.Equal("SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM (GENERATED_SQL) \"results_wrapper\") WHERE \"row_num\" > ?", ctx.RawSql);
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Single(ctx.Bindings);
         }
 
@@ -74,8 +74,8 @@ namespace SqlKata.Tests.Oracle
 
             // Assert:
             Assert.Equal("SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM (GENERATED_SQL) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?", ctx.RawSql);
-            Assert.Equal(25, ctx.Bindings[0]);
-            Assert.Equal(20, ctx.Bindings[1]);
+            Assert.Equal(25L, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);
         }
     }

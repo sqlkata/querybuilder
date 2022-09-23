@@ -411,5 +411,195 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [table] WHERE ([a] = 1 OR [a] = 2)", c[EngineCodes.SqlServer].ToString());
         }
+
+        [Fact]
+        public void AdHoc_Throws_WhenNoColumnsProvided() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new string[0],
+                    new object[][] {
+                        new object[] {},
+                        new object[] {},
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenNoValueRowsProvided() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b", "c" },
+                    new object[][] {
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenColumnsOutnumberFieldValues() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b", "c", "d" },
+                    new object[][] {
+                        new object[] { 1, 2, 3 },
+                        new object[] { 4, 5, 6 },
+                    }));
+
+        [Fact]
+        public void AdHoc_Throws_WhenFieldValuesOutNumberColumns() =>
+            Assert.Throws<InvalidOperationException>(() =>
+                new Query("rows").With("rows",
+                    new[] { "a", "b" },
+                    new object[][] {
+                        new object[] { 1, 2, 3 },
+                        new object[] { 4, 5, 6 },
+                    }));
+
+        [Fact]
+        public void AdHoc_SingletonRow()
+        {
+            var query = new Query("rows").With("rows",
+                new[] { "a" },
+                new object[][] {
+                    new object[] { 1 },
+                });
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal("WITH [rows] AS (SELECT [a] FROM (VALUES (1)) AS tbl ([a]))\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\")\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("WITH `rows` AS (SELECT 1 AS `a`)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\")\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
+            Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS \"A\" FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\" FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
+        }
+
+        [Fact]
+        public void AdHoc_TwoRows()
+        {
+            var query = new Query("rows").With("rows",
+                new[] { "a", "b", "c" },
+                new object[][] {
+                    new object[] { 1, 2, 3 },
+                    new object[] { 4, 5, 6 },
+                });
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal("WITH [rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("WITH `rows` AS (SELECT 1 AS `a`, 2 AS `b`, 3 AS `c` UNION ALL SELECT 4 AS `a`, 5 AS `b`, 6 AS `c`)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
+            Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS \"A\", 2 AS \"B\", 3 AS \"C\" FROM RDB$DATABASE UNION ALL SELECT 4 AS \"A\", 5 AS \"B\", 6 AS \"C\" FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
+            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" FROM DUAL UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\" FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
+        }
+
+        [Fact]
+        public void AdHoc_ProperBindingsPlacement()
+        {
+            var query = new Query("rows")
+                .With("othercte", q => q.From("othertable").Where("othertable.status", "A"))
+                .Where("rows.foo", "bar")
+                .With("rows",
+                new[] { "a", "b", "c" },
+                new object[][] {
+                    new object[] { 1, 2, 3 },
+                    new object[] { 4, 5, 6 },
+                })
+                .Where("rows.baz", "buzz");
+
+            var c = Compilers.Compile(query);
+
+            Assert.Equal(string.Join("\n", new[] {
+                "WITH [othercte] AS (SELECT * FROM [othertable] WHERE [othertable].[status] = 'A'),",
+                "[rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))",
+                "SELECT * FROM [rows] WHERE [rows].[foo] = 'bar' AND [rows].[baz] = 'buzz'",
+            }), c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void UnsafeLiteral_Insert()
+        {
+            var query = new Query("Table").AsInsert(new
+            {
+                Count = new UnsafeLiteral("Count + 1")
+            });
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("INSERT INTO [Table] ([Count]) VALUES (Count + 1)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void UnsafeLiteral_Update()
+        {
+            var query = new Query("Table").AsUpdate(new
+            {
+                Count = new UnsafeLiteral("Count + 1")
+            });
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("UPDATE [Table] SET [Count] = Count + 1", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Boolean_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", true);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] = cast(1 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Boolean_False_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", false);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] = cast(0 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Negative_Boolean_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", "!=", true);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] != cast(1 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
+
+        [Fact]
+        public void Passing_Negative_Boolean_False_To_Where_Should_Call_WhereTrue_Or_WhereFalse()
+        {
+            var query = new Query("Table").Where("Col", "!=", false);
+
+            var engines = new[] {
+                EngineCodes.SqlServer,
+            };
+
+            var c = Compilers.Compile(engines, query);
+
+            Assert.Equal("SELECT * FROM [Table] WHERE [Col] != cast(0 as bit)", c[EngineCodes.SqlServer].ToString());
+        }
     }
 }

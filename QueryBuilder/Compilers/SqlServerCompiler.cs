@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -10,7 +12,7 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
-        public bool UseLegacyPagination { get; set; } = true;
+        public bool UseLegacyPagination { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
@@ -167,6 +169,22 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        {
+            var ctx = new SqlResult();
+
+            var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
+
+            var valueRow = string.Join(", ", Enumerable.Repeat("?", adHoc.Columns.Count));
+            var valueRows = string.Join(", ", Enumerable.Repeat($"({valueRow})", adHoc.Values.Count / adHoc.Columns.Count));
+            var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
+
+            ctx.RawSql = sql;
+            ctx.Bindings = adHoc.Values;
+
+            return ctx;
         }
     }
 }

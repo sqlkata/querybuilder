@@ -55,3 +55,4 @@ namespace SqlKata.Tests.Infrastructure
         protected override string ClosingIdentifier { get; set; } = "";
     }
 }
+

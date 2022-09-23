@@ -24,6 +24,7 @@ namespace SqlKata.Compilers
 
         public virtual string EngineCode { get; }
 
+        protected virtual string SingleRowDummyTableName { get => null; }
 
         /// <summary>
         /// A list of white-listed operators
@@ -209,6 +210,27 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        {
+            var ctx = new SqlResult();
+
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"? AS {Wrap(col)}"));
+
+            var fromTable = SingleRowDummyTableName;
+
+            if (fromTable != null)
+            {
+                row += $" FROM {fromTable}";
+            }
+
+            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Count / adHoc.Columns.Count));
+
+            ctx.RawSql = rows;
+            ctx.Bindings = adHoc.Values;
+
+            return ctx;
+        }
+
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
             var ctx = new SqlResult
@@ -285,8 +307,31 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+            // check for increment statements
+            var clause = ctx.Query.GetOneComponent("update", EngineCode);
 
+            string wheres;
+
+            if (clause != null && clause is IncrementClause increment)
+            {
+                var column = Wrap(increment.Column);
+                var value = Parameter(ctx, Math.Abs(increment.Value));
+                var sign = increment.Value >= 0 ? "+" : "-";
+
+                wheres = CompileWheres(ctx);
+
+                if (!string.IsNullOrEmpty(wheres))
+                {
+                    wheres = " " + wheres;
+                }
+
+                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}";
+
+                return ctx;
+            }
+
+
+            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
@@ -294,16 +339,16 @@ namespace SqlKata.Compilers
                 parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
             }
 
-            var where = CompileWheres(ctx);
-
-            if (!string.IsNullOrEmpty(where))
-            {
-                where = " " + where;
-            }
-
             var sets = string.Join(", ", parts);
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{where}";
+            wheres = CompileWheres(ctx);
+
+            if (!string.IsNullOrEmpty(wheres))
+            {
+                wheres = " " + wheres;
+            }
+
+            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
 
             return ctx;
         }
@@ -475,6 +520,13 @@ namespace SqlKata.Compilers
 
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
             }
+            else if (cte is AdHocTableFromClause adHoc)
+            {
+                var subCtx = CompileAdHocQuery(adHoc);
+                ctx.Bindings.AddRange(subCtx.Bindings);
+
+                ctx.RawSql = $"{WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})";
+            }
 
             return ctx;
         }
@@ -595,14 +647,14 @@ namespace SqlKata.Compilers
 
         public virtual string CompileFrom(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            if (ctx.Query.HasComponent("from", EngineCode))
             {
-                throw new InvalidOperationException("No table is set");
+                var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+
+                return "FROM " + CompileTableExpression(ctx, from);
             }
 
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            return "FROM " + CompileTableExpression(ctx, from);
+            return string.Empty;
         }
 
         public virtual string CompileJoins(SqlResult ctx)
@@ -635,7 +687,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode) || !ctx.Query.HasComponent("where", EngineCode))
+            if (!ctx.Query.HasComponent("where", EngineCode))
             {
                 return null;
             }
@@ -844,7 +896,6 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
-        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public virtual object Resolve(SqlResult ctx, object parameter)
         {
@@ -870,7 +921,6 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
-        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public virtual string Parameter(SqlResult ctx, object parameter)
         {

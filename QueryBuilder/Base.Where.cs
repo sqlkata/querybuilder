@@ -18,6 +18,16 @@ namespace SqlKata
                 return Not(op != "=").WhereNull(column);
             }
 
+            if (value is bool boolValue)
+            {
+                if (op != "=")
+                {
+                    Not();
+                }
+
+                return boolValue ? WhereTrue(column) : WhereFalse(column);
+            }
+
             return AddComponent("where", new BasicCondition
             {
                 Column = column,
@@ -371,7 +381,7 @@ namespace SqlKata
         public Q WhereIn<T>(string column, IEnumerable<T> values)
         {
 
-            // If the developer has passed a string most probably he wants List<string>
+            // If the developer has passed a string they most likely want a List<string>
             // since string is considered as List<char>
             if (values is string)
             {

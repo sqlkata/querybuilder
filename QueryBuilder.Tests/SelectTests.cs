@@ -1,7 +1,8 @@
-﻿using SqlKata.Compilers;
+using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -12,6 +13,19 @@ namespace SqlKata.Tests
         public void BasicSelect()
         {
             var q = new Query().From("users").Select("id", "name");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `id`, `name` FROM `users`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
+        public void BasicSelectEnumerable()
+        {
+            var q = new Query().From("users").Select(new List<string>() { "id", "name" });
             var c = Compile(q);
 
             Assert.Equal("SELECT [id], [name] FROM [users]", c[EngineCodes.SqlServer]);
@@ -701,6 +715,17 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void ShouldUseILikeOnPostgresWhenNonCaseSensitive()
+        {
+            var q = new Query("Table1")
+                .WhereLike("Column1", "%Upper Word%", false);
+            var c = Compile(q);
+
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%upper word%'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Table1\" WHERE \"Column1\" ilike '%Upper Word%'", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
         public void EscapedWhereLike()
         {
             var q = new Query("Table1")
@@ -789,5 +814,40 @@ namespace SqlKata.Tests
                     .HavingContains("Column1", @"TestString\%", false, @"\aa");
             });
         }
+
+
+        [Fact]
+        public void BasicSelectRaw_WithNoTable()
+        {
+            var q = new Query().SelectRaw("somefunction() as c1");                
+
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT somefunction() as c1", c.ToString());
+        }
+
+        [Fact]
+        public void BasicSelect_WithNoTable()
+        {
+            var q = new Query().Select("c1");
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1]", c.ToString());
+        }
+
+        [Fact]
+        public void BasicSelect_WithNoTableAndWhereClause()
+        {
+            var q = new Query().Select("c1").Where("p", 1);
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1] WHERE [p] = 1", c.ToString());
+        }
+
+        [Fact]
+        public void BasicSelect_WithNoTableWhereRawClause()
+        {
+            var q = new Query().Select("c1").WhereRaw("1 = 1");
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT [c1] WHERE 1 = 1", c.ToString());
+        }
+        
     }
 }

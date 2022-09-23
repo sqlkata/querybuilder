@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlKata.Compilers;
@@ -21,6 +21,9 @@ namespace SqlKata.Tests.Infrastructure
             [EngineCodes.PostgreSql] = new PostgresCompiler(),
             [EngineCodes.Sqlite] = new SqliteCompiler(),
             [EngineCodes.SqlServer] = new SqlServerCompiler()
+            {
+                UseLegacyPagination = true
+            }
         };
 
         public IEnumerable<string> KnownEngineCodes
@@ -52,7 +55,7 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public TCompiler Get<TCompiler>(string engineCode) where TCompiler : Compiler
         {
-            return (TCompiler) Get(engineCode);
+            return (TCompiler)Get(engineCode);
         }
 
         /// <summary>

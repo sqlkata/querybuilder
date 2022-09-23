@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
@@ -61,7 +61,7 @@ namespace SqlKata.Tests
             var query = new Query("Table").AsUpdate(new
             {
                 Name = "The User",
-                Age = new DateTime(2018, 1, 1),
+                Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             });
 
             var c = Compile(query);
@@ -215,7 +215,7 @@ namespace SqlKata.Tests
             var dictionaryUser = new Dictionary<string, object>
                 {
                     { "Name", "The User" },
-                    { "Age",  new DateTime(2018, 1, 1) },
+                    { "Age",  new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 }
                 .ToArray();
 
@@ -234,7 +234,7 @@ namespace SqlKata.Tests
         {
             var dictionaryUser = new Dictionary<string, object> {
                 { "Name", "The User" },
-                { "Age",  new DateTime(2018, 1, 1) },
+                { "Age",  new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             };
 
             var query = new Query("Table")
@@ -254,7 +254,7 @@ namespace SqlKata.Tests
                 new Dictionary<string, object>
                 {
                     { "Name", "The User" },
-                    { "Age",  new DateTime(2018, 1, 1) },
+                    { "Age",  new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 });
 
             var query = new Query("Table")
@@ -272,7 +272,7 @@ namespace SqlKata.Tests
         {
             dynamic expandoUser = new ExpandoObject();
             expandoUser.Name = "The User";
-            expandoUser.Age = new DateTime(2018, 1, 1);
+            expandoUser.Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             var query = new Query("Table")
                 .AsUpdate(expandoUser);
@@ -282,6 +282,38 @@ namespace SqlKata.Tests
             Assert.Equal(
                 "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
                 c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void IncrementUpdate()
+        {
+            var query = new Query("Table").AsIncrement("Total");
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 1", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void IncrementUpdateWithValue()
+        {
+            var query = new Query("Table").AsIncrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void IncrementUpdateWithWheres()
+        {
+            var query = new Query("Table").Where("Name", "A").AsIncrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void DecrementUpdate()
+        {
+            var query = new Query("Table").Where("Name", "A").AsDecrement("Total", 2);
+            var c = Compile(query);
+            Assert.Equal("UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
         }
     }
 }

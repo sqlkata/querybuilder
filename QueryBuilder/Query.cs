@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +8,11 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
+        private string comment;
+
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-        public string QueryComment { get; set; }
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
@@ -25,11 +26,13 @@ namespace SqlKata
             Comment(comment);
         }
 
+        public string GetComment() => comment ?? "";
+
         public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
 
         public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
 
-        internal int GetOffset(string engineCode = null)
+        internal long GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
             var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
@@ -63,9 +66,14 @@ namespace SqlKata
             return this;
         }
 
+        /// <summary>
+        /// Sets a comment for the query.
+        /// </summary>
+        /// <param name="comment">The comment.</param>
+        /// <returns></returns>
         public Query Comment(string comment)
         {
-            QueryComment = comment;
+            this.comment = comment;
             return this;
         }
 
@@ -118,6 +126,40 @@ namespace SqlKata
             return With(alias, fn.Invoke(new Query()));
         }
 
+        /// <summary>
+        /// Constructs an ad-hoc table of the given data as a CTE.
+        /// </summary>
+        public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        {
+            var columnsList = columns?.ToList();
+            var valuesCollectionList = valuesCollection?.ToList();
+
+            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
+            {
+                throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
+            }
+
+            var clause = new AdHocTableFromClause()
+            {
+                Alias = alias,
+                Columns = columnsList,
+                Values = new List<object>(),
+            };
+
+            foreach (var values in valuesCollectionList)
+            {
+                var valuesList = values.ToList();
+                if (columnsList.Count != valuesList.Count)
+                {
+                    throw new InvalidOperationException("Columns count should be equal to each Values count");
+                }
+
+                clause.Values.AddRange(valuesList);
+            }
+
+            return AddComponent("cte", clause);
+        }
+
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
             return AddComponent("cte", new RawFromClause
@@ -138,7 +180,7 @@ namespace SqlKata
             return AddOrReplaceComponent("limit", newClause);
         }
 
-        public Query Offset(int value)
+        public Query Offset(long value)
         {
             var newClause = new OffsetClause
             {
@@ -146,6 +188,11 @@ namespace SqlKata
             };
 
             return AddOrReplaceComponent("offset", newClause);
+        }
+
+        public Query Offset(int value)
+        {
+            return Offset((long)value);
         }
 
         /// <summary>
@@ -313,7 +360,7 @@ namespace SqlKata
         {
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
-        
+
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         /// <summary>
