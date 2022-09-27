@@ -263,6 +263,8 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
+            var joins = CompileJoins(ctx);
+
             var where = CompileWheres(ctx);
 
             if (!string.IsNullOrEmpty(where))
@@ -270,7 +272,23 @@ namespace SqlKata.Compilers
                 where = " " + where;
             }
 
-            ctx.RawSql = $"DELETE FROM {table}{where}";
+            if (string.IsNullOrEmpty(joins))
+            {
+                ctx.RawSql = $"DELETE FROM {table}{where}";
+            }
+            else
+            {
+                // check if we have alias 
+                if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
+                {
+                    ctx.RawSql = $"DELETE {Wrap(fromClause.Alias)} FROM {table} {joins}{where}";
+                }
+                else
+                {
+                    ctx.RawSql = $"DELETE {table} FROM {table} {joins}{where}";
+                }
+
+            }
 
             return ctx;
         }
