@@ -24,6 +24,12 @@ namespace SqlKata.Compilers
 
         public virtual string EngineCode { get; }
 
+        /// <summary>
+        /// Whether the compiler supports the `SELECT ... FILTER` syntax
+        /// </summary>
+        /// <value></value>            
+        public virtual bool SupportsFilterClause { get; set; } = false;
+
         protected virtual string SingleRowDummyTableName { get => null; }
 
         /// <summary>
@@ -512,10 +518,44 @@ namespace SqlKata.Compilers
                 return "(" + subCtx.RawSql + $"){alias}";
             }
 
+            if (column is AggregatedColumn aggregatedColumn)
+            {
+                string agg = aggregatedColumn.Aggregate.ToUpperInvariant();
+
+                var (col, alias) = SplitAlias(CompileColumn(ctx, aggregatedColumn.Column));
+
+                alias = string.IsNullOrEmpty(alias) ? "" : $" {ColumnAsKeyword}{alias}";
+
+                string filterCondition = CompileFilterConditions(ctx, aggregatedColumn);
+
+                if (string.IsNullOrEmpty(filterCondition))
+                {
+                    return $"{agg}({col}){alias}";
+                }
+
+                if (SupportsFilterClause)
+                {
+                    return $"{agg}({col}) FILTER (WHERE {filterCondition}){alias}";
+                }
+
+                return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
+            }
+
             return Wrap((column as Column).Name);
 
         }
 
+        protected virtual string CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
+        {
+            if (aggregatedColumn.Filter == null)
+            {
+                return null;
+            }
+
+            var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>("where");
+
+            return CompileConditions(ctx, wheres);
+        }
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
@@ -872,9 +912,7 @@ namespace SqlKata.Compilers
 
             if (value.ToLowerInvariant().Contains(" as "))
             {
-                var index = value.ToLowerInvariant().IndexOf(" as ");
-                var before = value.Substring(0, index);
-                var after = value.Substring(index + 4);
+                var (before, after) = SplitAlias(value);
 
                 return Wrap(before) + $" {ColumnAsKeyword}" + WrapValue(after);
             }
@@ -890,6 +928,20 @@ namespace SqlKata.Compilers
             // If we reach here then the value does not contain an "AS" alias
             // nor dot "." expression, so wrap it as regular value.
             return WrapValue(value);
+        }
+
+        public virtual (string, string) SplitAlias(string value)
+        {
+            var index = value.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+
+            if (index > 0)
+            {
+                var before = value.Substring(0, index);
+                var after = value.Substring(index + 4);
+                return (before, after);
+            }
+
+            return (value, null);
         }
 
         /// <summary>
