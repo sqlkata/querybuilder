@@ -200,6 +200,55 @@ namespace SqlKata.Tests
             db.Drop("Transaction");
         }
 
+        [Fact]
+        public void BasicSelectFilter()
+        {
+            var db = DB().Create("Transaction", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Date DATE NOT NULL",
+                    "Amount int NOT NULL",
+            });
+
+            var data = new Dictionary<string, int> {
+                // 2020
+                {"2020-01-01", 10},
+                {"2020-05-01", 20},
+                
+                // 2021
+                {"2021-01-01", 40},
+                {"2021-02-01", 10},
+                {"2021-04-01", -10},
+                
+                // 2022
+                {"2022-01-01", 80},
+                {"2022-02-01", -30},
+                {"2022-05-01", 50},
+            };
+
+            foreach (var row in data)
+            {
+                db.Query("Transaction").Insert(new
+                {
+                    Date = row.Key,
+                    Amount = row.Value
+                });
+            }
+
+            var query = db.Query("Transaction")
+                .SelectSum("Amount as Total_2020", q => q.WhereDatePart("year", "date", 2020))
+                .SelectSum("Amount as Total_2021", q => q.WhereDatePart("year", "date", 2021))
+                .SelectSum("Amount as Total_2022", q => q.WhereDatePart("year", "date", 2022))
+                ;
+
+            var results = query.Get().ToList();
+            Assert.Single(results);
+            Assert.Equal(30, results[0].Total_2020);
+            Assert.Equal(40, results[0].Total_2021);
+            Assert.Equal(100, results[0].Total_2022);
+
+            db.Drop("Transaction");
+        }
+
         QueryFactory DB()
         {
             var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");

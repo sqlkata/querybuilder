@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using SqlKata;
-using SqlKata.Compilers;
 
 namespace SqlKata.Compilers
 {
@@ -10,6 +8,7 @@ namespace SqlKata.Compilers
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
         protected override string LastId { get; set; } = "select last_insert_rowid() as id";
+        public override bool SupportsFilterClause { get; set; } = true;
 
         public override string CompileTrue()
         {
