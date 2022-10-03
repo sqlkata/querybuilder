@@ -903,5 +903,33 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [Title], SUM(CASE WHEN [Published_Month] = 'Jan' THEN [ViewCount] END) AS [Published_Jan], SUM(CASE WHEN [Published_Month] = 'Feb' THEN [ViewCount] END) AS [Published_Feb] FROM [Posts]", sqlServer.ToString());
         }
 
+        [Fact]
+        public void SelectWithExists()
+        {
+            var q = new Query("Posts").WhereExists(
+                new Query("Comments").WhereColumns("Comments.PostId", "=", "Posts.Id")
+            );
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT 1 FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
+        }
+
+        [Fact]
+        public void SelectWithExists_OmitSelectIsFalse()
+        {
+            var q = new Query("Posts").WhereExists(
+                new Query("Comments").Select("Id").WhereColumns("Comments.PostId", "=", "Posts.Id")
+            );
+
+
+            var compiler = new SqlServerCompiler
+            {
+                OmitSelectInsideExists = false,
+            };
+
+            var sqlServer = compiler.Compile(q).ToString();
+            Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
+        }
+
     }
 }
