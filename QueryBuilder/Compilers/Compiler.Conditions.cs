@@ -247,7 +247,16 @@ namespace SqlKata.Compilers
         {
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
 
-            var subCtx = CompileSelectQuery(item.Query);
+
+            // remove unneeded components
+            var query = item.Query.Clone();
+
+            if (OmitSelectInsideExists)
+            {
+                query.ClearComponent("select").SelectRaw("1");
+            }
+
+            var subCtx = CompileSelectQuery(query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
