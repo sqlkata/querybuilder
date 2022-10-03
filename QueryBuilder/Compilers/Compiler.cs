@@ -30,6 +30,12 @@ namespace SqlKata.Compilers
         /// <value></value>            
         public virtual bool SupportsFilterClause { get; set; } = false;
 
+        /// <summary>
+        /// If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
+        /// </summary>
+        /// <value></value>            
+        public virtual bool OmitSelectInsideExists { get; set; } = true;
+
         protected virtual string SingleRowDummyTableName { get => null; }
 
         /// <summary>
