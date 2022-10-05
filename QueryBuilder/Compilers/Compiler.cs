@@ -17,6 +17,11 @@ namespace SqlKata.Compilers
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
+
+        protected virtual string SingleInsertStartClause { get; set; } = "INSERT INTO";
+        protected virtual string MultiInsertStartClause { get; set; } = "INSERT INTO";
+
+
         protected Compiler()
         {
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
@@ -391,24 +396,15 @@ namespace SqlKata.Compilers
             };
 
             if (!ctx.Query.HasComponent("from", EngineCode))
-            {
                 throw new InvalidOperationException("No table set to insert");
-            }
 
             var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
             if (fromClause is null)
-            {
                 throw new InvalidOperationException("Invalid table expression");
-            }
 
             string table = null;
-
             if (fromClause is FromClause fromClauseCast)
-            {
                 table = Wrap(fromClauseCast.Table);
-            }
-
             if (fromClause is RawFromClause rawFromClause)
             {
                 table = WrapIdentifiers(rawFromClause.Expression);
@@ -416,56 +412,68 @@ namespace SqlKata.Compilers
             }
 
             if (table is null)
-            {
                 throw new InvalidOperationException("Invalid table expression");
-            }
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
-
-            if (inserts[0] is InsertClause insertClause)
-            {
-                var columns = string.Join(", ", WrapArray(insertClause.Columns));
-                var values = string.Join(", ", Parameterize(ctx, insertClause.Values));
-
-                ctx.RawSql = $"INSERT INTO {table} ({columns}) VALUES ({values})";
-
-                if (insertClause.ReturnId && !string.IsNullOrEmpty(LastId))
-                {
-                    ctx.RawSql += ";" + LastId;
-                }
-            }
+            if (inserts[0] is InsertQueryClause insertQueryClause)
+                return CompileInsertQueryClause(ctx, table, insertQueryClause);
             else
-            {
-                var clause = inserts[0] as InsertQueryClause;
+                return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>());
+        }
 
-                var columns = "";
+        protected virtual SqlResult CompileInsertQueryClause(
+            SqlResult ctx, string table, InsertQueryClause clause)
+        {
+            string columns = GetInsertColumnsList(clause.Columns);
 
-                if (clause.Columns.Any())
-                {
-                    columns = $" ({string.Join(", ", WrapArray(clause.Columns))}) ";
-                }
+            var subCtx = CompileSelectQuery(clause.Query);
+            ctx.Bindings.AddRange(subCtx.Bindings);
 
-                var subCtx = CompileSelectQuery(clause.Query);
-                ctx.Bindings.AddRange(subCtx.Bindings);
-
-                ctx.RawSql = $"INSERT INTO {table}{columns}{subCtx.RawSql}";
-            }
-
-            if (inserts.Count > 1)
-            {
-                foreach (var insert in inserts.GetRange(1, inserts.Count - 1))
-                {
-                    var clause = insert as InsertClause;
-
-                    ctx.RawSql += ", (" + string.Join(", ", Parameterize(ctx, clause.Values)) + ")";
-
-                }
-            }
-
+            ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
 
             return ctx;
         }
 
+        protected virtual SqlResult CompileValueInsertClauses(
+            SqlResult ctx, string table, IEnumerable<InsertClause> insertClauses)
+        {
+            bool isMultiValueInsert = insertClauses.Skip(1).Any();
+
+            var insertInto = (isMultiValueInsert) ? MultiInsertStartClause : SingleInsertStartClause;
+
+            var firstInsert = insertClauses.First();
+            string columns = GetInsertColumnsList(firstInsert.Columns);
+            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
+
+            ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
+
+            if (isMultiValueInsert)
+                return CompileRemainingInsertClauses(ctx, table, insertClauses);
+
+            if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
+                ctx.RawSql += ";" + LastId;
+
+            return ctx;
+        }
+
+        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        {
+            foreach (var insert in inserts.Skip(1))
+            {
+                string values = string.Join(", ", Parameterize(ctx, insert.Values));
+                ctx.RawSql += $", ({values})";
+            }
+            return ctx;
+        }
+
+        protected string GetInsertColumnsList(List<string> columnList)
+        {
+            var columns = "";
+            if (columnList.Any())
+                columns = $" ({string.Join(", ", WrapArray(columnList))})";
+
+            return columns;
+        }
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {

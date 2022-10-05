@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -12,6 +13,7 @@ namespace SqlKata.Compilers
             ColumnAsKeyword = "";
             TableAsKeyword = "";
             parameterPrefix = ":p";
+            MultiInsertStartClause = "INSERT ALL INTO";
         }
 
         public override string EngineCode { get; } = EngineCodes.Oracle;
@@ -151,6 +153,24 @@ namespace SqlKata.Compilers
 
             return sql;
 
+        }
+
+        protected override SqlResult CompileRemainingInsertClauses(
+            SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        {
+            foreach (var insert in inserts.Skip(1))
+            {
+                string columns = GetInsertColumnsList(insert.Columns);
+                string values = string.Join(", ", Parameterize(ctx, insert.Values));
+
+                string intoFormat = " INTO {0}{1} VALUES ({2})";
+                var nextInsert = string.Format(intoFormat, table, columns, values);
+
+                ctx.RawSql += nextInsert;
+            }
+
+            ctx.RawSql += " SELECT 1 FROM DUAL";
+            return ctx;
         }
     }
 }
