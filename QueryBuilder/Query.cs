@@ -361,7 +361,7 @@ namespace SqlKata
             return Include(relationName, query, foreignKey, localKey, isMany: true);
         }
 
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static readonly ConcurrentDictionary<Type, PropertyData[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyData[]>();
 
         /// <summary>
         /// Define a variable to be used within the query
@@ -405,33 +405,57 @@ namespace SqlKata
         private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
         {
             var dictionary = new Dictionary<string, object>();
-            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
+            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type =>
+            {
+                var list = new List<PropertyData>();
+                foreach (var item in type.GetRuntimeProperties().ToArray())
+                {
+                    list.Add(new PropertyData
+                    {
+                        PropertyInfo = item,
+                        Attributes = item.GetCustomAttributes().GroupBy(w => w.GetType()).ToDictionary(w => w.Key, w => w.ToArray())
+                    });
+                }
+
+                return list.ToArray();
+            });
 
             foreach (var property in props)
             {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                if (property.Attributes.ContainsKey(typeof(IgnoreAttribute)))
                 {
                     continue;
                 }
 
-                var value = property.GetValue(data);
+                var name = property.PropertyInfo.Name;
+                var value = property.PropertyInfo.GetValue(data);
 
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-
-                var name = colAttr?.Name ?? property.Name;
-
-                dictionary.Add(name, value);
-
-                if (considerKeys && colAttr != null)
+                if (property.Attributes.ContainsKey(typeof(ColumnAttribute)))
                 {
-                    if ((colAttr as KeyAttribute) != null)
+                    var colAttr = property.Attributes[typeof(ColumnAttribute)].First() as ColumnAttribute;
+                    name = colAttr?.Name ?? property.PropertyInfo.Name;
+                }
+
+                if (property.Attributes.ContainsKey(typeof(KeyAttribute)))
+                {
+                    var keyAttr = property.Attributes[typeof(KeyAttribute)].First() as KeyAttribute;
+                    if (considerKeys && keyAttr != null)
                     {
+                        name = keyAttr?.Name ?? property.PropertyInfo.Name;
                         this.Where(name, value);
                     }
                 }
+
+                dictionary.Add(name, value);
             }
 
             return dictionary;
+        }
+
+        private class PropertyData
+        {
+            public PropertyInfo PropertyInfo { get; set; }
+            public Dictionary<Type, Attribute[]> Attributes { get; set; }
         }
     }
 }
