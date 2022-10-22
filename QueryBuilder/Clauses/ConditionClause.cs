@@ -336,4 +336,46 @@ namespace SqlKata
             };
         }
     }
+
+    public class AggregatedCondition : AbstractCondition
+    {
+        /// <summary>
+        /// Gets or sets the a query that used to filter the data, 
+        /// the compiler will consider only the `Where` clause.
+        /// </summary>
+        /// <value>
+        /// The filter query.
+        /// </value>
+        public Query Filter { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the keyword of aggregate function.
+        /// </summary>
+        /// <value>
+        /// The keyword of aggregate function, e.g. "COUNT(DISTINCT columnName)", "COUNT(ALL columnName)", etc.
+        /// </value>
+        public string Keyword { get; set; }
+
+        public string Aggregate { get; set; }
+        public string Column { get; set; }
+        public string Operator { get; set; }
+        public object Value { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new AggregatedCondition
+            {
+                Filter = Filter?.Clone(),
+                Keyword = Keyword,
+                Aggregate = Aggregate,
+                Column = Column,
+                Operator = Operator,
+                Value = Value,
+                IsOr = IsOr,
+                IsNot = IsNot,
+                Engine = Engine,
+                Component = Component,
+            };
+        }
+    }
 }
