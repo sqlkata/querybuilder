@@ -1,11 +1,9 @@
-using SqlKata.Compilers;
-using Xunit;
-using SqlKata.Execution;
 using MySql.Data.MySqlClient;
-using System;
-using System.Linq;
-using static SqlKata.Expressions;
+using SqlKata.Compilers;
+using SqlKata.Execution;
 using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
 namespace SqlKata.Tests
 {
@@ -174,7 +172,7 @@ namespace SqlKata.Tests
             });
 
             var exists = db.Query("Transaction").Exists();
-            Assert.Equal(false, exists);
+            Assert.False(exists);
 
             db.Drop("Transaction");
         }
@@ -195,7 +193,7 @@ namespace SqlKata.Tests
             });
 
             var exists = db.Query("Transaction").Exists();
-            Assert.Equal(true, exists);
+            Assert.True(exists);
 
             db.Drop("Transaction");
         }

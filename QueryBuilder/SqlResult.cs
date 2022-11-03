@@ -1,3 +1,4 @@
+using SqlKata.Compilers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,13 @@ namespace SqlKata
 {
     public class SqlResult
     {
+        private readonly Compiler compiler;
+
+        public SqlResult(Compiler compiler)
+        {
+            this.compiler = compiler;
+        }
+
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
@@ -16,21 +24,21 @@ namespace SqlKata
 
         private static readonly Type[] NumberTypes =
         {
-            typeof(int),
-            typeof(long),
-            typeof(decimal),
-            typeof(double),
-            typeof(float),
-            typeof(short),
-            typeof(ushort),
-            typeof(ulong),
-        };
+        typeof(int),
+        typeof(long),
+        typeof(decimal),
+        typeof(double),
+        typeof(float),
+        typeof(short),
+        typeof(ushort),
+        typeof(ulong),
+    };
 
         public override string ToString()
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
 
-            return Helper.ReplaceAll(RawSql, "?", i =>
+            return Helper.ReplaceAll(RawSql, compiler.ParameterPlaceholder, i =>
             {
                 if (i >= deepParameters.Count)
                 {
@@ -81,7 +89,7 @@ namespace SqlKata
             }
 
             // fallback to string
-            return "'" + value.ToString().Replace("'","''") + "'";
+            return "'" + value.ToString().Replace("'", "''") + "'";
         }
     }
 }
