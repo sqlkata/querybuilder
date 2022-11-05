@@ -213,12 +213,12 @@ namespace SqlKata.Tests
                 // 2020
                 {"2020-01-01", 10},
                 {"2020-05-01", 20},
-                
+
                 // 2021
                 {"2021-01-01", 40},
                 {"2021-02-01", 10},
                 {"2021-04-01", -10},
-                
+
                 // 2022
                 {"2022-01-01", 80},
                 {"2022-02-01", -30},
@@ -249,6 +249,25 @@ namespace SqlKata.Tests
             db.Drop("Transaction");
         }
 
+        [Fact]
+        public void ShouldUseSpecifiedColumnsForCountQueryDuringPagination()
+        {
+            var db = DB().Create("Transactions", new[] {
+                    "Id INT PRIMARY KEY AUTO_INCREMENT",
+                    "Date DATE NOT NULL",
+                    "Amount int NOT NULL",
+            });
+
+            var result = db.Query("Transactions as t1")
+                .Distinct()
+                .Select("t1.Id")
+                .Join("Transactions as t2", "t1.Id", "t2.Id", "=")
+                .Paginate<object>(page: 1, perPage: 25, columns: new string[] { "t1.Id" });
+            Assert.Equal(0, result.TotalPages);
+
+            db.Drop("Transactions");
+        }
+
         QueryFactory DB()
         {
             var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
@@ -262,8 +281,5 @@ namespace SqlKata.Tests
 
             return db;
         }
-
-
-
     }
 }
