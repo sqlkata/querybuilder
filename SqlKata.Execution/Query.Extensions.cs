@@ -88,28 +88,48 @@ namespace SqlKata.Execution
             return await FirstAsync<dynamic>(query, transaction, timeout, cancellationToken);
         }
 
-        public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        public static PaginationResult<T> Paginate<T>(this Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
 
-            return db.Paginate<T>(query, page, perPage, transaction, timeout);
+            return db.Paginate<T>(query, columns, page, perPage, transaction, timeout);
         }
 
-        public static async Task<PaginationResult<T>> PaginateAsync<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        public static PaginationResult<T> Paginate<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return Paginate<T>(query, null, page, perPage, transaction, timeout);
+        }
+
+        public static async Task<PaginationResult<T>> PaginateAsync<T>(this Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var db = CreateQueryFactory(query);
 
-            return await db.PaginateAsync<T>(query, page, perPage, transaction, timeout, cancellationToken);
+            return await db.PaginateAsync<T>(query, columns, page, perPage, transaction, timeout, cancellationToken);
+        }
+
+        public static Task<PaginationResult<T>> PaginateAsync<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return PaginateAsync<T>(query, null, page, perPage, transaction, timeout, cancellationToken);
+        }
+
+        public static PaginationResult<dynamic> Paginate(this Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return Paginate<dynamic>(query, columns, page, perPage, transaction, timeout);
         }
 
         public static PaginationResult<dynamic> Paginate(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
         {
-            return query.Paginate<dynamic>(page, perPage, transaction, timeout);
+            return Paginate<dynamic>(query, null, page, perPage, transaction, timeout);
+        }
+
+        public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return await PaginateAsync<dynamic>(query, columns, page, perPage, transaction, timeout, cancellationToken);
         }
 
         public static async Task<PaginationResult<dynamic>> PaginateAsync(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await PaginateAsync<dynamic>(query, page, perPage, transaction, timeout, cancellationToken);
+            return await PaginateAsync<dynamic>(query, null, page, perPage, transaction, timeout, cancellationToken);
         }
 
         public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func, IDbTransaction transaction = null, int? timeout = null)

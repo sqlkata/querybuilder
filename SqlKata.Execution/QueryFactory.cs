@@ -285,7 +285,7 @@ namespace SqlKata.Execution
         public async Task<SqlMapper.GridReader> GetMultipleAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default)
         {
             var compiled = this.Compiler.Compile(queries);
@@ -324,7 +324,7 @@ namespace SqlKata.Execution
         public async Task<IEnumerable<IEnumerable<T>>> GetAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -388,7 +388,7 @@ namespace SqlKata.Execution
             string aggregateOperation,
             string[] columns = null,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -456,6 +456,11 @@ namespace SqlKata.Execution
 
         public PaginationResult<T> Paginate<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
         {
+            return Paginate<T>(query, null, page, perPage, transaction, timeout);
+        }
+
+        public PaginationResult<T> Paginate<T>(Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
             if (page < 1)
             {
                 throw new ArgumentException("Page param should be greater than or equal to 1", nameof(page));
@@ -466,7 +471,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var count = Count<long>(query.Clone(), null, transaction, timeout);
+            var count = Count<long>(query.Clone(), columns, transaction, timeout);
 
             IEnumerable<T> list;
 
@@ -489,7 +494,12 @@ namespace SqlKata.Execution
             };
         }
 
-        public async Task<PaginationResult<T>> PaginateAsync<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        public Task<PaginationResult<T>> PaginateAsync<T>(Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return PaginateAsync<T>(query, null, page, perPage, transaction, timeout, cancellationToken);
+        }
+
+        public async Task<PaginationResult<T>> PaginateAsync<T>(Query query, string[] columns, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             if (page < 1)
             {
@@ -501,7 +511,7 @@ namespace SqlKata.Execution
                 throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(perPage));
             }
 
-            var count = await CountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken);
+            var count = await CountAsync<long>(query.Clone(), columns, transaction, timeout, cancellationToken);
 
             IEnumerable<T> list;
 
@@ -553,7 +563,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Func<IEnumerable<T>, int, bool> func,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -592,7 +602,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Action<IEnumerable<T>, int> action,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
