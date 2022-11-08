@@ -158,15 +158,6 @@ namespace SqlKata.Compilers
 
         }
 
-        protected virtual string CompileBasicDateSelect(SqlResult ctx,DateQueryColumn x)
-        {
-            var column = Wrap(x.Column);
-
-            var sql = $"{x.Part.ToUpperInvariant()}({column})";
-
-            return sql;
-        }
-
         protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x)
         {
             var column = Wrap(x.Column);

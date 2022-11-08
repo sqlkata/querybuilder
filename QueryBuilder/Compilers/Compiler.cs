@@ -227,6 +227,16 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+
+        protected virtual string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
+
+            var sql = $"{x.Part.ToUpperInvariant()}({column})";
+
+            return sql;
+        }
+
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
             var ctx = new SqlResult();
