@@ -542,7 +542,7 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileBasicDateSelect(ctx,dateQueryColumn);
 
-                return "(" + subCtx + $"){alias}";
+                return subCtx + $"{alias}";
             }
             if (column is AggregatedColumn aggregatedColumn)
             {

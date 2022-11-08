@@ -936,12 +936,12 @@ namespace SqlKata.Tests
             var q = new Query().From("users as u").SelectDatePart("day","date","date_day");
             var c = Compile(q);
 
-            Assert.Equal("SELECT (DAY(`date`)) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT (strftime('%d', \"date\")) AS \"date_day\" FROM \"users\" AS \"u\"", c[EngineCodes.Sqlite]);
-            Assert.Equal("SELECT (DAY(`date`)) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT (EXTRACT(DAY FROM \"DATE\")) AS \"DATE_DAY\" FROM \"USERS\" AS \"U\"", c[EngineCodes.Firebird]);
-            Assert.Equal("SELECT (DATEPART(DAY, [date])) AS [date_day] FROM [users] AS [u]", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT (EXTRACT(DAY FROM \"date\")) \"date_day\" FROM \"users\" \"u\"", c[EngineCodes.Oracle]);
+            Assert.Equal("SELECT DAY(`date`) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT strftime('%d', \"date\") AS \"date_day\" FROM \"users\" AS \"u\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT DAY(`date`) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT EXTRACT(DAY FROM \"DATE\") AS \"DATE_DAY\" FROM \"USERS\" AS \"U\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT DATEPART(DAY, [date]) AS [date_day] FROM [users] AS [u]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT EXTRACT(DAY FROM \"date\") \"date_day\" FROM \"users\" \"u\"", c[EngineCodes.Oracle]);
         }
     }
 }
