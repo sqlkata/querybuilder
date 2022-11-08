@@ -117,5 +117,66 @@ namespace SqlKata
         {
             return SelectAggregate("max", column, filter);
         }
+
+        #region date
+        public Query SelectDatePart(string part, string column,string alias)
+        {
+            return AddComponent("select", new DateQueryColumn
+            {
+                Name = alias, 
+                Part = part?.ToLowerInvariant(),
+                Column=column
+            });
+        }
+        public Query SelectNotDatePart(string part, string column, string alias)
+        {
+            return Not().SelectDatePart(part, column, alias);
+        }
+
+        public Query OrSelectDatePart(string part, string column, string alias)
+        {
+            return Or().SelectDatePart(part, column, alias);
+        }
+
+        public Query OrSelectNotDatePart(string part, string column, string alias)
+        {
+            return Or().Not().SelectDatePart(part, column, alias);
+        }
+
+        public Query SelectDate(string column, string alias)
+        {
+            return SelectDatePart("date", column, alias);
+        }
+        public Query SelectNotDate(string column, string alias)
+        {
+            return Not().SelectDate(column, alias);
+        }
+        public Query OrSelectDate(string column, string alias)
+        {
+            return Or().SelectDate(column, alias);
+        }
+        public Query OrSelectNotDate(string column, string alias)
+        {
+            return Or().Not().SelectDate(column, alias);
+        }
+
+        public Query SelectTime(string column, string alias)
+        {
+            return SelectDatePart("time", column, alias);
+        }
+        public Query SelectNotTime(string column, string alias)
+        {
+            return Not().SelectTime(column, alias);
+        }
+        public Query OrSelectTime(string column, string alias)
+        {
+            return Or().SelectTime(column, alias);
+        }
+        public Query OrSelectNotTime(string column, string alias)
+        {
+            return Or().Not().SelectTime(column, alias);
+        }
+        #endregion
+
     }
 }

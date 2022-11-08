@@ -531,7 +531,19 @@ namespace SqlKata.Compilers
 
                 return "(" + subCtx.RawSql + $"){alias}";
             }
+            if (column is DateQueryColumn dateQueryColumn)
+            {
+                var alias = "";
 
+                if (!string.IsNullOrWhiteSpace(dateQueryColumn.Name))
+                {
+                    alias = $" {ColumnAsKeyword}{WrapValue(dateQueryColumn.Name)}";
+                }
+
+                var subCtx = CompileBasicDateSelect(ctx,dateQueryColumn);
+
+                return "(" + subCtx + $"){alias}";
+            }
             if (column is AggregatedColumn aggregatedColumn)
             {
                 string agg = aggregatedColumn.Aggregate.ToUpperInvariant();

@@ -930,6 +930,14 @@ namespace SqlKata.Tests
             var sqlServer = compiler.Compile(q).ToString();
             Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
         }
+        [Fact]
+        public void SelectWithDatePart()
+        {
+            var q = new Query().From("users as u").SelectDatePart("day","date","date_day");
+            var c = Compile(q);
 
+            Assert.Equal("SELECT (DAY(`date`)) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT (strftime('%d', \"date\")) AS \"date_day\" FROM \"users\" AS \"u\"", c[EngineCodes.Sqlite]);
+        }
     }
 }
