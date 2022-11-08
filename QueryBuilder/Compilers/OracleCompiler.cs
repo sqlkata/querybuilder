@@ -99,7 +99,34 @@ namespace SqlKata.Compilers
 
             ctx.RawSql = newSql;
         }
+        protected override string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
 
+            string sql;
+            switch (x.Part)
+            {
+                case "date": // assume YY-MM-DD format
+                    sql = $"TO_CHAR({column}, 'YY-MM-DD')";
+                    break;
+                case "time":
+                    sql = $"TO_CHAR({column}, 'HH24:MI:SS')";
+                    break;
+                case "year":
+                case "month":
+                case "day":
+                case "hour":
+                case "minute":
+                case "second":
+                    sql = $"EXTRACT({x.Part.ToUpperInvariant()} FROM {column})";
+                    break;
+                default:
+                    sql = column;
+                    break;
+            }
+
+            return sql;
+        }
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
 

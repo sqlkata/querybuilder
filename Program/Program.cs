@@ -37,7 +37,8 @@ namespace Program
             using (var db = SqlLiteQueryFactory())
             {
                 var query = db.Query("accounts")
-                    .SelectDatePart("year", "created_at", "created_at_day")
+                    .Where("balance", ">", 0)
+                    .GroupBy("balance")
                 .Limit(10);
 
                 var accounts = query.Clone().Get();

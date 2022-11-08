@@ -938,6 +938,10 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT (DAY(`date`)) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
             Assert.Equal("SELECT (strftime('%d', \"date\")) AS \"date_day\" FROM \"users\" AS \"u\"", c[EngineCodes.Sqlite]);
+            Assert.Equal("SELECT (DAY(`date`)) AS `date_day` FROM `users` AS `u`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT (EXTRACT(DAY FROM \"DATE\")) AS \"DATE_DAY\" FROM \"USERS\" AS \"U\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT (DATEPART(DAY, [date])) AS [date_day] FROM [users] AS [u]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT (EXTRACT(DAY FROM \"date\")) \"date_day\" FROM \"users\" \"u\"", c[EngineCodes.Oracle]);
         }
     }
 }
