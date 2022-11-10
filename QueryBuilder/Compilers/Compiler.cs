@@ -829,7 +829,7 @@ namespace SqlKata.Compilers
 
                     var sql = CompileBasicDateSelect(ctx, new DateQueryColumn { Column = dateOrderBy.Column, Part = dateOrderBy.Part });
 
-                    return Wrap(sql) + direct;
+                    return sql + direct;
                 }
 
                 var direction = (x as OrderBy).Ascending ? "" : " DESC";
