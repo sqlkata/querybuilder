@@ -823,6 +823,14 @@ namespace SqlKata.Compilers
                     ctx.Bindings.AddRange(raw.Bindings);
                     return WrapIdentifiers(raw.Expression);
                 }
+                if (x is DateOrderBy dateOrderBy)
+                {
+                    var direct = dateOrderBy.Ascending ? "" : " DESC";
+
+                    var sql = CompileBasicDateSelect(ctx, new DateQueryColumn { Column = dateOrderBy.Column, Part = dateOrderBy.Part });
+
+                    return Wrap(sql) + direct;
+                }
 
                 var direction = (x as OrderBy).Ascending ? "" : " DESC";
 
