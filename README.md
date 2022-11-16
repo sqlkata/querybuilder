@@ -163,10 +163,10 @@ int affected = db.Query("Users").Where("Id", 1).Delete();
 I announce updates on My [Twitter Account](https://twitter.com/ahmadmuzavi), and you can subscribe to our news letters from the website https://sqlkata.com
 
 ### The database that I want is not supported why?
-Usually it's impossible to support all available database vendors, this why we focus on the major ones, and we are encourage you to create your own compiler for your database
+Usually it's impossible to support all available database vendors, this why we focus on the major ones, and we encourage you to create your own compiler for your database.
 
 ### Do you accept new compilers?
-Unfortunetly no, the reason is this will add overhead for the project contributors, we prefer to improve the quality of the existing compilers instead
+Unfortunetly no, the reason is this will add overhead for the project contributors, we prefer to improve the quality of the existing compilers instead.
 
 ### How can I support the project?
 - Star the project here in Github, and share it with your friends
