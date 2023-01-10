@@ -346,6 +346,7 @@ namespace SqlKata.Compilers
             var clause = ctx.Query.GetOneComponent("update", EngineCode);
 
             string wheres;
+            string joins;
 
             if (clause != null && clause is IncrementClause increment)
             {
@@ -354,13 +355,14 @@ namespace SqlKata.Compilers
                 var sign = increment.Value >= 0 ? "+" : "-";
 
                 wheres = CompileWheres(ctx);
+                joins = CompileJoins(ctx);
 
                 if (!string.IsNullOrEmpty(wheres))
                 {
                     wheres = " " + wheres;
                 }
 
-                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}";
+                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value} FROM {table}{joins}{wheres}";
 
                 return ctx;
             }
@@ -377,13 +379,14 @@ namespace SqlKata.Compilers
             var sets = string.Join(", ", parts);
 
             wheres = CompileWheres(ctx);
+            joins = CompileJoins(ctx);
 
             if (!string.IsNullOrEmpty(wheres))
             {
                 wheres = " " + wheres;
             }
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
+            ctx.RawSql = $"UPDATE {table} SET {sets} FROM {table}{joins}{wheres}";
 
             return ctx;
         }
