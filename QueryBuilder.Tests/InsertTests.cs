@@ -1,10 +1,10 @@
+using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.Linq;
-using SqlKata.Compilers;
-using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -281,6 +281,45 @@ namespace SqlKata.Tests
 
             Assert.Equal(
                 "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
+                c[EngineCodes.Firebird]);
+        }
+
+        [Fact]
+        public void InsertDictionaryList()
+        {
+            var expensiveCars = new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
+                {
+                    { "name", "Chiron" },
+                    { "brand", "Bugatti" },
+                    { "year", null },
+                },
+                new Dictionary<string, object>
+                {
+                    { "name", "Huayra" },
+                    { "year", 2012 },
+                    { "brand", "Pagani" },
+                },
+                new Dictionary<string, object>
+                {
+                    { "year", 2009 },
+                    { "brand", "Lamborghini" },
+                    { "name", "Reventon roadster" },
+                },
+            };
+
+            var query = new Query("expensive_cars")
+                .AsInsert(expensiveCars);
+
+            var c = Compile(query);
+
+            Assert.Equal(
+                "INSERT INTO [expensive_cars] ([brand], [name], [year]) VALUES ('Bugatti', 'Chiron', NULL), ('Pagani', 'Huayra', 2012), ('Lamborghini', 'Reventon roadster', 2009)",
+                c[EngineCodes.SqlServer]);
+
+            Assert.Equal(
+                "INSERT INTO \"EXPENSIVE_CARS\" (\"BRAND\", \"NAME\", \"YEAR\") SELECT 'Bugatti', 'Chiron', NULL FROM RDB$DATABASE UNION ALL SELECT 'Pagani', 'Huayra', 2012 FROM RDB$DATABASE UNION ALL SELECT 'Lamborghini', 'Reventon roadster', 2009 FROM RDB$DATABASE",
                 c[EngineCodes.Firebird]);
         }
 

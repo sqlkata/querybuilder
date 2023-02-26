@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace SqlKata
 {
@@ -95,6 +94,47 @@ namespace SqlKata
             }
 
             return this;
+        }
+
+        public Query AsInsert(IEnumerable<IEnumerable<KeyValuePair<string, object>>> values)
+        {
+            if (values == null || !values.Any())
+            {
+                throw new InvalidOperationException($"{values} argument cannot be null or empty");
+            }
+
+            var columnsList = values.First().Select(x => x.Key).OrderBy(x => x).ToList();
+            if (!columnsList.Any())
+            {
+                throw new InvalidOperationException($"Elements in {values} argument cannot be empty");
+            }
+
+            var rowsValuesList = new List<List<object>>();
+
+            foreach (var rowValues in values)
+            {
+                int rowValuesCount = rowValues.Count();
+                if (rowValuesCount != columnsList.Count())
+                {
+                    throw new InvalidOperationException($"Not all elements in {values} contain the same columns.");
+                }
+
+                var valuesList = new List<object>();
+                var sortedRowValuesList = rowValues.OrderBy(x => x.Key).ToList();
+                for (int i = 0; i < rowValuesCount; i++)
+                {
+                    if (columnsList[i] != sortedRowValuesList[i].Key)
+                    {
+                        throw new InvalidOperationException($"Not all elements in {values} contain the same columns.");
+                    }
+
+                    valuesList.Add(sortedRowValuesList[i].Value);
+                }
+
+                rowsValuesList.Add(valuesList);
+            }
+
+            return AsInsert(columnsList, rowsValuesList);
         }
 
         /// <summary>
