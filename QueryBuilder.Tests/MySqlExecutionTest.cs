@@ -174,7 +174,7 @@ namespace SqlKata.Tests
             });
 
             var exists = db.Query("Transaction").Exists();
-            Assert.Equal(false, exists);
+            Assert.False(exists);
 
             db.Drop("Transaction");
         }
@@ -195,7 +195,7 @@ namespace SqlKata.Tests
             });
 
             var exists = db.Query("Transaction").Exists();
-            Assert.Equal(true, exists);
+            Assert.True(exists);
 
             db.Drop("Transaction");
         }
