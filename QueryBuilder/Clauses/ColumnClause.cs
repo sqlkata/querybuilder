@@ -77,4 +77,33 @@ namespace SqlKata
             };
         }
     }
+
+    /// <summary>
+    /// Represents an aggregated column clause with an optional filter
+    /// </summary>
+    /// <seealso cref="AbstractColumn" />
+    public class AggregatedColumn : AbstractColumn
+    {
+        /// <summary>
+        /// Gets or sets the a query that used to filter the data, 
+        /// the compiler will consider only the `Where` clause.
+        /// </summary>
+        /// <value>
+        /// The filter query.
+        /// </value>
+        public Query Filter { get; set; } = null;
+        public string Aggregate { get; set; }
+        public AbstractColumn Column { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new AggregatedColumn
+            {
+                Engine = Engine,
+                Filter = Filter?.Clone(),
+                Column = Column.Clone() as AbstractColumn,
+                Aggregate = Aggregate,
+                Component = Component,
+            };
+        }
+    }
 }

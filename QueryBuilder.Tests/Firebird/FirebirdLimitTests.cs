@@ -47,8 +47,8 @@ namespace SqlKata.Tests.Firebird
             var ctx = new SqlResult { Query = query };
 
             Assert.Equal("ROWS ? TO ?", compiler.CompileLimit(ctx));
-            Assert.Equal(21, ctx.Bindings[0]);
-            Assert.Equal(25, ctx.Bindings[1]);
+            Assert.Equal(21L, ctx.Bindings[0]);
+            Assert.Equal(25L, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);
         }
     }

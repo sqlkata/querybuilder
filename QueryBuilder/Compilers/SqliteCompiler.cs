@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using SqlKata;
-using SqlKata.Compilers;
 
 namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
         public override string EngineCode { get; } = EngineCodes.Sqlite;
-        protected override string parameterPlaceholder { get; set; } = "?";
-        protected override string parameterPrefix { get; set; } = "@p";
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
         protected override string LastId { get; set; } = "select last_insert_rowid() as id";
+        public override bool SupportsFilterClause { get; set; } = true;
 
         public override string CompileTrue()
         {
@@ -31,7 +28,7 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Add(offset);
-                return "LIMIT -1 OFFSET ?";
+                return $"LIMIT -1 OFFSET {parameterPlaceholder}";
             }
 
             return base.CompileLimit(ctx);
