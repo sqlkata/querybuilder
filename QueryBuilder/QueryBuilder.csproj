@@ -14,8 +14,8 @@
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
     <PackageReleaseNotes>https://github.com/sqlkata/querybuilder</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/sqlkata/querybuilder</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
 

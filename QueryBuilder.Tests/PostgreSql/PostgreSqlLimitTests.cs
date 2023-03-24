@@ -39,7 +39,7 @@ namespace SqlKata.Tests.PostgreSql
             var ctx = new SqlResult { Query = query };
 
             Assert.Equal("OFFSET ?", compiler.CompileLimit(ctx));
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Single(ctx.Bindings);
         }
 
@@ -51,7 +51,7 @@ namespace SqlKata.Tests.PostgreSql
 
             Assert.Equal("LIMIT ? OFFSET ?", compiler.CompileLimit(ctx));
             Assert.Equal(5, ctx.Bindings[0]);
-            Assert.Equal(20, ctx.Bindings[1]);
+            Assert.Equal(20L, ctx.Bindings[1]);
             Assert.Equal(2, ctx.Bindings.Count);
         }
     }

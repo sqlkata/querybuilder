@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -12,6 +13,7 @@ namespace SqlKata.Compilers
             ColumnAsKeyword = "";
             TableAsKeyword = "";
             parameterPrefix = ":p";
+            MultiInsertStartClause = "INSERT ALL INTO";
         }
 
         public override string EngineCode { get; } = EngineCodes.Oracle;
@@ -58,13 +60,13 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET ? ROWS";
+                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
         }
 
         internal void ApplyLegacyLimit(SqlResult ctx)
@@ -80,17 +82,17 @@ namespace SqlKata.Compilers
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {parameterPlaceholder}";
                 ctx.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
@@ -151,6 +153,24 @@ namespace SqlKata.Compilers
 
             return sql;
 
+        }
+
+        protected override SqlResult CompileRemainingInsertClauses(
+            SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        {
+            foreach (var insert in inserts.Skip(1))
+            {
+                string columns = GetInsertColumnsList(insert.Columns);
+                string values = string.Join(", ", Parameterize(ctx, insert.Values));
+
+                string intoFormat = " INTO {0}{1} VALUES ({2})";
+                var nextInsert = string.Format(intoFormat, table, columns, values);
+
+                ctx.RawSql += nextInsert;
+            }
+
+            ctx.RawSql += " SELECT 1 FROM DUAL";
+            return ctx;
         }
     }
 }

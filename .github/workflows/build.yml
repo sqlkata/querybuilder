@@ -68,9 +68,9 @@ jobs:
       - name: Test
         run: dotnet test -c Release
         env:
-          MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
-          MYSQL_USER: ${{ env.DB_MYSQL_USER }}
-          MYSQL_DB: ${{ env.DB_MYSQL_DATABASE }}
+          SQLKATA_MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
+          SQLKATA_MYSQL_USER: ${{ env.DB_MYSQL_USER }}
+          SQLKATA_MYSQL_DB: ${{ env.DB_MYSQL_DATABASE }}
 
       - name: Pack QueryBuilder
         if: matrix.os == 'ubuntu-latest'

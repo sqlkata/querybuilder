@@ -11,6 +11,7 @@
     <AssemblyOriginatorKeyFile>SqlKata.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.8" />
     <PackageReference Include="ConfigureAwait.Fody" Version="3.3.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -30,4 +31,3 @@
     <ProjectReference Include="..\SqlKata.Execution\SqlKata.Execution.csproj" />
   </ItemGroup>
 </Project>
-
