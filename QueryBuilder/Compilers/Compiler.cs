@@ -420,7 +420,7 @@ namespace SqlKata.Compilers
             if (inserts[0] is InsertQueryClause insertQueryClause)
                 return CompileInsertQueryClause(ctx, table, insertQueryClause);
             else
-                return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>());
+                return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>().ToArray());
         }
 
         protected virtual SqlResult CompileInsertQueryClause(
@@ -437,15 +437,15 @@ namespace SqlKata.Compilers
         }
 
         protected virtual SqlResult CompileValueInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> insertClauses)
+            SqlResult ctx, string table, IReadOnlyCollection<InsertClause> insertClauses)
         {
-            bool isMultiValueInsert = insertClauses.Skip(1).Any();
+            bool isMultiValueInsert = insertClauses.Count > 1;
 
             var insertInto = (isMultiValueInsert) ? MultiInsertStartClause : SingleInsertStartClause;
 
             var firstInsert = insertClauses.First();
-            string columns = GetInsertColumnsList(firstInsert.Columns);
-            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
+            string columns = GetInsertColumnsList(firstInsert.Data.Keys);
+            var values = string.Join(", ", Parameterize(ctx, firstInsert.Data.Values));
 
             ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
 
@@ -458,17 +458,21 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, IReadOnlyCollection<InsertClause> inserts)
         {
+            var sql = new StringBuilder(ctx.RawSql, inserts.Count - 1);
+
             foreach (var insert in inserts.Skip(1))
             {
-                string values = string.Join(", ", Parameterize(ctx, insert.Values));
-                ctx.RawSql += $", ({values})";
+                sql.Append($", ({string.Join(", ", Parameterize(ctx, insert.Data.Values))})");
             }
+
+            ctx.RawSql = sql.ToString();
+
             return ctx;
         }
 
-        protected string GetInsertColumnsList(List<string> columnList)
+        protected string GetInsertColumnsList(IReadOnlyCollection<string> columnList)
         {
             var columns = "";
             if (columnList.Any())
