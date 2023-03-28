@@ -366,7 +366,16 @@ namespace SqlKata.Execution
 
         internal static QueryFactory CreateQueryFactory(XQuery xQuery)
         {
-            var factory = new QueryFactory(xQuery.Connection, xQuery.Compiler, xQuery.QueryFactory.QueryTimeout);
+            QueryFactory factory;
+
+            if (xQuery.QueryFactory != null)
+            {
+                factory = new QueryFactory(xQuery.Connection, xQuery.Compiler, xQuery.QueryFactory.QueryTimeout);
+            }
+            else
+            {
+                factory = new QueryFactory(xQuery.Connection, xQuery.Compiler);
+            }
 
             factory.Logger = xQuery.Logger;
 

@@ -14,6 +14,7 @@ namespace SqlKata.Execution
 
         public XQuery(IDbConnection connection, Compiler compiler)
         {
+            this.QueryFactory = new QueryFactory(connection, compiler);
             this.Connection = connection;
             this.Compiler = compiler;
         }
@@ -21,7 +22,12 @@ namespace SqlKata.Execution
         public override Query Clone()
         {
 
-            var query = new XQuery(this.Connection, this.Compiler);
+            var query = new XQuery(this.QueryFactory.Connection, this.QueryFactory.Compiler);
+
+            if (this.QueryFactory?.QueryTimeout != null)
+            {
+                query.QueryFactory.QueryTimeout = this.QueryFactory?.QueryTimeout ?? 30;
+            }
 
             query.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
             query.Logger = this.Logger;

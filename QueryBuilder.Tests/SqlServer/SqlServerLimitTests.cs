@@ -31,7 +31,7 @@ namespace SqlKata.Tests.SqlServer
 
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
             Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(0, ctx.Bindings[0]);
+            Assert.Equal(0L, ctx.Bindings[0]);
             Assert.Equal(10, ctx.Bindings[1]);
         }
 
@@ -44,7 +44,7 @@ namespace SqlKata.Tests.SqlServer
             Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
 
             Assert.Single(ctx.Bindings);
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace SqlKata.Tests.SqlServer
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
 
             Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Equal(5, ctx.Bindings[1]);
         }
 

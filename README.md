@@ -6,23 +6,19 @@
     <a href="https://www.nuget.org/packages/SqlKata"><img src="https://img.shields.io/nuget/vpre/SqlKata.svg"></a>
     <a href="https://github.com/sqlkata/querybuilder/network/members"><img src="https://img.shields.io/github/forks/sqlkata/querybuilder"></a>
     <a href="https://github.com/sqlkata/querybuilder/stargazers"><img src="https://img.shields.io/github/stars/sqlkata/querybuilder"></a>
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-<a href="#contributors-"><img src="https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square" alt="All Contributors"></a>
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
     <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=Tweet%20about%20SqlKata&style=social&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"></a>		
 </p>
 
 
-
-
-
-> **WE ARE NOT ACCEPTING NEW COMPILERS, if you want to add your own compiler, we recommend to create a separate repo like SqlKata-Oracle**
-
-Follow <a href="https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fsqlkata%2Fquerybuilder"><img alt="Twitter" src="https://img.shields.io/twitter/url?label=%40ahmadmuzavi&style=social&url=https%3A%2F%2Ftwitter.com%2Fahmadmuzavi"></a> for the latest updates about SqlKata.
+<p align="center">
+<strong>Follow and Upvote SqlKata on Product Hunt to encourage the development of this project</strong>
+</p>
+<p align="center">
+<a href="https://www.producthunt.com/products/sqlkata?utm_source=badge-follow&utm_medium=badge&utm_souce=badge-sqlkata" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?post_id=398417&theme=light" alt="SqlKata - Dynamic&#0032;Sql&#0032;query&#0032;builder&#0032;for&#0032;dotnet | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+</p>
 
 
 ![Quick Demo](https://i.imgur.com/jOWD4vk.gif)
-
 
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
@@ -41,14 +37,9 @@ Checkout the full documentation on [https://sqlkata.com](https://sqlkata.com)
 
 ## Installation
 
-using dotnet cli
 ```sh
 $ dotnet add package SqlKata
-```
-
-using Nuget Package Manager
-```sh
-PM> Install-Package SqlKata
+$ dotnet add package SqlKata.Execution # (optional) If you want the execution support
 ```
 
 
@@ -167,22 +158,17 @@ int affected = db.Query("Users").Where("Id", 1).Update(new {
 int affected = db.Query("Users").Where("Id", 1).Delete();
 ```
 
-## Contributors ✨
+## FAQ
+### How to know when a new release or a feature is available?
+I announce updates on My [Twitter Account](https://twitter.com/ahmadmuzavi), and you can subscribe to our news letters from the website https://sqlkata.com
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+### The database that I want is not supported why?
+Usually it's impossible to support all available database vendors, this why we focus on the major ones, and we encourage you to create your own compiler for your database.
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/mnsrulz"><img src="https://avatars.githubusercontent.com/u/1809086?v=4?s=100" width="100px;" alt=""/><br /><sub><b>mnsrulz</b></sub></a><br /><a href="https://github.com/sqlkata/querybuilder/commits?author=mnsrulz" title="Code">💻</a></td>
-  </tr>
-</table>
+### Do you accept new compilers?
+Unfortunetly no, the reason is this will add overhead for the project contributors, we prefer to improve the quality of the existing compilers instead.
 
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+### How can I support the project?
+- Star the project here in Github, and share it with your friends
+- Follow and upvote it on Product Hunt <a href="https://www.producthunt.com/products/sqlkata?utm_source=badge-follow&utm_medium=badge&utm_souce=badge-sqlkata" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?post_id=398417&theme=light&size=small" alt="SqlKata - Dynamic&#0032;Sql&#0032;query&#0032;builder&#0032;for&#0032;dotnet | Product Hunt" style="width: 86px; height: 32px;" width="250" height="54" /></a>
+- You can also donate to support the project financily on open collection.

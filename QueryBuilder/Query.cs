@@ -32,7 +32,7 @@ namespace SqlKata
 
         public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
 
-        internal int GetOffset(string engineCode = null)
+        internal long GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
             var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
@@ -180,7 +180,7 @@ namespace SqlKata
             return AddOrReplaceComponent("limit", newClause);
         }
 
-        public Query Offset(int value)
+        public Query Offset(long value)
         {
             var newClause = new OffsetClause
             {
@@ -188,6 +188,11 @@ namespace SqlKata
             };
 
             return AddOrReplaceComponent("offset", newClause);
+        }
+
+        public Query Offset(int value)
+        {
+            return Offset((long)value);
         }
 
         /// <summary>

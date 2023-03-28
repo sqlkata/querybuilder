@@ -11,6 +11,7 @@ namespace SqlKata.Compilers
         }
 
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
+        public override bool SupportsFilterClause { get; set; } = true;
 
 
         protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
