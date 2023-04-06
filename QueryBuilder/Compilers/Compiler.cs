@@ -231,16 +231,22 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult();
 
-            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} AS {Wrap(col)}"));
+            var firstRow = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} {ColumnAsKeyword}{Wrap(col)}"));
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder}"));
 
             var fromTable = SingleRowDummyTableName;
 
             if (fromTable != null)
             {
-                row += $" FROM {fromTable}";
+                var fromClause = $" FROM {fromTable}";
+                firstRow += fromClause;
+                row += fromClause;
             }
 
-            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Count / adHoc.Columns.Count));
+            var rowCount = adHoc.Values.Count / adHoc.Columns.Count;
+            var rows = rowCount > 0
+                ? string.Join(" UNION ALL ", Enumerable.Repeat(row, rowCount - 1).Prepend(firstRow))
+                : string.Empty;
 
             ctx.RawSql = rows;
             ctx.Bindings = adHoc.Values;
@@ -555,7 +561,7 @@ namespace SqlKata.Compilers
                 return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
             }
 
-            return Wrap((column as Column).Name);
+            return Wrap(((Column)column).Name);
 
         }
 
@@ -618,11 +624,9 @@ namespace SqlKata.Compilers
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
                     .ToList();
 
-                string sql = string.Empty;
-
                 if (aggregateColumns.Count == 1)
                 {
-                    sql = string.Join(", ", aggregateColumns);
+                    var sql = string.Join(", ", aggregateColumns);
 
                     if (ctx.Query.IsDistinct)
                     {
@@ -675,7 +679,7 @@ namespace SqlKata.Compilers
                 }
                 else
                 {
-                    var combineRawClause = clause as RawCombine;
+                    var combineRawClause = (RawCombine)clause;
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
 
@@ -802,9 +806,10 @@ namespace SqlKata.Compilers
                     return WrapIdentifiers(raw.Expression);
                 }
 
-                var direction = (x as OrderBy).Ascending ? "" : " DESC";
+                var orderByClause = (OrderBy)x;
+                var direction = orderByClause.Ascending ? "" : " DESC";
 
-                return Wrap((x as OrderBy).Column) + direction;
+                return Wrap(orderByClause.Column) + direction;
             });
 
             return "ORDER BY " + string.Join(", ", columns);
