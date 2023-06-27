@@ -1,4 +1,7 @@
+using SqlKata.Clauses;
+using SqlKata.Contract.CreateTable;
 using System.Linq;
+using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -186,5 +189,25 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            var result = base.CompileCreateTable(query);
+            var tableName = result.Query.GetOneComponent<FromClause>("from", EngineCode).Table;
+            var tableType = result.Query.GetOneComponent<TableCluase>("TableType").TableType;
+            if(tableType == TableType.Temporary)
+                tableName = new StringBuilder("#").Append(tableName).ToString();
+
+            var queryString = new StringBuilder($"Create Table {tableName} ");
+            queryString.Append("(\n");
+            var createTableColumnCluases = 
+
+
+
+            queryString.Append(")\n");
+            result.RawSql = queryString.ToString();
+            return result;
+        }
+
     }
 }

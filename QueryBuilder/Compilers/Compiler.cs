@@ -124,6 +124,10 @@ namespace SqlKata.Compilers
             {
                 ctx = CompileDeleteQuery(query);
             }
+            else if (query.Method == "CreateTable")
+            {
+                ctx = CompileCreateTable(query);
+            }
             else
             {
                 if (query.Method == "aggregate")
@@ -227,6 +231,19 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        /// <summary>
+        /// gets create table query. each db has its own implementation
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        protected virtual SqlResult CompileCreateTable(Query query)
+        {
+            var ctx = new SqlResult()
+            {
+                Query= query.Clone(),
+            };
+            return ctx;
+        }
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
             var ctx = new SqlResult();
