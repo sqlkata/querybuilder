@@ -1,5 +1,7 @@
 using SqlKata.Clauses;
 using SqlKata.Contract.CreateTable;
+using SqlKata.DbTypes;
+using SqlKata.Exceptions.CreateTableQuery;
 using System.Linq;
 using System.Text;
 
@@ -198,12 +200,32 @@ namespace SqlKata.Compilers
             if(tableType == TableType.Temporary)
                 tableName = new StringBuilder("#").Append(tableName).ToString();
 
-            var queryString = new StringBuilder($"Create Table {tableName} ");
+            var queryString = new StringBuilder($"CREATE TABLE {tableName} ");
             queryString.Append("(\n");
-            var createTableColumnCluases = 
+            var createTableColumnCluases = result.Query.GetComponents<CreateTableColumn>("CreateTableColumn");
 
+            var identityAndAutoIncrementColumns = createTableColumnCluases.Where(x => x.IsIdentity || x.IsAutoIncrement);
+            if(identityAndAutoIncrementColumns.Count() > 1)
+            {
+                throw new AutoIncrementOrIdentityExceededException("sql server table can not have more than one auto increment or identity column");
+            }
+            foreach(var columnCluase in identityAndAutoIncrementColumns)
+            {
+                if(columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
+                {
+                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType} IDENTITY(1,1),\n");
+                }
+                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType},\n");
+            }
+            var primaryKeys = createTableColumnCluases.Where(column => column.IsPrimaryKey);
+            if (primaryKeys.Any())
+                queryString.Append(string.Format("PRIMARY KEY ({0}),\n", string.Join(",", primaryKeys)));
 
-
+            var uniqeColumns = createTableColumnCluases.Where(column => column.IsUnique).ToList();
+            for (var i = 0; i < uniqeColumns.Count();i++)
+            {
+                queryString.Append($"CONSTRAINT unique_constraint_{i} UNIQUE ({uniqeColumns[i].ColumnName}),");
+            }
             queryString.Append(")\n");
             result.RawSql = queryString.ToString();
             return result;
