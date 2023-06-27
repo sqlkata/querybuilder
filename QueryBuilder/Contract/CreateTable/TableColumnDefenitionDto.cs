@@ -1,6 +1,6 @@
 namespace SqlKata.Contract.CreateTable
 {
-    public class TableColumnDefenition
+    public class TableColumnDefenitionDto
     {
         public string ColumnName { get; set; }
         public object ColumnDbType { get; set; }

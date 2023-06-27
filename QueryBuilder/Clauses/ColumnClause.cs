@@ -30,6 +30,31 @@ namespace SqlKata
         }
     }
 
+    public class CreateTableColumn : AbstractClause
+    {
+        public string ColumnName { get; set; }
+        public object ColumnDbType { get; set; }
+        public bool IsNullable { get; set; }
+        public bool IsPrimaryKey { get; set; }
+        public bool IsUnique { get; set; }
+        public bool IsIdentity { get; set; }
+        public bool IsAutoIncrement { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new CreateTableColumn
+            {
+                ColumnDbType= ColumnDbType,
+                ColumnName= ColumnName,
+                IsAutoIncrement= IsAutoIncrement,
+                IsPrimaryKey= IsPrimaryKey,
+                IsUnique= IsUnique,
+                IsIdentity= IsIdentity,
+            };
+        }
+    }
+
+
+
     /// <summary>
     /// Represents column clause calculated using query.
     /// </summary>
