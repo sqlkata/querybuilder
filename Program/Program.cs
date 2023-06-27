@@ -13,6 +13,7 @@ using Dapper;
 using System.Data.SQLite;
 using static SqlKata.Expressions;
 using System.IO;
+using SqlKata.Contract.CreateTable;
 
 namespace Program
 {
@@ -34,7 +35,31 @@ namespace Program
 
         static void Main(string[] args)
         {
-            using (var db = SqlLiteQueryFactory())
+            var query = new Query("Users").CreateTable(new List<TableColumnDefenitionDto>()
+            {
+                new TableColumnDefenitionDto()
+                {
+                    ColumnName= "id",
+                    ColumnDbType = SqlDbType.Int,
+                    IsAutoIncrement=false,
+                    IsNullable=false,
+                    IsPrimaryKey=true,
+                    IsUnique=false,
+                },
+                new TableColumnDefenitionDto()
+                {
+                    ColumnName= "FullName",
+                    ColumnDbType = SqlDbType.Text,
+                    IsAutoIncrement=false,
+                    IsNullable=false,
+                    IsPrimaryKey=true,
+                    IsUnique=false,
+                }
+            },TableType.Permanent);
+            var compiler = new SqlServerCompiler();
+            Console.WriteLine(compiler.Compile(query));
+
+/*            using (var db = SqlLiteQueryFactory())
             {
                 var query = db.Query("accounts")
                     .Where("balance", ">", 0)
@@ -46,7 +71,7 @@ namespace Program
 
                 var exists = query.Clone().Exists();
                 Console.WriteLine(exists);
-            }
+            }*/
         }
 
         private static void log(Compiler compiler, Query query)

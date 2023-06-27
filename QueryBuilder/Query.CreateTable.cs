@@ -7,19 +7,21 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public void CreateTable(IEnumerable<TableColumnDefenitionDto> columns,TableType tableType = TableType.Permanent)
+        public Query CreateTable(IEnumerable<TableColumnDefenitionDto> columns,TableType tableType = TableType.Permanent)
         {
             Method = "CreateTable";
 
             ClearComponent("TableType").AddComponent("TableType",new TableCluase()
             {
-                TableType = tableType
+                TableType = tableType,
+                Component = "TableType"
             });
 
             columns.ToList().ForEach(column =>
             {
                 AddComponent("CreateTableColumn",new CreateTableColumn()
                 {
+                    Component = "CreateTableColumn",
                     ColumnName = column.ColumnName,
                     ColumnDbType = column.ColumnDbType,
                     IsNullable = column.IsNullable,
@@ -29,6 +31,7 @@ namespace SqlKata
                     IsIdentity = column.IsIdentity
                 });
             });
+            return this;
         }
 
     }
