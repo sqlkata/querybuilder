@@ -209,7 +209,7 @@ namespace SqlKata.Compilers
             {
                 throw new AutoIncrementOrIdentityExceededException("sql server table can not have more than one auto increment or identity column");
             }
-            foreach(var columnCluase in identityAndAutoIncrementColumns)
+            foreach(var columnCluase in createTableColumnCluases)
             {
                 if(columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
                 {
@@ -219,7 +219,7 @@ namespace SqlKata.Compilers
             }
             var primaryKeys = createTableColumnCluases.Where(column => column.IsPrimaryKey);
             if (primaryKeys.Any())
-                queryString.Append(string.Format("PRIMARY KEY ({0}),\n", string.Join(",", primaryKeys)));
+                queryString.Append(string.Format("PRIMARY KEY ({0}),\n", string.Join(",", primaryKeys.Select(column => column.ColumnName))));
 
             var uniqeColumns = createTableColumnCluases.Where(column => column.IsUnique).ToList();
             for (var i = 0; i < uniqeColumns.Count();i++)

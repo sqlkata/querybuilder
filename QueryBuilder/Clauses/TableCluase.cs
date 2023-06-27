@@ -10,6 +10,7 @@ namespace SqlKata.Clauses
             return new TableCluase()
             {
                 TableType = TableType,
+                Component = Component
             };
         }
     }

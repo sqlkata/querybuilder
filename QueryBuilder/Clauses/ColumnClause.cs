@@ -43,6 +43,7 @@ namespace SqlKata
         {
             return new CreateTableColumn
             {
+                Component= Component,
                 ColumnDbType= ColumnDbType,
                 ColumnName= ColumnName,
                 IsAutoIncrement= IsAutoIncrement,
