@@ -1,4 +1,4 @@
-namespace SqlKata.SqlQuery.DDL.DbTypes
+namespace SqlKata.DbTypes
 {
     public enum PostgresqlDbType
     {

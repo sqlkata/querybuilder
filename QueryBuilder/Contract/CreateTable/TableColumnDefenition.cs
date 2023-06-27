@@ -1,4 +1,4 @@
-namespace SqlKata.SqlQuery.DDL.Dtos.CreateTable
+namespace SqlKata.Contract.CreateTable
 {
     public class TableColumnDefenition
     {
