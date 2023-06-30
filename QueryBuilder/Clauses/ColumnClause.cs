@@ -1,3 +1,5 @@
+using SqlKata.DbTypes.DbColumn;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -33,7 +35,7 @@ namespace SqlKata
     public class CreateTableColumn : AbstractClause
     {
         public string ColumnName { get; set; }
-        public object ColumnDbType { get; set; }
+        public BaseDBColumn ColumnDbType { get; set; }
         public bool IsNullable { get; set; }
         public bool IsPrimaryKey { get; set; }
         public bool IsUnique { get; set; }

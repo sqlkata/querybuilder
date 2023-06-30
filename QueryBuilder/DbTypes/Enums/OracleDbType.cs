@@ -1,4 +1,4 @@
-namespace SqlKata.DbTypes
+namespace SqlKata.DbTypes.Enums
 {
     public enum OracleDbType
     {

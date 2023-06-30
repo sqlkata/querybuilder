@@ -14,6 +14,8 @@ using System.Data.SQLite;
 using static SqlKata.Expressions;
 using System.IO;
 using SqlKata.Contract.CreateTable;
+using SqlKata.DbTypes.DbColumn;
+using SqlKata.DbTypes.Enums;
 
 namespace Program
 {
@@ -40,7 +42,10 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "id",
-                    ColumnDbType = SqlDbType.Int,
+                    ColumnDbType = new SqlServerDBColumn()
+                    {
+                        SqlServerDbType = SqlServerDbType.Int
+                    },
                     IsAutoIncrement=false,
                     IsNullable=false,
                     IsPrimaryKey=true,
@@ -49,7 +54,11 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "FullName",
-                    ColumnDbType = SqlDbType.Text,
+                    ColumnDbType = new SqlServerDBColumn()
+                    {
+                        SqlServerDbType = SqlServerDbType.Varchar,
+                        Length = 30
+                    },
                     IsAutoIncrement=false,
                     IsNullable=false,
                     IsPrimaryKey=true,

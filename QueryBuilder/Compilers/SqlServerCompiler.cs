@@ -213,9 +213,9 @@ namespace SqlKata.Compilers
             {
                 if(columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
                 {
-                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType} IDENTITY(1,1),\n");
+                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()} IDENTITY(1,1),\n");
                 }
-                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType},\n");
+                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()},\n");
             }
             var primaryKeys = createTableColumnCluases.Where(column => column.IsPrimaryKey);
             if (primaryKeys.Any())
