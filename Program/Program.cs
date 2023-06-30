@@ -61,8 +61,8 @@ namespace Program
                     },
                     IsAutoIncrement=false,
                     IsNullable=false,
-                    IsPrimaryKey=true,
-                    IsUnique=false,
+                    IsPrimaryKey=false,
+                    IsUnique=true,
                 }
             },TableType.Permanent);
             var compiler = new SqlServerCompiler();

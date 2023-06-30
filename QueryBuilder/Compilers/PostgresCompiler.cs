@@ -1,3 +1,5 @@
+using SqlKata.Compilers.DDLCompiler.CreateCompilers;
+using SqlKata.Compilers.DDLCompiler;
 using System;
 using System.Linq;
 
@@ -94,6 +96,11 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return new DbDDLCompiler(new PostgresqlCreateCommandUtil()).CompileCreateTable(query);
         }
     }
 }

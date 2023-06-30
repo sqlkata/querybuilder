@@ -1,4 +1,6 @@
 using SqlKata.Clauses;
+using SqlKata.Compilers.DDLCompiler.CreateCompilers;
+using SqlKata.Compilers.DDLCompiler;
 using SqlKata.Contract.CreateTable;
 using SqlKata.DbTypes;
 using SqlKata.Exceptions.CreateTableQuery;
@@ -194,42 +196,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            var result = base.CompileCreateTable(query);
-            var tableName = result.Query.GetOneComponent<FromClause>("from", EngineCode).Table;
-            var tableType = result.Query.GetOneComponent<TableCluase>("TableType").TableType;
-            if(tableType == TableType.Temporary)
-                tableName = new StringBuilder("#").Append(tableName).ToString();
-
-            var queryString = new StringBuilder($"CREATE TABLE {tableName} ");
-            queryString.Append("(\n");
-            var createTableColumnCluases = result.Query.GetComponents<CreateTableColumn>("CreateTableColumn");
-
-            var identityAndAutoIncrementColumns = createTableColumnCluases.Where(x => x.IsIdentity || x.IsAutoIncrement);
-            if(identityAndAutoIncrementColumns.Count() > 1)
-            {
-                throw new AutoIncrementOrIdentityExceededException("sql server table can not have more than one auto increment or identity column");
-            }
-            foreach(var columnCluase in createTableColumnCluases)
-            {
-                if(columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
-                {
-                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()} IDENTITY(1,1),\n");
-                }
-                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()},\n");
-            }
-            var primaryKeys = createTableColumnCluases.Where(column => column.IsPrimaryKey);
-            if (primaryKeys.Any())
-                queryString.Append(string.Format("PRIMARY KEY ({0}),\n", string.Join(",", primaryKeys.Select(column => column.ColumnName))));
-
-            var uniqeColumns = createTableColumnCluases.Where(column => column.IsUnique).ToList();
-            for (var i = 0; i < uniqeColumns.Count();i++)
-            {
-                queryString.Append($"CONSTRAINT unique_constraint_{i} UNIQUE ({uniqeColumns[i].ColumnName}),");
-            }
-            queryString.Append(")\n");
-            result.RawSql = queryString.ToString();
-            return result;
+            return new DbDDLCompiler(new SqlServerCreateCommandUtil()).CompileCreateTable(query);
         }
-
     }
 }

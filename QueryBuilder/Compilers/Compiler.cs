@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SqlKata.Compilers
 {
-    public partial class Compiler
+    public abstract partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
@@ -236,14 +236,7 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        protected virtual SqlResult CompileCreateTable(Query query)
-        {
-            var ctx = new SqlResult()
-            {
-                Query= query.Clone(),
-            };
-            return ctx;
-        }
+        protected abstract SqlResult CompileCreateTable(Query query);
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
             var ctx = new SqlResult();

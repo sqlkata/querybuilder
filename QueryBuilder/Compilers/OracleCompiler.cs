@@ -1,3 +1,5 @@
+using SqlKata.Compilers.DDLCompiler.CreateCompilers;
+using SqlKata.Compilers.DDLCompiler;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -171,6 +173,11 @@ namespace SqlKata.Compilers
 
             ctx.RawSql += " SELECT 1 FROM DUAL";
             return ctx;
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return new DbDDLCompiler(new OracleCreateCommandUtil()).CompileCreateTable(query);
         }
     }
 }

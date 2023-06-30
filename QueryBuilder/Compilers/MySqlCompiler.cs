@@ -1,3 +1,6 @@
+using SqlKata.Compilers.DDLCompiler;
+using SqlKata.Compilers.DDLCompiler.CreateCompilers;
+
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
@@ -44,6 +47,11 @@ namespace SqlKata.Compilers
 
             return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
 
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return new DbDDLCompiler(new MySqlCreateCommandUtil()).CompileCreateTable(query);
         }
     }
 }
