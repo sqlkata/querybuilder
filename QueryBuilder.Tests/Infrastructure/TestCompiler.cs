@@ -15,6 +15,11 @@ namespace SqlKata.Tests.Infrastructure
         {
             return FindCompilerMethodInfo(clauseType, methodName);
         }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class TestSqlServerCompiler : SqlServerCompiler

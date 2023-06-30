@@ -42,11 +42,11 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "id",
-                    ColumnDbType = new SqlServerDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        SqlServerDbType = SqlServerDbType.Int
+                        OracleDbType = OracleDbType.Int32
                     },
-                    IsAutoIncrement=false,
+                    IsAutoIncrement=true,
                     IsNullable=false,
                     IsPrimaryKey=true,
                     IsUnique=false,
@@ -54,9 +54,9 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "FullName",
-                    ColumnDbType = new SqlServerDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        SqlServerDbType = SqlServerDbType.Varchar,
+                        OracleDbType = OracleDbType.Raw,
                         Length = 30
                     },
                     IsAutoIncrement=false,
@@ -64,8 +64,8 @@ namespace Program
                     IsPrimaryKey=false,
                     IsUnique=true,
                 }
-            },TableType.Permanent);
-            var compiler = new SqlServerCompiler();
+            },TableType.Temporary);
+            var compiler = new OracleCompiler();
             Console.WriteLine(compiler.Compile(query));
 
 /*            using (var db = SqlLiteQueryFactory())

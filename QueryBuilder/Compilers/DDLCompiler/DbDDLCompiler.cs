@@ -34,11 +34,13 @@ namespace SqlKata.Compilers.DDLCompiler
             }
             foreach (var columnCluase in createTableColumnCluases)
             {
+                var nullOrNot = columnCluase.IsNullable ? "NULL " : "NOT NULL ";
                 if (columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
                 {
-                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()}  {_sqlCommandUtil.AutoIncrementIdentityCommandGenerator()} ,\n");
+                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()}  {_sqlCommandUtil.AutoIncrementIdentityCommandGenerator()},\n");
+                    continue;
                 }
-                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()},\n");
+                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()} {nullOrNot},\n");
             }
             var primaryKeys = createTableColumnCluases.Where(column => column.IsPrimaryKey);
             if (primaryKeys.Any())

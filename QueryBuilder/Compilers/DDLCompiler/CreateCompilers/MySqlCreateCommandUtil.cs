@@ -7,7 +7,7 @@ namespace SqlKata.Compilers.DDLCompiler.CreateCompilers
     {
         public string AutoIncrementIdentityCommandGenerator()
         {
-            return " AUTO_INCREMENT ";
+            return "AUTO_INCREMENT ";
         }
 
         public string CreateTableCommandGenerator(TableType tableType, string tableName)

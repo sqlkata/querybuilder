@@ -52,6 +52,7 @@ namespace SqlKata
                 IsPrimaryKey= IsPrimaryKey,
                 IsUnique= IsUnique,
                 IsIdentity= IsIdentity,
+                IsNullable= IsNullable,
             };
         }
     }
