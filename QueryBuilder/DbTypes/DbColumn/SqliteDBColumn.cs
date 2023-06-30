@@ -9,7 +9,7 @@ namespace SqlKata.DbTypes.DbColumn
 
         internal override string GetDBType()
         {
-            var stringBuilder = new StringBuilder(SqliteDbType.ToString());
+            var stringBuilder = new StringBuilder(SqliteDbType.ToString().Replace("_", " "));
             AddLengthAndPrecisionToType(stringBuilder);
             return stringBuilder.ToString();
         }

@@ -9,7 +9,7 @@ namespace SqlKata.DbTypes.DbColumn
 
         internal override string GetDBType()
         {
-            var stringBuilder = new StringBuilder(SqlServerDbType.ToString());
+            var stringBuilder = new StringBuilder(SqlServerDbType.ToString().Replace("_", " "));
             AddLengthAndPrecisionToType(stringBuilder);
             return stringBuilder.ToString();
         }

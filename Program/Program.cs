@@ -42,9 +42,9 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "id",
-                    ColumnDbType = new OracleDBColumn()
+                    ColumnDbType = new PostgresqlDBColumn()
                     {
-                        OracleDbType = OracleDbType.Int32
+                        PostgresqlDbType = PostgresqlDbType.Integer
                     },
                     IsAutoIncrement=true,
                     IsNullable=false,
@@ -54,9 +54,9 @@ namespace Program
                 new TableColumnDefenitionDto()
                 {
                     ColumnName= "FullName",
-                    ColumnDbType = new OracleDBColumn()
+                    ColumnDbType = new PostgresqlDBColumn()
                     {
-                        OracleDbType = OracleDbType.Raw,
+                        PostgresqlDbType = PostgresqlDbType.Character_varying,
                         Length = 30
                     },
                     IsAutoIncrement=false,
@@ -65,7 +65,7 @@ namespace Program
                     IsUnique=true,
                 }
             },TableType.Temporary);
-            var compiler = new OracleCompiler();
+            var compiler = new PostgresCompiler();
             Console.WriteLine(compiler.Compile(query));
 
 /*            using (var db = SqlLiteQueryFactory())

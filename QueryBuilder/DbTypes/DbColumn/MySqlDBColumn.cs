@@ -9,7 +9,7 @@ namespace SqlKata.DbTypes.DbColumn
 
         internal override string GetDBType()
         {
-            var stringBuilder = new StringBuilder(MySqlDbType.ToString());
+            var stringBuilder = new StringBuilder(MySqlDbType.ToString().Replace("_"," "));
             AddLengthAndPrecisionToType(stringBuilder);
             return stringBuilder.ToString();
         }
