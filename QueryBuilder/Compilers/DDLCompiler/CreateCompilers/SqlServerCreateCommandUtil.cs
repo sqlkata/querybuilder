@@ -12,7 +12,6 @@ namespace SqlKata.Compilers.DDLCompiler.CreateCompilers
 
         public string CreateTableCommandGenerator(TableType tableType, string tableName)
         {
-            tableName = tableType == TableType.Temporary ? "#" + tableName : tableName;
             return $"CREATE TABLE {tableName}  ";
         }
     }
