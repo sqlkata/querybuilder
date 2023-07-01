@@ -4,6 +4,7 @@ using SqlKata.Contract.CreateTable;
 using SqlKata.Exceptions.CreateTableQuery;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace SqlKata.Compilers.DDLCompiler
 {
@@ -52,8 +53,19 @@ namespace SqlKata.Compilers.DDLCompiler
                 queryString.Append($"CONSTRAINT unique_constraint_{i} UNIQUE ({uniqeColumns[i].ColumnName}), \n");
             }
             queryString.Append(")\n");
-            result.RawSql = queryString.ToString();
+            result.RawSql = RefineQueryString(queryString.ToString());
+            result.RawSql.LastIndexOf(",");
             return result;
         }
+
+        private string RefineQueryString(string queryString)
+        {
+            var lastCommaChar = queryString.LastIndexOf(',');
+            if(lastCommaChar != -1)
+                queryString = queryString.Remove(lastCommaChar,1);
+            return queryString;
+        }
+
+
     }
 }
