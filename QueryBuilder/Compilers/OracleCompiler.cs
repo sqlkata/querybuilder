@@ -178,9 +178,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            var result = new DbDDLCompiler(new OracleCreateCommandUtil()).CompileCreateTable(query);
-            result.RawSql = result.RawSql + CreateTableCondition;
-            return result;
+            return new DbDDLCompiler(new OracleCreateCommandUtil()).CompileCreateTable(query);
         }
     }
 }
