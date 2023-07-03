@@ -6,6 +6,7 @@ using SqlKata.Compilers;
 using SqlKata.Compilers.Abstractions;
 using SqlKata.Compilers.Enums;
 using SqlKata.Contract.CreateTable;
+using SqlKata.Contract.CreateTable.DbTableSpecific;
 using SqlKata.DbTypes.DbColumn;
 using SqlKata.DbTypes.Enums;
 
@@ -48,7 +49,7 @@ namespace Program
                     IsPrimaryKey = false,
                     IsUnique = true,
                 }
-            }, TableType.Temporary);
+            }, TableType.Temporary,new OracleDbTableExtensions(){OnCommitPreserveRows = true});
 
             Console.WriteLine(compiler.Compile(query));
 
