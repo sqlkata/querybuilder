@@ -2,6 +2,7 @@
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 using SqlKata.Contract.CreateTable;
+using SqlKata.Contract.CreateTable.DbTableSpecific;
 
 namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers
 {
@@ -25,6 +26,10 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers
             var tableName = query.GetOneComponent<FromClause>("from").Table;
             var tableType = query.GetOneComponent<TableCluase>("TableType").TableType;
             var tempString = tableType == TableType.Temporary ? "GLOBAL TEMPORARY" : "";
+
+            var tableExtensions = (OracleDbTableExtensions)query.GetOneComponent<CreateTableQueryExtensionClause>("CreateTableExtension")?.CreateDbTableExtension;
+            var onCommitBehaviour = tableExtensions != null && tableType == TableType.Temporary && tableExtensions.OnCommitPreserveRows ? "on commit preserve rows" : "on commit delete rows" ;
+
             string hint = "";
             return string.Format(queryFormat,
                 tempString,
@@ -32,7 +37,8 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers
                 tableName,
                 _columnCompiler.CompileCreateTableColumns(createTableColumnClauses),
                 _primaryKeyCompiler.CompilePrimaryKey(createTableColumnClauses),
-                _uniqueConstraintCompiler.CompileUniqueConstraints(createTableColumnClauses)
+                _uniqueConstraintCompiler.CompileUniqueConstraints(createTableColumnClauses),
+                onCommitBehaviour
                 );
         }
     }

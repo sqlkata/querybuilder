@@ -19,28 +19,28 @@ namespace Program
             serviceCollection.AddKataServices();
             var provider = serviceCollection.BuildServiceProvider();
             var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
-            var compiler = compilerProvider.CreateCompiler(DataSource.Postgresql);
+            var compiler = compilerProvider.CreateCompiler(DataSource.Oracle);
 
             var query = new Query("Users").CreateTable(new List<TableColumnDefenitionDto>()
             {
-                new TableColumnDefenitionDto()
+                new()
                 {
                     ColumnName = "id",
-                    ColumnDbType = new PostgresqlDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        PostgresqlDbType = PostgresqlDbType.Integer
+                        OracleDbType = OracleDbType.Int32
                     },
                     IsAutoIncrement = true,
                     IsNullable = false,
                     IsPrimaryKey = true,
                     IsUnique = false,
                 },
-                new TableColumnDefenitionDto()
+                new()
                 {
                     ColumnName = "FullName",
-                    ColumnDbType = new PostgresqlDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        PostgresqlDbType = PostgresqlDbType.Character_varying,
+                        OracleDbType = OracleDbType.Varchar2,
                         Length = 30
                     },
                     IsAutoIncrement = false,
