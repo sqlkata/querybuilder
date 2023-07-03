@@ -3,7 +3,10 @@ using SqlKata.Compilers.DDLCompiler;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableCompilers;
+using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtils;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.PrimaryKeyCompilers;
+using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Factories;
+using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.UniqueConstraintCompilers;
 using SqlKata.Compilers.DDLCompiler.Providers;
 
@@ -21,6 +24,22 @@ namespace SqlKata
             services.AddSingleton<ICreateTableFormatFactoryProvider,CreateTableFormatFactoryProvider>();
             services.AddSingleton<ICreateTableQueryFillerProvider,CreateTableFormatFillerProvider>();
             services.AddSingleton<IDDLCompiler, DDLCompiler>();
+
+            services.AddSingleton<ISqlCreateCommandUtil, SqlServerCreateCommandUtil>();
+            services.AddSingleton<ISqlCreateCommandUtil, MySqlCreateCommandUtil>();
+            services.AddSingleton<ISqlCreateCommandUtil, PostgresqlCreateCommandUtil>();
+            services.AddSingleton<ISqlCreateCommandUtil, OracleCreateCommandUtil>();
+
+            services.AddSingleton<ICreateQueryFormatFactory,SqlServerCreateTableFormatFactory>();
+            services.AddSingleton<ICreateQueryFormatFactory,MySqlCreateTableFormatFactory>();
+            services.AddSingleton<ICreateQueryFormatFactory,PostgresqlCreateTableFormatFactory>();
+            services.AddSingleton<ICreateQueryFormatFactory,OracleCreateTableFormatFactory>();
+
+            services.AddSingleton<ICreateQueryFormatFiller,SqlServerCreateQueryFormatFiller>();
+            services.AddSingleton<ICreateQueryFormatFiller,PostgresqlCreateQueryFormatFiller>();
+            services.AddSingleton<ICreateQueryFormatFiller,MySqlCreateQueryFormatFiller>();
+            services.AddSingleton<ICreateQueryFormatFiller,OracleCreateQueryFormatFiller>();
+
 
             return services;
         }
