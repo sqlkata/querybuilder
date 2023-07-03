@@ -1,20 +1,21 @@
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Contract.CreateTable;
 
-namespace SqlKata.Compilers.DDLCompiler.CreateCompilers
+namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtils
 {
-    internal class SqliteCreateColmmandUtil : ISqlCreateCommandUtil
+    internal class OracleCreateCommandUtil : ISqlCreateCommandUtil
     {
         public string AutoIncrementIdentityCommandGenerator()
         {
-            return "AUTOINCREMENT ";
+            return "GENERATED ALWAYS AS IDENTITY ";
         }
 
         public string CreateTableCommandGenerator(TableType tableType, string tableName)
         {
             if (tableType == TableType.Temporary)
-                return $"CREATE TEMPORARY TABLE {tableName}";
-            return $"CREATE TABLE {tableName}";
+                return $"CREATE GLOBAL TEMPORARY TABLE {tableName} ";
+            else
+                return $"CREATE TABLE {tableName}   ";
         }
     }
 }

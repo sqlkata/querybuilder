@@ -2,12 +2,13 @@ using SqlKata.Clauses;
 using SqlKata.Contract.CreateTable;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Contract.CreateTable.DbTableSpecific;
 
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query CreateTable(IEnumerable<TableColumnDefenitionDto> columns,TableType tableType = TableType.Permanent)
+        public Query CreateTable(IEnumerable<TableColumnDefenitionDto> columns,TableType tableType = TableType.Permanent,CreateDbTableExtension createDbTableExtension = null)
         {
             Method = "CreateTable";
 
@@ -31,6 +32,15 @@ namespace SqlKata
                     IsIdentity = column.IsIdentity
                 });
             });
+
+            if (createDbTableExtension != null)
+            {
+                AddComponent("CreateTableExtension", new CreateTableQueryExtensionClause()
+                {
+                    CreateDbTableExtension = createDbTableExtension,
+                    Component = "CreateTableExtension"
+                });
+            }
             return this;
         }
 

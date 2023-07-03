@@ -1,11 +1,4 @@
-using SqlKata.Clauses;
-using SqlKata.Compilers.DDLCompiler.CreateCompilers;
-using SqlKata.Compilers.DDLCompiler;
-using SqlKata.Contract.CreateTable;
-using SqlKata.DbTypes;
-using SqlKata.Exceptions.CreateTableQuery;
 using System.Linq;
-using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -196,7 +189,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return new DbDDLCompiler(new SqlServerCreateCommandUtil()).CompileCreateTable(query);
+            return null;
         }
     }
 }
