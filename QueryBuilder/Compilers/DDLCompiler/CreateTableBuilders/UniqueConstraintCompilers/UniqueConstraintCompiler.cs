@@ -7,13 +7,15 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.UniqueConstraintComp
 {
     public class UniqueConstraintCompiler : IUniqueConstraintCompiler
     {
-        public void CompileUniqueConstraints(StringBuilder queryString, List<CreateTableColumn> createTableColumnClauses)
+        public string CompileUniqueConstraints(List<CreateTableColumn> createTableColumnClauses)
         {
+            var queryString = new StringBuilder();
             var uniqeColumns = createTableColumnClauses.Where(column => column.IsUnique).ToList();
             for (var i = 0; i < uniqeColumns.Count(); i++)
             {
                 queryString.Append($"CONSTRAINT unique_constraint_{i} UNIQUE ({uniqeColumns[i].ColumnName}), \n");
             }
+            return queryString.ToString();
         }
     }
 }

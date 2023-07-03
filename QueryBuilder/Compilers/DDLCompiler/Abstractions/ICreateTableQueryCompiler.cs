@@ -6,6 +6,6 @@ namespace SqlKata.Compilers.DDLCompiler.Abstractions
 {
     internal interface ICreateTableQueryCompiler
     {
-        StringBuilder CompileCreateTable(string tableName,TableType tableType,List<CreateTableColumn> createTableColumnClauses);
+        string CompileCreateTable(Query query);
     }
 }

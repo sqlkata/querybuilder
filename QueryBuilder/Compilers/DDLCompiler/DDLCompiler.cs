@@ -19,20 +19,10 @@ namespace SqlKata.Compilers.DDLCompiler
             {
                 Query = query.Clone(),
             };
-            var createTableColumnClauses = result.Query.GetComponents<CreateTableColumn>("CreateTableColumn");
-            var tableName = result.Query.GetOneComponent<FromClause>("from").Table;
-            var tableType = result.Query.GetOneComponent<TableCluase>("TableType").TableType;
-            var queryString = _createTableQueryCompiler.CompileCreateTable(tableName,tableType,createTableColumnClauses);
-            result.RawSql = RefineQueryString(queryString.ToString());
+            var queryString = _createTableQueryCompiler.CompileCreateTable(result.Query);
+            result.RawSql = queryString;
             return result;
         }
 
-        private static string RefineQueryString(string queryString)
-        {
-            var lastCommaChar = queryString.LastIndexOf(',');
-            if(lastCommaChar != -1)
-                queryString = queryString.Remove(lastCommaChar,1);
-            return queryString;
-        }
     }
 }

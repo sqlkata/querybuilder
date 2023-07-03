@@ -3,8 +3,8 @@ using System.Text;
 
 namespace SqlKata.Compilers.DDLCompiler.Abstractions
 {
-    public interface IUniqueConstraintCompiler
+    internal interface IUniqueConstraintCompiler
     {
-        void CompileUniqueConstraints(StringBuilder queryString, List<CreateTableColumn> createTableColumnClauses);
+        string CompileUniqueConstraints(List<CreateTableColumn> createTableColumnClauses);
     }
 }

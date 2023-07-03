@@ -5,6 +5,6 @@ namespace SqlKata.Compilers.DDLCompiler.Abstractions
 {
     internal interface IColumnCompiler
     {
-        void CompileCreateTableColumns(StringBuilder queryString, List<CreateTableColumn> createTableColumnClauses);
+        string CompileCreateTableColumns(List<CreateTableColumn> createTableColumnClauses);
     }
 }

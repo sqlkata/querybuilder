@@ -9,13 +9,5 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtil
         {
             return "GENERATED ALWAYS AS IDENTITY ";
         }
-
-        public string CreateTableCommandGenerator(TableType tableType, string tableName)
-        {
-            if (tableType == TableType.Temporary)
-                return $"CREATE GLOBAL TEMPORARY TABLE {tableName} ";
-            else
-                return $"CREATE TABLE {tableName}   ";
-        }
     }
 }

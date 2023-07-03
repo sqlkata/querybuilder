@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
-using SqlKata.Contract.CreateTable;
 
 namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableCompilers
 {
@@ -20,15 +19,32 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableCompilers
             _uniqueConstraintCompiler = uniqueConstraintCompiler;
         }
 
-        public StringBuilder CompileCreateTable(string tableName,TableType tableType,List<CreateTableColumn> createTableColumnClauses)
+        public string CompileCreateTable(Query query)
         {
-            var queryString = new StringBuilder(_sqlCommandUtil.CreateTableCommandGenerator(tableType,tableName));
+            /*var createTableColumnClauses = query.GetComponents<CreateTableColumn>("CreateTableColumn");
+            var tableName = query.GetOneComponent<FromClause>("from").Table;
+            var tableType = query.GetOneComponent<TableCluase>("TableType").TableType;
+
+            var createTableString = _sqlCommandUtil.CreateTableCommandGenerator(tableType, tableName);
+            var queryString = new StringBuilder(createTableString);
             queryString.Append("(\n");
             _columnCompiler.CompileCreateTableColumns(queryString,createTableColumnClauses);
             _primaryKeyCompiler.CompilePrimaryKey(queryString,createTableColumnClauses);
             _uniqueConstraintCompiler.CompileUniqueConstraints(queryString,createTableColumnClauses);
-            queryString.Append(")\n");
+            queryString.Append(")\n");*/
+
+            /*
+            return RefineQueryString(queryString.ToString());*/
+            return null;
+        }
+
+        private static string RefineQueryString(string queryString)
+        {
+            var lastCommaChar = queryString.LastIndexOf(',');
+            if(lastCommaChar != -1)
+                queryString = queryString.Remove(lastCommaChar,1);
             return queryString;
         }
+
     }
 }

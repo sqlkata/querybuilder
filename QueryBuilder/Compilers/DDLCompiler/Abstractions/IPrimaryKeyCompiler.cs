@@ -5,6 +5,6 @@ namespace SqlKata.Compilers.DDLCompiler.Abstractions
 {
     internal interface IPrimaryKeyCompiler
     {
-        void CompilePrimaryKey(StringBuilder queryString, List<CreateTableColumn> createTableColumnClauses);
+        string CompilePrimaryKey(List<CreateTableColumn> createTableColumnClauses);
     }
 }

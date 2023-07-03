@@ -14,8 +14,9 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers
         {
             _sqlCommandUtil = sqlCommandUtil;
         }
-        public void CompileCreateTableColumns(StringBuilder queryString, List<CreateTableColumn> createTableColumnClauses)
+        public string CompileCreateTableColumns(List<CreateTableColumn> createTableColumnClauses)
         {
+            var queryString = new StringBuilder();
             var identityAndAutoIncrementColumns = createTableColumnClauses.Where(x => x.IsIdentity || x.IsAutoIncrement);
             if (identityAndAutoIncrementColumns.Count() > 1)
             {
@@ -31,6 +32,8 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers
                 }
                 queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()} {nullOrNot},\n");
             }
+
+            return queryString.ToString();
         }
     }
 }
