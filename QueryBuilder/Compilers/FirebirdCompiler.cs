@@ -1,13 +1,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
+        private readonly IDDLCompiler _ddlCompiler;
+        public FirebirdCompiler(IDDLCompiler ddlCompiler)
+        {
+            _ddlCompiler = ddlCompiler;
+        }
+
         public FirebirdCompiler()
         {
+
         }
 
         public override string EngineCode { get; } = EngineCodes.Firebird;

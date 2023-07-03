@@ -1,12 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 
 namespace SqlKata.Compilers
 {
     public class OracleCompiler : Compiler
     {
-        private const string CreateTableCondition = "ON COMMIT PRESERVE ROWS";
+        private readonly IDDLCompiler _ddlCompiler;
+        public OracleCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            _ddlCompiler = ddlCompiler;
+
+        }
+
         public OracleCompiler()
         {
             ColumnAsKeyword = "";
@@ -174,7 +182,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return null;
+            return _ddlCompiler.CompileCreateTable(query,DataSource.Oracle);
         }
 
 

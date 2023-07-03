@@ -1,9 +1,17 @@
 using System.Linq;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
+        private readonly IDDLCompiler _ddlCompiler;
+        public SqlServerCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            _ddlCompiler = ddlCompiler;
+        }
+
         public SqlServerCompiler()
         {
             OpeningIdentifier = "[";
@@ -189,7 +197,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return null;
+            return _ddlCompiler.CompileCreateTable(query,DataSource.SqlServer);
         }
     }
 }

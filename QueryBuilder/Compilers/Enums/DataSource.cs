@@ -1,6 +1,6 @@
 ﻿namespace SqlKata.Compilers.Enums
 {
-    internal enum DataSource
+    public enum DataSource
     {
         SqlServer,
         Oracle,

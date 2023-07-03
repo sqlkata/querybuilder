@@ -2,7 +2,7 @@
 
 namespace SqlKata.Compilers.DDLCompiler.Abstractions
 {
-    internal interface IDDLCompiler
+    public interface IDDLCompiler
     {
         SqlResult CompileCreateTable(Query query,DataSource dataSource);
     }

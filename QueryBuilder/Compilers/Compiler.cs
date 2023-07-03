@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
 {
@@ -17,7 +18,6 @@ namespace SqlKata.Compilers
         protected virtual string LastId { get; set; } = "";
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
-
         protected virtual string SingleInsertStartClause { get; set; } = "INSERT INTO";
         protected virtual string MultiInsertStartClause { get; set; } = "INSERT INTO";
 
@@ -32,13 +32,13 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool SupportsFilterClause { get; set; } = false;
 
         /// <summary>
         /// If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool OmitSelectInsideExists { get; set; } = true;
 
         protected virtual string SingleRowDummyTableName { get => null; }
@@ -305,7 +305,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                // check if we have alias 
+                // check if we have alias
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
                 {
                     ctx.RawSql = $"DELETE {Wrap(fromClause.Alias)} FROM {table} {joins}{where}";

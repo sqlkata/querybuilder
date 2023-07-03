@@ -1,9 +1,22 @@
 using System.Collections.Generic;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
+        private readonly IDDLCompiler _ddlCompiler;
+
+        public SqliteCompiler(IDDLCompiler ddlCompiler)
+        {
+            _ddlCompiler = ddlCompiler;
+        }
+
+        public SqliteCompiler()
+        {
+
+        }
+
         public override string EngineCode { get; } = EngineCodes.Sqlite;
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";

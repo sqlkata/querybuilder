@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SqlKata.Compilers.Abstractions;
 using SqlKata.Compilers.DDLCompiler;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers;
@@ -9,6 +10,8 @@ using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Factories;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.UniqueConstraintCompilers;
 using SqlKata.Compilers.DDLCompiler.Providers;
+using SqlKata.Compilers.Providers;
+using SqlKata.Compilers.Providers.Factories;
 
 namespace SqlKata
 {
@@ -40,6 +43,14 @@ namespace SqlKata
             services.AddSingleton<ICreateQueryFormatFiller,MySqlCreateQueryFormatFiller>();
             services.AddSingleton<ICreateQueryFormatFiller,OracleCreateQueryFormatFiller>();
 
+            services.AddSingleton<ICompilerFactory,SqlServerCompilerFactory>();
+            services.AddSingleton<ICompilerFactory,OracleCompilerFactory>();
+            services.AddSingleton<ICompilerFactory,PostgresCompilerFactory>();
+            services.AddSingleton<ICompilerFactory,MySqlCompilerFactory>();
+            services.AddSingleton<ICompilerFactory,FirebirdCompilerFactory>();
+            services.AddSingleton<ICompilerFactory,SqliteCompilerFactory>();
+
+            services.AddSingleton<ICompilerProvider,CompilerProvider>();
 
             return services;
         }

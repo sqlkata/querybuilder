@@ -1,12 +1,22 @@
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
+
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
+        private readonly IDDLCompiler _ddlCompiler;
+        public MySqlCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            _ddlCompiler = ddlCompiler;
+        }
+
         public MySqlCompiler()
         {
             OpeningIdentifier = ClosingIdentifier = "`";
             LastId = "SELECT last_insert_id() as Id";
         }
+
 
         public override string EngineCode { get; } = EngineCodes.MySql;
 
@@ -48,7 +58,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return null;
+            return _ddlCompiler.CompileCreateTable(query,DataSource.MySql);
         }
     }
 }

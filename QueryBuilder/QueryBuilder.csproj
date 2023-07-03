@@ -36,7 +36,4 @@
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Compilers\Abstractions\" />
-  </ItemGroup>
 </Project>
