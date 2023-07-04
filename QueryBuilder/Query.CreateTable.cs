@@ -3,6 +3,7 @@ using SqlKata.Contract.CreateTable;
 using System.Collections.Generic;
 using System.Linq;
 using SqlKata.Contract.CreateTable.DbTableSpecific;
+using SqlKata.Exceptions.CreateTableQuery;
 
 namespace SqlKata
 {
@@ -45,5 +46,26 @@ namespace SqlKata
             return this;
         }
 
+        public Query CreateTableAs(Query selectQuery, TableType tableType)
+        {
+            if (selectQuery.Method != "select")
+            {
+                throw new InvalidQueryMethodException("Inner query of CREATE TABLE AS must be select query");
+            }
+
+            ClearComponent("TableType").AddComponent("TableType",new TableCluase()
+            {
+                TableType = tableType,
+                Component = "TableType"
+            });
+
+            AddComponent("CreateTableAsQuery", new CreateTableAsClause
+            {
+                SelectQuery = selectQuery,
+                Component = "CreateTableAsQuery"
+            });
+
+            return this;
+        }
     }
 }
