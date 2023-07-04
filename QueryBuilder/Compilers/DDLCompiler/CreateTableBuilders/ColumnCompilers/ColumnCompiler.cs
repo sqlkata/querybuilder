@@ -22,15 +22,16 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers
             {
                 throw new AutoIncrementOrIdentityExceededException("table can not have more than one auto increment or identity column");
             }
-            foreach (var columnCluase in createTableColumnClauses)
+            foreach (var columnClause in createTableColumnClauses)
             {
-                var nullOrNot = columnCluase.IsNullable ? "NULL " : "NOT NULL ";
-                if (columnCluase.IsIdentity || columnCluase.IsAutoIncrement)
+                var nullOrNot = columnClause.IsNullable ? "NULL " : "NOT NULL ";
+                var collate = columnClause.Collate == null ? "" : $"Collate {columnClause.Collate}";
+                if (columnClause.IsIdentity || columnClause.IsAutoIncrement)
                 {
-                    queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()}  {_sqlCommandUtil.AutoIncrementIdentityCommandGenerator()},\n");
+                    queryString.Append($"{columnClause.ColumnName} {columnClause.ColumnDbType.GetDBType()} {collate} {_sqlCommandUtil.AutoIncrementIdentityCommandGenerator()},\n");
                     continue;
                 }
-                queryString.Append($"{columnCluase.ColumnName} {columnCluase.ColumnDbType.GetDBType()} {nullOrNot},\n");
+                queryString.Append($"{columnClause.ColumnName} {columnClause.ColumnDbType.GetDBType()} {collate} {nullOrNot},\n");
             }
 
             return queryString.ToString();

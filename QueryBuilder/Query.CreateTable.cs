@@ -8,7 +8,7 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query CreateTable(IEnumerable<TableColumnDefenitionDto> columns,TableType tableType = TableType.Permanent,CreateDbTableExtension createDbTableExtension = null)
+        public Query CreateTable(IEnumerable<TableColumnDefinitionDto> columns,TableType tableType = TableType.Permanent,CreateDbTableExtension createDbTableExtension = null)
         {
             Method = "CreateTable";
 
@@ -29,7 +29,8 @@ namespace SqlKata
                     IsUnique = column.IsUnique,
                     IsPrimaryKey = column.IsPrimaryKey,
                     IsAutoIncrement = column.IsAutoIncrement,
-                    IsIdentity = column.IsIdentity
+                    IsIdentity = column.IsIdentity,
+                    Collate = column.Collate
                 });
             });
 

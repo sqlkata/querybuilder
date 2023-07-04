@@ -22,7 +22,7 @@ namespace Program
             var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
             var compiler = compilerProvider.CreateCompiler(DataSource.Oracle);
 
-            var query = new Query("Users").CreateTable(new List<TableColumnDefenitionDto>()
+            var query = new Query("Users").CreateTable(new List<TableColumnDefinitionDto>()
             {
                 new()
                 {

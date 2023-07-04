@@ -41,6 +41,7 @@ namespace SqlKata
         public bool IsUnique { get; set; }
         public bool IsIdentity { get; set; }
         public bool IsAutoIncrement { get; set; }
+        public string Collate { get; set; }
         public override AbstractClause Clone()
         {
             return new CreateTableColumn
@@ -53,6 +54,7 @@ namespace SqlKata
                 IsUnique= IsUnique,
                 IsIdentity= IsIdentity,
                 IsNullable= IsNullable,
+                Collate = Collate
             };
         }
     }
@@ -114,7 +116,7 @@ namespace SqlKata
     public class AggregatedColumn : AbstractColumn
     {
         /// <summary>
-        /// Gets or sets the a query that used to filter the data, 
+        /// Gets or sets the a query that used to filter the data,
         /// the compiler will consider only the `Where` clause.
         /// </summary>
         /// <value>

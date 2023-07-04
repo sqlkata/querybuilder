@@ -2,7 +2,7 @@ using SqlKata.DbTypes.DbColumn;
 
 namespace SqlKata.Contract.CreateTable
 {
-    public class TableColumnDefenitionDto
+    public class TableColumnDefinitionDto
     {
         public string ColumnName { get; set; }
         public BaseDBColumn ColumnDbType { get; set; }
@@ -11,5 +11,6 @@ namespace SqlKata.Contract.CreateTable
         public bool IsUnique { get; set; }
         public bool IsIdentity { get; set; }
         public bool IsAutoIncrement { get; set; }
+        public string Collate { get; set; }
     }
 }
