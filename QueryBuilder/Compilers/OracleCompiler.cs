@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
@@ -9,11 +10,9 @@ namespace SqlKata.Compilers
 {
     public class OracleCompiler : Compiler
     {
-        private readonly IDDLCompiler _ddlCompiler;
         public OracleCompiler(IDDLCompiler ddlCompiler) : this()
         {
-            _ddlCompiler = ddlCompiler;
-
+            DdlCompiler = ddlCompiler;
         }
 
         public OracleCompiler()
@@ -31,7 +30,7 @@ namespace SqlKata.Compilers
         protected override SqlResult CompileCreateTableAs(Query query)
         {
             var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
-            return _ddlCompiler.CompileCreateTableAs(query,DataSource.Oracle,compiledSelectQuery);
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.Oracle,compiledSelectQuery);
         }
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -189,10 +188,15 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return _ddlCompiler.CompileCreateTable(query,DataSource.Oracle);
+            return DdlCompiler.CompileCreateTable(query,DataSource.Oracle);
         }
 
-
+        protected override SqlResult CompileDropTable(Query query)
+        {
+            var result = base.CompileDropTable(query);
+            result.RawSql = new StringBuilder(result.RawSql).Append(" PURGE").ToString();
+            return result;
+        }
 
 
     }

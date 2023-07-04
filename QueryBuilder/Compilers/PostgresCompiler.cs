@@ -8,10 +8,9 @@ namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
-        private readonly IDDLCompiler _ddlCompiler;
         public PostgresCompiler(IDDLCompiler ddlCompiler) : this()
         {
-            _ddlCompiler = ddlCompiler;
+            DdlCompiler = ddlCompiler;
         }
 
         public PostgresCompiler()
@@ -109,12 +108,12 @@ namespace SqlKata.Compilers
         protected override SqlResult CompileCreateTableAs(Query query)
         {
             var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
-            return _ddlCompiler.CompileCreateTableAs(query,DataSource.Postgresql,compiledSelectQuery);
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.Postgresql,compiledSelectQuery);
         }
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return _ddlCompiler.CompileCreateTable(query,DataSource.Postgresql);
+            return DdlCompiler.CompileCreateTable(query,DataSource.Postgresql);
         }
     }
 }

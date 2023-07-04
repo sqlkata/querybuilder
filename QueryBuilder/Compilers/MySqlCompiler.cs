@@ -6,10 +6,9 @@ namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
     {
-        private readonly IDDLCompiler _ddlCompiler;
         public MySqlCompiler(IDDLCompiler ddlCompiler) : this()
         {
-            _ddlCompiler = ddlCompiler;
+            DdlCompiler = ddlCompiler;
         }
 
         public MySqlCompiler()
@@ -60,12 +59,12 @@ namespace SqlKata.Compilers
         protected override SqlResult CompileCreateTableAs(Query query)
         {
             var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
-            return _ddlCompiler.CompileCreateTableAs(query,DataSource.MySql,compiledSelectQuery);
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.MySql,compiledSelectQuery);
         }
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return _ddlCompiler.CompileCreateTable(query,DataSource.MySql);
+            return DdlCompiler.CompileCreateTable(query,DataSource.MySql);
         }
     }
 }

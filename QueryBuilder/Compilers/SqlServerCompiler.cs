@@ -7,10 +7,9 @@ namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
-        private readonly IDDLCompiler _ddlCompiler;
         public SqlServerCompiler(IDDLCompiler ddlCompiler) : this()
         {
-            _ddlCompiler = ddlCompiler;
+            DdlCompiler = ddlCompiler;
         }
 
         public SqlServerCompiler()
@@ -26,7 +25,7 @@ namespace SqlKata.Compilers
         protected override SqlResult CompileCreateTableAs(Query query)
         {
             var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
-            return _ddlCompiler.CompileCreateTableAs(query,DataSource.SqlServer,compiledSelectQuery);
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.SqlServer,compiledSelectQuery);
         }
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -204,7 +203,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileCreateTable(Query query)
         {
-            return _ddlCompiler.CompileCreateTable(query,DataSource.SqlServer);
+            return DdlCompiler.CompileCreateTable(query,DataSource.SqlServer);
         }
     }
 }

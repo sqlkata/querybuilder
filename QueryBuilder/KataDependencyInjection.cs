@@ -14,6 +14,7 @@ using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers.CreateTable;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers.CreateTableAs;
 using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.UniqueConstraintCompilers;
+using SqlKata.Compilers.DDLCompiler.DeleteDdl;
 using SqlKata.Compilers.DDLCompiler.Providers;
 using SqlKata.Compilers.Providers;
 using SqlKata.Compilers.Providers.Factories;
@@ -63,8 +64,9 @@ namespace SqlKata
 
             services.AddSingleton<ICompilerProvider,CompilerProvider>();
 
-
-
+            services.AddSingleton<IDropTableQueryFactory, DropTableQueryFactory>();
+            services.AddSingleton<ITruncateTableQueryFactory, TruncateTableQueryFactory>();
+            
             return services;
         }
     }

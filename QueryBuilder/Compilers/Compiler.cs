@@ -9,6 +9,7 @@ namespace SqlKata.Compilers
     public abstract partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
+        protected IDDLCompiler DdlCompiler;
         protected virtual string parameterPlaceholder { get; set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
         protected virtual string OpeningIdentifier { get; set; } = "\"";
@@ -25,6 +26,11 @@ namespace SqlKata.Compilers
         protected Compiler()
         {
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
+        }
+
+        protected Compiler(IDDLCompiler ddlCompiler) : this()
+        {
+            DdlCompiler = ddlCompiler;
         }
 
         public virtual string EngineCode { get; }
@@ -132,6 +138,14 @@ namespace SqlKata.Compilers
             {
                 ctx = CompileCreateTableAs(query);
             }
+            else if (query.Method == "Drop")
+            {
+                ctx = CompileDropTable(query);
+            }
+            else if (query.Method == "Truncate")
+            {
+                ctx = CompileTruncateTable(query);
+            }
             else
             {
                 if (query.Method == "aggregate")
@@ -155,6 +169,16 @@ namespace SqlKata.Compilers
             ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, ctx.Bindings.ToArray());
 
             return ctx;
+        }
+
+        protected virtual SqlResult CompileTruncateTable(Query query)
+        {
+            return DdlCompiler.CompileTruncateTable(query);
+        }
+
+        protected virtual SqlResult CompileDropTable(Query query)
+        {
+            return DdlCompiler.CompileDropTable(query);
         }
 
         protected abstract SqlResult CompileCreateTableAs(Query query);

@@ -5,11 +5,10 @@ namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
-        private readonly IDDLCompiler _ddlCompiler;
 
         public SqliteCompiler(IDDLCompiler ddlCompiler)
         {
-            _ddlCompiler = ddlCompiler;
+            DdlCompiler = ddlCompiler;
         }
 
         public SqliteCompiler()

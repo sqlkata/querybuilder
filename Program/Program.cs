@@ -23,7 +23,9 @@ namespace Program
             var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
             var compiler = compilerProvider.CreateCompiler(DataSource.SqlServer);
 
-            var query = CreateTable();
+            //var query = new Query("Users").DropTable();
+            var query = new Query("Users").Truncate();
+            //var query = CreateTable();
             //var query = CreateTableAs();
             Console.WriteLine(compiler.Compile(query));
 
@@ -46,9 +48,9 @@ namespace Program
                 new()
                 {
                     ColumnName = "id",
-                    ColumnDbType = new SqlServerDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        SqlServerDbType = SqlServerDbType.BigInt
+                        OracleDbType = OracleDbType.Int32
                     },
                     IsAutoIncrement = true,
                     IsNullable = false,
@@ -58,11 +60,11 @@ namespace Program
                 new()
                 {
                     ColumnName = "FullName",
-                    ColumnDbType = new SqlServerDBColumn()
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        SqlServerDbType = SqlServerDbType.Varchar,
+                        OracleDbType = OracleDbType.Varchar2,
                         Length = 30,
-                        Collation = "Arabiv_Ci_100_Ai"
+                        //Collation = "Arabiv_Ci_100_Ai"
                     },
                     IsAutoIncrement = false,
                     IsNullable = false,
