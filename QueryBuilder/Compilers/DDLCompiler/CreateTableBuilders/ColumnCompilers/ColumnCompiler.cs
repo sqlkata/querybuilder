@@ -2,19 +2,20 @@
 using System.Linq;
 using System.Text;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 using SqlKata.Exceptions.CreateTableQuery;
 
 namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers
 {
     internal class ColumnCompiler : IColumnCompiler
     {
-        private readonly ISqlCreateCommandUtil _sqlCommandUtil;
+        private readonly ISqlCreateCommandProvider _sqlCreateCommandProvider;
 
-        public ColumnCompiler(ISqlCreateCommandUtil sqlCommandUtil)
+        public ColumnCompiler(ISqlCreateCommandProvider sqlCreateCommandProvider)
         {
-            _sqlCommandUtil = sqlCommandUtil;
+            this._sqlCreateCommandProvider = sqlCreateCommandProvider;
         }
-        public string CompileCreateTableColumns(List<CreateTableColumn> createTableColumnClauses)
+        public string CompileCreateTableColumns(List<CreateTableColumn> createTableColumnClauses,DataSource dataSource)
         {
             var queryString = new StringBuilder();
             var identityAndAutoIncrementColumns = createTableColumnClauses.Where(x => x.IsIdentity || x.IsAutoIncrement);
@@ -28,7 +29,7 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.ColumnCompilers
                 var collate = columnClause.Collate == null ? "" : $"Collate {columnClause.Collate}";
                 if (columnClause.IsIdentity || columnClause.IsAutoIncrement)
                 {
-                    queryString.Append($"{columnClause.ColumnName} {columnClause.ColumnDbType.GetDBType()} {collate} {_sqlCommandUtil.AutoIncrementIdentityCommandGenerator()},\n");
+                    queryString.Append($"{columnClause.ColumnName} {columnClause.ColumnDbType.GetDBType()} {collate} {_sqlCreateCommandProvider.GetSqlCreateCommandUtil(dataSource).AutoIncrementIdentityCommandGenerator()},\n");
                     continue;
                 }
                 queryString.Append($"{columnClause.ColumnName} {columnClause.ColumnDbType.GetDBType()} {collate} {nullOrNot},\n");

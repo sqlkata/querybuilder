@@ -13,11 +13,9 @@ namespace SqlKata
         {
             Method = "CreateTable";
 
-            ClearComponent("TableType").AddComponent("TableType",new TableCluase()
-            {
-                TableType = tableType,
-                Component = "TableType"
-            });
+            AddTableTypeComponent(tableType);
+
+            AddDbSpecificCreateTableComponent(createDbTableExtension);
 
             columns.ToList().ForEach(column =>
             {
@@ -31,33 +29,23 @@ namespace SqlKata
                     IsPrimaryKey = column.IsPrimaryKey,
                     IsAutoIncrement = column.IsAutoIncrement,
                     IsIdentity = column.IsIdentity,
-                    Collate = column.Collate
+                    Collate = column.ColumnDbType.Collation
                 });
             });
 
-            if (createDbTableExtension != null)
-            {
-                AddComponent("CreateTableExtension", new CreateTableQueryExtensionClause()
-                {
-                    CreateDbTableExtension = createDbTableExtension,
-                    Component = "CreateTableExtension"
-                });
-            }
             return this;
         }
 
-        public Query CreateTableAs(Query selectQuery, TableType tableType)
+        public Query CreateTableAs(Query selectQuery, TableType tableType = TableType.Permanent,CreateDbTableExtension createDbTableExtension = null)
         {
+            Method = "CreateTableAs";
             if (selectQuery.Method != "select")
             {
                 throw new InvalidQueryMethodException("Inner query of CREATE TABLE AS must be select query");
             }
 
-            ClearComponent("TableType").AddComponent("TableType",new TableCluase()
-            {
-                TableType = tableType,
-                Component = "TableType"
-            });
+            AddDbSpecificCreateTableComponent(createDbTableExtension);
+            AddTableTypeComponent(tableType);
 
             AddComponent("CreateTableAsQuery", new CreateTableAsClause
             {
@@ -67,5 +55,27 @@ namespace SqlKata
 
             return this;
         }
+
+        private void AddDbSpecificCreateTableComponent(CreateDbTableExtension createDbTableExtension)
+        {
+            if (createDbTableExtension != null)
+            {
+                AddComponent("CreateTableExtension", new CreateTableQueryExtensionClause()
+                {
+                    CreateDbTableExtension = createDbTableExtension,
+                    Component = "CreateTableExtension"
+                });
+            }
+        }
+        private void AddTableTypeComponent(TableType tableType)
+        {
+            ClearComponent("TableType").AddComponent("TableType", new TableCluase()
+            {
+                TableType = tableType,
+                Component = "TableType"
+            });
+        }
+
+
     }
 }

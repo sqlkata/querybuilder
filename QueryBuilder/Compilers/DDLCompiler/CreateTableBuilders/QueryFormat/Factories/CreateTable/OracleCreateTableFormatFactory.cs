@@ -1,7 +1,7 @@
 ﻿using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 
-namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Factories
+namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Factories.CreateTable
 {
     internal class OracleCreateTableFormatFactory : ICreateQueryFormatFactory
     {

@@ -77,6 +77,11 @@ namespace SqlKata.Compilers
             return sql;
         }
 
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override SqlResult CompileCreateTable(Query query)
         {
             throw new System.NotImplementedException();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 
@@ -26,6 +27,12 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return _ddlCompiler.CompileCreateTableAs(query,DataSource.Oracle,compiledSelectQuery);
+        }
 
         protected override SqlResult CompileSelectQuery(Query query)
         {

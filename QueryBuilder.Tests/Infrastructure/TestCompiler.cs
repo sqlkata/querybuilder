@@ -16,6 +16,11 @@ namespace SqlKata.Tests.Infrastructure
             return FindCompilerMethodInfo(clauseType, methodName);
         }
 
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override SqlResult CompileCreateTable(Query query)
         {
             throw new NotImplementedException();

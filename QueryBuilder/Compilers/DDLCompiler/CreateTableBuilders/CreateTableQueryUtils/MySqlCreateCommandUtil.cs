@@ -12,5 +12,10 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtil
         {
             return "AUTO_INCREMENT ";
         }
+
+        public string GetTempTableClause()
+        {
+            return "TEMPORARY";
+        }
     }
 }

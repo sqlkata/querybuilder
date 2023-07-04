@@ -1,4 +1,5 @@
 using System.Linq;
+using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 
@@ -21,6 +22,12 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = false;
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return _ddlCompiler.CompileCreateTableAs(query,DataSource.SqlServer,compiledSelectQuery);
+        }
 
         protected override SqlResult CompileSelectQuery(Query query)
         {

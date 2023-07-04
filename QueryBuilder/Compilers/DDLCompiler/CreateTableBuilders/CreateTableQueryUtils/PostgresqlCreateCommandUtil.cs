@@ -12,5 +12,9 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtil
         {
             return "";
         }
+        public string GetTempTableClause()
+        {
+            return "TEMPORARY";
+        }
     }
 }

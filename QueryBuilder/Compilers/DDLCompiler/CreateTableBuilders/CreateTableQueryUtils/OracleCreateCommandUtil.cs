@@ -1,6 +1,5 @@
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
-using SqlKata.Contract.CreateTable;
 
 namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtils
 {
@@ -11,6 +10,10 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtil
         public string AutoIncrementIdentityCommandGenerator()
         {
             return "GENERATED ALWAYS AS IDENTITY ";
+        }
+        public string GetTempTableClause()
+        {
+            return "Global TEMPORARY";
         }
     }
 }

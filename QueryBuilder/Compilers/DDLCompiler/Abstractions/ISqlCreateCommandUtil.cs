@@ -7,5 +7,6 @@ namespace SqlKata.Compilers.DDLCompiler.Abstractions
     {
         DataSource DataSource { get; }
         string AutoIncrementIdentityCommandGenerator();
+        string GetTempTableClause();
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Compilers.Abstractions;
+using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.DBSpecificQueries;
 using SqlKata.Compilers.Enums;
 using SqlKata.Contract.CreateTable;
 using SqlKata.Contract.CreateTable.DbTableSpecific;
@@ -20,16 +21,34 @@ namespace Program
             serviceCollection.AddKataServices();
             var provider = serviceCollection.BuildServiceProvider();
             var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
-            var compiler = compilerProvider.CreateCompiler(DataSource.Oracle);
+            var compiler = compilerProvider.CreateCompiler(DataSource.SqlServer);
 
+            var query = CreateTable();
+            //var query = CreateTableAs();
+            Console.WriteLine(compiler.Compile(query));
+
+
+
+        }
+
+        private static Query CreateTableAs()
+        {
+            var selectQuery = new Query("Users").Select("id", "fullname", "age");
+            var query = new Query("SampleUsers").CreateTableAs(selectQuery, TableType.Temporary,
+                new OracleDbTableExtensions() { OnCommitPreserveRows = true });
+            return query;
+        }
+
+        private static Query CreateTable()
+        {
             var query = new Query("Users").CreateTable(new List<TableColumnDefinitionDto>()
             {
                 new()
                 {
                     ColumnName = "id",
-                    ColumnDbType = new OracleDBColumn()
+                    ColumnDbType = new SqlServerDBColumn()
                     {
-                        OracleDbType = OracleDbType.Int32
+                        SqlServerDbType = SqlServerDbType.BigInt
                     },
                     IsAutoIncrement = true,
                     IsNullable = false,
@@ -39,22 +58,19 @@ namespace Program
                 new()
                 {
                     ColumnName = "FullName",
-                    ColumnDbType = new OracleDBColumn()
+                    ColumnDbType = new SqlServerDBColumn()
                     {
-                        OracleDbType = OracleDbType.Varchar2,
-                        Length = 30
+                        SqlServerDbType = SqlServerDbType.Varchar,
+                        Length = 30,
+                        Collation = "Arabiv_Ci_100_Ai"
                     },
                     IsAutoIncrement = false,
                     IsNullable = false,
                     IsPrimaryKey = false,
                     IsUnique = true,
                 }
-            }, TableType.Temporary,new OracleDbTableExtensions(){OnCommitPreserveRows = true});
-
-            Console.WriteLine(compiler.Compile(query));
-
-
-
+            }, TableType.Temporary);
+            return query;
         }
     }
 }

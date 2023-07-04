@@ -12,5 +12,9 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.CreateTableQueryUtil
         {
             return "IDENTITY(1,1) ";
         }
+        public string GetTempTableClause()
+        {
+            return "";
+        }
     }
 }

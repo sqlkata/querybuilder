@@ -128,6 +128,10 @@ namespace SqlKata.Compilers
             {
                 ctx = CompileCreateTable(query);
             }
+            else if (query.Method == "CreateTableAs")
+            {
+                ctx = CompileCreateTableAs(query);
+            }
             else
             {
                 if (query.Method == "aggregate")
@@ -152,6 +156,8 @@ namespace SqlKata.Compilers
 
             return ctx;
         }
+
+        protected abstract SqlResult CompileCreateTableAs(Query query);
 
         /// <summary>
         /// Add the passed operator(s) to the white list so they can be used with

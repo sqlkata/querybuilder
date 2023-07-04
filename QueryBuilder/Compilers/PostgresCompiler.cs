@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 
@@ -102,6 +103,13 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return _ddlCompiler.CompileCreateTableAs(query,DataSource.Postgresql,compiledSelectQuery);
         }
 
         protected override SqlResult CompileCreateTable(Query query)

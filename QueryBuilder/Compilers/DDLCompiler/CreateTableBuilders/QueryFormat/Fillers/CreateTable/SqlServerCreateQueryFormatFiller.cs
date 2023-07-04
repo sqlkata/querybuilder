@@ -1,8 +1,7 @@
-﻿using SqlKata.Clauses;
-using SqlKata.Compilers.DDLCompiler.Abstractions;
+﻿using SqlKata.Compilers.DDLCompiler.Abstractions;
 using SqlKata.Compilers.Enums;
 
-namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers
+namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers.CreateTable
 {
     internal class SqlServerCreateQueryFormatFiller : ICreateQueryFormatFiller
     {
@@ -24,7 +23,7 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Fillers
             var tableName = query.GetOneComponent<FromClause>("from").Table;
             return string.Format(queryFormat,
                 tableName,
-                _columnCompiler.CompileCreateTableColumns(createTableColumnClauses),
+                _columnCompiler.CompileCreateTableColumns(createTableColumnClauses,DataSource.SqlServer),
                 _primaryKeyCompiler.CompilePrimaryKey(createTableColumnClauses),
                 _uniqueConstraintCompiler.CompileUniqueConstraints(createTableColumnClauses)
                 );

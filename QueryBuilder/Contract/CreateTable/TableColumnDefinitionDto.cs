@@ -11,6 +11,5 @@ namespace SqlKata.Contract.CreateTable
         public bool IsUnique { get; set; }
         public bool IsIdentity { get; set; }
         public bool IsAutoIncrement { get; set; }
-        public string Collate { get; set; }
     }
 }
