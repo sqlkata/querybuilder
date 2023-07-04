@@ -4,8 +4,9 @@ namespace SqlKata.DbTypes.DbColumn
 {
     public abstract class BaseDBColumn
     {
-        public int? Length { get; set; } 
+        public int? Length { get; set; }
         public int? Precision { get; set; }
+        public string Collation { get; set; }
         internal abstract string GetDBType();
 
         protected void AddLengthAndPrecisionToType(StringBuilder stringBuilder)
