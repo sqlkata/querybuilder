@@ -21,11 +21,11 @@ namespace Program
             serviceCollection.AddKataServices();
             var provider = serviceCollection.BuildServiceProvider();
             var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
-            var compiler = compilerProvider.CreateCompiler(DataSource.SqlServer);
+            var compiler = compilerProvider.CreateCompiler(DataSource.Postgresql);
 
             //var query = new Query("Users").DropTable();
-            var query = new Query("Users").Truncate();
-            //var query = CreateTable();
+            //var query = new Query("Users").Truncate();
+            var query = CreateTable();
             //var query = CreateTableAs();
             Console.WriteLine(compiler.Compile(query));
 

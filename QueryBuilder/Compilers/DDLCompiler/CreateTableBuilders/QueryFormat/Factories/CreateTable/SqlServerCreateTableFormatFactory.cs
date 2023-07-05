@@ -9,11 +9,7 @@ namespace SqlKata.Compilers.DDLCompiler.CreateTableBuilders.QueryFormat.Factorie
         public string CreateTableFormat()
         {
             return  @"CREATE TABLE {0}(
-                        {1}
-                        {2}
-                        {3}
-                    )
-                    ";
+{1}{2}{3})";
         }
     }
 }
