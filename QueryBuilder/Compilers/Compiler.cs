@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SqlKata.Clauses;
 using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
@@ -146,6 +147,10 @@ namespace SqlKata.Compilers
             {
                 ctx = CompileTruncateTable(query);
             }
+            else if (query.Method == "selectInto")
+            {
+                ctx = CompileSelectIntoQuery(query);
+            }
             else
             {
                 if (query.Method == "aggregate")
@@ -156,7 +161,6 @@ namespace SqlKata.Compilers
 
                     query = TransformAggregateQuery(query);
                 }
-
                 ctx = CompileSelectQuery(query);
             }
 
@@ -168,6 +172,25 @@ namespace SqlKata.Compilers
 
             ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, ctx.Bindings.ToArray());
 
+            return ctx;
+        }
+
+        private SqlResult CompileSelectIntoQuery(Query query)
+        {
+            var ctx = new SqlResult
+            {
+                Query = query.Clone(),
+            };
+
+            var columns = ctx.Query
+                         .GetComponents<AbstractColumn>("select", EngineCode)
+                         .Select(x => CompileColumn(ctx, x))
+                         .ToList();
+            var from = CompileFrom(ctx);
+
+            var intoClause = ctx.Query.GetOneComponent<IntoClause>("IntoCluase");
+            var newTable = Wrap(intoClause.TableName);
+            ctx.RawSql = string.Format("SELECT {0} INTO {1} {2}",string.Join(",",columns),newTable,from);
             return ctx;
         }
 
@@ -908,7 +931,7 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        /// Compile the random statement into SQL.
+        /// Compile the random statement newTable SQL.
         /// </summary>
         /// <param name="seed"></param>
         /// <returns></returns>

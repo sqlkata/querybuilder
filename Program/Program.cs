@@ -25,12 +25,17 @@ namespace Program
 
             //var query = new Query("Users").DropTable();
             //var query = new Query("Users").Truncate();
-            var query = CreateTable();
+            //var query = CreateTable();
             //var query = CreateTableAs();
+
+            /*            var fromClause = new FromClause()
+                        {
+                            Table = "dbo.user"
+                        };
+
+                        Console.WriteLine(compiler.Wrap(fromClause.Table));*/
+            var query = new Query("users").Select("Id", "FullName").Into("public.Sample");
             Console.WriteLine(compiler.Compile(query));
-
-
-
         }
 
         private static Query CreateTableAs()

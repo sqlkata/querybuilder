@@ -1,3 +1,4 @@
+using SqlKata.Clauses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,30 @@ namespace SqlKata
         public Query Select(params string[] columns)
         {
             return Select(columns.AsEnumerable());
+        }
+
+        public Query Into(string newTableName,params string[] newColumnList)
+        {
+            Method = "selectInto";
+
+            newColumnList = newColumnList
+            .Select(x => Helper.ExpandExpression(x))
+            .SelectMany(x => x)
+            .ToArray();
+
+            AddComponent("IntoCluase", new IntoClause()
+            {
+                TableName = newTableName
+            });
+
+            newColumnList.ToList().ForEach(newColumn => {
+                AddComponent("select",new Column
+                {
+                    Name = newColumn
+                });
+            });
+
+            return this;
         }
 
         public Query Select(IEnumerable<string> columns)
