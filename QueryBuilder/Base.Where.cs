@@ -83,7 +83,7 @@ namespace SqlKata
 
         public Query Where(IEnumerable<KeyValuePair<string, object>> values)
         {
-            var query = (Query)this;
+            var query = this;
             var orFlag = GetOr();
             var notFlag = GetNot();
 
@@ -126,7 +126,7 @@ namespace SqlKata
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Where(x => x.Component == "where").Any()) return (Query)this;
+            if (!query.Clauses.Where(x => x.Component == "where").Any()) return this;
 
             return AddComponent("where", new NestedCondition<Query>
             {

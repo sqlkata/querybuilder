@@ -19,7 +19,7 @@ namespace SqlKata
         {
             EngineScope = engine;
 
-            return (Query)this;
+            return this;
         }
 
       
@@ -29,12 +29,12 @@ namespace SqlKata
                 throw new ArgumentException($"Cannot set the same {nameof(Query)} as a parent of itself");
 
             Parent = parent;
-            return (Query)this;
+            return this;
         }
 
         public Query NewChild()
         {
-            var newQuery = NewQuery().SetParent((Query)this);
+            var newQuery = NewQuery().SetParent(this);
             newQuery.EngineScope = EngineScope;
             return newQuery;
         }
@@ -54,7 +54,7 @@ namespace SqlKata
             clause.Component = component;
             Clauses.Add(clause);
 
-            return (Query)this;
+            return this;
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace SqlKata
                               (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
-            return (Query)this;
+            return this;
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace SqlKata
         protected Query And()
         {
             _orFlag = false;
-            return (Query)this;
+            return this;
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace SqlKata
         public Query Or()
         {
             _orFlag = true;
-            return (Query)this;
+            return this;
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace SqlKata
         public Query Not(bool flag = true)
         {
             _notFlag = flag;
-            return (Query)this;
+            return this;
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace SqlKata
         public Query From(Query query, string alias = null)
         {
             query = query.Clone();
-            query.SetParent((Query)this);
+            query.SetParent(this);
 
             if (alias != null) query.As(alias);
             
@@ -266,7 +266,7 @@ namespace SqlKata
         {
             var query = new Query();
 
-            query.SetParent((Query)this);
+            query.SetParent(this);
 
             return From(callback.Invoke(query), alias);
         }

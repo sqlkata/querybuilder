@@ -371,7 +371,7 @@ namespace SqlKata
 
             if (found) return Variables[variable];
 
-            if (Parent != null) return ((Query)Parent).FindVariable(variable);
+            if (Parent != null) return Parent.FindVariable(variable);
 
             throw new Exception($"Variable '{variable}' not found");
         }
