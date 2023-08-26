@@ -668,8 +668,8 @@ namespace SqlKata.Compilers
 
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
         {
-            var from = join.GetOneComponent<AbstractFrom>("from", EngineCode);
-            var conditions = join.GetComponents<AbstractCondition>("where", EngineCode);
+            var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
             var joinTable = CompileTableExpression(ctx, from);
             var constraints = CompileConditions(ctx, conditions);

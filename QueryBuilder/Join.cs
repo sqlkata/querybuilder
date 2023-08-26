@@ -2,8 +2,15 @@ using System;
 
 namespace SqlKata
 {
-    public class Join : BaseQuery<Join>
+    public sealed class Join 
     {
+        public Query BaseQuery { get; }
+
+        public Join(Query baseQuery)
+        {
+            BaseQuery = baseQuery;
+        }
+
         protected string TypeField = "inner join";
 
         public string Type
@@ -12,11 +19,12 @@ namespace SqlKata
             set => TypeField = value.ToUpperInvariant();
         }
 
-        public override Join Clone()
+        public Join Clone()
         {
-            var clone = base.Clone();
-            clone.TypeField = TypeField;
-            return clone;
+            return new Join(BaseQuery)
+            {
+                TypeField = TypeField
+            };
         }
 
         public Join AsType(string type)
@@ -33,17 +41,17 @@ namespace SqlKata
         /// <returns></returns>
         public Join JoinWith(string table)
         {
-            return From(table);
+            return new Join(BaseQuery.From(table));
         }
 
         public Join JoinWith(Query query)
         {
-            return From(query);
+            return new Join(BaseQuery.From(query));
         }
 
         public Join JoinWith(Func<Query, Query> callback)
         {
-            return From(callback);
+            return new Join(BaseQuery.From(callback));
         }
 
         public Join AsInner()
@@ -73,24 +81,20 @@ namespace SqlKata
 
         public Join On(string first, string second, string op = "=")
         {
-            return AddComponent("where", new TwoColumnsCondition
+            return new Join(BaseQuery.AddComponent("where", new TwoColumnsCondition
             {
                 First = first,
                 Second = second,
                 Operator = op,
-                IsOr = GetOr(),
-                IsNot = GetNot()
-            });
+                IsOr = BaseQuery.GetOr(),
+                IsNot = BaseQuery.GetNot()
+            }));
         }
 
         public Join OrOn(string first, string second, string op = "=")
         {
-            return Or().On(first, second, op);
+            return new Join(BaseQuery.Or()).On(first, second, op);
         }
 
-        public override Join NewQuery()
-        {
-            return new Join();
-        }
     }
 }

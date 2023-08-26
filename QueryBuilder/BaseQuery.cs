@@ -5,13 +5,9 @@ using SqlKata.Extensions;
 
 namespace SqlKata
 {
-    public abstract class AbstractQuery
+    public partial class Query
     {
-        public AbstractQuery Parent;
-    }
-
-    public abstract partial class BaseQuery<TQ> : AbstractQuery where TQ : BaseQuery<TQ>
-    {
+        public Query Parent;
         public string EngineScope;
         private bool _notFlag;
 
@@ -19,40 +15,26 @@ namespace SqlKata
 
         public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
 
-        public TQ SetEngineScope(string engine)
+        public Query SetEngineScope(string engine)
         {
             EngineScope = engine;
 
-            return (TQ)this;
+            return (Query)this;
         }
 
-        /// <summary>
-        ///     Return a cloned copy of the current query.
-        /// </summary>
-        /// <returns></returns>
-        public virtual TQ Clone()
-        {
-            var q = NewQuery();
-
-            q.Clauses = Clauses.Select(x => x.Clone()).ToList();
-
-            return q;
-        }
-
-        public TQ SetParent(AbstractQuery parent)
+      
+        public Query SetParent(Query parent)
         {
             if (this == parent)
-                throw new ArgumentException($"Cannot set the same {nameof(AbstractQuery)} as a parent of itself");
+                throw new ArgumentException($"Cannot set the same {nameof(Query)} as a parent of itself");
 
             Parent = parent;
-            return (TQ)this;
+            return (Query)this;
         }
 
-        public abstract TQ NewQuery();
-
-        public TQ NewChild()
+        public Query NewChild()
         {
-            var newQuery = NewQuery().SetParent((TQ)this);
+            var newQuery = NewQuery().SetParent((Query)this);
             newQuery.EngineScope = EngineScope;
             return newQuery;
         }
@@ -64,7 +46,7 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public TQ AddComponent(string component, AbstractClause clause, string engineCode = null)
+        public Query AddComponent(string component, AbstractClause clause, string engineCode = null)
         {
             if (engineCode == null) engineCode = EngineScope;
 
@@ -72,7 +54,7 @@ namespace SqlKata
             clause.Component = component;
             Clauses.Add(clause);
 
-            return (TQ)this;
+            return (Query)this;
         }
 
         /// <summary>
@@ -84,7 +66,7 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public TQ AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
+        public Query AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
 
@@ -169,7 +151,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public TQ ClearComponent(string component, string engineCode = null)
+        public Query ClearComponent(string component, string engineCode = null)
         {
             if (engineCode == null) engineCode = EngineScope;
 
@@ -178,44 +160,44 @@ namespace SqlKata
                               (engineCode == null || x.Engine == null || engineCode == x.Engine)))
                 .ToList();
 
-            return (TQ)this;
+            return (Query)this;
         }
 
         /// <summary>
         ///     Set the next boolean operator to "and" for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected TQ And()
+        protected Query And()
         {
             _orFlag = false;
-            return (TQ)this;
+            return (Query)this;
         }
 
         /// <summary>
         ///     Set the next boolean operator to "or" for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        public TQ Or()
+        public Query Or()
         {
             _orFlag = true;
-            return (TQ)this;
+            return (Query)this;
         }
 
         /// <summary>
         ///     Set the next "not" operator for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        public TQ Not(bool flag = true)
+        public Query Not(bool flag = true)
         {
             _notFlag = flag;
-            return (TQ)this;
+            return (Query)this;
         }
 
         /// <summary>
         ///     Get the boolean operator and reset it to "and"
         /// </summary>
         /// <returns></returns>
-        protected bool GetOr()
+        public bool GetOr()
         {
             var ret = _orFlag;
 
@@ -228,7 +210,7 @@ namespace SqlKata
         ///     Get the "not" operator and clear it
         /// </summary>
         /// <returns></returns>
-        protected bool GetNot()
+        public bool GetNot()
         {
             var ret = _notFlag;
 
@@ -242,14 +224,14 @@ namespace SqlKata
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public TQ From(GTable table)
+        public Query From(GTable table)
         {
             return AddOrReplaceComponent("from", new FromClause
             {
                 Table = table.Name
             });
         }
-        public TQ From(string table)
+        public Query From(string table)
         {
             return AddOrReplaceComponent("from", new FromClause
             {
@@ -257,10 +239,10 @@ namespace SqlKata
             });
         }
 
-        public TQ From(Query query, string alias = null)
+        public Query From(Query query, string alias = null)
         {
             query = query.Clone();
-            query.SetParent((TQ)this);
+            query.SetParent((Query)this);
 
             if (alias != null) query.As(alias);
             
@@ -271,7 +253,7 @@ namespace SqlKata
             });
         }
 
-        public TQ FromRaw(string sql, params object[] bindings)
+        public Query FromRaw(string sql, params object[] bindings)
         {
             return AddOrReplaceComponent("from", new RawFromClause
             {
@@ -280,11 +262,11 @@ namespace SqlKata
             });
         }
 
-        public TQ From(Func<Query, Query> callback, string alias = null)
+        public Query From(Func<Query, Query> callback, string alias = null)
         {
             var query = new Query();
 
-            query.SetParent((TQ)this);
+            query.SetParent((Query)this);
 
             return From(callback.Invoke(query), alias);
         }

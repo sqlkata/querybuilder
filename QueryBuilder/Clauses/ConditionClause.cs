@@ -121,7 +121,7 @@ namespace SqlKata
     /// <summary>
     ///     Represents a comparison between a column and a full "subquery".
     /// </summary>
-    public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class QueryCondition<T> : AbstractCondition where T : Query
     {
         public string Column { get; set; }
         public string Operator { get; set; }
@@ -146,7 +146,7 @@ namespace SqlKata
     /// <summary>
     ///     Represents a comparison between a full "subquery" and a value.
     /// </summary>
-    public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class SubQueryCondition<T> : AbstractCondition where T : Query
     {
         public object Value { get; set; }
         public string Operator { get; set; }
@@ -284,9 +284,9 @@ namespace SqlKata
     ///     Represents a "nested" clause condition.
     ///     i.e OR (myColumn = "A")
     /// </summary>
-    public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class NestedCondition<T> : AbstractCondition 
     {
-        public T Query { get; set; }
+        public Query Query { get; set; }
 
         public override AbstractClause Clone()
         {

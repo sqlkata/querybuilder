@@ -6,7 +6,7 @@ namespace SqlKata
     {
         private Query Join(Func<Join, Join> callback)
         {
-            var join = callback.Invoke(new Join().AsInner());
+            var join = callback.Invoke(new Join(new Query()).AsInner());
 
             return AddComponent("join", new BaseJoin
             {
@@ -22,17 +22,20 @@ namespace SqlKata
             string type = "inner join"
         )
         {
-            return Join(j => j.JoinWith(table).WhereColumns(first, op, second).AsType(type));
+            return Join(j => new Join(j.JoinWith(table).AsType(type)
+                .BaseQuery.WhereColumns(first, op, second)));
         }
 
         public Query Join(string table, Func<Join, Join> callback, string type = "inner join")
         {
-            return Join(j => j.JoinWith(table).Where(callback).AsType(type));
+            return Join(j => new Join(j.JoinWith(table).AsType(type)
+                .BaseQuery.Where(callback)));
         }
 
         public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner join")
         {
-            return Join(j => j.JoinWith(query).Where(onCallback).AsType(type));
+            return Join(j => new Join(j.JoinWith(query).AsType(type)
+                .BaseQuery.Where(onCallback)));
         }
 
         public Query LeftJoin(string table, string first, string second, string op = "=")

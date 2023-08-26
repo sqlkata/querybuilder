@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace SqlKata
 {
-    public partial class Query : BaseQuery<Query>
+    public partial class Query 
     {
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
 
@@ -59,9 +59,10 @@ namespace SqlKata
             return limit?.Limit ?? 0;
         }
 
-        public override Query Clone()
+        public Query Clone()
         {
-            var clone = base.Clone();
+            var clone = NewQuery();
+            clone.Clauses = Clauses.Select(x => x.Clone()).ToList();
             clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
@@ -326,7 +327,7 @@ namespace SqlKata
             return this;
         }
 
-        public override Query NewQuery()
+        public Query NewQuery()
         {
             return new Query();
         }
