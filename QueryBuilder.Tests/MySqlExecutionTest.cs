@@ -251,10 +251,11 @@ namespace SqlKata.Tests
 
         QueryFactory DB()
         {
-            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
+           // var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
+           // var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
+           // var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
+           // var cs = $"server={host};user={user};database={dbName}";
+           string cs = "server=localhost;user=root;port=3306;password=mysql;database=kata";
 
             var connection = new MySqlConnection(cs);
 
