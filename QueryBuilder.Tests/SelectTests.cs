@@ -430,10 +430,13 @@ public class SelectTests : TestSupport
             .Join("countries", j => j.On("countries.id", "users.country_id"))
             .Where(_ => new Query());
 
-        var c = Compile(query);
+        var c = Compile(query)[EngineCodes.SqlServer];
 
-        Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON ([countries].[id] = [users].[country_id])",
-            c[EngineCodes.SqlServer]);
+        Assert.Equal(
+            """
+            SELECT * FROM [users] 
+            INNER JOIN [countries] ON ([countries].[id] = [users].[country_id])
+            """, c.Replace("\n", "\r\n"));
     }
 
     [Fact]
