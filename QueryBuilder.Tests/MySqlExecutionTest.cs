@@ -174,8 +174,7 @@ public class MySqlExecutionTest
             "Date DATE NOT NULL"
         });
 
-        var exists = db.Query("Transaction").Exists();
-        Assert.Equal(false, exists);
+        Assert.False(db.Query("Transaction").Exists());
 
         db.Drop("Transaction");
     }
@@ -196,8 +195,7 @@ public class MySqlExecutionTest
             Amount = 10
         });
 
-        var exists = db.Query("Transaction").Exists();
-        Assert.Equal(true, exists);
+        Assert.True(db.Query("Transaction").Exists());
 
         db.Drop("Transaction");
     }

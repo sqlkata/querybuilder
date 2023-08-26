@@ -15,18 +15,20 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            if ((columns?.Any() ?? false) == false || (values?.Any() ?? false) == false)
-                throw new InvalidOperationException($"{columns} and {values} cannot be null or empty");
+            var columnsCache = columns is ICollection<string> c ? c : columns?.ToArray();
+            var valuesCache = values is ICollection<object> v ? v : values?.ToArray();
+            if ((columnsCache?.Any() ?? false) == false || (valuesCache?.Any() ?? false) == false)
+                throw new InvalidOperationException($"{columnsCache} and {valuesCache} cannot be null or empty");
 
-            if (columns.Count() != values.Count())
-                throw new InvalidOperationException($"{columns} count should be equal to {values} count");
+            if (columnsCache.Count() != valuesCache.Count())
+                throw new InvalidOperationException($"{columnsCache} count should be equal to {valuesCache} count");
 
             Method = "update";
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = columns.ToList(),
-                Values = values.ToList()
+                Columns = columnsCache.ToList(),
+                Values = valuesCache.ToList()
             });
 
             return this;
@@ -34,15 +36,18 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> values)
         {
-            if (values == null || values.Any() == false)
-                throw new InvalidOperationException($"{values} cannot be null or empty");
+            var valuesCached = values is IReadOnlyDictionary<string, object> d
+                ? d
+                : values?.ToDictionary(x => x.Key, x => x.Value);
+            if (valuesCached == null || valuesCached.Any() == false)
+                throw new InvalidOperationException($"{valuesCached} cannot be null or empty");
 
             Method = "update";
 
             ClearComponent("update").AddComponent("update", new InsertClause
             {
-                Columns = values.Select(x => x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList()
+                Columns = valuesCached.Select(x => x.Key).ToList(),
+                Values = valuesCached.Select(x => x.Value).ToList()
             });
 
             return this;

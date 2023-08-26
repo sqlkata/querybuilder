@@ -37,15 +37,18 @@ namespace SqlKata
 
         public Query AsInsert(IEnumerable<KeyValuePair<string, object>> values, bool returnId = false)
         {
-            if (values == null || values.Any() == false)
-                throw new InvalidOperationException($"{values} argument cannot be null or empty");
+            var valuesCached = values is IReadOnlyDictionary<string, object> d
+                ? d
+                : values?.ToDictionary(x => x.Key, x => x.Value);
+            if (valuesCached == null || valuesCached.Count == 0)
+                throw new InvalidOperationException($"{valuesCached} argument cannot be null or empty");
 
             Method = "insert";
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = values.Select(x => x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList(),
+                Columns = valuesCached.Select(x => x.Key).ToList(),
+                Values = valuesCached.Select(x => x.Value).ToList(),
                 ReturnId = returnId
             });
 

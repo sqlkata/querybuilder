@@ -285,6 +285,28 @@ public class InsertTests : TestSupport
             "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
             c[EngineCodes.Firebird]);
     }
+    [Fact]
+    public void InsertAnonymousObject()
+    {
+        var expandoUser = new
+        {
+            Name = "The User",
+            Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+
+        var query = new Query("Table")
+            .AsInsert(expandoUser);
+
+        var c = Compile(query);
+
+        Assert.Equal(
+            "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
+            c[EngineCodes.SqlServer]);
+
+        Assert.Equal(
+            "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
+            c[EngineCodes.Firebird]);
+    }
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Account
     {

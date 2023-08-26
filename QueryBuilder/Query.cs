@@ -8,12 +8,11 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties =
-            new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
 
         private string _comment;
-        public List<Include> Includes = new List<Include>();
-        public Dictionary<string, object> Variables = new Dictionary<string, object>();
+        public List<Include> Includes = new();
+        public Dictionary<string, object> Variables = new();
 
         public Query()
         {
@@ -385,7 +384,7 @@ namespace SqlKata
         ///     and will add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data,
+        private IReadOnlyDictionary<string, object> BuildKeyValuePairsFromObject(object data,
             bool considerKeys = false)
         {
             var dictionary = new Dictionary<string, object>();

@@ -83,7 +83,7 @@ namespace SqlKata.Execution
                 commandTimeout: timeout ?? QueryTimeout
             ).ToList();
 
-            result = HandleIncludes<T>(query, result).ToList();
+            result = HandleIncludes(query, result).ToList();
 
             return result;
         }
@@ -266,7 +266,7 @@ namespace SqlKata.Execution
             return await Connection.ExecuteScalarAsync<T>(commandDefinition);
         }
 
-        public SqlMapper.GridReader GetMultiple<T>(
+        public SqlMapper.GridReader GetMultiple(
             Query[] queries,
             IDbTransaction transaction = null,
             int? timeout = null
@@ -282,7 +282,7 @@ namespace SqlKata.Execution
             );
         }
 
-        public async Task<SqlMapper.GridReader> GetMultipleAsync<T>(
+        public async Task<SqlMapper.GridReader> GetMultipleAsync(
             Query[] queries,
             IDbTransaction transaction = null,
             int? timeout = null, 
@@ -306,7 +306,7 @@ namespace SqlKata.Execution
         )
         {
 
-            var multi = GetMultiple<T>(
+            var multi = GetMultiple(
                 queries,
                 transaction,
                 timeout
@@ -328,7 +328,7 @@ namespace SqlKata.Execution
             CancellationToken cancellationToken = default
         )
         {
-            var multi = await GetMultipleAsync<T>(
+            var multi = await GetMultipleAsync(
                 queries,
                 transaction,
                 timeout,
@@ -655,7 +655,7 @@ namespace SqlKata.Execution
             return await Connection.ExecuteAsync(commandDefinition);
         }
 
-        private static IEnumerable<T> HandleIncludes<T>(Query query, IEnumerable<T> result)
+        private static IEnumerable<T> HandleIncludes<T>(Query query, List<T> result)
         {
             if (!result.Any())
             {
@@ -757,7 +757,7 @@ namespace SqlKata.Execution
             return dynamicResult.Cast<T>();
         }
 
-        private static async Task<IEnumerable<T>> HandleIncludesAsync<T>(Query query, IEnumerable<T> result, CancellationToken cancellationToken = default)
+        private static async Task<IEnumerable<T>> HandleIncludesAsync<T>(Query query, List<T> result, CancellationToken cancellationToken = default)
         {
             if (!result.Any())
             {

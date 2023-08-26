@@ -370,7 +370,7 @@ namespace SqlKata.Compilers
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
                 return CompileInsertQueryClause(ctx, table, insertQueryClause);
-            return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>());
+            return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>().ToArray());
         }
 
         protected virtual SqlResult CompileInsertQueryClause(
@@ -387,9 +387,9 @@ namespace SqlKata.Compilers
         }
 
         protected virtual SqlResult CompileValueInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> insertClauses)
+            SqlResult ctx, string table, InsertClause[] insertClauses)
         {
-            var isMultiValueInsert = insertClauses.Skip(1).Any();
+            var isMultiValueInsert = insertClauses.Length > 1;
 
             var insertInto = isMultiValueInsert ? MultiInsertStartClause : SingleInsertStartClause;
 
