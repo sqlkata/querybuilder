@@ -59,7 +59,7 @@ namespace SqlKata
             return limit?.Limit ?? 0;
         }
 
-        public Query Clone()
+        public virtual Query Clone()
         {
             var clone = NewQuery();
             clone.Clauses = Clauses.Select(x => x.Clone()).ToList();

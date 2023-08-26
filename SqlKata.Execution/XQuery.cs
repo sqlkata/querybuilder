@@ -19,7 +19,7 @@ namespace SqlKata.Execution
             Compiler = compiler;
         }
 
-        public Query Clone()
+        public override Query Clone()
         {
             var query = new XQuery(QueryFactory.Connection, QueryFactory.Compiler);
 
