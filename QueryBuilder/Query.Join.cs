@@ -28,14 +28,21 @@ namespace SqlKata
 
         public Query Join(string table, Func<Join, Join> callback, string type = "inner join")
         {
-            return Join(j => new Join(j.JoinWith(table)
-                .BaseQuery.Where(callback)).AsType(type));
+            return Join(j =>
+            {
+                var join = new Join(j.JoinWith(table).BaseQuery);
+                join.BaseQuery.Where(q => callback(new Join(q)).BaseQuery);
+                return join.AsType(type);
+            });
         }
 
         public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner join")
         {
-            return Join(j => new Join(j.JoinWith(query)
-                .BaseQuery.Where(onCallback)).AsType(type));
+            return Join(j =>
+            {
+                return new Join(j.JoinWith(query)
+                    .BaseQuery.Where(onCallback)).AsType(type);
+            });
         }
 
         public Query LeftJoin(string table, string first, string second, string op = "=")
