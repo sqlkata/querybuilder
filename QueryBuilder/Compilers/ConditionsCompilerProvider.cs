@@ -7,13 +7,13 @@ namespace SqlKata.Compilers
 {
     internal class ConditionsCompilerProvider
     {
-        private readonly Type compilerType;
-        private readonly Dictionary<string, MethodInfo> methodsCache = new Dictionary<string, MethodInfo>();
-        private readonly object syncRoot = new object();
+        private readonly Type _compilerType;
+        private readonly Dictionary<string, MethodInfo> _methodsCache = new Dictionary<string, MethodInfo>();
+        private readonly object _syncRoot = new object();
 
         public ConditionsCompilerProvider(Compiler compiler)
         {
-            this.compilerType = compiler.GetType();
+            _compilerType = compiler.GetType();
         }
 
         public MethodInfo GetMethodInfo(Type clauseType, string methodName)
@@ -21,32 +21,24 @@ namespace SqlKata.Compilers
             // The cache key should take the type and the method name into consideration
             var cacheKey = methodName + "::" + clauseType.FullName;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                if (methodsCache.ContainsKey(cacheKey))
-                {
-                    return methodsCache[cacheKey];
-                }
+                if (_methodsCache.ContainsKey(cacheKey)) return _methodsCache[cacheKey];
 
-                return methodsCache[cacheKey] = FindMethodInfo(clauseType, methodName);
+                return _methodsCache[cacheKey] = FindMethodInfo(clauseType, methodName);
             }
         }
 
         private MethodInfo FindMethodInfo(Type clauseType, string methodName)
         {
-            MethodInfo methodInfo = compilerType
+            var methodInfo = _compilerType
                 .GetRuntimeMethods()
                 .FirstOrDefault(x => x.Name == methodName);
 
-            if (methodInfo == null)
-            {
-                throw new Exception($"Failed to locate a compiler for '{methodName}'.");
-            }
+            if (methodInfo == null) throw new Exception($"Failed to locate a compiler for '{methodName}'.");
 
             if (clauseType.IsConstructedGenericType && methodInfo.GetGenericArguments().Any())
-            {
                 methodInfo = methodInfo.MakeGenericMethod(clauseType.GenericTypeArguments);
-            }
 
             return methodInfo;
         }

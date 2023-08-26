@@ -5,25 +5,18 @@ using System.Reflection;
 
 namespace SqlKata
 {
-    public abstract partial class BaseQuery<Q>
+    public abstract partial class BaseQuery<TQ>
     {
-        public Q Where(string column, string op, object value)
+        public TQ Where(string column, string op, object value)
         {
-
             // If the value is "null", we will just assume the developer wants to add a
             // where null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
-            if (value == null)
-            {
-                return Not(op != "=").WhereNull(column);
-            }
+            if (value == null) return Not(op != "=").WhereNull(column);
 
             if (value is bool boolValue)
             {
-                if (op != "=")
-                {
-                    Not();
-                }
+                if (op != "=") Not();
 
                 return boolValue ? WhereTrue(column) : WhereFalse(column);
             }
@@ -34,137 +27,131 @@ namespace SqlKata
                 Operator = op,
                 Value = value,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNot(string column, string op, object value)
+        public TQ WhereNot(string column, string op, object value)
         {
             return Not().Where(column, op, value);
         }
 
-        public Q OrWhere(string column, string op, object value)
+        public TQ OrWhere(string column, string op, object value)
         {
             return Or().Where(column, op, value);
         }
 
-        public Q OrWhereNot(string column, string op, object value)
+        public TQ OrWhereNot(string column, string op, object value)
         {
-            return this.Or().Not().Where(column, op, value);
+            return Or().Not().Where(column, op, value);
         }
 
-        public Q Where(string column, object value)
+        public TQ Where(string column, object value)
         {
             return Where(column, "=", value);
         }
-        public Q WhereNot(string column, object value)
+
+        public TQ WhereNot(string column, object value)
         {
             return WhereNot(column, "=", value);
         }
-        public Q OrWhere(string column, object value)
+
+        public TQ OrWhere(string column, object value)
         {
             return OrWhere(column, "=", value);
         }
-        public Q OrWhereNot(string column, object value)
+
+        public TQ OrWhereNot(string column, object value)
         {
             return OrWhereNot(column, "=", value);
         }
 
         /// <summary>
-        /// Perform a where constraint
+        ///     Perform a where constraint
         /// </summary>
         /// <param name="constraints"></param>
         /// <returns></returns>
-        public Q Where(object constraints)
+        public TQ Where(object constraints)
         {
             var dictionary = new Dictionary<string, object>();
 
             foreach (var item in constraints.GetType().GetRuntimeProperties())
-            {
                 dictionary.Add(item.Name, item.GetValue(constraints));
-            }
 
             return Where(dictionary);
         }
 
-        public Q Where(IEnumerable<KeyValuePair<string, object>> values)
+        public TQ Where(IEnumerable<KeyValuePair<string, object>> values)
         {
-            var query = (Q)this;
+            var query = (TQ)this;
             var orFlag = GetOr();
             var notFlag = GetNot();
 
             foreach (var tuple in values)
             {
                 if (orFlag)
-                {
                     query = query.Or();
-                }
                 else
-                {
                     query.And();
-                }
 
-                query = this.Not(notFlag).Where(tuple.Key, tuple.Value);
+                query = Not(notFlag).Where(tuple.Key, tuple.Value);
             }
 
             return query;
         }
 
-        public Q WhereRaw(string sql, params object[] bindings)
+        public TQ WhereRaw(string sql, params object[] bindings)
         {
             return AddComponent("where", new RawCondition
             {
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q OrWhereRaw(string sql, params object[] bindings)
+        public TQ OrWhereRaw(string sql, params object[] bindings)
         {
             return Or().WhereRaw(sql, bindings);
         }
 
         /// <summary>
-        /// Apply a nested where clause
+        ///     Apply a nested where clause
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public Q Where(Func<Q, Q> callback)
+        public TQ Where(Func<TQ, TQ> callback)
         {
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Where(x => x.Component == "where").Any())
-            {
-                return (Q)this;
-            }
+            if (!query.Clauses.Where(x => x.Component == "where").Any()) return (TQ)this;
 
-            return AddComponent("where", new NestedCondition<Q>
+            return AddComponent("where", new NestedCondition<TQ>
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
-        public Q WhereNot(Func<Q, Q> callback)
+        public TQ WhereNot(Func<TQ, TQ> callback)
         {
             return Not().Where(callback);
         }
 
-        public Q OrWhere(Func<Q, Q> callback)
+        public TQ OrWhere(Func<TQ, TQ> callback)
         {
             return Or().Where(callback);
         }
 
-        public Q OrWhereNot(Func<Q, Q> callback)
+        public TQ OrWhereNot(Func<TQ, TQ> callback)
         {
             return Not().Or().Where(callback);
         }
 
-        public Q WhereColumns(string first, string op, string second)
+        public TQ WhereColumns(string first, string op, string second)
         {
             return AddComponent("where", new TwoColumnsCondition
             {
@@ -172,73 +159,73 @@ namespace SqlKata
                 Second = second,
                 Operator = op,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q OrWhereColumns(string first, string op, string second)
+        public TQ OrWhereColumns(string first, string op, string second)
         {
             return Or().WhereColumns(first, op, second);
         }
 
-        public Q WhereNull(string column)
+        public TQ WhereNull(string column)
         {
             return AddComponent("where", new NullCondition
             {
                 Column = column,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNotNull(string column)
+        public TQ WhereNotNull(string column)
         {
             return Not().WhereNull(column);
         }
 
-        public Q OrWhereNull(string column)
+        public TQ OrWhereNull(string column)
         {
-            return this.Or().WhereNull(column);
+            return Or().WhereNull(column);
         }
 
-        public Q OrWhereNotNull(string column)
+        public TQ OrWhereNotNull(string column)
         {
             return Or().Not().WhereNull(column);
         }
 
-        public Q WhereTrue(string column)
+        public TQ WhereTrue(string column)
         {
             return AddComponent("where", new BooleanCondition
             {
                 Column = column,
                 Value = true,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q OrWhereTrue(string column)
+        public TQ OrWhereTrue(string column)
         {
             return Or().WhereTrue(column);
         }
 
-        public Q WhereFalse(string column)
+        public TQ WhereFalse(string column)
         {
             return AddComponent("where", new BooleanCondition
             {
                 Column = column,
                 Value = false,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q OrWhereFalse(string column)
+        public TQ OrWhereFalse(string column)
         {
             return Or().WhereFalse(column);
         }
 
-        public Q WhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("where", new BasicStringCondition
             {
@@ -248,25 +235,26 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Not().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().Not().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
-        public Q WhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+
+        public TQ WhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("where", new BasicStringCondition
             {
@@ -276,26 +264,27 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereNotStarts(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q WhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("where", new BasicStringCondition
             {
@@ -305,26 +294,26 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q WhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return AddComponent("where", new BasicStringCondition
             {
@@ -334,26 +323,28 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Q WhereNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ WhereNotContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Not().WhereContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
             return Or().WhereContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q OrWhereNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public TQ OrWhereNotContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().WhereContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Q WhereBetween<T>(string column, T lower, T higher)
+        public TQ WhereBetween<T>(string column, T lower, T higher)
         {
             return AddComponent("where", new BetweenCondition<T>
             {
@@ -365,27 +356,28 @@ namespace SqlKata
             });
         }
 
-        public Q OrWhereBetween<T>(string column, T lower, T higher)
+        public TQ OrWhereBetween<T>(string column, T lower, T higher)
         {
             return Or().WhereBetween(column, lower, higher);
         }
-        public Q WhereNotBetween<T>(string column, T lower, T higher)
+
+        public TQ WhereNotBetween<T>(string column, T lower, T higher)
         {
             return Not().WhereBetween(column, lower, higher);
         }
-        public Q OrWhereNotBetween<T>(string column, T lower, T higher)
+
+        public TQ OrWhereNotBetween<T>(string column, T lower, T higher)
         {
             return Or().Not().WhereBetween(column, lower, higher);
         }
 
-        public Q WhereIn<T>(string column, IEnumerable<T> values)
+        public TQ WhereIn<T>(string column, IEnumerable<T> values)
         {
-
             // If the developer has passed a string they most likely want a List<string>
             // since string is considered as List<char>
             if (values is string)
             {
-                string val = values as string;
+                var val = values as string;
 
                 return AddComponent("where", new InCondition<string>
                 {
@@ -403,88 +395,88 @@ namespace SqlKata
                 IsNot = GetNot(),
                 Values = values.Distinct().ToList()
             });
-
-
         }
 
-        public Q OrWhereIn<T>(string column, IEnumerable<T> values)
+        public TQ OrWhereIn<T>(string column, IEnumerable<T> values)
         {
             return Or().WhereIn(column, values);
         }
 
-        public Q WhereNotIn<T>(string column, IEnumerable<T> values)
+        public TQ WhereNotIn<T>(string column, IEnumerable<T> values)
         {
             return Not().WhereIn(column, values);
         }
 
-        public Q OrWhereNotIn<T>(string column, IEnumerable<T> values)
+        public TQ OrWhereNotIn<T>(string column, IEnumerable<T> values)
         {
             return Or().Not().WhereIn(column, values);
         }
 
 
-        public Q WhereIn(string column, Query query)
+        public TQ WhereIn(string column, Query query)
         {
             return AddComponent("where", new InQueryCondition
             {
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Query = query,
+                Query = query
             });
         }
-        public Q WhereIn(string column, Func<Query, Query> callback)
+
+        public TQ WhereIn(string column, Func<Query, Query> callback)
         {
             var query = callback.Invoke(new Query().SetParent(this));
 
             return WhereIn(column, query);
         }
 
-        public Q OrWhereIn(string column, Query query)
+        public TQ OrWhereIn(string column, Query query)
         {
             return Or().WhereIn(column, query);
         }
 
-        public Q OrWhereIn(string column, Func<Query, Query> callback)
+        public TQ OrWhereIn(string column, Func<Query, Query> callback)
         {
             return Or().WhereIn(column, callback);
         }
-        public Q WhereNotIn(string column, Query query)
+
+        public TQ WhereNotIn(string column, Query query)
         {
             return Not().WhereIn(column, query);
         }
 
-        public Q WhereNotIn(string column, Func<Query, Query> callback)
+        public TQ WhereNotIn(string column, Func<Query, Query> callback)
         {
             return Not().WhereIn(column, callback);
         }
 
-        public Q OrWhereNotIn(string column, Query query)
+        public TQ OrWhereNotIn(string column, Query query)
         {
             return Or().Not().WhereIn(column, query);
         }
 
-        public Q OrWhereNotIn(string column, Func<Query, Query> callback)
+        public TQ OrWhereNotIn(string column, Func<Query, Query> callback)
         {
             return Or().Not().WhereIn(column, callback);
         }
 
 
         /// <summary>
-        /// Perform a sub query where clause
+        ///     Perform a sub query where clause
         /// </summary>
         /// <param name="column"></param>
         /// <param name="op"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public Q Where(string column, string op, Func<Q, Q> callback)
+        public TQ Where(string column, string op, Func<TQ, TQ> callback)
         {
             var query = callback.Invoke(NewChild());
 
             return Where(column, op, query);
         }
 
-        public Q Where(string column, string op, Query query)
+        public TQ Where(string column, string op, Query query)
         {
             return AddComponent("where", new QueryCondition<Query>
             {
@@ -492,16 +484,16 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
-        public Q WhereSub(Query query, object value)
+        public TQ WhereSub(Query query, object value)
         {
             return WhereSub(query, "=", value);
         }
 
-        public Q WhereSub(Query query, string op, object value)
+        public TQ WhereSub(Query query, string op, object value)
         {
             return AddComponent("where", new SubQueryCondition<Query>
             {
@@ -509,78 +501,83 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
-        public Q OrWhereSub(Query query, object value)
+        public TQ OrWhereSub(Query query, object value)
         {
             return Or().WhereSub(query, value);
         }
 
-        public Q OrWhereSub(Query query, string op, object value)
+        public TQ OrWhereSub(Query query, string op, object value)
         {
             return Or().WhereSub(query, op, value);
         }
 
-        public Q OrWhere(string column, string op, Query query)
+        public TQ OrWhere(string column, string op, Query query)
         {
             return Or().Where(column, op, query);
         }
-        public Q OrWhere(string column, string op, Func<Query, Query> callback)
+
+        public TQ OrWhere(string column, string op, Func<Query, Query> callback)
         {
             return Or().Where(column, op, callback);
         }
 
-        public Q WhereExists(Query query)
+        public TQ WhereExists(Query query)
         {
             if (!query.HasComponent("from"))
-            {
-                throw new ArgumentException($"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
-            }
+                throw new ArgumentException(
+                    $"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
 
             return AddComponent("where", new ExistsCondition
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
-        public Q WhereExists(Func<Query, Query> callback)
+
+        public TQ WhereExists(Func<Query, Query> callback)
         {
             var childQuery = new Query().SetParent(this);
             return WhereExists(callback.Invoke(childQuery));
         }
 
-        public Q WhereNotExists(Query query)
+        public TQ WhereNotExists(Query query)
         {
             return Not().WhereExists(query);
         }
 
-        public Q WhereNotExists(Func<Query, Query> callback)
+        public TQ WhereNotExists(Func<Query, Query> callback)
         {
             return Not().WhereExists(callback);
         }
 
-        public Q OrWhereExists(Query query)
+        public TQ OrWhereExists(Query query)
         {
             return Or().WhereExists(query);
         }
-        public Q OrWhereExists(Func<Query, Query> callback)
+
+        public TQ OrWhereExists(Func<Query, Query> callback)
         {
             return Or().WhereExists(callback);
         }
-        public Q OrWhereNotExists(Query query)
+
+        public TQ OrWhereNotExists(Query query)
         {
             return Or().Not().WhereExists(query);
         }
-        public Q OrWhereNotExists(Func<Query, Query> callback)
+
+        public TQ OrWhereNotExists(Func<Query, Query> callback)
         {
             return Or().Not().WhereExists(callback);
         }
 
         #region date
-        public Q WhereDatePart(string part, string column, string op, object value)
+
+        public TQ WhereDatePart(string part, string column, string op, object value)
         {
             return AddComponent("where", new BasicDateCondition
             {
@@ -589,107 +586,121 @@ namespace SqlKata
                 Value = value,
                 Part = part?.ToLowerInvariant(),
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
-        public Q WhereNotDatePart(string part, string column, string op, object value)
+
+        public TQ WhereNotDatePart(string part, string column, string op, object value)
         {
             return Not().WhereDatePart(part, column, op, value);
         }
 
-        public Q OrWhereDatePart(string part, string column, string op, object value)
+        public TQ OrWhereDatePart(string part, string column, string op, object value)
         {
             return Or().WhereDatePart(part, column, op, value);
         }
 
-        public Q OrWhereNotDatePart(string part, string column, string op, object value)
+        public TQ OrWhereNotDatePart(string part, string column, string op, object value)
         {
             return Or().Not().WhereDatePart(part, column, op, value);
         }
 
-        public Q WhereDate(string column, string op, object value)
+        public TQ WhereDate(string column, string op, object value)
         {
             return WhereDatePart("date", column, op, value);
         }
-        public Q WhereNotDate(string column, string op, object value)
+
+        public TQ WhereNotDate(string column, string op, object value)
         {
             return Not().WhereDate(column, op, value);
         }
-        public Q OrWhereDate(string column, string op, object value)
+
+        public TQ OrWhereDate(string column, string op, object value)
         {
             return Or().WhereDate(column, op, value);
         }
-        public Q OrWhereNotDate(string column, string op, object value)
+
+        public TQ OrWhereNotDate(string column, string op, object value)
         {
             return Or().Not().WhereDate(column, op, value);
         }
 
-        public Q WhereTime(string column, string op, object value)
+        public TQ WhereTime(string column, string op, object value)
         {
             return WhereDatePart("time", column, op, value);
         }
-        public Q WhereNotTime(string column, string op, object value)
+
+        public TQ WhereNotTime(string column, string op, object value)
         {
             return Not().WhereTime(column, op, value);
         }
-        public Q OrWhereTime(string column, string op, object value)
+
+        public TQ OrWhereTime(string column, string op, object value)
         {
             return Or().WhereTime(column, op, value);
         }
-        public Q OrWhereNotTime(string column, string op, object value)
+
+        public TQ OrWhereNotTime(string column, string op, object value)
         {
             return Or().Not().WhereTime(column, op, value);
         }
 
-        public Q WhereDatePart(string part, string column, object value)
+        public TQ WhereDatePart(string part, string column, object value)
         {
             return WhereDatePart(part, column, "=", value);
         }
-        public Q WhereNotDatePart(string part, string column, object value)
+
+        public TQ WhereNotDatePart(string part, string column, object value)
         {
             return WhereNotDatePart(part, column, "=", value);
         }
 
-        public Q OrWhereDatePart(string part, string column, object value)
+        public TQ OrWhereDatePart(string part, string column, object value)
         {
             return OrWhereDatePart(part, column, "=", value);
         }
 
-        public Q OrWhereNotDatePart(string part, string column, object value)
+        public TQ OrWhereNotDatePart(string part, string column, object value)
         {
             return OrWhereNotDatePart(part, column, "=", value);
         }
 
-        public Q WhereDate(string column, object value)
+        public TQ WhereDate(string column, object value)
         {
             return WhereDate(column, "=", value);
         }
-        public Q WhereNotDate(string column, object value)
+
+        public TQ WhereNotDate(string column, object value)
         {
             return WhereNotDate(column, "=", value);
         }
-        public Q OrWhereDate(string column, object value)
+
+        public TQ OrWhereDate(string column, object value)
         {
             return OrWhereDate(column, "=", value);
         }
-        public Q OrWhereNotDate(string column, object value)
+
+        public TQ OrWhereNotDate(string column, object value)
         {
             return OrWhereNotDate(column, "=", value);
         }
 
-        public Q WhereTime(string column, object value)
+        public TQ WhereTime(string column, object value)
         {
             return WhereTime(column, "=", value);
         }
-        public Q WhereNotTime(string column, object value)
+
+        public TQ WhereNotTime(string column, object value)
         {
             return WhereNotTime(column, "=", value);
         }
-        public Q OrWhereTime(string column, object value)
+
+        public TQ OrWhereTime(string column, object value)
         {
             return OrWhereTime(column, "=", value);
         }
-        public Q OrWhereNotTime(string column, object value)
+
+        public TQ OrWhereNotTime(string column, object value)
         {
             return OrWhereNotTime(column, "=", value);
         }

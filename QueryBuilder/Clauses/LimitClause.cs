@@ -28,7 +28,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Limit = Limit,
-                Component = Component,
+                Component = Component
             };
         }
     }

@@ -4,14 +4,13 @@ namespace SqlKata
 {
     public abstract class AbstractInsertClause : AbstractClause
     {
-
     }
 
     public class InsertClause : AbstractInsertClause
     {
         public List<string> Columns { get; set; }
         public List<object> Values { get; set; }
-        public bool ReturnId { get; set; } = false;
+        public bool ReturnId { get; set; }
 
         public override AbstractClause Clone()
         {
@@ -21,7 +20,7 @@ namespace SqlKata
                 Component = Component,
                 Columns = Columns,
                 Values = Values,
-                ReturnId = ReturnId,
+                ReturnId = ReturnId
             };
         }
     }
@@ -38,7 +37,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Columns = Columns,
-                Query = Query.Clone(),
+                Query = Query.Clone()
             };
         }
     }

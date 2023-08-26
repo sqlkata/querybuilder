@@ -28,7 +28,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Offset = Offset,
-                Component = Component,
+                Component = Component
             };
         }
     }

@@ -4,14 +4,8 @@ using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using System.Data.SqlClient;
-using System.Threading.Tasks;
-using System.Linq;
 using Newtonsoft.Json;
-using Npgsql;
-using System.Data;
-using Dapper;
 using System.Data.SQLite;
-using static SqlKata.Expressions;
 using System.IO;
 
 namespace Program
@@ -49,7 +43,7 @@ namespace Program
             }
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static void Log(Compiler compiler, Query query)
         {
             var compiled = compiler.Compile(query);
             Console.WriteLine(compiled.ToString());

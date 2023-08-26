@@ -8,12 +8,6 @@ namespace SqlKata
 {
     public class SqlResult
     {
-        public Query Query { get; set; }
-        public string RawSql { get; set; } = "";
-        public List<object> Bindings { get; set; } = new List<object>();
-        public string Sql { get; set; } = "";
-        public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
-
         private static readonly Type[] NumberTypes =
         {
             typeof(int),
@@ -23,8 +17,14 @@ namespace SqlKata
             typeof(float),
             typeof(short),
             typeof(ushort),
-            typeof(ulong),
+            typeof(ulong)
         };
+
+        public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
+        public Query Query { get; set; }
+        public string RawSql { get; set; } = "";
+        public List<object> Bindings { get; set; } = new List<object>();
+        public string Sql { get; set; } = "";
 
         public override string ToString()
         {
@@ -33,10 +33,8 @@ namespace SqlKata
             return Helper.ReplaceAll(RawSql, "?", i =>
             {
                 if (i >= deepParameters.Count)
-                {
                     throw new Exception(
                         $"Failed to retrieve a binding at index {i}, the total bindings count is {Bindings.Count}");
-                }
 
                 var value = deepParameters[i];
                 return ChangeToSqlValue(value);
@@ -45,43 +43,25 @@ namespace SqlKata
 
         private string ChangeToSqlValue(object value)
         {
-            if (value == null)
-            {
-                return "NULL";
-            }
+            if (value == null) return "NULL";
 
-            if (Helper.IsArray(value))
-            {
-                return Helper.JoinArray(",", value as IEnumerable);
-            }
+            if (Helper.IsArray(value)) return Helper.JoinArray(",", value as IEnumerable);
 
-            if (NumberTypes.Contains(value.GetType()))
-            {
-                return Convert.ToString(value, CultureInfo.InvariantCulture);
-            }
+            if (NumberTypes.Contains(value.GetType())) return Convert.ToString(value, CultureInfo.InvariantCulture);
 
             if (value is DateTime date)
             {
-                if (date.Date == date)
-                {
-                    return "'" + date.ToString("yyyy-MM-dd") + "'";
-                }
+                if (date.Date == date) return "'" + date.ToString("yyyy-MM-dd") + "'";
 
                 return "'" + date.ToString("yyyy-MM-dd HH:mm:ss") + "'";
             }
 
-            if (value is bool vBool)
-            {
-                return vBool ? "true" : "false";
-            }
+            if (value is bool vBool) return vBool ? "true" : "false";
 
-            if (value is Enum vEnum)
-            {
-                return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
-            }
+            if (value is Enum vEnum) return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
 
             // fallback to string
-            return "'" + value.ToString().Replace("'","''") + "'";
+            return "'" + value.ToString().Replace("'", "''") + "'";
         }
     }
 }

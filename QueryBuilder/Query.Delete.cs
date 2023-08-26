@@ -7,6 +7,5 @@ namespace SqlKata
             Method = "delete";
             return this;
         }
-
     }
 }

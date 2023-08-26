@@ -8,34 +8,46 @@ namespace SqlKata
 {
     public partial class Query : BaseQuery<Query>
     {
-        private string comment;
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties =
+            new ConcurrentDictionary<Type, PropertyInfo[]>();
 
-        public bool IsDistinct { get; set; } = false;
-        public string QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
+        private string _comment;
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();
 
-        public Query() : base()
+        public Query()
         {
         }
 
-        public Query(string table, string comment = null) : base()
+        public Query(string table, string comment = null)
         {
             From(table);
             Comment(comment);
         }
 
-        public string GetComment() => comment ?? "";
+        public bool IsDistinct { get; set; }
+        public string QueryAlias { get; set; }
+        public string Method { get; set; } = "select";
 
-        public bool HasOffset(string engineCode = null) => GetOffset(engineCode) > 0;
+        public string GetComment()
+        {
+            return _comment ?? "";
+        }
 
-        public bool HasLimit(string engineCode = null) => GetLimit(engineCode) > 0;
+        public bool HasOffset(string engineCode = null)
+        {
+            return GetOffset(engineCode) > 0;
+        }
+
+        public bool HasLimit(string engineCode = null)
+        {
+            return GetLimit(engineCode) > 0;
+        }
 
         internal long GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            var offset = GetOneComponent<OffsetClause>("offset", engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -43,7 +55,7 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            var limit = GetOneComponent<LimitClause>("limit", engineCode);
 
             return limit?.Limit ?? 0;
         }
@@ -67,13 +79,13 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Sets a comment for the query.
+        ///     Sets a comment for the query.
         /// </summary>
         /// <param name="comment">The comment.</param>
         /// <returns></returns>
         public Query Comment(string comment)
         {
-            this.comment = comment;
+            _comment = comment;
             return this;
         }
 
@@ -93,9 +105,7 @@ namespace SqlKata
         {
             // Clear query alias and add it to the containing clause
             if (string.IsNullOrWhiteSpace(query.QueryAlias))
-            {
                 throw new InvalidOperationException("No Alias found for the CTE query");
-            }
 
             query = query.Clone();
 
@@ -107,7 +117,7 @@ namespace SqlKata
             return AddComponent("cte", new QueryFromClause
             {
                 Query = query,
-                Alias = alias,
+                Alias = alias
             });
         }
 
@@ -127,7 +137,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Constructs an ad-hoc table of the given data as a CTE.
+        ///     Constructs an ad-hoc table of the given data as a CTE.
         /// </summary>
         public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
@@ -135,24 +145,20 @@ namespace SqlKata
             var valuesCollectionList = valuesCollection?.ToList();
 
             if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
-            {
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
-            }
 
-            var clause = new AdHocTableFromClause()
+            var clause = new AdHocTableFromClause
             {
                 Alias = alias,
                 Columns = columnsList,
-                Values = new List<object>(),
+                Values = new List<object>()
             };
 
             foreach (var values in valuesCollectionList)
             {
                 var valuesList = values.ToList();
                 if (columnsList.Count != valuesList.Count)
-                {
                     throw new InvalidOperationException("Columns count should be equal to each Values count");
-                }
 
                 clause.Values.AddRange(valuesList);
             }
@@ -166,7 +172,7 @@ namespace SqlKata
             {
                 Alias = alias,
                 Expression = sql,
-                Bindings = bindings,
+                Bindings = bindings
             });
         }
 
@@ -196,7 +202,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for Limit
+        ///     Alias for Limit
         /// </summary>
         /// <param name="limit"></param>
         /// <returns></returns>
@@ -206,7 +212,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for Offset
+        ///     Alias for Offset
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
@@ -216,7 +222,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Set the limit and offset for a given page.
+        ///     Set the limit and offset for a given page.
         /// </summary>
         /// <param name="page"></param>
         /// <param name="perPage"></param>
@@ -233,7 +239,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Apply the callback's query changes if the given "condition" is true.
+        ///     Apply the callback's query changes if the given "condition" is true.
         /// </summary>
         /// <param name="condition"></param>
         /// <param name="whenTrue">Invoked when the condition is true</param>
@@ -241,31 +247,22 @@ namespace SqlKata
         /// <returns></returns>
         public Query When(bool condition, Func<Query, Query> whenTrue, Func<Query, Query> whenFalse = null)
         {
-            if (condition && whenTrue != null)
-            {
-                return whenTrue.Invoke(this);
-            }
+            if (condition && whenTrue != null) return whenTrue.Invoke(this);
 
-            if (!condition && whenFalse != null)
-            {
-                return whenFalse.Invoke(this);
-            }
+            if (!condition && whenFalse != null) return whenFalse.Invoke(this);
 
             return this;
         }
 
         /// <summary>
-        /// Apply the callback's query changes if the given "condition" is false.
+        ///     Apply the callback's query changes if the given "condition" is false.
         /// </summary>
         /// <param name="condition"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
         public Query WhenNot(bool condition, Func<Query, Query> callback)
         {
-            if (!condition)
-            {
-                return callback.Invoke(this);
-            }
+            if (!condition) return callback.Invoke(this);
 
             return this;
         }
@@ -273,13 +270,11 @@ namespace SqlKata
         public Query OrderBy(params string[] columns)
         {
             foreach (var column in columns)
-            {
                 AddComponent("order", new OrderBy
                 {
                     Column = column,
                     Ascending = true
                 });
-            }
 
             return this;
         }
@@ -287,13 +282,11 @@ namespace SqlKata
         public Query OrderByDesc(params string[] columns)
         {
             foreach (var column in columns)
-            {
                 AddComponent("order", new OrderBy
                 {
                     Column = column,
                     Ascending = false
                 });
-            }
 
             return this;
         }
@@ -309,18 +302,16 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom { });
+            return AddComponent("order", new OrderByRandom());
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
-            {
                 AddComponent("group", new Column
                 {
                     Name = column
                 });
-            }
 
             return this;
         }
@@ -330,7 +321,7 @@ namespace SqlKata
             AddComponent("group", new RawColumn
             {
                 Expression = expression,
-                Bindings = bindings,
+                Bindings = bindings
             });
 
             return this;
@@ -341,16 +332,16 @@ namespace SqlKata
             return new Query();
         }
 
-        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id", bool isMany = false)
+        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id",
+            bool isMany = false)
         {
-
             Includes.Add(new Include
             {
                 Name = relationName,
                 LocalKey = localKey,
                 ForeignKey = foreignKey,
                 Query = query,
-                IsMany = isMany,
+                IsMany = isMany
             });
 
             return this;
@@ -358,13 +349,11 @@ namespace SqlKata
 
         public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
         {
-            return Include(relationName, query, foreignKey, localKey, isMany: true);
+            return Include(relationName, query, foreignKey, localKey, true);
         }
 
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new ConcurrentDictionary<Type, PropertyInfo[]>();
-
         /// <summary>
-        /// Define a variable to be used within the query
+        ///     Define a variable to be used within the query
         /// </summary>
         /// <param name="variable"></param>
         /// <param name="value"></param>
@@ -380,39 +369,32 @@ namespace SqlKata
         {
             var found = Variables.ContainsKey(variable);
 
-            if (found)
-            {
-                return Variables[variable];
-            }
+            if (found) return Variables[variable];
 
-            if (Parent != null)
-            {
-                return (Parent as Query).FindVariable(variable);
-            }
+            if (Parent != null) return (Parent as Query).FindVariable(variable);
 
             throw new Exception($"Variable '{variable}' not found");
         }
 
         /// <summary>
-        /// Gather a list of key-values representing the properties of the object and their values.
+        ///     Gather a list of key-values representing the properties of the object and their values.
         /// </summary>
         /// <param name="data">The plain C# object</param>
         /// <param name="considerKeys">
-        /// When true it will search for properties with the [Key] attribute
-        /// and will add it automatically to the Where clause
+        ///     When true it will search for properties with the [Key] attribute
+        ///     and will add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
+        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data,
+            bool considerKeys = false)
         {
             var dictionary = new Dictionary<string, object>();
-            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
+            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(),
+                type => type.GetRuntimeProperties().ToArray());
 
             foreach (var property in props)
             {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
-                {
-                    continue;
-                }
+                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null) continue;
 
                 var value = property.GetValue(data);
 
@@ -423,12 +405,8 @@ namespace SqlKata
                 dictionary.Add(name, value);
 
                 if (considerKeys && colAttr != null)
-                {
-                    if ((colAttr as KeyAttribute) != null)
-                    {
-                        this.Where(name, value);
-                    }
-                }
+                    if (colAttr as KeyAttribute != null)
+                        Where(name, value);
             }
 
             return dictionary;

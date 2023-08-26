@@ -1,15 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
-        public FirebirdCompiler()
-        {
-        }
-
         public override string EngineCode { get; } = EngineCodes.Firebird;
         protected override string SingleRowDummyTableName => "RDB$DATABASE";
 
@@ -39,7 +33,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return $"ROWS {parameterPlaceholder} TO {parameterPlaceholder}";
+                return $"ROWS {ParameterPlaceholder} TO {ParameterPlaceholder}";
             }
 
             return null;
@@ -59,15 +53,16 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("limit");
 
-                return $"SELECT FIRST {parameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT FIRST {ParameterPlaceholder}" + compiled.Substring(6);
             }
-            else if (limit == 0 && offset > 0)
+
+            if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Insert(0, offset);
 
                 ctx.Query.ClearComponent("offset");
 
-                return $"SELECT SKIP {parameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT SKIP {ParameterPlaceholder}" + compiled.Substring(6);
             }
 
             return compiled;
@@ -80,24 +75,15 @@ namespace SqlKata.Compilers
             string left;
 
             if (condition.Part == "time")
-            {
                 left = $"CAST({column} as TIME)";
-            }
             else if (condition.Part == "date")
-            {
                 left = $"CAST({column} as DATE)";
-            }
             else
-            {
                 left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
-            }
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
-            if (condition.IsNot)
-            {
-                return $"NOT ({sql})";
-            }
+            if (condition.IsNot) return $"NOT ({sql})";
 
             return sql;
         }

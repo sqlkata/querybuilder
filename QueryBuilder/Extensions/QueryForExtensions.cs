@@ -34,6 +34,5 @@ namespace SqlKata.Extensions
         {
             return src.For(EngineCodes.SqlServer, fn);
         }
-
     }
 }

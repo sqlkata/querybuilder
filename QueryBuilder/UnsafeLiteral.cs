@@ -2,22 +2,15 @@ namespace SqlKata
 {
     public class UnsafeLiteral
     {
-        public string Value { get; set; }
-
         public UnsafeLiteral(string value, bool replaceQuotes = true)
         {
-            if (value == null)
-            {
-                value = "";
-            }
+            if (value == null) value = "";
 
-            if (replaceQuotes)
-            {
-                value = value.Replace("'", "''");
-            }
+            if (replaceQuotes) value = value.Replace("'", "''");
 
-            this.Value = value;
+            Value = value;
         }
 
+        public string Value { get; set; }
     }
 }

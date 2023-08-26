@@ -6,7 +6,6 @@ namespace SqlKata
 {
     public partial class Query
     {
-
         public Query Select(params string[] columns)
         {
             return Select(columns.AsEnumerable());
@@ -23,18 +22,16 @@ namespace SqlKata
 
 
             foreach (var column in columns)
-            {
                 AddComponent("select", new Column
                 {
                     Name = column
                 });
-            }
 
             return this;
         }
 
         /// <summary>
-        /// Add a new "raw" select expression to the query.
+        ///     Add a new "raw" select expression to the query.
         /// </summary>
         /// <returns></returns>
         public Query SelectRaw(string sql, params object[] bindings)
@@ -44,7 +41,7 @@ namespace SqlKata
             AddComponent("select", new RawColumn
             {
                 Expression = sql,
-                Bindings = bindings,
+                Bindings = bindings
             });
 
             return this;
@@ -58,7 +55,7 @@ namespace SqlKata
 
             AddComponent("select", new QueryColumn
             {
-                Query = query.As(alias),
+                Query = query.As(alias)
             });
 
             return this;
@@ -77,7 +74,7 @@ namespace SqlKata
             {
                 Column = new Column { Name = column },
                 Aggregate = aggregate,
-                Filter = filter,
+                Filter = filter
             });
 
             return this;
@@ -85,10 +82,7 @@ namespace SqlKata
 
         public Query SelectAggregate(string aggregate, string column, Func<Query, Query> filter)
         {
-            if (filter == null)
-            {
-                return SelectAggregate(aggregate, column);
-            }
+            if (filter == null) return SelectAggregate(aggregate, column);
 
             return SelectAggregate(aggregate, column, filter.Invoke(NewChild()));
         }

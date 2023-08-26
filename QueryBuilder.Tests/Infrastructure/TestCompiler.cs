@@ -2,57 +2,55 @@ using System;
 using System.Reflection;
 using SqlKata.Compilers;
 
-namespace SqlKata.Tests.Infrastructure
+namespace SqlKata.Tests.Infrastructure;
+
+/// <summary>
+///     A test class to expose private methods
+/// </summary>
+internal class TestCompiler : Compiler
 {
-    /// <summary>
-    /// A test class to expose private methods
-    /// </summary>
-    class TestCompiler : Compiler
-    {
-        public override string EngineCode { get; } = "test";
+    public override string EngineCode { get; } = "test";
 
-        public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return FindCompilerMethodInfo(clauseType, methodName);
-        }
-    }
-
-    class TestSqlServerCompiler : SqlServerCompiler
+    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
     {
-        public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return FindCompilerMethodInfo(clauseType, methodName);
-        }
-    }
-
-    class TestMySqlCompiler : MySqlCompiler
-    {
-        public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return FindCompilerMethodInfo(clauseType, methodName);
-        }
-    }
-
-    class TestPostgresCompiler : PostgresCompiler
-    {
-        public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return FindCompilerMethodInfo(clauseType, methodName);
-        }
-    }
-
-    class TestFirebirdCompiler : FirebirdCompiler
-    {
-        public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return FindCompilerMethodInfo(clauseType, methodName);
-        }
-    }
-
-    class TestEmptyIdentifiersCompiler : TestCompiler
-    {
-        protected override string OpeningIdentifier { get; set; } = "";
-        protected override string ClosingIdentifier { get; set; } = "";
+        return FindCompilerMethodInfo(clauseType, methodName);
     }
 }
 
+internal class TestSqlServerCompiler : SqlServerCompiler
+{
+    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
+    {
+        return FindCompilerMethodInfo(clauseType, methodName);
+    }
+}
+
+internal class TestMySqlCompiler : MySqlCompiler
+{
+    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
+    {
+        return FindCompilerMethodInfo(clauseType, methodName);
+    }
+}
+
+internal class TestPostgresCompiler : PostgresCompiler
+{
+    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
+    {
+        return FindCompilerMethodInfo(clauseType, methodName);
+    }
+}
+
+internal class TestFirebirdCompiler : FirebirdCompiler
+{
+    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
+    {
+        return FindCompilerMethodInfo(clauseType, methodName);
+    }
+}
+
+internal class TestEmptyIdentifiersCompiler : TestCompiler
+{
+    protected override string OpeningIdentifier { get; set; } = "";
+    protected override string ClosingIdentifier { get; set; } = "";
+}

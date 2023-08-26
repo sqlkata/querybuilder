@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -12,7 +10,7 @@ namespace SqlKata.Compilers
         {
             ColumnAsKeyword = "";
             TableAsKeyword = "";
-            parameterPrefix = ":p";
+            ParameterPrefix = ":p";
             MultiInsertStartClause = "INSERT ALL INTO";
         }
 
@@ -22,10 +20,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
-            if (!UseLegacyPagination)
-            {
-                return base.CompileSelectQuery(query);
-            }
+            if (!UseLegacyPagination) return base.CompileSelectQuery(query);
 
             var result = base.CompileSelectQuery(query);
 
@@ -37,36 +32,28 @@ namespace SqlKata.Compilers
         public override string CompileLimit(SqlResult ctx)
         {
             if (UseLegacyPagination)
-            {
                 // in pre-12c versions of Oracle, limit is handled by ROWNUM techniques
                 return null;
-            }
 
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
 
-            if (limit == 0 && offset == 0)
-            {
-                return null;
-            }
+            if (limit == 0 && offset == 0) return null;
 
             var safeOrder = "";
 
-            if (!ctx.Query.HasComponent("order"))
-            {
-                safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
-            }
+            if (!ctx.Query.HasComponent("order")) safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
+                return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS";
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
+            return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS FETCH NEXT {ParameterPlaceholder} ROWS ONLY";
         }
 
         internal void ApplyLegacyLimit(SqlResult ctx)
@@ -74,25 +61,24 @@ namespace SqlKata.Compilers
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
 
-            if (limit == 0 && offset == 0)
-            {
-                return;
-            }
+            if (limit == 0 && offset == 0) return;
 
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
+                newSql =
+                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {ParameterPlaceholder}";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {parameterPlaceholder}";
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {ParameterPlaceholder}";
                 ctx.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
+                newSql =
+                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {ParameterPlaceholder}) WHERE \"row_num\" > {ParameterPlaceholder}";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
@@ -102,14 +88,13 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-
             var column = Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
             var sql = "";
             var valueFormat = "";
 
-            var isDateTime = (condition.Value is DateTime dt);
+            var isDateTime = condition.Value is DateTime dt;
 
             switch (condition.Part)
             {
@@ -122,7 +107,9 @@ namespace SqlKata.Compilers
                     break;
                 case "time":
                     if (isDateTime)
+                    {
                         valueFormat = $"{value}";
+                    }
                     else
                     {
                         // assume HH:MM format
@@ -131,6 +118,7 @@ namespace SqlKata.Compilers
                         else // assume HH:MM:SS format
                             valueFormat = $"TO_DATE({value}, 'HH24:MI:SS')";
                     }
+
                     sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";
                     break;
                 case "year":
@@ -146,13 +134,9 @@ namespace SqlKata.Compilers
                     break;
             }
 
-            if (condition.IsNot)
-            {
-                return $"NOT ({sql})";
-            }
+            if (condition.IsNot) return $"NOT ({sql})";
 
             return sql;
-
         }
 
         protected override SqlResult CompileRemainingInsertClauses(
@@ -160,10 +144,10 @@ namespace SqlKata.Compilers
         {
             foreach (var insert in inserts.Skip(1))
             {
-                string columns = GetInsertColumnsList(insert.Columns);
-                string values = string.Join(", ", Parameterize(ctx, insert.Values));
+                var columns = GetInsertColumnsList(insert.Columns);
+                var values = string.Join(", ", Parameterize(ctx, insert.Values));
 
-                string intoFormat = " INTO {0}{1} VALUES ({2})";
+                var intoFormat = " INTO {0}{1} VALUES ({2})";
                 var nextInsert = string.Format(intoFormat, table, columns, values);
 
                 ctx.RawSql += nextInsert;

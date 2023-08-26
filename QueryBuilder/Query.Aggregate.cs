@@ -7,35 +7,32 @@ namespace SqlKata
     {
         public Query AsAggregate(string type, string[] columns = null)
         {
-
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
-            .AddComponent("aggregate", new AggregateClause
-            {
-                Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
-            });
+            ClearComponent("aggregate")
+                .AddComponent("aggregate", new AggregateClause
+                {
+                    Type = type,
+                    Columns = columns?.ToList() ?? new List<string>()
+                });
 
             return this;
         }
 
         public Query AsCount(string[] columns = null)
         {
-            var cols = columns?.ToList() ?? new List<string> { };
+            var cols = columns?.ToList() ?? new List<string>();
 
-            if (!cols.Any())
-            {
-                cols.Add("*");
-            }
+            if (!cols.Any()) cols.Add("*");
 
             return AsAggregate("count", cols.ToArray());
         }
 
         public Query AsAvg(string column)
         {
-            return AsAggregate("avg", new string[] { column });
+            return AsAggregate("avg", new[] { column });
         }
+
         public Query AsAverage(string column)
         {
             return AsAvg(column);

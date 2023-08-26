@@ -5,12 +5,12 @@ namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
-        public bool IsOr { get; set; } = false;
-        public bool IsNot { get; set; } = false;
+        public bool IsOr { get; set; }
+        public bool IsNot { get; set; }
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a value.
+    ///     Represents a comparison between a column and a value.
     /// </summary>
     public class BasicCondition : AbstractCondition
     {
@@ -29,29 +29,31 @@ namespace SqlKata
                 Value = Value,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     public class BasicStringCondition : BasicCondition
     {
+        private string _escapeCharacter;
 
-        public bool CaseSensitive { get; set; } = false;
+        public bool CaseSensitive { get; set; }
 
-        private string escapeCharacter = null;
         public string EscapeCharacter
         {
-            get => escapeCharacter;
+            get => _escapeCharacter;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                     value = null;
                 else if (value.Length > 1)
-                    throw new ArgumentOutOfRangeException($"The {nameof(EscapeCharacter)} can only contain a single character!");
-                escapeCharacter = value;
+                    throw new ArgumentOutOfRangeException(
+                        $"The {nameof(EscapeCharacter)} can only contain a single character!");
+                _escapeCharacter = value;
             }
         }
+
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
@@ -65,7 +67,7 @@ namespace SqlKata
                 IsNot = IsNot,
                 CaseSensitive = CaseSensitive,
                 EscapeCharacter = EscapeCharacter,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -86,13 +88,13 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Part = Part,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a comparison between two columns.
+    ///     Represents a comparison between two columns.
     /// </summary>
     public class TwoColumnsCondition : AbstractCondition
     {
@@ -111,13 +113,13 @@ namespace SqlKata
                 Second = Second,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a comparison between a column and a full "subquery".
+    ///     Represents a comparison between a column and a full "subquery".
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
@@ -136,13 +138,13 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a comparison between a full "subquery" and a value.
+    ///     Represents a comparison between a full "subquery" and a value.
     /// </summary>
     public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
@@ -161,18 +163,19 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a "is in" condition.
+    ///     Represents a "is in" condition.
     /// </summary>
     public class InCondition<T> : AbstractCondition
     {
         public string Column { get; set; }
         public IEnumerable<T> Values { get; set; }
+
         public override AbstractClause Clone()
         {
             return new InCondition<T>
@@ -182,19 +185,19 @@ namespace SqlKata
                 Values = new List<T>(Values),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
-
     }
 
     /// <summary>
-    /// Represents a "is in subquery" condition.
+    ///     Represents a "is in subquery" condition.
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
         public Query Query { get; set; }
         public string Column { get; set; }
+
         public override AbstractClause Clone()
         {
             return new InQueryCondition
@@ -204,19 +207,20 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a "is between" condition.
+    ///     Represents a "is between" condition.
     /// </summary>
     public class BetweenCondition<T> : AbstractCondition
     {
         public string Column { get; set; }
         public T Higher { get; set; }
         public T Lower { get; set; }
+
         public override AbstractClause Clone()
         {
             return new BetweenCondition<T>
@@ -227,13 +231,13 @@ namespace SqlKata
                 Lower = Lower,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents an "is null" condition.
+    ///     Represents an "is null" condition.
     /// </summary>
     public class NullCondition : AbstractCondition
     {
@@ -248,13 +252,13 @@ namespace SqlKata
                 Column = Column,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a boolean (true/false) condition.
+    ///     Represents a boolean (true/false) condition.
     /// </summary>
     public class BooleanCondition : AbstractCondition
     {
@@ -271,18 +275,19 @@ namespace SqlKata
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,
-                Value = Value,
+                Value = Value
             };
         }
     }
 
     /// <summary>
-    /// Represents a "nested" clause condition.
-    /// i.e OR (myColumn = "A")
+    ///     Represents a "nested" clause condition.
+    ///     i.e OR (myColumn = "A")
     /// </summary>
     public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
     {
         public T Query { get; set; }
+
         public override AbstractClause Clone()
         {
             return new NestedCondition<T>
@@ -291,13 +296,13 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents an "exists sub query" clause condition.
+    ///     Represents an "exists sub query" clause condition.
     /// </summary>
     public class ExistsCondition : AbstractCondition
     {
@@ -312,7 +317,7 @@ namespace SqlKata
                 Query = Query.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -332,7 +337,7 @@ namespace SqlKata
                 Bindings = Bindings,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                Component = Component,
+                Component = Component
             };
         }
     }

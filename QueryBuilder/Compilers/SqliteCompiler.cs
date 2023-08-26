@@ -28,7 +28,7 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"LIMIT -1 OFFSET {parameterPlaceholder}";
+                return $"LIMIT -1 OFFSET {ParameterPlaceholder}";
             }
 
             return base.CompileLimit(ctx);
@@ -39,27 +39,22 @@ namespace SqlKata.Compilers
             var column = Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
-            var formatMap = new Dictionary<string, string> {
+            var formatMap = new Dictionary<string, string>
+            {
                 { "date", "%Y-%m-%d" },
                 { "time", "%H:%M:%S" },
                 { "year", "%Y" },
                 { "month", "%m" },
                 { "day", "%d" },
                 { "hour", "%H" },
-                { "minute", "%M" },
+                { "minute", "%M" }
             };
 
-            if (!formatMap.ContainsKey(condition.Part))
-            {
-                return $"{column} {condition.Operator} {value}";
-            }
+            if (!formatMap.ContainsKey(condition.Part)) return $"{column} {condition.Operator} {value}";
 
             var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
 
-            if (condition.IsNot)
-            {
-                return $"NOT ({sql})";
-            }
+            if (condition.IsNot) return $"NOT ({sql})";
 
             return sql;
         }

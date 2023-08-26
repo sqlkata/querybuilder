@@ -64,32 +64,32 @@ namespace SqlKata.Execution
 
         public Query NextQuery()
         {
-            return this.Query.ForPage(Page + 1, PerPage);
+            return Query.ForPage(Page + 1, PerPage);
         }
 
         public PaginationResult<T> Next(IDbTransaction transaction = null, int? timeout = null)
         {
-            return this.Query.Paginate<T>(Page + 1, PerPage, transaction, timeout);
+            return Query.Paginate<T>(Page + 1, PerPage, transaction, timeout);
         }
 
         public async Task<PaginationResult<T>> NextAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page + 1, PerPage, transaction, timeout, cancellationToken);
+            return await Query.PaginateAsync<T>(Page + 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public Query PreviousQuery()
         {
-            return this.Query.ForPage(Page - 1, PerPage);
+            return Query.ForPage(Page - 1, PerPage);
         }
 
         public PaginationResult<T> Previous(IDbTransaction transaction = null, int? timeout = null)
         {
-            return this.Query.Paginate<T>(Page - 1, PerPage, transaction, timeout);
+            return Query.Paginate<T>(Page - 1, PerPage, transaction, timeout);
         }
 
         public async Task<PaginationResult<T>> PreviousAsync(IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            return await this.Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout, cancellationToken);
+            return await Query.PaginateAsync<T>(Page - 1, PerPage, transaction, timeout, cancellationToken);
         }
 
         public PaginationIterator<T> Each

@@ -4,28 +4,18 @@ namespace SqlKata
 {
     public class Join : BaseQuery<Join>
     {
-        protected string _type = "inner join";
+        protected string TypeField = "inner join";
 
         public string Type
         {
-            get
-            {
-                return _type;
-            }
-            set
-            {
-                _type = value.ToUpperInvariant();
-            }
-        }
-
-        public Join() : base()
-        {
+            get => TypeField;
+            set => TypeField = value.ToUpperInvariant();
         }
 
         public override Join Clone()
         {
             var clone = base.Clone();
-            clone._type = _type;
+            clone.TypeField = TypeField;
             return clone;
         }
 
@@ -36,20 +26,50 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Alias for "from" operator.
-        /// Since "from" does not sound well with join clauses
+        ///     Alias for "from" operator.
+        ///     Since "from" does not sound well with join clauses
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public Join JoinWith(string table) => From(table);
-        public Join JoinWith(Query query) => From(query);
-        public Join JoinWith(Func<Query, Query> callback) => From(callback);
+        public Join JoinWith(string table)
+        {
+            return From(table);
+        }
 
-        public Join AsInner() => AsType("inner join");
-        public Join AsOuter() => AsType("outer join");
-        public Join AsLeft() => AsType("left join");
-        public Join AsRight() => AsType("right join");
-        public Join AsCross() => AsType("cross join");
+        public Join JoinWith(Query query)
+        {
+            return From(query);
+        }
+
+        public Join JoinWith(Func<Query, Query> callback)
+        {
+            return From(callback);
+        }
+
+        public Join AsInner()
+        {
+            return AsType("inner join");
+        }
+
+        public Join AsOuter()
+        {
+            return AsType("outer join");
+        }
+
+        public Join AsLeft()
+        {
+            return AsType("left join");
+        }
+
+        public Join AsRight()
+        {
+            return AsType("right join");
+        }
+
+        public Join AsCross()
+        {
+            return AsType("cross join");
+        }
 
         public Join On(string first, string second, string op = "=")
         {
@@ -61,7 +81,6 @@ namespace SqlKata
                 IsOr = GetOr(),
                 IsNot = GetNot()
             });
-
         }
 
         public Join OrOn(string first, string second, string op = "=")

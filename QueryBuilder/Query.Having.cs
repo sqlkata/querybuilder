@@ -9,14 +9,10 @@ namespace SqlKata
     {
         public Query Having(string column, string op, object value)
         {
-
             // If the value is "null", we will just assume the developer wants to add a
             // Having null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
-            if (value == null)
-            {
-                return Not(op != "=").HavingNull(column);
-            }
+            if (value == null) return Not(op != "=").HavingNull(column);
 
             return AddComponent("having", new BasicCondition
             {
@@ -24,7 +20,7 @@ namespace SqlKata
                 Operator = op,
                 Value = value,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -40,28 +36,31 @@ namespace SqlKata
 
         public Query OrHavingNot(string column, string op, object value)
         {
-            return this.Or().Not().Having(column, op, value);
+            return Or().Not().Having(column, op, value);
         }
 
         public Query Having(string column, object value)
         {
             return Having(column, "=", value);
         }
+
         public Query HavingNot(string column, object value)
         {
             return HavingNot(column, "=", value);
         }
+
         public Query OrHaving(string column, object value)
         {
             return OrHaving(column, "=", value);
         }
+
         public Query OrHavingNot(string column, object value)
         {
             return OrHavingNot(column, "=", value);
         }
 
         /// <summary>
-        /// Perform a Having constraint
+        ///     Perform a Having constraint
         /// </summary>
         /// <param name="constraints"></param>
         /// <returns></returns>
@@ -70,9 +69,7 @@ namespace SqlKata
             var dictionary = new Dictionary<string, object>();
 
             foreach (var item in constraints.GetType().GetRuntimeProperties())
-            {
                 dictionary.Add(item.Name, item.GetValue(constraints));
-            }
 
             return Having(dictionary);
         }
@@ -86,15 +83,11 @@ namespace SqlKata
             foreach (var tuple in values)
             {
                 if (orFlag)
-                {
                     query = query.Or();
-                }
                 else
-                {
                     query.And();
-                }
 
-                query = this.Not(notFlag).Having(tuple.Key, tuple.Value);
+                query = Not(notFlag).Having(tuple.Key, tuple.Value);
             }
 
             return query;
@@ -107,7 +100,7 @@ namespace SqlKata
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -117,7 +110,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Apply a nested Having clause
+        ///     Apply a nested Having clause
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
@@ -129,7 +122,7 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -156,7 +149,7 @@ namespace SqlKata
                 Second = second,
                 Operator = op,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -171,7 +164,7 @@ namespace SqlKata
             {
                 Column = column,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
@@ -182,7 +175,7 @@ namespace SqlKata
 
         public Query OrHavingNull(string column)
         {
-            return this.Or().HavingNull(column);
+            return Or().HavingNull(column);
         }
 
         public Query OrHavingNotNull(string column)
@@ -195,7 +188,7 @@ namespace SqlKata
             return AddComponent("having", new BooleanCondition
             {
                 Column = column,
-                Value = true,
+                Value = true
             });
         }
 
@@ -209,7 +202,7 @@ namespace SqlKata
             return AddComponent("having", new BooleanCondition
             {
                 Column = column,
-                Value = false,
+                Value = false
             });
         }
 
@@ -228,25 +221,30 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Query HavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query HavingNotLike(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Not().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingLike(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingNotLike(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().HavingLike(column, value, caseSensitive, escapeCharacter);
         }
-        public Query HavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+
+        public Query HavingStarts(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -256,21 +254,24 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Query HavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query HavingNotStarts(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingStarts(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingNotStarts(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
         }
@@ -285,26 +286,30 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Query HavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query HavingNotEnds(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingEnds(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingNotEnds(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query HavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query HavingContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return AddComponent("having", new BasicStringCondition
             {
@@ -314,21 +319,24 @@ namespace SqlKata
                 CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
 
-        public Query HavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query HavingNotContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Not().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrHavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrHavingNotContains(string column, object value, bool caseSensitive = false,
+            string escapeCharacter = null)
         {
             return Or().Not().HavingContains(column, value, caseSensitive, escapeCharacter);
         }
@@ -349,10 +357,12 @@ namespace SqlKata
         {
             return Or().HavingBetween(column, lower, higher);
         }
+
         public Query HavingNotBetween<T>(string column, T lower, T higher)
         {
             return Not().HavingBetween(column, lower, higher);
         }
+
         public Query OrHavingNotBetween<T>(string column, T lower, T higher)
         {
             return Or().Not().HavingBetween(column, lower, higher);
@@ -364,7 +374,7 @@ namespace SqlKata
             // since string is considered as List<char>
             if (values is string)
             {
-                string val = values as string;
+                var val = values as string;
 
                 return AddComponent("having", new InCondition<string>
                 {
@@ -382,8 +392,6 @@ namespace SqlKata
                 IsNot = GetNot(),
                 Values = values.Distinct().ToList()
             });
-
-
         }
 
         public Query OrHavingIn<T>(string column, IEnumerable<T> values)
@@ -409,9 +417,10 @@ namespace SqlKata
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Query = query,
+                Query = query
             });
         }
+
         public Query HavingIn(string column, Func<Query, Query> callback)
         {
             var query = callback.Invoke(new Query());
@@ -428,6 +437,7 @@ namespace SqlKata
         {
             return Or().HavingIn(column, callback);
         }
+
         public Query HavingNotIn(string column, Query query)
         {
             return Not().HavingIn(column, query);
@@ -450,7 +460,7 @@ namespace SqlKata
 
 
         /// <summary>
-        /// Perform a sub query Having clause
+        ///     Perform a sub query Having clause
         /// </summary>
         /// <param name="column"></param>
         /// <param name="op"></param>
@@ -471,7 +481,7 @@ namespace SqlKata
                 Operator = op,
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
 
@@ -479,6 +489,7 @@ namespace SqlKata
         {
             return Or().Having(column, op, query);
         }
+
         public Query OrHaving(string column, string op, Func<Query, Query> callback)
         {
             return Or().Having(column, op, callback);
@@ -487,9 +498,8 @@ namespace SqlKata
         public Query HavingExists(Query query)
         {
             if (!query.HasComponent("from"))
-            {
-                throw new ArgumentException($"{nameof(FromClause)} cannot be empty if used inside a {nameof(HavingExists)} condition");
-            }
+                throw new ArgumentException(
+                    $"{nameof(FromClause)} cannot be empty if used inside a {nameof(HavingExists)} condition");
 
             // simplify the query as much as possible
             query = query.Clone().ClearComponent("select")
@@ -500,9 +510,10 @@ namespace SqlKata
             {
                 Query = query,
                 IsNot = GetNot(),
-                IsOr = GetOr(),
+                IsOr = GetOr()
             });
         }
+
         public Query HavingExists(Func<Query, Query> callback)
         {
             var childQuery = new Query().SetParent(this);
@@ -523,20 +534,24 @@ namespace SqlKata
         {
             return Or().HavingExists(query);
         }
+
         public Query OrHavingExists(Func<Query, Query> callback)
         {
             return Or().HavingExists(callback);
         }
+
         public Query OrHavingNotExists(Query query)
         {
             return Or().Not().HavingExists(query);
         }
+
         public Query OrHavingNotExists(Func<Query, Query> callback)
         {
             return Or().Not().HavingExists(callback);
         }
 
         #region date
+
         public Query HavingDatePart(string part, string column, string op, object value)
         {
             return AddComponent("having", new BasicDateCondition
@@ -546,9 +561,10 @@ namespace SqlKata
                 Value = value,
                 Part = part,
                 IsOr = GetOr(),
-                IsNot = GetNot(),
+                IsNot = GetNot()
             });
         }
+
         public Query HavingNotDatePart(string part, string column, string op, object value)
         {
             return Not().HavingDatePart(part, column, op, value);
@@ -568,14 +584,17 @@ namespace SqlKata
         {
             return HavingDatePart("date", column, op, value);
         }
+
         public Query HavingNotDate(string column, string op, object value)
         {
             return Not().HavingDate(column, op, value);
         }
+
         public Query OrHavingDate(string column, string op, object value)
         {
             return Or().HavingDate(column, op, value);
         }
+
         public Query OrHavingNotDate(string column, string op, object value)
         {
             return Or().Not().HavingDate(column, op, value);
@@ -585,14 +604,17 @@ namespace SqlKata
         {
             return HavingDatePart("time", column, op, value);
         }
+
         public Query HavingNotTime(string column, string op, object value)
         {
             return Not().HavingTime(column, op, value);
         }
+
         public Query OrHavingTime(string column, string op, object value)
         {
             return Or().HavingTime(column, op, value);
         }
+
         public Query OrHavingNotTime(string column, string op, object value)
         {
             return Or().Not().HavingTime(column, op, value);
@@ -602,6 +624,7 @@ namespace SqlKata
         {
             return HavingDatePart(part, column, "=", value);
         }
+
         public Query HavingNotDatePart(string part, string column, object value)
         {
             return HavingNotDatePart(part, column, "=", value);
@@ -621,14 +644,17 @@ namespace SqlKata
         {
             return HavingDate(column, "=", value);
         }
+
         public Query HavingNotDate(string column, object value)
         {
             return HavingNotDate(column, "=", value);
         }
+
         public Query OrHavingDate(string column, object value)
         {
             return OrHavingDate(column, "=", value);
         }
+
         public Query OrHavingNotDate(string column, object value)
         {
             return OrHavingNotDate(column, "=", value);
@@ -638,14 +664,17 @@ namespace SqlKata
         {
             return HavingTime(column, "=", value);
         }
+
         public Query HavingNotTime(string column, object value)
         {
             return HavingNotTime(column, "=", value);
         }
+
         public Query OrHavingTime(string column, object value)
         {
             return OrHavingTime(column, "=", value);
         }
+
         public Query OrHavingNotTime(string column, object value)
         {
             return OrHavingNotTime(column, "=", value);

@@ -1,37 +1,34 @@
-using System.Linq;
-
 namespace SqlKata
 {
     public abstract class AbstractCombine : AbstractClause
     {
-
     }
 
     public class Combine : AbstractCombine
     {
         /// <summary>
-        /// Gets or sets the query to be combined with.
+        ///     Gets or sets the query to be combined with.
         /// </summary>
         /// <value>
-        /// The query that will be combined.
+        ///     The query that will be combined.
         /// </value>
         public Query Query { get; set; }
 
         /// <summary>
-        /// Gets or sets the combine operation, e.g. "UNION", etc.
+        ///     Gets or sets the combine operation, e.g. "UNION", etc.
         /// </summary>
         /// <value>
-        /// The combine operation.
+        ///     The combine operation.
         /// </value>
         public string Operation { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this <see cref="Combine"/> clause will combine all.
+        ///     Gets or sets a value indicating whether this <see cref="Combine" /> clause will combine all.
         /// </summary>
         /// <value>
-        ///   <c>true</c> if all; otherwise, <c>false</c>.
+        ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; set; } = false;
+        public bool All { get; set; }
 
         public override AbstractClause Clone()
         {
@@ -41,7 +38,7 @@ namespace SqlKata
                 Operation = Operation,
                 Component = Component,
                 Query = Query,
-                All = All,
+                All = All
             };
         }
     }
@@ -59,7 +56,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                Bindings = Bindings,
+                Bindings = Bindings
             };
         }
     }

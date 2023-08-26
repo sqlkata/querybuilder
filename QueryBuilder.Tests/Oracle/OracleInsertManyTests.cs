@@ -2,60 +2,63 @@ using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests.Oracle
+namespace SqlKata.Tests.Oracle;
+
+public class OracleInsertManyTests : TestSupport
 {
-    public class OracleInsertManyTests : TestSupport
+    private const string TableName = "Table";
+    private readonly OracleCompiler _compiler;
+
+    public OracleInsertManyTests()
     {
-        private const string TableName = "Table";
-        private readonly OracleCompiler compiler;
+        _compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+    }
 
-        public OracleInsertManyTests()
+    [Fact]
+    public void InsertManyForOracle_ShouldRepeatColumnsAndAddSelectFromDual()
+    {
+        // Arrange:
+        var cols = new[] { "Name", "Price" };
+
+        var data = new[]
         {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
-        }
+            new object[] { "A", 1000 },
+            new object[] { "B", 2000 },
+            new object[] { "C", 3000 }
+        };
 
-        [Fact]
-        public void InsertManyForOracle_ShouldRepeatColumnsAndAddSelectFromDual()
+        var query = new Query(TableName)
+            .AsInsert(cols, data);
+
+
+        // Act:
+        var ctx = _compiler.Compile(query);
+
+        // Assert:
+        Assert.Equal(
+            $@"INSERT ALL INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) SELECT 1 FROM DUAL",
+            ctx.RawSql);
+    }
+
+    [Fact]
+    public void InsertForOracle_SingleInsertShouldNotAddALLKeywordAndNotHaveSelectFromDual()
+    {
+        // Arrange:
+        var cols = new[] { "Name", "Price" };
+
+        var data = new[]
         {
-            // Arrange:
-            var cols = new[] { "Name", "Price" };
+            new object[] { "A", 1000 }
+        };
 
-            var data = new[] {
-                new object[] { "A", 1000 },
-                new object[] { "B", 2000 },
-                new object[] { "C", 3000 },
-            };
-
-            var query = new Query(TableName)
-                .AsInsert(cols, data);
+        var query = new Query(TableName)
+            .AsInsert(cols, data);
 
 
-            // Act:
-            var ctx = compiler.Compile(query);
+        // Act:
+        var ctx = _compiler.Compile(query);
 
-            // Assert:
-            Assert.Equal($@"INSERT ALL INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?) SELECT 1 FROM DUAL", ctx.RawSql);
-        }
-
-        [Fact]
-        public void InsertForOracle_SingleInsertShouldNotAddALLKeywordAndNotHaveSelectFromDual()
-        {
-            // Arrange:
-            var cols = new[] { "Name", "Price" };
-
-            var data = new[] {
-                new object[] { "A", 1000 }
-            };
-
-            var query = new Query(TableName)
-                .AsInsert(cols, data);
-
-
-            // Act:
-            var ctx = compiler.Compile(query);
-
-            // Assert:
-            Assert.Equal($@"INSERT INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?)", ctx.RawSql);
-        }
+        // Assert:
+        Assert.Equal($@"INSERT INTO ""{TableName}"" (""Name"", ""Price"") VALUES (?, ?)", ctx.RawSql);
     }
 }

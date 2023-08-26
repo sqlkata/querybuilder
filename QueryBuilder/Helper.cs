@@ -11,41 +11,26 @@ namespace SqlKata
     {
         public static bool IsArray(object value)
         {
-            if (value is string)
-            {
-                return false;
-            }
+            if (value is string) return false;
 
-            if (value is byte[])
-            {
-                return false;
-            }
+            if (value is byte[]) return false;
 
             return value is IEnumerable;
         }
 
         /// <summary>
-        /// Flat IEnumerable one level down
+        ///     Flat IEnumerable one level down
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
         public static IEnumerable<object> Flatten(IEnumerable<object> array)
         {
             foreach (var item in array)
-            {
                 if (IsArray(item))
-                {
-                    foreach (var sub in (item as IEnumerable))
-                    {
+                    foreach (var sub in item as IEnumerable)
                         yield return sub;
-                    }
-                }
                 else
-                {
                     yield return item;
-                }
-
-            }
         }
 
         public static IEnumerable<object> FlattenDeep(IEnumerable<object> array)
@@ -55,10 +40,7 @@ namespace SqlKata
 
         public static IEnumerable<int> AllIndexesOf(string str, string value)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                yield break;
-            }
+            if (string.IsNullOrEmpty(value)) yield break;
 
             var index = 0;
 
@@ -66,22 +48,15 @@ namespace SqlKata
             {
                 index = str.IndexOf(value, index, StringComparison.Ordinal);
 
-                if (index == -1)
-                {
-                    yield break;
-                }
+                if (index == -1) yield break;
 
                 yield return index;
-
             } while ((index += value.Length) < str.Length);
         }
 
         public static string ReplaceAll(string subject, string match, Func<int, string> callback)
         {
-            if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match))
-            {
-                return subject;
-            }
+            if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match)) return subject;
 
             var splitted = subject.Split(
                 new[] { match },
@@ -89,19 +64,16 @@ namespace SqlKata
             );
 
             return splitted.Skip(1)
-              .Select((item, index) => callback(index) + item)
-              .Aggregate(new StringBuilder(splitted.First()), (prev, right) => prev.Append(right))
-              .ToString();
+                .Select((item, index) => callback(index) + item)
+                .Aggregate(new StringBuilder(splitted.First()), (prev, right) => prev.Append(right))
+                .ToString();
         }
 
         public static string JoinArray(string glue, IEnumerable array)
         {
             var result = new List<string>();
 
-            foreach (var item in array)
-            {
-                result.Add(item.ToString());
-            }
+            foreach (var item in array) result.Add(item.ToString());
 
             return string.Join(glue, result);
         }
@@ -118,18 +90,15 @@ namespace SqlKata
                     return string.Join(",", placeholder.Repeat(count));
                 }
 
-                return placeholder.ToString();
+                return placeholder;
             });
         }
 
         public static int EnumerableCount(IEnumerable obj)
         {
-            int count = 0;
+            var count = 0;
 
-            foreach (var item in obj)
-            {
-                count++;
-            }
+            foreach (var item in obj) count++;
 
             return count;
         }
@@ -140,10 +109,8 @@ namespace SqlKata
             var match = Regex.Match(expression, regex);
 
             if (!match.Success)
-            {
                 // we did not found a match return the string as is.
                 return new List<string> { expression };
-            }
 
             var table = expression.Substring(0, expression.IndexOf(".{"));
 
@@ -161,7 +128,8 @@ namespace SqlKata
             return Enumerable.Repeat(str, count);
         }
 
-        public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
+        public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter,
+            string identifier, string newIdentifier)
         {
             //Replace standard, non-escaped identifiers first
             var nonEscapedRegex = new Regex($@"(?<!{Regex.Escape(escapeCharacter)}){Regex.Escape(identifier)}");

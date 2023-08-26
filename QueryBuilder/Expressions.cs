@@ -3,8 +3,8 @@ namespace SqlKata
     public static class Expressions
     {
         /// <summary>
-        /// Instruct the compiler to resolve the value from the predefined variables
-        /// In the current query or parents queries.
+        ///     Instruct the compiler to resolve the value from the predefined variables
+        ///     In the current query or parents queries.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -14,8 +14,8 @@ namespace SqlKata
         }
 
         /// <summary>
-        /// Instruct the compiler to treat this as a literal.
-        /// WARNING: don't pass user data directly to this method.
+        ///     Instruct the compiler to treat this as a literal.
+        ///     WARNING: don't pass user data directly to this method.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="replaceQuotes">if true it will esacpe single quotes</param>

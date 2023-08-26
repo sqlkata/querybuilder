@@ -5,17 +5,21 @@ namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {
-        protected string _alias;
+        protected string AliasField;
 
         /// <summary>
-        /// Try to extract the Alias for the current clause.
+        ///     Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
-        public virtual string Alias { get => _alias; set => _alias = value; }
+        public virtual string Alias
+        {
+            get => AliasField;
+            set => AliasField = value;
+        }
     }
 
     /// <summary>
-    /// Represents a "from" clause.
+    ///     Represents a "from" clause.
     /// </summary>
     public class FromClause : AbstractFrom
     {
@@ -27,7 +31,7 @@ namespace SqlKata
             {
                 if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    var segments = Table.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    var segments = Table.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                     return segments[2];
                 }
@@ -44,25 +48,19 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Table = Table,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a "from subquery" clause.
+    ///     Represents a "from subquery" clause.
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
         public Query Query { get; set; }
 
-        public override string Alias
-        {
-            get
-            {
-                return string.IsNullOrEmpty(_alias) ? Query.QueryAlias : _alias;
-            }
-        }
+        public override string Alias => string.IsNullOrEmpty(AliasField) ? Query.QueryAlias : AliasField;
 
         /// <inheritdoc />
         public override AbstractClause Clone()
@@ -72,7 +70,7 @@ namespace SqlKata
                 Engine = Engine,
                 Alias = Alias,
                 Query = Query.Clone(),
-                Component = Component,
+                Component = Component
             };
         }
     }
@@ -91,13 +89,13 @@ namespace SqlKata
                 Alias = Alias,
                 Expression = Expression,
                 Bindings = Bindings,
-                Component = Component,
+                Component = Component
             };
         }
     }
 
     /// <summary>
-    /// Represents a FROM clause that is an ad-hoc table built with predefined values.
+    ///     Represents a FROM clause that is an ad-hoc table built with predefined values.
     /// </summary>
     public class AdHocTableFromClause : AbstractFrom
     {
@@ -112,7 +110,7 @@ namespace SqlKata
                 Alias = Alias,
                 Columns = Columns,
                 Values = Values,
-                Component = Component,
+                Component = Component
             };
         }
     }

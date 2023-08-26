@@ -2,7 +2,6 @@ namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
     {
-
     }
 
     public class OrderBy : AbstractOrderBy
@@ -36,7 +35,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Expression = Expression,
-                Bindings = Bindings,
+                Bindings = Bindings
             };
         }
     }
@@ -48,7 +47,7 @@ namespace SqlKata
         {
             return new OrderByRandom
             {
-                Engine = Engine,
+                Engine = Engine
             };
         }
     }
