@@ -11,25 +11,13 @@ namespace SqlKata
             BaseQuery = baseQuery;
         }
 
-        private string _typeField = "inner join";
+        public string Type { get; private set; }
 
-        public string Type
-        {
-            get => _typeField;
-            set => _typeField = value.ToUpperInvariant();
-        }
-
-        public Join Clone()
-        {
-            return new Join(BaseQuery)
-            {
-                _typeField = _typeField
-            };
-        }
+        public Join Clone() => new(BaseQuery) { Type = Type };
 
         public Join AsType(string type)
         {
-            Type = type;
+            Type = type.ToUpperInvariant();
             return this;
         }
 
