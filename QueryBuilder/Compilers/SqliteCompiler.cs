@@ -2,13 +2,15 @@ using System.Collections.Generic;
 
 namespace SqlKata.Compilers
 {
-    public class SqliteCompiler : Compiler
+    public sealed class SqliteCompiler : Compiler
     {
-        public override string EngineCode { get; } = EngineCodes.Sqlite;
-        protected override string OpeningIdentifier { get; set; } = "\"";
-        protected override string ClosingIdentifier { get; set; } = "\"";
-        protected override string LastId { get; set; } = "select last_insert_rowid() as id";
-        public override bool SupportsFilterClause { get; set; } = true;
+        public SqliteCompiler()
+        {
+            OpeningIdentifier = ClosingIdentifier = "\"";
+            LastId = "select last_insert_rowid() as id";
+            EngineCode = EngineCodes.Sqlite;
+            SupportsFilterClause = true;
+        }
 
         public override string CompileTrue()
         {

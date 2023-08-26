@@ -83,7 +83,7 @@ namespace SqlKata
             foreach (var tuple in values)
             {
                 if (orFlag)
-                    query = query.Or();
+                    query.Or();
                 else
                     query.And();
 

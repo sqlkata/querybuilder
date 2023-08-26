@@ -116,11 +116,11 @@ namespace SqlKata.Execution
         {
             var db = CreateQueryFactory(query);
 
-            db.Chunk<T>(query, chunkSize, func, transaction, timeout);
+            db.Chunk(query, chunkSize, func, transaction, timeout);
         }
         public static async Task ChunkAsync<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, func, transaction, timeout, cancellationToken);
+            await CreateQueryFactory(query).ChunkAsync(query, chunkSize, func, transaction, timeout, cancellationToken);
         }
 
         public static void Chunk(this Query query, int chunkSize, Func<IEnumerable<dynamic>, int, bool> func, IDbTransaction transaction = null, int? timeout = null)
@@ -141,7 +141,7 @@ namespace SqlKata.Execution
 
         public static async Task ChunkAsync<T>(this Query query, int chunkSize, Action<IEnumerable<T>, int> action, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            await CreateQueryFactory(query).ChunkAsync<T>(query, chunkSize, action, transaction, timeout, cancellationToken);
+            await CreateQueryFactory(query).ChunkAsync(query, chunkSize, action, transaction, timeout, cancellationToken);
         }
 
         public static void Chunk(this Query query, int chunkSize, Action<IEnumerable<dynamic>, int> action, IDbTransaction transaction = null, int? timeout = null)

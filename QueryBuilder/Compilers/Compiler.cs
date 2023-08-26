@@ -32,32 +32,32 @@ namespace SqlKata.Compilers
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
-        protected virtual string ParameterPlaceholder { get; set; } = "?";
-        protected virtual string ParameterPrefix { get; set; } = "@p";
-        protected virtual string OpeningIdentifier { get; set; } = "\"";
-        protected virtual string ClosingIdentifier { get; set; } = "\"";
-        protected virtual string ColumnAsKeyword { get; set; } = "AS ";
-        protected virtual string TableAsKeyword { get; set; } = "AS ";
-        protected virtual string LastId { get; set; } = "";
-        protected virtual string EscapeCharacter { get; set; } = "\\";
+        protected string ParameterPlaceholder { get; set; } = "?";
+        protected string ParameterPrefix { get; set; } = "@p";
+        protected string OpeningIdentifier { get; set; } = "\"";
+        protected string ClosingIdentifier { get; set; } = "\"";
+        protected string ColumnAsKeyword { get; set; } = "AS ";
+        protected string TableAsKeyword { get; set; } = "AS ";
+        protected string LastId { get; set; } = "";
+        protected string EscapeCharacter { get; set; } = "\\";
 
 
-        protected virtual string SingleInsertStartClause { get; set; } = "INSERT INTO";
-        protected virtual string MultiInsertStartClause { get; set; } = "INSERT INTO";
+        protected string SingleInsertStartClause { get; set; } = "INSERT INTO";
+        protected string MultiInsertStartClause { get; set; } = "INSERT INTO";
 
-        public virtual string EngineCode { get; }
+        public string EngineCode { get; protected set; }
 
         /// <summary>
         ///     Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
         /// <value></value>
-        public virtual bool SupportsFilterClause { get; set; } = false;
+        public bool SupportsFilterClause { get; set; } = false;
 
         /// <summary>
         ///     If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
         /// </summary>
         /// <value></value>
-        public virtual bool OmitSelectInsideExists { get; set; } = true;
+        public bool OmitSelectInsideExists { get; set; } = true;
 
         protected virtual string SingleRowDummyTableName => null;
 

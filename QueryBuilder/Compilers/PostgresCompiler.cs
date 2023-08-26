@@ -8,10 +8,9 @@ namespace SqlKata.Compilers
         public PostgresCompiler()
         {
             LastId = "SELECT lastval() AS id";
+            EngineCode = EngineCodes.PostgreSql;
+            SupportsFilterClause  = true;
         }
-
-        public override string EngineCode { get; } = EngineCodes.PostgreSql;
-        public override bool SupportsFilterClause { get; set; } = true;
 
 
         protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)

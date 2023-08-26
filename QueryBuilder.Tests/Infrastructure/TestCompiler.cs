@@ -9,7 +9,10 @@ namespace SqlKata.Tests.Infrastructure;
 /// </summary>
 internal class TestCompiler : Compiler
 {
-    public override string EngineCode { get; } = "test";
+    protected TestCompiler()
+    {
+        EngineCode = "test";
+    }
 
     public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
     {
@@ -51,6 +54,8 @@ internal class TestFirebirdCompiler : FirebirdCompiler
 
 internal class TestEmptyIdentifiersCompiler : TestCompiler
 {
-    protected override string OpeningIdentifier { get; set; } = "";
-    protected override string ClosingIdentifier { get; set; } = "";
+    public TestEmptyIdentifiersCompiler()
+    {
+        OpeningIdentifier = ClosingIdentifier = "";
+    }
 }

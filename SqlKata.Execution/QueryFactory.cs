@@ -717,7 +717,7 @@ namespace SqlKata.Execution
 
                     foreach (var item in dynamicResult)
                     {
-                        var localValue = item[include.LocalKey].ToString();
+                        var localValue = item[include.LocalKey].ToString()!;
                         item[include.Name] = children.TryGetValue(localValue, out var child) ? child : new List<Dictionary<string, object>>();
                     }
 
@@ -815,7 +815,7 @@ namespace SqlKata.Execution
 
                     foreach (var item in dynamicResult)
                     {
-                        var localValue = item[include.LocalKey].ToString();
+                        var localValue = item[include.LocalKey].ToString()!;
                         item[include.Name] = children.TryGetValue(localValue, out var child) ? child : new List<Dictionary<string, object>>();
                     }
 

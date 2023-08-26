@@ -9,7 +9,7 @@ namespace SqlKata
 {
     public static class Helper
     {
-        public static bool IsArray(object? value)
+        public static bool IsArray(object value)
         {
             if (value is string) return false;
 
@@ -27,7 +27,7 @@ namespace SqlKata
         {
             foreach (var item in array)
                 if (IsArray(item))
-                    foreach (var sub in item as IEnumerable)
+                    foreach (var sub in (IEnumerable)item)
                         yield return sub;
                 else
                     yield return item;
@@ -98,7 +98,7 @@ namespace SqlKata
         {
             var count = 0;
 
-            foreach (var item in obj) count++;
+            foreach (var unused in obj) count++;
 
             return count;
         }
@@ -112,7 +112,7 @@ namespace SqlKata
                 // we did not found a match return the string as is.
                 return new List<string> { expression };
 
-            var table = expression.Substring(0, expression.IndexOf(".{"));
+            var table = expression.Substring(0, expression.IndexOf(".{", StringComparison.Ordinal));
 
             var captures = match.Groups[1].Value;
 

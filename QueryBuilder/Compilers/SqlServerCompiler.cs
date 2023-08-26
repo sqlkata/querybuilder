@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -9,9 +10,9 @@ namespace SqlKata.Compilers
             OpeningIdentifier = "[";
             ClosingIdentifier = "]";
             LastId = "SELECT scope_identity() as Id";
+            EngineCode = EngineCodes.SqlServer;
         }
 
-        public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = false;
 
         protected override SqlResult CompileSelectQuery(Query query)
@@ -77,7 +78,7 @@ namespace SqlKata.Compilers
                 ctx.Query.ClearComponent("limit");
 
                 // handle distinct
-                if (compiled.IndexOf("SELECT DISTINCT") == 0)
+                if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
                     return $"SELECT DISTINCT TOP ({ParameterPlaceholder}){compiled.Substring(15)}";
 
                 return $"SELECT TOP ({ParameterPlaceholder}){compiled.Substring(6)}";

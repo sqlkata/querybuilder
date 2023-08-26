@@ -12,9 +12,9 @@ namespace SqlKata.Compilers
             TableAsKeyword = "";
             ParameterPrefix = ":p";
             MultiInsertStartClause = "INSERT ALL INTO";
+            EngineCode = EngineCodes.Oracle;
         }
 
-        public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
 
@@ -91,18 +91,15 @@ namespace SqlKata.Compilers
             var column = Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
-            var sql = "";
-            var valueFormat = "";
+            string sql;
+            string valueFormat;
 
-            var isDateTime = condition.Value is DateTime dt;
+            var isDateTime = condition.Value is DateTime;
 
             switch (condition.Part)
             {
                 case "date": // assume YY-MM-DD format
-                    if (isDateTime)
-                        valueFormat = $"{value}";
-                    else
-                        valueFormat = $"TO_DATE({value}, 'YY-MM-DD')";
+                    valueFormat = isDateTime ? $"{value}" : $"TO_DATE({value}, 'YY-MM-DD')";
                     sql = $"TO_CHAR({column}, 'YY-MM-DD') {condition.Operator} TO_CHAR({valueFormat}, 'YY-MM-DD')";
                     break;
                 case "time":
@@ -113,10 +110,9 @@ namespace SqlKata.Compilers
                     else
                     {
                         // assume HH:MM format
-                        if (condition.Value.ToString().Split(':').Count() == 2)
-                            valueFormat = $"TO_DATE({value}, 'HH24:MI')";
-                        else // assume HH:MM:SS format
-                            valueFormat = $"TO_DATE({value}, 'HH24:MI:SS')";
+                        valueFormat = condition.Value.ToString()!.Split(':').Count() == 2 ? $"TO_DATE({value}, 'HH24:MI')" :
+                            // assume HH:MM:SS format
+                            $"TO_DATE({value}, 'HH24:MI:SS')";
                     }
 
                     sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";

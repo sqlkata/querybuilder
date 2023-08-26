@@ -16,7 +16,7 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public string Operator { get; set; }
-        public virtual object Value { get; set; }
+        public object Value { get; set; }
 
         /// <inheritdoc />
         public override AbstractClause Clone()

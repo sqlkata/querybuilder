@@ -4,8 +4,12 @@ namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
-        public override string EngineCode { get; } = EngineCodes.Firebird;
         protected override string SingleRowDummyTableName => "RDB$DATABASE";
+
+        public FirebirdCompiler()
+        {
+            EngineCode = EngineCodes.Firebird;
+        }
 
         protected override SqlResult CompileInsertQuery(Query query)
         {

@@ -61,7 +61,7 @@ namespace SqlKata
             if (value is Enum vEnum) return Convert.ToInt32(vEnum) + $" /* {vEnum} */";
 
             // fallback to string
-            return "'" + value.ToString().Replace("'", "''") + "'";
+            return "'" + value.ToString()!.Replace("'", "''") + "'";
         }
     }
 }

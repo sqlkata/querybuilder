@@ -6,9 +6,8 @@ namespace SqlKata.Compilers
         {
             OpeningIdentifier = ClosingIdentifier = "`";
             LastId = "SELECT last_insert_id() as Id";
+            EngineCode = EngineCodes.MySql;
         }
-
-        public override string EngineCode { get; } = EngineCodes.MySql;
 
         public override string CompileLimit(SqlResult ctx)
         {
