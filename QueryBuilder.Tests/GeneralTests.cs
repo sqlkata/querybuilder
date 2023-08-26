@@ -86,7 +86,7 @@ public class GeneralTests : TestSupport
         );
 
         var call2 = compiler.Call_FindCompilerMethodInfo(
-            typeof(NestedCondition<Join>), "CompileNestedCondition"
+            typeof(BasicCondition), "CompileNestedCondition"
         );
 
         Assert.NotSame(call1, call2);
