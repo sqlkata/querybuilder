@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.Linq;
+using JetBrains.Annotations;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
@@ -284,10 +285,10 @@ public class InsertTests : TestSupport
             "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
             c[EngineCodes.Firebird]);
     }
-
+    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Account
     {
-        public Account(string name, string currency = null, string createdAt = null, string color = null)
+        public Account(string name, string currency = null, string color = null)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Currency = currency;

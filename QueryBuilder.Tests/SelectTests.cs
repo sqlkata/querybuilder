@@ -862,7 +862,7 @@ public class SelectTests : TestSupport
     {
         Assert.ThrowsAny<ArgumentException>(() =>
         {
-            var q = new Query("Table1")
+            new Query("Table1")
                 .HavingContains("Column1", @"TestString\%", false, @"\aa");
         });
     }

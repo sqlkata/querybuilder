@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
             lock (_syncRoot)
             {
-                if (_methodsCache.ContainsKey(cacheKey)) return _methodsCache[cacheKey];
+                if (_methodsCache.TryGetValue(cacheKey, out var info)) return info;
 
                 return _methodsCache[cacheKey] = FindMethodInfo(clauseType, methodName);
             }

@@ -251,10 +251,8 @@ public class GeneralTests : TestSupport
         if (table != null)
             query.From(table);
         query.AddOrReplaceComponent("from", new FromClause { Table = "updated", Engine = engine });
-        var froms = query.Clauses.OfType<FromClause>();
 
-        Assert.Single(froms);
-        Assert.Equal("updated", froms.Single().Table);
+        Assert.Equal("updated", query.Clauses.OfType<FromClause>().Single().Table);
     }
 
     [Theory]

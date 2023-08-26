@@ -21,7 +21,7 @@ namespace SqlKata
     /// <summary>
     ///     Represents a "from" clause.
     /// </summary>
-    public class FromClause : AbstractFrom
+    public sealed class FromClause : AbstractFrom
     {
         public string Table { get; set; }
 

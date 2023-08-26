@@ -18,7 +18,7 @@ namespace SqlKata.Compilers
 
             var name = clauseType.Name;
 
-            name = name.Substring(0, name.IndexOf("Condition"));
+            name = name.Substring(0, name.IndexOf("Condition", StringComparison.Ordinal));
 
             var methodName = "Compile" + name + "Condition";
 

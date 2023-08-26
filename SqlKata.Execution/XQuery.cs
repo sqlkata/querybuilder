@@ -9,7 +9,7 @@ namespace SqlKata.Execution
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
-        public Action<SqlResult> Logger = result => { };
+        public Action<SqlResult> Logger = _ => { };
         public QueryFactory QueryFactory { get; set; }
 
         public XQuery(IDbConnection connection, Compiler compiler)

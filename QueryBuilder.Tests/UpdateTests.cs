@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.Linq;
+using JetBrains.Annotations;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
@@ -272,6 +273,7 @@ public class UpdateTests : TestSupport
         Assert.Equal("UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
     }
 
+    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Book
     {
         public Book(string name, string author, decimal price = 1.0m, string color = null)
@@ -291,17 +293,19 @@ public class UpdateTests : TestSupport
         [Ignore] public string Color { get; set; }
     }
 
+    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class OrderProductComposite
     {
         public OrderProductComposite(string orderid, string productid, int quantity)
         {
-            OrderId = orderid;
+            OrderIdRenamed = orderid;
             ProductId = productid;
             Quantity = quantity;
             Foo = "baz";
         }
 
-        [Key("OrdId")] public string OrderId { get; set; }
+        // ReSharper disable once ExplicitCallerInfoArgument
+        [Key("OrdId")] public string OrderIdRenamed { get; set; }
 
         [Key] public string ProductId { get; set; }
 

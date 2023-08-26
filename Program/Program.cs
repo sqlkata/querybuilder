@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
-using System.Data.SqlClient;
 using Newtonsoft.Json;
 using System.Data.SQLite;
 using System.IO;
@@ -12,21 +9,8 @@ namespace Program
 {
     class Program
     {
-        private class Loan
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public List<Installment> Installments { get; set; } = new List<Installment>();
-        }
-
-        private class Installment
-        {
-            public string Id { get; set; }
-            public string LoanId { get; set; }
-            public int DaysCount { get; set; }
-        }
-
-        static void Main(string[] args)
+      
+        static void Main()
         {
             using (var db = SqlLiteQueryFactory())
             {
@@ -41,13 +25,6 @@ namespace Program
                 var exists = query.Clone().Exists();
                 Console.WriteLine(exists);
             }
-        }
-
-        private static void Log(Compiler compiler, Query query)
-        {
-            var compiled = compiler.Compile(query);
-            Console.WriteLine(compiled.ToString());
-            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
         }
 
         private static QueryFactory SqlLiteQueryFactory()
@@ -87,22 +64,6 @@ namespace Program
 
         }
 
-        private static QueryFactory SqlServerQueryFactory()
-        {
-            var compiler = new PostgresCompiler();
-            var connection = new SqlConnection(
-               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-           );
-
-            var db = new QueryFactory(connection, compiler);
-
-            db.Logger = result =>
-            {
-                Console.WriteLine(result.ToString());
-            };
-
-            return db;
-        }
 
     }
 }

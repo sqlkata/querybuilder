@@ -9,7 +9,7 @@ namespace SqlKata
 {
     public static class Helper
     {
-        public static bool IsArray(object value)
+        public static bool IsArray(object? value)
         {
             if (value is string) return false;
 

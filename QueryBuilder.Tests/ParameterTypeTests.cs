@@ -33,9 +33,9 @@ public class ParameterTypeTests : TestSupport
         private readonly List<object[]> _data = new()
         {
             new object[] { "1", 1 },
-            new object[] { Convert.ToSingle("10.5", CultureInfo.InvariantCulture).ToString(), 10.5 },
+            new object[] { Convert.ToSingle("10.5", CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture), 10.5 },
             new object[] { "-2", -2 },
-            new object[] { Convert.ToSingle("-2.8", CultureInfo.InvariantCulture).ToString(), -2.8 },
+            new object[] { Convert.ToSingle("-2.8", CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture), -2.8 },
             new object[] { "cast(1 as bit)", true },
             new object[] { "cast(0 as bit)", false },
             new object[] { "'2018-10-28 19:22:00'", new DateTime(2018, 10, 28, 19, 22, 0) },

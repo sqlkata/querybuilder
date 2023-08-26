@@ -7,7 +7,6 @@ namespace SqlKata.Tests.Oracle;
 public class OracleDateConditionTests : TestSupport
 {
     private const string TableName = "Table";
-    private const string SqlPlaceholder = "GENERATED_SQL";
 
     private readonly OracleCompiler _compiler;
 

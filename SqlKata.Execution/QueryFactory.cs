@@ -15,7 +15,7 @@ namespace SqlKata.Execution
     {
         public IDbConnection Connection { get; set; }
         public Compiler Compiler { get; set; }
-        public Action<SqlResult> Logger = result => { };
+        public Action<SqlResult> Logger = _ => { };
         private bool _disposedValue;
 
         public int QueryTimeout { get; set; } = 30;
@@ -718,7 +718,7 @@ namespace SqlKata.Execution
                     foreach (var item in dynamicResult)
                     {
                         var localValue = item[include.LocalKey].ToString();
-                        item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                        item[include.Name] = children.TryGetValue(localValue, out var child) ? child : new List<Dictionary<string, object>>();
                     }
 
                     continue;
@@ -750,7 +750,7 @@ namespace SqlKata.Execution
                 foreach (var item in dynamicResult)
                 {
                     var foreignValue = item[include.ForeignKey]?.ToString();
-                    item[include.Name] = foreignValue != null && related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    item[include.Name] = foreignValue != null && related.TryGetValue(foreignValue, out var value) ? value : null;
                 }
             }
 
@@ -816,7 +816,7 @@ namespace SqlKata.Execution
                     foreach (var item in dynamicResult)
                     {
                         var localValue = item[include.LocalKey].ToString();
-                        item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                        item[include.Name] = children.TryGetValue(localValue, out var child) ? child : new List<Dictionary<string, object>>();
                     }
 
                     continue;
@@ -844,7 +844,7 @@ namespace SqlKata.Execution
                 foreach (var item in dynamicResult)
                 {
                     var foreignValue = item[include.ForeignKey]?.ToString();
-                    item[include.Name] = foreignValue != null && related.ContainsKey(foreignValue) ? related[foreignValue] : null;
+                    item[include.Name] = foreignValue != null && related.TryGetValue(foreignValue, out var value) ? value : null;
                 }
             }
 

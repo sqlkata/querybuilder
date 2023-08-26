@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Linq;
 using Xunit;
 
@@ -97,7 +96,7 @@ public class HelperTests
     }
 
     [Fact]
-    public void Flatten_ReturnFlatttenDeepCollectionRecursively_IfArrayIsNested()
+    public void Flatten_ReturnFlattenDeepCollectionRecursively_IfArrayIsNested()
     {
         // Given
         var objects = new object[]
@@ -171,11 +170,8 @@ public class HelperTests
     [Fact]
     public void IsArray_ReturnFalse_IfValueIsNull()
     {
-        // Given
-        IEnumerable test = null;
-
         // When
-        var isArray = Helper.IsArray(test);
+        var isArray = Helper.IsArray(null);
 
         // Then
         Assert.False(isArray);

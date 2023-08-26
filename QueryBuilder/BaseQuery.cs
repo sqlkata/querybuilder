@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Extensions;
 
 namespace SqlKata
 {
@@ -241,6 +242,13 @@ namespace SqlKata
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
+        public TQ From(GTable table)
+        {
+            return AddOrReplaceComponent("from", new FromClause
+            {
+                Table = table.Name
+            });
+        }
         public TQ From(string table)
         {
             return AddOrReplaceComponent("from", new FromClause
@@ -255,7 +263,7 @@ namespace SqlKata
             query.SetParent((TQ)this);
 
             if (alias != null) query.As(alias);
-            ;
+            
 
             return AddOrReplaceComponent("from", new QueryFromClause
             {

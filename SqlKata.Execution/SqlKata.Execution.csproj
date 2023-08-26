@@ -4,7 +4,7 @@
     <Description>Adds the execution capabilities for SqlKata</Description>
     <Authors>Ahmad Moussawi</Authors>
     <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>SqlKata</RootNamespace>
 
     <!-- NuGet settings -->

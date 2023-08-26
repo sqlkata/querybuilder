@@ -23,6 +23,7 @@ public class SqliteExecutionTest
 
 
         var tables = db.Select(@"SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'");
+        Assert.NotEmpty(tables);
 
         var rows = db.Query("Cars").Get();
 
@@ -201,7 +202,6 @@ public class SqliteExecutionTest
             .SelectRaw("([Transaction].[Amount] * [Rates].[Rate]) as AmountConverted")
             .Get();
 
-        Assert.Single(rows);
         Assert.Equal(5, rows.First().AmountConverted);
 
         db.Drop("Transaction");

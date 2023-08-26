@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using SqlKata.Execution;
 
+namespace SqlKata.Tests;
+
 internal static class QueryFactoryExtensions
 {
     public static QueryFactory Create(this QueryFactory db, string table, IEnumerable<string> cols)

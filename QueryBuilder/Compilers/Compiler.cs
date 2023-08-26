@@ -13,7 +13,7 @@ namespace SqlKata.Compilers
         ///     A list of white-listed operators
         /// </summary>
         /// <value></value>
-        protected readonly HashSet<string> Operators = new HashSet<string>
+        protected readonly HashSet<string> Operators = new()
         {
             "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
             "like", "not like",
@@ -24,7 +24,7 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
-        protected HashSet<string> UserOperators = new HashSet<string>();
+        protected HashSet<string> UserOperators = new();
 
 
         protected Compiler()
@@ -501,7 +501,7 @@ namespace SqlKata.Compilers
                 return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
             }
 
-            return Wrap((column as Column).Name);
+            return Wrap(((Column)column).Name);
         }
 
         protected virtual string CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
@@ -557,11 +557,9 @@ namespace SqlKata.Compilers
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
                     .ToList();
 
-                var sql = string.Empty;
-
                 if (aggregateColumns.Count == 1)
                 {
-                    sql = string.Join(", ", aggregateColumns);
+                    var sql = string.Join(", ", aggregateColumns);
 
                     if (ctx.Query.IsDistinct) sql = "DISTINCT " + sql;
 
@@ -607,7 +605,7 @@ namespace SqlKata.Compilers
                 }
                 else
                 {
-                    var combineRawClause = clause as RawCombine;
+                    var combineRawClause = (RawCombine)clause;
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
 
@@ -716,9 +714,9 @@ namespace SqlKata.Compilers
                         return WrapIdentifiers(raw.Expression);
                     }
 
-                    var direction = (x as OrderBy).Ascending ? "" : " DESC";
+                    var direction = ((OrderBy)x).Ascending ? "" : " DESC";
 
-                    return Wrap((x as OrderBy).Column) + direction;
+                    return Wrap((x as OrderBy)?.Column) + direction;
                 });
 
             return "ORDER BY " + string.Join(", ", columns);
@@ -839,7 +837,7 @@ namespace SqlKata.Compilers
             }
 
             if (value.Contains("."))
-                return string.Join(".", value.Split('.').Select((x, index) => { return WrapValue(x); }));
+                return string.Join(".", value.Split('.').Select((x, _) => { return WrapValue(x); }));
 
             // If we reach here then the value does not contain an "AS" alias
             // nor dot "." expression, so wrap it as regular value.

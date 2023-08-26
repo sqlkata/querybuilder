@@ -126,5 +126,7 @@ public class OperatorWhitelistTests
 
         var query = new Query("Table")
             .WhereRaw("Col !! value");
+
+        compiler.Compile(query);
     }
 }

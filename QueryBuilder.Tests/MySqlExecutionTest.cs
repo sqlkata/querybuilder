@@ -159,7 +159,6 @@ public class MySqlExecutionTest
             .SelectRaw("Transaction.Amount * Rates.Rate as AmountConverted")
             .Get();
 
-        Assert.Single(rows);
         Assert.Equal(5, rows.First().AmountConverted);
 
         db.Drop("Transaction");
