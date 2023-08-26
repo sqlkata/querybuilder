@@ -22,20 +22,20 @@ namespace SqlKata
             string type = "inner join"
         )
         {
-            return Join(j => new Join(j.JoinWith(table).AsType(type)
-                .BaseQuery.WhereColumns(first, op, second)));
+            return Join(j => new Join(j.JoinWith(table)
+                .BaseQuery.WhereColumns(first, op, second)).AsType(type));
         }
 
         public Query Join(string table, Func<Join, Join> callback, string type = "inner join")
         {
-            return Join(j => new Join(j.JoinWith(table).AsType(type)
-                .BaseQuery.Where(callback)));
+            return Join(j => new Join(j.JoinWith(table)
+                .BaseQuery.Where(callback)).AsType(type));
         }
 
         public Query Join(Query query, Func<Join, Join> onCallback, string type = "inner join")
         {
-            return Join(j => new Join(j.JoinWith(query).AsType(type)
-                .BaseQuery.Where(onCallback)));
+            return Join(j => new Join(j.JoinWith(query)
+                .BaseQuery.Where(onCallback)).AsType(type));
         }
 
         public Query LeftJoin(string table, string first, string second, string op = "=")
