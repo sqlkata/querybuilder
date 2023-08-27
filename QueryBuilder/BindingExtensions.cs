@@ -23,14 +23,14 @@ namespace SqlKata
         {
             return ReplaceAll(sql, placeholder, i =>
             {
-                if (bindings[i]?.AsArray() is not {} arr) return placeholder;
+                if (bindings[i]?.AsArray() is not { } arr) return placeholder;
 
                 var count = arr.Cast<object>().Count();
                 return string.Join(",", placeholder.Repeat(count));
 
             });
         }
-        public static string ReplaceAll(string subject, string match, Func<int, string> callback)
+        public static string ReplaceAll(string subject, string match, Func<int, string> replace)
         {
             if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match)) return subject;
 
@@ -40,7 +40,7 @@ namespace SqlKata
             );
 
             return split.Skip(1)
-                .Select((item, index) => callback(index) + item)
+                .Select((item, index) => replace(index) + item)
                 .Aggregate(new StringBuilder(split.First()), (prev, right) => prev.Append(right))
                 .ToString();
         }
@@ -62,8 +62,8 @@ namespace SqlKata
             {
                 if (value == null) return "NULL";
 
-                if (IsArray(value))
-                    return ((IEnumerable)value).StrJoin(",");
+                if (AsArray(value) is {} arr)
+                    return arr.StrJoin(",");
 
                 if (NumberTypes.Contains(value.GetType()))
                     return Convert.ToString(value, CultureInfo.InvariantCulture)!;
@@ -83,7 +83,6 @@ namespace SqlKata
                 return "'" + value.ToString()!.Replace("'", "''") + "'";
             }
         }
-
         public static Dictionary<string, object?> GenerateNamedBindings(this IEnumerable<object?> bindings, string parameterPrefix)
         {
             return bindings.Flatten().Select((v, i) => new { i, v })
@@ -99,15 +98,6 @@ namespace SqlKata
             return value as IEnumerable;
         }
 
-        public static bool IsArray(object? value)
-        {
-            if (value == null) return false;
-            if (value is string) return false;
-
-            if (value is byte[]) return false;
-
-            return value is IEnumerable;
-        }
 
         /// <summary>
         ///     Flat IEnumerable one level down
@@ -117,7 +107,7 @@ namespace SqlKata
         public static IEnumerable<T> Flatten<T>(this IEnumerable<T> array)
         {
             foreach (var item in array)
-                if (item?.AsArray() is {} arr)
+                if (item?.AsArray() is { } arr)
                     foreach (var sub in arr)
                     {
                         if (sub == null)
@@ -128,11 +118,5 @@ namespace SqlKata
                 else
                     yield return item;
         }
-
-        public static IEnumerable<object> FlattenDeep(this IEnumerable<object> array)
-        {
-            return array.SelectMany(o => IsArray(o) ? FlattenDeep((IEnumerable<object>)o) : new[] { o });
-        }
-
     }
 }

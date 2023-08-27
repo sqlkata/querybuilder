@@ -95,34 +95,6 @@ public class HelperTests
     }
 
     [Fact]
-    public void Flatten_ReturnFlattenDeepCollectionRecursively_IfArrayIsNested()
-    {
-        // Given
-        var objects = new object[]
-        {
-            1,
-            0.1,
-            'A',
-            new object[]
-            {
-                'A',
-                "B",
-                new object[]
-                {
-                    "C",
-                    'D'
-                }
-            }
-        };
-
-        // When
-        var flatten = objects.FlattenDeep();
-
-        // Then
-        Assert.Equal(new object[] { 1, 0.1, 'A', 'A', "B", "C", 'D' }, flatten);
-    }
-
-    [Fact]
     public void Flatten_FlatOneLevel()
     {
         // Given
@@ -144,63 +116,6 @@ public class HelperTests
         Assert.Equal(new[] { 4, 5, 6 }, flatten.ElementAt(3));
     }
 
-    [Fact]
-    public void Flatten_ShouldRemoveEmptyCollections()
-    {
-        // Given
-        var objects = new object[]
-        {
-            1,
-            new object[] { },
-            new object[]
-            {
-                2,
-                3
-            }
-        };
-
-        // When
-        var flatten = objects.FlattenDeep();
-
-        // Then
-        Assert.Equal(new object[] { 1, 2, 3 }, flatten);
-    }
-
-    [Fact]
-    public void IsArray_ReturnFalse_IfValueIsNull()
-    {
-        // When
-        var isArray = BindingExtensions.IsArray(null);
-
-        // Then
-        Assert.False(isArray);
-    }
-
-    [Fact]
-    public void IsArray_ReturnFalse_IfTypeOfValueIsString()
-    {
-        // Given
-        var value = "string";
-
-        // When
-        var isArray = BindingExtensions.IsArray(value);
-
-        // Then
-        Assert.False(isArray);
-    }
-
-    [Fact]
-    public void IsArray_ReturnTrue_IfValueIsExactlyIEnumerable()
-    {
-        // Given
-        var value = new object[] { 1, 'B', "C" };
-
-        // When
-        var isArray = BindingExtensions.IsArray(value);
-
-        // Then
-        Assert.True(isArray);
-    }
 
     [Theory]
     [InlineData("Users.Id", "Users.Id")]
