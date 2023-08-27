@@ -1,11 +1,9 @@
 using System.Collections.Immutable;
-using System.Reflection;
 
 namespace SqlKata
 {
     public partial class Query
     {
-
         public Query()
         {
         }
@@ -15,7 +13,6 @@ namespace SqlKata
             From(table);
             Comment(comment);
         }
-
 
         public string GetComment()
         {
@@ -394,27 +391,11 @@ namespace SqlKata
         private IReadOnlyDictionary<string, object?> BuildKeyValuePairsFromObject(object data,
             bool considerKeys = false)
         {
-            var dictionary = new Dictionary<string, object?>();
-            var props = CacheDictionaryProperties.GetOrAdd(data.GetType(),
-                type => type.GetRuntimeProperties().ToArray());
-
-            foreach (var property in props)
-            {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null) continue;
-
-                var value = property.GetValue(data);
-
-                var colAttr = property.GetCustomAttribute(typeof(ColumnAttribute)) as ColumnAttribute;
-
-                var name = colAttr?.Name ?? property.Name;
-
-                dictionary.Add(name, value);
-
-                if (considerKeys && colAttr is KeyAttribute)
+            var dynamicData = data.ToDynamicData();
+            if (considerKeys)
+                foreach (var (name, value) in dynamicData.Keys)
                     Where(name, value);
-            }
-
-            return dictionary;
+            return dynamicData.Properties;
         }
     }
 }

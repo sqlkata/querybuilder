@@ -6,9 +6,7 @@ namespace SqlKata
     {
         public Query AsInsert(object data, bool returnId = false)
         {
-            var propertiesKeyValues = BuildKeyValuePairsFromObject(data);
-
-            return AsInsert(propertiesKeyValues, returnId);
+            return AsInsert(BuildKeyValuePairsFromObject(data), returnId);
         }
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object?> values)

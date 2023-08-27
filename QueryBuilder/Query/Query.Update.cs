@@ -6,9 +6,7 @@ namespace SqlKata
     {
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildKeyValuePairsFromObject(data, true);
-
-            return AsUpdate(dictionary);
+            return AsUpdate(BuildKeyValuePairsFromObject(data, true));
         }
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object?> values)

@@ -1,7 +1,5 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Reflection;
 using SqlKata.Extensions;
 
 namespace SqlKata
@@ -16,7 +14,6 @@ namespace SqlKata
 
         public List<AbstractClause> Clauses { get; set; } = new();
 
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
 
         private string? _comment;
         public List<Include> Includes = new();
@@ -31,7 +28,6 @@ namespace SqlKata
 
             return this;
         }
-
 
         public Query SetParent(Query? parent)
         {
