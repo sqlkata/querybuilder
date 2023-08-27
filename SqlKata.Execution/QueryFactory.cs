@@ -52,11 +52,11 @@ namespace SqlKata.Execution
         /// <returns></returns>
         public Query FromQuery(Query query)
         {
-            var xQuery = new XQuery(Connection, Compiler);
-
-            xQuery.QueryFactory = this;
-
-            xQuery.Clauses = query.Clauses.ToList();
+            var xQuery = new XQuery(Connection, Compiler)
+            {
+                QueryFactory = this,
+                Clauses = query.Clauses.ToList()
+            };
 
             xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;

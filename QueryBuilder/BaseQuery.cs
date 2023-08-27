@@ -33,7 +33,7 @@ namespace SqlKata
         }
 
 
-        public Query SetParent(Query parent)
+        public Query SetParent(Query? parent)
         {
             if (this == parent)
                 throw new ArgumentException($"Cannot set the same {nameof(Query)} as a parent of itself");

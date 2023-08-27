@@ -706,7 +706,7 @@ namespace SqlKata.Compilers
             return "GROUP BY " + string.Join(", ", columns);
         }
 
-        public string CompileOrders(SqlResult ctx)
+        public string? CompileOrders(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("order", EngineCode)) return null;
 

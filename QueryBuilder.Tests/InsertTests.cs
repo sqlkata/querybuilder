@@ -307,7 +307,7 @@ public class InsertTests : TestSupport
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Account
     {
-        public Account(string name, string? currency = null, string color = null)
+        public Account(string name, string? currency = null, string? color = null)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Currency = currency;
@@ -318,6 +318,6 @@ public class InsertTests : TestSupport
 
         [Column("currency_id")] public string? Currency { get; set; }
 
-        [Ignore] public string Color { get; set; }
+        [Ignore] public string? Color { get; set; }
     }
 }
