@@ -12,16 +12,12 @@ namespace SqlKata.Compilers
         public static SqlResult Compile(this Compiler compiler, IEnumerable<Query> queries)
         {
             var compiled = queries.Select(compiler.CompileRaw).ToArray();
-            var bindings = compiled.Select(r => r.Bindings).ToArray();
-            var totalBindingsCount = bindings.Select(b => b.Count).Aggregate((a, b) => a + b);
-
-            var combinedBindings = new List<object?>(totalBindingsCount);
-            foreach (var cb in bindings) combinedBindings.AddRange(cb);
-
+            var combinedBindings = compiled.SelectMany(r => r.Bindings).ToList();
             var ctx = new SqlResult
             {
                 Query = null,
-                RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
+                RawSql = compiled.Select(r => r.RawSql)
+                    .Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings
             };
 

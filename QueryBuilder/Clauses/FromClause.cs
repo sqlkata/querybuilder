@@ -28,14 +28,8 @@ namespace SqlKata
         {
             get
             {
-                if (Table.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    var segments = Table.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    return segments[2];
-                }
-
-                return Table;
+                var segments = Table.Split(" as ");
+                return segments.Length > 1 ? segments[1] : Table;
             }
         }
     }

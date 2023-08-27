@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Globalization;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -42,7 +43,7 @@ namespace SqlKata
             if (value == null) return "NULL";
 
             if (Helper.IsArray(value))
-                return Helper.JoinArray(",", (IEnumerable)value);
+                return ((IEnumerable)value).StrJoin(",");
 
             if (NumberTypes.Contains(value.GetType()))
                 return Convert.ToString(value, CultureInfo.InvariantCulture)!;

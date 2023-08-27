@@ -759,11 +759,9 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public string Wrap(string value)
         {
-            var (before, after) = SplitAlias(value);
-            if (after != null)
-            {
-                return Wrap(before) + $" {ColumnAsKeyword}" + WrapValue(after);
-            }
+            var segments = value.Split(" as ");
+            if (segments.Length> 1)
+                return $"{Wrap(segments[0])} {ColumnAsKeyword}{WrapValue(segments[1])}";
 
             if (value.Contains("."))
                 return string.Join(".", value.Split('.').Select((x, _) => WrapValue(x)));
@@ -794,14 +792,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public virtual string WrapValue(string value)
         {
-            if (value == "*") return value;
-
-            var opening = OpeningIdentifier;
-            var closing = ClosingIdentifier;
-
-            if (string.IsNullOrWhiteSpace(opening) && string.IsNullOrWhiteSpace(closing)) return value;
-
-            return opening + value.Replace(closing, closing + closing) + closing;
+            return value.Brace(OpeningIdentifier, ClosingIdentifier);
         }
 
         /// <summary>

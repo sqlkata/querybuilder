@@ -80,16 +80,6 @@ namespace SqlKata
                 .ToString();
         }
 
-        //TODO: refactor
-        public static string JoinArray(string glue, IEnumerable array)
-        {
-            var result = new List<string?>();
-
-            foreach (var item in array) result.Add(item.ToString());
-
-            return string.Join(glue, result);
-        }
-
         public static string ExpandParameters(string sql, string placeholder, object?[] bindings)
         {
             return ReplaceAll(sql, placeholder, i =>
