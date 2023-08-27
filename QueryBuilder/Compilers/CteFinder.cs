@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace SqlKata.Compilers
 {
     public sealed class CteFinder
@@ -12,6 +14,7 @@ namespace SqlKata.Compilers
                 var result = new List<AbstractFrom>();
                 foreach (var cte in query.GetComponents<AbstractFrom>("cte", engineCode))
                 {
+                    Debug.Assert(cte.Alias != null, "All CTE components have alias!");
                     if (!already.Add(cte.Alias))
                         continue;
                     if (cte is QueryFromClause qfc)

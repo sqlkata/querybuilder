@@ -18,7 +18,7 @@ namespace SqlKata
         };
 
         public Dictionary<string, object> NamedBindings = new();
-        public Query Query { get; set; }
+        public required Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new();
         public string Sql { get; set; } = "";

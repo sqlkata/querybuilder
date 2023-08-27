@@ -9,12 +9,13 @@ namespace SqlKata
             BaseQuery = baseQuery;
         }
 
-        public string Type { get; private set; }
+        public string? Type { get; private set; }
 
         public Join Clone() => new(BaseQuery) { Type = Type };
 
         public Join AsType(string type)
         {
+            ArgumentNullException.ThrowIfNull(type);
             Type = type.ToUpperInvariant();
             return this;
         }

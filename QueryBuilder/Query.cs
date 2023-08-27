@@ -132,6 +132,9 @@ namespace SqlKata
         /// </summary>
         public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
+            ArgumentNullException.ThrowIfNull(alias);
+            ArgumentNullException.ThrowIfNull(columns);
+            ArgumentNullException.ThrowIfNull(valuesCollection);
             var columnsList = columns is ImmutableArray<string> l ? l : columns.ToImmutableArray();
             var valuesCollectionList = valuesCollection is IReadOnlyList<ImmutableArray<object>> r
                 ? r
@@ -163,13 +166,16 @@ namespace SqlKata
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
+            ArgumentNullException.ThrowIfNull(alias);
+            ArgumentNullException.ThrowIfNull(sql);
+            ArgumentNullException.ThrowIfNull(bindings);
             return AddComponent(new RawFromClause
             {
                 Engine = EngineScope,
                 Component = "cte",
                 Alias = alias,
                 Expression = sql,
-                Bindings = bindings
+                Bindings = bindings.ToImmutableArray()
             });
         }
 

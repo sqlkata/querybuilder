@@ -20,7 +20,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsCount(string[] columns = null)
+        public Query AsCount(string[]? columns = null)
         {
             var cols = columns?.ToList() ?? new List<string>();
 

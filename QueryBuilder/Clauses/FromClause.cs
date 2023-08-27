@@ -53,7 +53,7 @@ namespace SqlKata
     public sealed class RawFromClause : AbstractFrom
     {
         public required string Expression { get; init; }
-        public required object[] Bindings { get; init; }
+        public required ImmutableArray<object> Bindings { get; init; }
     }
 
     /// <summary>

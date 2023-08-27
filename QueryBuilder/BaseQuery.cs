@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
 using SqlKata.Extensions;
@@ -21,6 +22,7 @@ namespace SqlKata
         public List<Include> Includes = new();
         public Dictionary<string, object?> Variables = new();
         public bool IsDistinct { get; set; }
+        // Mandatory for CTE queries
         public string? QueryAlias { get; set; }
         public string Method { get; set; } = "select";
         public Query SetEngineScope(string? engine)
@@ -30,7 +32,7 @@ namespace SqlKata
             return this;
         }
 
-      
+
         public Query SetParent(Query parent)
         {
             if (this == parent)
@@ -249,10 +251,11 @@ namespace SqlKata
             query.SetParent(this);
 
             if (alias != null) query.As(alias);
-            
+
 
             return AddOrReplaceComponent(new QueryFromClause
-            {Engine = EngineScope,
+            {
+                Engine = EngineScope,
                 Component = "from",
                 Query = query
             });
@@ -260,11 +263,14 @@ namespace SqlKata
 
         public Query FromRaw(string sql, params object[] bindings)
         {
-            return AddOrReplaceComponent( new RawFromClause
-            {Engine = EngineScope,  
+            ArgumentNullException.ThrowIfNull(sql);
+            ArgumentNullException.ThrowIfNull(bindings);
+            return AddOrReplaceComponent(new RawFromClause
+            {
+                Engine = EngineScope,
                 Component = "from",
                 Expression = sql,
-                Bindings = bindings
+                Bindings = bindings.ToImmutableArray()
             });
         }
 
