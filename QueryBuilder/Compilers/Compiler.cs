@@ -43,8 +43,8 @@ namespace SqlKata.Compilers
 
         private const string SingleInsertStartClause = "INSERT INTO";
         protected string MultiInsertStartClause { get; init; } = "INSERT INTO";
-
         public string? EngineCode { get; protected init; }
+        protected string? SingleRowDummyTableName { get; init; }
 
         /// <summary>
         ///     Whether the compiler supports the `SELECT ... FILTER` syntax
@@ -58,7 +58,6 @@ namespace SqlKata.Compilers
         /// <value></value>
         public bool OmitSelectInsideExists { get; init; } = true;
 
-        protected string? SingleRowDummyTableName { get; init; }
 
         /// <summary>
         ///     Add the passed operator(s) to the white list so they can be used with
@@ -73,8 +72,7 @@ namespace SqlKata.Compilers
 
             return this;
         }
-
-
+        
         public virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult
@@ -314,11 +312,9 @@ namespace SqlKata.Compilers
 
         protected string GetInsertColumnsList(ImmutableArray<string> columnList)
         {
-            var columns = "";
-            if (columnList.Any())
-                columns = $" ({string.Join(", ", WrapArray(columnList))})";
-
-            return columns;
+            return !columnList.Any()
+                ? ""
+                : $" ({string.Join(", ", columnList.Select(Wrap))})";
         }
 
         public SqlResult CompileCteQuery(SqlResult ctx, Query query)
@@ -811,16 +807,6 @@ namespace SqlKata.Compilers
         public string Parametrize(SqlResult ctx, IEnumerable<object> values)
         {
             return string.Join(", ", values.Select(x => Parameter(ctx, x)));
-        }
-
-        /// <summary>
-        ///     Wrap an array of values.
-        /// </summary>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public List<string> WrapArray(ImmutableArray<string> values)
-        {
-            return values.Select(Wrap).ToList();
         }
 
         public string WrapIdentifiers(string input)
