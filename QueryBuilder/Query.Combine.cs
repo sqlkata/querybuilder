@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public partial class Query
@@ -26,7 +28,7 @@ namespace SqlKata
                 Engine = EngineScope,  
                 Component = "combine",
                 Expression = sql,
-                Bindings = bindings
+                Bindings = bindings.ToImmutableArray()
             });
         }
 

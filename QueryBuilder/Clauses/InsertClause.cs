@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractInsertClause : AbstractClause
@@ -7,7 +9,7 @@ namespace SqlKata
     public class InsertClause : AbstractInsertClause
     {
         public List<string> Columns { get; set; }
-        public List<object> Values { get; set; }
+        public ImmutableArray<object?> Values { get; set; }
         public bool ReturnId { get; set; }
     }
 

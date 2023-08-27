@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -8,7 +10,7 @@ namespace SqlKata
     ///     Represents "column" or "column as alias" clause.
     /// </summary>
     /// <seealso cref="AbstractColumn" />
-    public class Column : AbstractColumn
+    public sealed class Column : AbstractColumn
     {
         /// <summary>
         ///     Gets or sets the column name. Can be "columnName" or "columnName as columnAlias".
@@ -16,14 +18,14 @@ namespace SqlKata
         /// <value>
         ///     The column name.
         /// </value>
-        public string Name { get; set; }
+        public required string Name { get; init; }
     }
 
     /// <summary>
     ///     Represents column clause calculated using query.
     /// </summary>
     /// <seealso cref="AbstractColumn" />
-    public class QueryColumn : AbstractColumn
+    public sealed class QueryColumn : AbstractColumn
     {
         /// <summary>
         ///     Gets or sets the query that will be used for column value calculation.
@@ -31,10 +33,10 @@ namespace SqlKata
         /// <value>
         ///     The query for column value calculation.
         /// </value>
-        public Query Query { get; set; }
+        public required Query Query { get; init; }
     }
 
-    public class RawColumn : AbstractColumn
+    public sealed class RawColumn : AbstractColumn
     {
         /// <summary>
         ///     Gets or sets the RAW expression.
@@ -42,16 +44,16 @@ namespace SqlKata
         /// <value>
         ///     The RAW expression.
         /// </value>
-        public string Expression { get; set; }
+        public required string Expression { get; init; }
 
-        public object[] Bindings { set; get; }
+        public required ImmutableArray<object> Bindings { get; init; }
     }
 
     /// <summary>
     ///     Represents an aggregated column clause with an optional filter
     /// </summary>
     /// <seealso cref="AbstractColumn" />
-    public class AggregatedColumn : AbstractColumn
+    public sealed class AggregatedColumn : AbstractColumn
     {
         /// <summary>
         ///     Gets or sets the a query that used to filter the data,
@@ -60,9 +62,9 @@ namespace SqlKata
         /// <value>
         ///     The filter query.
         /// </value>
-        public Query? Filter { get; set; }
+        public required Query? Filter { get; init; }
 
-        public string Aggregate { get; set; }
-        public AbstractColumn Column { get; set; }
+        public required string Aggregate { get; init; }
+        public required AbstractColumn Column { get; init; }
     }
 }

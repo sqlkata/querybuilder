@@ -333,7 +333,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "group",
                 Expression = expression,
-                Bindings = bindings
+                Bindings = bindings.ToImmutableArray()
             });
 
             return this;

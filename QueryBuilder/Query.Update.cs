@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public partial class Query
@@ -9,14 +11,14 @@ namespace SqlKata
             return AsUpdate(dictionary);
         }
 
-        public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
+        public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object?> values)
         {
             var columnsCache = columns is ICollection<string> c ? c : columns.ToArray();
-            var valuesCache = values is ICollection<object> v ? v : values.ToArray();
+            var valuesCache = values is ImmutableArray<object?> v ? v : values.ToImmutableArray();
             if (!columnsCache.Any() || !valuesCache.Any())
                 throw new InvalidOperationException($"{columnsCache} and {valuesCache} cannot be null or empty");
 
-            if (columnsCache.Count != valuesCache.Count)
+            if (columnsCache.Count != valuesCache.Length)
                 throw new InvalidOperationException($"{columnsCache} count should be equal to {valuesCache} count");
 
             Method = "update";
@@ -26,15 +28,15 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "update",
                 Columns = columnsCache.ToList(),
-                Values = valuesCache.ToList()
+                Values = valuesCache
             });
 
             return this;
         }
 
-        public Query AsUpdate(IEnumerable<KeyValuePair<string, object>> values)
+        public Query AsUpdate(IEnumerable<KeyValuePair<string, object?>> values)
         {
-            var valuesCached = values is IReadOnlyDictionary<string, object> d
+            var valuesCached = values is IReadOnlyDictionary<string, object?> d
                 ? d
                 : values.ToDictionary(x => x.Key, x => x.Value);
             if (valuesCached == null || valuesCached.Any() == false)
@@ -47,7 +49,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "update",
                 Columns = valuesCached.Select(x => x.Key).ToList(),
-                Values = valuesCached.Select(x => x.Value).ToList()
+                Values = valuesCached.Select(x => x.Value).ToImmutableArray()
             });
 
             return this;

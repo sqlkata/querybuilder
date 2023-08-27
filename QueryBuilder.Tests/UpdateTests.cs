@@ -34,7 +34,7 @@ public class UpdateTests : TestSupport
     {
         var query = new Query("Books").Where("Id", 1).AsUpdate(
             new[] { "Author", "Date", "Version" },
-            new object[] { "Author 1", null, null }
+            new object?[] { "Author 1", null, null }
         );
 
         var c = Compile(query);

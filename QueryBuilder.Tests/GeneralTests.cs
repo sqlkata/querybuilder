@@ -80,11 +80,11 @@ public class GeneralTests : TestSupport
         var compiler = new TestSqlServerCompiler();
 
         var call1 = compiler.Call_FindCompilerMethodInfo(
-            typeof(NestedCondition<Query>), "CompileNestedCondition"
+            typeof(InCondition<int>), "CompileInCondition"
         );
 
         var call2 = compiler.Call_FindCompilerMethodInfo(
-            typeof(BasicCondition), "CompileNestedCondition"
+            typeof(InCondition<bool>), "CompileInCondition"
         );
 
         Assert.NotSame(call1, call2);
@@ -285,6 +285,11 @@ public class GeneralTests : TestSupport
             {
                 Engine = null,
                 Component = "where",
+                Value = "does not matter",
+                Column = "does not matter",
+                Operator = "does not matter",
+                IsOr = false,
+                IsNot = false
             }));
     }
 

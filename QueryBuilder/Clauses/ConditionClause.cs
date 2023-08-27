@@ -1,9 +1,11 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
     {
-        public bool IsOr { get; set; }
-        public bool IsNot { get; set; }
+        public required bool IsOr { get; init; }
+        public required bool IsNot { get; init; }
     }
 
     /// <summary>
@@ -11,18 +13,17 @@ namespace SqlKata
     /// </summary>
     public class BasicCondition : AbstractCondition
     {
-        public string Column { get; set; }
-        public string Operator { get; set; }
-        public object Value { get; set; }
+        public required string Column { get; init; }
+        public required string Operator { get; init; }
+        public required object Value { get; init; }
     }
 
     public class BasicStringCondition : BasicCondition
     {
-        private string? _escapeCharacter;
+        public required bool CaseSensitive { get; init; }
 
-        public bool CaseSensitive { get; set; }
-
-        public string? EscapeCharacter
+        private readonly string? _escapeCharacter;
+        public required string? EscapeCharacter
         {
             get => _escapeCharacter;
             init
@@ -37,39 +38,39 @@ namespace SqlKata
         }
     }
 
-    public class BasicDateCondition : BasicCondition
+    public sealed class BasicDateCondition : BasicCondition
     {
-        public string Part { get; set; }
+        public required string Part { get; init; }
     }
 
     /// <summary>
     ///     Represents a comparison between two columns.
     /// </summary>
-    public class TwoColumnsCondition : AbstractCondition
+    public sealed class TwoColumnsCondition : AbstractCondition
     {
-        public string First { get; set; }
-        public string Operator { get; set; }
-        public string Second { get; set; }
+        public required string First { get; init; }
+        public required string Operator { get; init; }
+        public required string Second { get; init; }
     }
 
     /// <summary>
     ///     Represents a comparison between a column and a full "subQuery".
     /// </summary>
-    public class QueryCondition<T> : AbstractCondition where T : Query
+    public sealed class QueryCondition : AbstractCondition
     {
-        public string Column { get; set; }
-        public string Operator { get; set; }
-        public Query Query { get; set; }
+        public required string Column { get; init; }
+        public required string Operator { get; init; }
+        public required Query Query { get; init; }
     }
 
     /// <summary>
     ///     Represents a comparison between a full "subQuery" and a value.
     /// </summary>
-    public class SubQueryCondition<T> : AbstractCondition where T : Query
+    public class SubQueryCondition : AbstractCondition
     {
-        public object Value { get; set; }
-        public string Operator { get; set; }
-        public Query Query { get; set; }
+        public required object Value { get; init; }
+        public required string Operator { get; init; }
+        public required Query Query { get; init; }
     }
 
     /// <summary>
@@ -77,8 +78,8 @@ namespace SqlKata
     /// </summary>
     public class InCondition<T> : AbstractCondition
     {
-        public string Column { get; set; }
-        public IEnumerable<T> Values { get; set; }
+        public required string Column { get; init; }
+        public required ImmutableArray<T> Values { get; init; }
     }
 
     /// <summary>
@@ -86,8 +87,8 @@ namespace SqlKata
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {
-        public Query Query { get; set; }
-        public string Column { get; set; }
+        public required Query Query { get; init; }
+        public required string Column { get; init; }
     }
 
     /// <summary>
@@ -95,9 +96,9 @@ namespace SqlKata
     /// </summary>
     public class BetweenCondition<T> : AbstractCondition
     {
-        public string Column { get; set; }
-        public T Higher { get; set; }
-        public T Lower { get; set; }
+        public required string Column { get; init; }
+        public required T Higher { get; init; }
+        public required T Lower { get; init; }
     }
 
     /// <summary>
@@ -105,7 +106,7 @@ namespace SqlKata
     /// </summary>
     public class NullCondition : AbstractCondition
     {
-        public string Column { get; set; }
+        public required string Column { get; init; }
     }
 
     /// <summary>
@@ -113,17 +114,17 @@ namespace SqlKata
     /// </summary>
     public class BooleanCondition : AbstractCondition
     {
-        public string Column { get; set; }
-        public bool Value { get; set; }
+        public required string Column { get; init; }
+        public required bool Value { get; init; }
     }
 
     /// <summary>
     ///     Represents a "nested" clause condition.
     ///     i.e OR (myColumn = "A")
     /// </summary>
-    public class NestedCondition<T> : AbstractCondition 
+    public class NestedCondition : AbstractCondition 
     {
-        public Query Query { get; set; }
+        public required Query Query { get; init; }
     }
 
     /// <summary>
@@ -131,12 +132,12 @@ namespace SqlKata
     /// </summary>
     public class ExistsCondition : AbstractCondition
     {
-        public Query Query { get; set; }
+        public required Query Query { get; init; }
     }
 
     public class RawCondition : AbstractCondition
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public required string Expression { get; init; }
+        public required object[] Bindings { get; init; }
     }
 }

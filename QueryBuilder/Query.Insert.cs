@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public partial class Query
@@ -9,26 +11,26 @@ namespace SqlKata
             return AsInsert(propertiesKeyValues, returnId);
         }
 
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<object?> values)
         {
             ArgumentNullException.ThrowIfNull(columns);
             ArgumentNullException.ThrowIfNull(values);
 
             var columnsList = columns.ToList();
-            var valuesList = values.ToList();
+            var valuesList = values.ToImmutableArray();
 
-            if (columnsList.Count == 0 || valuesList.Count== 0)
+            if (columnsList.Count == 0 || valuesList.Length == 0)
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
-            if (columnsList.Count != valuesList.Count)
+            if (columnsList.Count != valuesList.Length)
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
             Method = "insert";
 
             RemoveComponent("insert").AddComponent(new InsertClause
             {
-                    Engine = EngineScope,
-                Component = "insert", 
+                Engine = EngineScope,
+                Component = "insert",
                 Columns = columnsList,
                 Values = valuesList
             });
@@ -36,22 +38,23 @@ namespace SqlKata
             return this;
         }
 
-        public Query AsInsert(IEnumerable<KeyValuePair<string, object>> values, bool returnId = false)
+        public Query AsInsert(IEnumerable<KeyValuePair<string, object?>> values, bool returnId = false)
         {
-            var valuesCached = values is IReadOnlyDictionary<string, object> d
+            var valuesCached = values is IReadOnlyDictionary<string, object?> d
                 ? d
-                : values?.ToDictionary(x => x.Key, x => x.Value);
+                : values.ToDictionary(x => x.Key, x => x.Value);
             if (valuesCached == null || valuesCached.Count == 0)
                 throw new InvalidOperationException($"{valuesCached} argument cannot be null or empty");
 
             Method = "insert";
 
             RemoveComponent("insert").AddComponent(new InsertClause
-            {Engine = EngineScope,
-                Component = "insert", 
+            {
+                Engine = EngineScope,
+                Component = "insert",
 
                 Columns = valuesCached.Select(x => x.Key).ToList(),
-                Values = valuesCached.Select(x => x.Value).ToList(),
+                Values = valuesCached.Select(x => x.Value).ToImmutableArray(),
                 ReturnId = returnId
             });
 
@@ -79,14 +82,15 @@ namespace SqlKata
 
             foreach (var values in valuesCollectionList)
             {
-                var valuesList = values.ToList();
-                if (columnsList.Count != valuesList.Count)
+                var valuesList = values.ToImmutableArray();
+                if (columnsList.Count != valuesList.Length)
                     throw new InvalidOperationException(
                         $"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
 
                 AddComponent(new InsertClause
-                {Engine = EngineScope,
-                    Component = "insert", 
+                {
+                    Engine = EngineScope,
+                    Component = "insert",
 
                     Columns = columnsList,
                     Values = valuesList
@@ -107,8 +111,9 @@ namespace SqlKata
             Method = "insert";
 
             RemoveComponent("insert").AddComponent(new InsertQueryClause
-            {Engine = EngineScope,  
-                Component = "insert", 
+            {
+                Engine = EngineScope,
+                Component = "insert",
                 Columns = columns.ToList(),
                 Query = query.Clone()
             });

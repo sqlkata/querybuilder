@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractCombine : AbstractClause
@@ -12,7 +14,7 @@ namespace SqlKata
         /// <value>
         ///     The query that will be combined.
         /// </value>
-        public Query Query { get; set; }
+        public required Query Query { get; init; }
 
         /// <summary>
         ///     Gets or sets the combine operation, e.g. "UNION", etc.
@@ -20,7 +22,7 @@ namespace SqlKata
         /// <value>
         ///     The combine operation.
         /// </value>
-        public string Operation { get; set; }
+        public required string Operation { get; init; }
 
         /// <summary>
         ///     Gets or sets a value indicating whether this <see cref="Combine" /> clause will combine all.
@@ -28,13 +30,13 @@ namespace SqlKata
         /// <value>
         ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; set; }
+        public bool All { get; init; }
     }
 
     public class RawCombine : AbstractCombine
     {
-        public string Expression { get; set; }
+        public required string Expression { get; init; }
 
-        public object[] Bindings { get; set; }
+        public required ImmutableArray<object> Bindings { get; init; }
     }
 }

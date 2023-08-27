@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
             return _compileConditionMethodsProvider.GetMethodInfo(clauseType, methodName);
         }
 
-        protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)
+        protected virtual string? CompileCondition(SqlResult ctx, AbstractCondition clause)
         {
             var clauseType = clause.GetType();
 
@@ -61,7 +61,7 @@ namespace SqlKata.Compilers
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : Query
+        protected virtual string CompileQueryCondition(SqlResult ctx, QueryCondition x) 
         {
             var subCtx = CompileSelectQuery(x.Query);
 
@@ -70,8 +70,7 @@ namespace SqlKata.Compilers
             return Wrap(x.Column) + " " + CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
-        protected virtual string CompileSubQueryCondition<T>(SqlResult ctx, SubQueryCondition<T> x)
-            where T : Query
+        protected virtual string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
         {
             var subCtx = CompileSelectQuery(x.Query);
 
@@ -146,7 +145,7 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        protected virtual string CompileNestedCondition<TQ>(SqlResult ctx, NestedCondition<TQ> x) where TQ : Query
+        protected virtual string CompileNestedCondition(SqlResult ctx, NestedCondition x) 
         {
             if (!(x.Query.HasComponent("where", EngineCode) || x.Query.HasComponent("having", EngineCode))) return null;
 

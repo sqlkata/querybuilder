@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public partial class Query
@@ -41,7 +43,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "select",
                 Expression = sql,
-                Bindings = bindings
+                Bindings = bindings.ToImmutableArray()
             });
 
             return this;
