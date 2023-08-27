@@ -22,20 +22,7 @@ namespace SqlKata
     {
         public required bool CaseSensitive { get; init; }
 
-        private readonly string? _escapeCharacter;
-        public required string? EscapeCharacter
-        {
-            get => _escapeCharacter;
-            init
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                    value = null;
-                else if (value.Length > 1)
-                    throw new ArgumentOutOfRangeException(
-                        $"The {nameof(EscapeCharacter)} can only contain a single character!");
-                _escapeCharacter = value;
-            }
-        }
+        public required char? EscapeCharacter { get; init; }
     }
 
     public sealed class BasicDateCondition : BasicCondition

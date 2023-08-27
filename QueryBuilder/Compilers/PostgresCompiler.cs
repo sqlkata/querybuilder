@@ -44,7 +44,7 @@ namespace SqlKata.Compilers
             else
                 sql = $"{column} {CheckOperator(method)} {Parameter(ctx, value)}";
 
-            if (!string.IsNullOrEmpty(x.EscapeCharacter)) sql = $"{sql} ESCAPE '{x.EscapeCharacter}'";
+            if (x.EscapeCharacter is {} esc) sql = $"{sql} ESCAPE '{esc}'";
 
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
