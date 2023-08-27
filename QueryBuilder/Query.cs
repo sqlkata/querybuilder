@@ -144,7 +144,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
 
 
-            var buffer = new List<object>();
+            var buffer = new List<object?>();
             foreach (var values in valuesCollectionList)
             {
                 var valuesList = values.ToList();

@@ -85,14 +85,12 @@ namespace SqlKata
         /// <returns></returns>
         public List<TC> GetComponents<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
-            if (engineCode == null) engineCode = EngineScope;
-
-            var clauses = Clauses
+            engineCode ??= EngineScope;
+            return Clauses
                 .Where(x => x.Component == component)
                 .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                .Cast<TC>();
-
-            return clauses.ToList();
+                .Cast<TC>()
+                .ToList();
         }
 
         /// <summary>

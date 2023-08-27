@@ -62,6 +62,6 @@ namespace SqlKata
     public sealed class AdHocTableFromClause : AbstractFrom
     {
         public ImmutableArray<string> Columns { get; init; }
-        public ImmutableArray<object> Values { get; init; }
+        public ImmutableArray<object?> Values { get; init; }
     }
 }

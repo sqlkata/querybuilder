@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         ///     A list of white-listed operators
         /// </summary>
         /// <value></value>
-        protected readonly HashSet<string> Operators = new()
+        private readonly HashSet<string> Operators = new()
         {
             "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
             "like", "not like",
@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
-        protected readonly HashSet<string> UserOperators = new();
+        private readonly HashSet<string> UserOperators = new();
 
 
         protected Compiler()
@@ -31,36 +31,36 @@ namespace SqlKata.Compilers
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
-        protected string ParameterPlaceholder { get; set; } = "?";
-        protected string ParameterPrefix { get; set; } = "@p";
-        protected string OpeningIdentifier { get; set; } = "\"";
-        protected string ClosingIdentifier { get; set; } = "\"";
-        protected string ColumnAsKeyword { get; set; } = "AS ";
-        protected string TableAsKeyword { get; set; } = "AS ";
-        protected string LastId { get; set; } = "";
-        protected string EscapeCharacter { get; set; } = "\\";
+        protected const string ParameterPlaceholder = "?";
+        protected string ParameterPrefix { get; init; } = "@p";
+        protected string OpeningIdentifier { get; init; } = "\"";
+        protected string ClosingIdentifier { get; init; } = "\"";
+        protected string ColumnAsKeyword { get; init; } = "AS ";
+        protected string TableAsKeyword { get; init; } = "AS ";
+        protected string LastId { get; init; } = "";
+        private const string EscapeCharacter = "\\";
 
 
-        protected string SingleInsertStartClause { get; set; } = "INSERT INTO";
-        protected string MultiInsertStartClause { get; set; } = "INSERT INTO";
+        private const string SingleInsertStartClause = "INSERT INTO";
+        protected string MultiInsertStartClause { get; init; } = "INSERT INTO";
 
-        public string EngineCode { get; protected set; }
+        public string? EngineCode { get; protected init; }
 
         /// <summary>
         ///     Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
         /// <value></value>
-        public bool SupportsFilterClause { get; set; } = false;
+        public bool SupportsFilterClause { get; init; }
 
         /// <summary>
         ///     If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
         /// </summary>
         /// <value></value>
-        public bool OmitSelectInsideExists { get; set; } = true;
+        public bool OmitSelectInsideExists { get; init; } = true;
 
-        protected string? SingleRowDummyTableName { get; set; } = null;
+        protected string? SingleRowDummyTableName { get; init; }
 
-        protected Dictionary<string, object> GenerateNamedBindings(object[] bindings)
+        protected Dictionary<string, object?> GenerateNamedBindings(object?[] bindings)
         {
             return Helper.Flatten(bindings).Select((v, i) => new { i, v })
                 .ToDictionary(x => ParameterPrefix + x.i, x => x.v);
@@ -171,7 +171,7 @@ namespace SqlKata.Compilers
             var bindings = compiled.Select(r => r.Bindings).ToArray();
             var totalBindingsCount = bindings.Select(b => b.Count).Aggregate((a, b) => a + b);
 
-            var combinedBindings = new List<object>(totalBindingsCount);
+            var combinedBindings = new List<object?>(totalBindingsCount);
             foreach (var cb in bindings) combinedBindings.AddRange(cb);
 
             var ctx = new SqlResult
@@ -218,7 +218,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult{Query = null};
+            var ctx = new SqlResult { Query = null };
 
             var row = "SELECT " +
                       string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {Wrap(col)}"));
@@ -308,7 +308,7 @@ namespace SqlKata.Compilers
             // check for increment statements
             var clause = ctx.Query.GetOneComponent("update", EngineCode);
 
-            string wheres;
+            string? wheres;
 
             if (clause is IncrementClause increment)
             {
@@ -358,7 +358,7 @@ namespace SqlKata.Compilers
             if (fromClause is null)
                 throw new InvalidOperationException("Invalid table expression");
 
-            string table = null;
+            string? table = null;
             if (fromClause is FromClause fromClauseCast)
                 table = Wrap(fromClauseCast.Table);
             if (fromClause is RawFromClause rawFromClause)
@@ -437,7 +437,7 @@ namespace SqlKata.Compilers
             var cteSearchResult = CteFinder.Find(query, EngineCode);
 
             var rawSql = new StringBuilder("WITH ");
-            var cteBindings = new List<object>();
+            var cteBindings = new List<object?>();
 
             foreach (var cte in cteSearchResult)
             {
@@ -517,7 +517,7 @@ namespace SqlKata.Compilers
 
         public SqlResult CompileCte(AbstractFrom? cte)
         {
-            var ctx = new SqlResult{Query = null};
+            var ctx = new SqlResult { Query = null };
 
             if (cte == null) return ctx;
 
@@ -588,7 +588,7 @@ namespace SqlKata.Compilers
             return $"SELECT {distinct}{select}";
         }
 
-        public string CompileUnion(SqlResult ctx)
+        public string? CompileUnion(SqlResult ctx)
         {
             // Handle UNION, EXCEPT and INTERSECT
             if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return null;
@@ -655,13 +655,14 @@ namespace SqlKata.Compilers
             {
                 var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
+                Debug.Assert(from != null, nameof(from) + " != null");
                 return "FROM " + CompileTableExpression(ctx, from);
             }
 
             return string.Empty;
         }
 
-        public string CompileJoins(SqlResult ctx)
+        public string? CompileJoins(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("join", EngineCode)) return null;
 
@@ -672,11 +673,12 @@ namespace SqlKata.Compilers
             return "\n" + string.Join("\n", joins);
         }
 
-        public string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
+        public string CompileJoin(SqlResult ctx, Join join)
         {
             var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
+            Debug.Assert(from != null, nameof(from) + " != null");
             var joinTable = CompileTableExpression(ctx, from);
             var constraints = CompileConditions(ctx, conditions);
 
@@ -685,7 +687,7 @@ namespace SqlKata.Compilers
             return $"{join.Type} {joinTable}{onClause}";
         }
 
-        public string CompileWheres(SqlResult ctx)
+        public string? CompileWheres(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("where", EngineCode)) return null;
 
@@ -695,7 +697,7 @@ namespace SqlKata.Compilers
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
 
-        public string CompileGroups(SqlResult ctx)
+        public string? CompileGroups(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("group", EngineCode)) return null;
 
@@ -728,7 +730,7 @@ namespace SqlKata.Compilers
             return "ORDER BY " + string.Join(", ", columns);
         }
 
-        public string CompileHaving(SqlResult ctx)
+        public string? CompileHaving(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("having", EngineCode)) return null;
 
@@ -834,15 +836,14 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public string Wrap(string value)
         {
-            if (value.ToLowerInvariant().Contains(" as "))
+            var (before, after) = SplitAlias(value);
+            if (after != null)
             {
-                var (before, after) = SplitAlias(value);
-
                 return Wrap(before) + $" {ColumnAsKeyword}" + WrapValue(after);
             }
 
             if (value.Contains("."))
-                return string.Join(".", value.Split('.').Select((x, _) => { return WrapValue(x); }));
+                return string.Join(".", value.Split('.').Select((x, _) => WrapValue(x)));
 
             // If we reach here then the value does not contain an "AS" alias
             // nor dot "." expression, so wrap it as regular value.
@@ -904,7 +905,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public string Parameter(SqlResult ctx, object parameter)
+        protected static string Parameter(SqlResult ctx, object? parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;

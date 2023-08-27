@@ -84,7 +84,7 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string? CompileLimit(SqlResult ctx)
         {
             if (UseLegacyPagination)
                 // in legacy versions of Sql Server, limit is handled by TOP

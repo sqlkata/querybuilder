@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
 {
     public sealed class CteFinder
     {
-        public static List<AbstractFrom> Find(Query queryToSearch, string engineCode)
+        public static List<AbstractFrom> Find(Query queryToSearch, string? engineCode)
         {
             var already = new HashSet<string>();
             return FindRecursively(queryToSearch);
