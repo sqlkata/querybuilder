@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
@@ -54,7 +51,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents a "from subquery" clause.
+    ///     Represents a "from subQuery" clause.
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {

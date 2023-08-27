@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace SqlKata.Compilers
@@ -177,7 +174,7 @@ namespace SqlKata.Compilers
             return Wrap(item.Column) + $" {between} {lower} AND {higher}";
         }
 
-        protected virtual string CompileInCondition<T>(SqlResult ctx, InCondition<T> item)
+        protected string CompileInCondition<T>(SqlResult ctx, InCondition<T> item)
         {
             var column = Wrap(item.Column);
 
@@ -186,7 +183,7 @@ namespace SqlKata.Compilers
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 
-            var values = Parameterize(ctx, item.Values);
+            var values = Parametrize(ctx, item.Values.OfType<object>());
 
             return column + $" {inOperator} ({values})";
         }

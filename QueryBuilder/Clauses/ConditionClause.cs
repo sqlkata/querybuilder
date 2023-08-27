@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractCondition : AbstractClause
@@ -36,14 +33,14 @@ namespace SqlKata
 
     public class BasicStringCondition : BasicCondition
     {
-        private string _escapeCharacter;
+        private string? _escapeCharacter;
 
         public bool CaseSensitive { get; set; }
 
-        public string EscapeCharacter
+        public string? EscapeCharacter
         {
             get => _escapeCharacter;
-            set
+            init
             {
                 if (string.IsNullOrWhiteSpace(value))
                     value = null;
@@ -119,7 +116,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents a comparison between a column and a full "subquery".
+    ///     Represents a comparison between a column and a full "subQuery".
     /// </summary>
     public class QueryCondition<T> : AbstractCondition where T : Query
     {
@@ -144,7 +141,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents a comparison between a full "subquery" and a value.
+    ///     Represents a comparison between a full "subQuery" and a value.
     /// </summary>
     public class SubQueryCondition<T> : AbstractCondition where T : Query
     {
@@ -191,7 +188,7 @@ namespace SqlKata
     }
 
     /// <summary>
-    ///     Represents a "is in subquery" condition.
+    ///     Represents a "is in subQuery" condition.
     /// </summary>
     public class InQueryCondition : AbstractCondition
     {

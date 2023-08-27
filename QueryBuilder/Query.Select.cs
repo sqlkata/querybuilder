@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SqlKata
 {
     public partial class Query
@@ -66,7 +62,7 @@ namespace SqlKata
             return Select(callback.Invoke(NewChild()), alias);
         }
 
-        public Query SelectAggregate(string aggregate, string column, Query filter = null)
+        public Query SelectAggregate(string aggregate, string column, Query? filter = null)
         {
             Method = "select";
 
@@ -80,34 +76,34 @@ namespace SqlKata
             return this;
         }
 
-        public Query SelectAggregate(string aggregate, string column, Func<Query, Query> filter)
+        public Query SelectAggregate(string aggregate, string column, Func<Query, Query>? filter)
         {
             if (filter == null) return SelectAggregate(aggregate, column);
 
             return SelectAggregate(aggregate, column, filter.Invoke(NewChild()));
         }
 
-        public Query SelectSum(string column, Func<Query, Query> filter = null)
+        public Query SelectSum(string column, Func<Query, Query>? filter = null)
         {
             return SelectAggregate("sum", column, filter);
         }
 
-        public Query SelectCount(string column, Func<Query, Query> filter = null)
+        public Query SelectCount(string column, Func<Query, Query>? filter = null)
         {
             return SelectAggregate("count", column, filter);
         }
 
-        public Query SelectAvg(string column, Func<Query, Query> filter = null)
+        public Query SelectAvg(string column, Func<Query, Query>? filter = null)
         {
             return SelectAggregate("avg", column, filter);
         }
 
-        public Query SelectMin(string column, Func<Query, Query> filter = null)
+        public Query SelectMin(string column, Func<Query, Query>? filter = null)
         {
             return SelectAggregate("min", column, filter);
         }
 
-        public Query SelectMax(string column, Func<Query, Query> filter = null)
+        public Query SelectMax(string column, Func<Query, Query>? filter = null)
         {
             return SelectAggregate("max", column, filter);
         }

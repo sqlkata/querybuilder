@@ -12,19 +12,17 @@ namespace Program
       
         static void Main()
         {
-            using (var db = SqlLiteQueryFactory())
-            {
-                var query = db.Query("accounts")
-                    .Where("balance", ">", 0)
-                    .GroupBy("balance")
+            using var db = SqlLiteQueryFactory();
+            var query = db.Query("accounts")
+                .Where("balance", ">", 0)
+                .GroupBy("balance")
                 .Limit(10);
 
-                var accounts = query.Clone().Get();
-                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+            var accounts = query.Clone().Get();
+            Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
 
-                var exists = query.Clone().Exists();
-                Console.WriteLine(exists);
-            }
+            var exists = query.Clone().Exists();
+            Console.WriteLine(exists);
         }
 
         private static QueryFactory SqlLiteQueryFactory()

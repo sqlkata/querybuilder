@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SqlKata
 {
     public partial class Query
@@ -92,7 +88,7 @@ namespace SqlKata
         }
 
         /// <summary>
-        ///     Produces insert from subquery
+        ///     Produces insert from subQuery
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="query"></param>

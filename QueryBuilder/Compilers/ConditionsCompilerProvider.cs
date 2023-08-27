@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace SqlKata.Compilers
@@ -8,8 +5,8 @@ namespace SqlKata.Compilers
     internal class ConditionsCompilerProvider
     {
         private readonly Type _compilerType;
-        private readonly Dictionary<string, MethodInfo> _methodsCache = new Dictionary<string, MethodInfo>();
-        private readonly object _syncRoot = new object();
+        private readonly Dictionary<string, MethodInfo> _methodsCache = new();
+        private readonly object _syncRoot = new();
 
         public ConditionsCompilerProvider(Compiler compiler)
         {

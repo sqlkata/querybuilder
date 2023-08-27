@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace SqlKata.Compilers
 {
     public sealed class SqliteCompiler : Compiler

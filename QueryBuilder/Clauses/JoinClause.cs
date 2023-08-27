@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public abstract class AbstractJoin : AbstractClause

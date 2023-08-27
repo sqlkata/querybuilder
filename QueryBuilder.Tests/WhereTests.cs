@@ -9,14 +9,18 @@ public class WhereTests : TestSupport
     [Fact]
     public void GroupedWhereFilters()
     {
-        var q = new Query("Table1")
-            .Where(q => q.Or().Where("Column1", 10).Or().Where("Column2", 20))
-            .Where("Column3", 30);
+        var q = new Query("T")
+            .Where(q => q.Or().Where("A", 10).Or().Where("B", 20))
+            .Where(q => q.And().Where("C", 30).Where("D", 40))
+            .Where("E", 50);
 
         var c = Compile(q);
 
-        Assert.Equal(@"SELECT * FROM ""Table1"" WHERE (""Column1"" = 10 OR ""Column2"" = 20) AND ""Column3"" = 30",
-            c[EngineCodes.PostgreSql]);
+        Assert.Equal("SELECT * FROM [T] " +
+                     "WHERE ([A] = 10 OR [B] = 20) " +
+                     "AND ([C] = 30 AND [D] = 40) " +
+                     "AND [E] = 50",
+            c[EngineCodes.SqlServer]);
     }
 
     [Fact]

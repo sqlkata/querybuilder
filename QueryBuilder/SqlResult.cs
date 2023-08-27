@@ -1,8 +1,5 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
 namespace SqlKata
 {
@@ -20,10 +17,10 @@ namespace SqlKata
             typeof(ulong)
         };
 
-        public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
+        public Dictionary<string, object> NamedBindings = new();
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
-        public List<object> Bindings { get; set; } = new List<object>();
+        public List<object> Bindings { get; set; } = new();
         public string Sql { get; set; } = "";
 
         public override string ToString()

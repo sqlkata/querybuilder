@@ -93,7 +93,7 @@ namespace SqlKata
         /// <value>
         ///     The filter query.
         /// </value>
-        public Query Filter { get; set; }
+        public Query? Filter { get; set; }
 
         public string Aggregate { get; set; }
         public AbstractColumn Column { get; set; }

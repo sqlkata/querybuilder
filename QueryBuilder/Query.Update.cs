@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SqlKata
 {
     public partial class Query
@@ -15,12 +11,12 @@ namespace SqlKata
 
         public Query AsUpdate(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            var columnsCache = columns is ICollection<string> c ? c : columns?.ToArray();
-            var valuesCache = values is ICollection<object> v ? v : values?.ToArray();
-            if ((columnsCache?.Any() ?? false) == false || (valuesCache?.Any() ?? false) == false)
+            var columnsCache = columns is ICollection<string> c ? c : columns.ToArray();
+            var valuesCache = values is ICollection<object> v ? v : values.ToArray();
+            if (!columnsCache.Any() || !valuesCache.Any())
                 throw new InvalidOperationException($"{columnsCache} and {valuesCache} cannot be null or empty");
 
-            if (columnsCache.Count() != valuesCache.Count())
+            if (columnsCache.Count != valuesCache.Count)
                 throw new InvalidOperationException($"{columnsCache} count should be equal to {valuesCache} count");
 
             Method = "update";
@@ -38,7 +34,7 @@ namespace SqlKata
         {
             var valuesCached = values is IReadOnlyDictionary<string, object> d
                 ? d
-                : values?.ToDictionary(x => x.Key, x => x.Value);
+                : values.ToDictionary(x => x.Key, x => x.Value);
             if (valuesCached == null || valuesCached.Any() == false)
                 throw new InvalidOperationException($"{valuesCached} cannot be null or empty");
 

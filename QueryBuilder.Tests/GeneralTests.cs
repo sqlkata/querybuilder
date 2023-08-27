@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;

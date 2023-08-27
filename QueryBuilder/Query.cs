@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace SqlKata
@@ -10,50 +7,50 @@ namespace SqlKata
     {
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
 
-        private string _comment;
+        private string? _comment;
         public List<Include> Includes = new();
-        public Dictionary<string, object> Variables = new();
+        public Dictionary<string, object?> Variables = new();
+        public bool IsDistinct { get; set; }
+        public string? QueryAlias { get; set; }
+        public string Method { get; set; } = "select";
 
         public Query()
         {
         }
 
-        public Query(string table, string comment = null)
+        public Query(string table, string? comment = null)
         {
             From(table);
             Comment(comment);
         }
 
-        public bool IsDistinct { get; set; }
-        public string QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
 
         public string GetComment()
         {
             return _comment ?? "";
         }
 
-        public bool HasOffset(string engineCode = null)
+        public bool HasOffset(string? engineCode = null)
         {
             return GetOffset(engineCode) > 0;
         }
 
-        public bool HasLimit(string engineCode = null)
+        public bool HasLimit(string? engineCode = null)
         {
             return GetLimit(engineCode) > 0;
         }
 
-        internal long GetOffset(string engineCode = null)
+        internal long GetOffset(string? engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
             var offset = GetOneComponent<OffsetClause>("offset", engineCode);
 
             return offset?.Offset ?? 0;
         }
 
-        internal int GetLimit(string engineCode = null)
+        internal int GetLimit(string? engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
             var limit = GetOneComponent<LimitClause>("limit", engineCode);
 
             return limit?.Limit ?? 0;
@@ -83,7 +80,7 @@ namespace SqlKata
         /// </summary>
         /// <param name="comment">The comment.</param>
         /// <returns></returns>
-        public Query Comment(string comment)
+        public Query Comment(string? comment)
         {
             _comment = comment;
             return this;
@@ -358,7 +355,7 @@ namespace SqlKata
         /// <param name="variable"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Query Define(string variable, object value)
+        public Query Define(string variable, object? value)
         {
             Variables.Add(variable, value);
 

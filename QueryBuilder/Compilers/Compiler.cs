@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace SqlKata.Compilers
@@ -24,7 +21,7 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
-        protected HashSet<string> UserOperators = new();
+        protected readonly HashSet<string> UserOperators = new();
 
 
         protected Compiler()
@@ -59,7 +56,7 @@ namespace SqlKata.Compilers
         /// <value></value>
         public bool OmitSelectInsideExists { get; set; } = true;
 
-        protected virtual string SingleRowDummyTableName => null;
+        protected string? SingleRowDummyTableName { get; set; } = null;
 
         protected Dictionary<string, object> GenerateNamedBindings(object[] bindings)
         {
@@ -245,7 +242,7 @@ namespace SqlKata.Compilers
 
             var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            string table = null;
+            string? table = null;
 
             if (fromClause is FromClause fromClauseCast) table = Wrap(fromClauseCast.Table);
 
@@ -291,7 +288,7 @@ namespace SqlKata.Compilers
 
             var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
-            string table = null;
+            string? table = null;
 
             if (fromClause is FromClause fromClauseCast) table = Wrap(fromClauseCast.Table);
 
@@ -308,7 +305,7 @@ namespace SqlKata.Compilers
 
             string wheres;
 
-            if (clause != null && clause is IncrementClause increment)
+            if (clause is IncrementClause increment)
             {
                 var column = Wrap(increment.Column);
                 var value = Parameter(ctx, Math.Abs(increment.Value));
@@ -373,7 +370,7 @@ namespace SqlKata.Compilers
             return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>().ToArray());
         }
 
-        protected virtual SqlResult CompileInsertQueryClause(
+        protected SqlResult CompileInsertQueryClause(
             SqlResult ctx, string table, InsertQueryClause clause)
         {
             var columns = GetInsertColumnsList(clause.Columns);
@@ -395,7 +392,7 @@ namespace SqlKata.Compilers
 
             var firstInsert = insertClauses.First();
             var columns = GetInsertColumnsList(firstInsert.Columns);
-            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
+            var values = string.Join(", ", Parametrize(ctx, firstInsert.Values));
 
             ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
 
@@ -413,7 +410,7 @@ namespace SqlKata.Compilers
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var values = string.Join(", ", Parameterize(ctx, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, insert.Values));
                 ctx.RawSql += $", ({values})";
             }
 
@@ -429,7 +426,7 @@ namespace SqlKata.Compilers
             return columns;
         }
 
-        protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
+        protected SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
             var cteFinder = new CteFinder(query, EngineCode);
             var cteSearchResult = cteFinder.Find();
@@ -462,7 +459,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="column"></param>
         /// <returns></returns>
-        public virtual string CompileColumn(SqlResult ctx, AbstractColumn column)
+        public string CompileColumn(SqlResult ctx, AbstractColumn column)
         {
             if (column is RawColumn raw)
             {
@@ -504,7 +501,7 @@ namespace SqlKata.Compilers
             return Wrap(((Column)column).Name);
         }
 
-        protected virtual string CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
+        private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
         {
             if (aggregatedColumn.Filter == null) return null;
 
@@ -513,7 +510,7 @@ namespace SqlKata.Compilers
             return CompileConditions(ctx, wheres);
         }
 
-        public virtual SqlResult CompileCte(AbstractFrom cte)
+        public SqlResult CompileCte(AbstractFrom cte)
         {
             var ctx = new SqlResult();
 
@@ -748,7 +745,7 @@ namespace SqlKata.Compilers
             return $"HAVING {string.Join(" ", sql)}";
         }
 
-        public virtual string CompileLimit(SqlResult ctx)
+        public virtual string? CompileLimit(SqlResult ctx)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
@@ -844,7 +841,7 @@ namespace SqlKata.Compilers
             return WrapValue(value);
         }
 
-        public virtual (string, string) SplitAlias(string value)
+        public virtual (string, string?) SplitAlias(string value)
         {
             var index = value.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
 
@@ -902,7 +899,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public virtual string Parameter(SqlResult ctx, object parameter)
+        public string Parameter(SqlResult ctx, object parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
@@ -925,7 +922,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public virtual string Parameterize<T>(SqlResult ctx, IEnumerable<T> values)
+        public string Parametrize(SqlResult ctx, IEnumerable<object> values)
         {
             return string.Join(", ", values.Select(x => Parameter(ctx, x)));
         }

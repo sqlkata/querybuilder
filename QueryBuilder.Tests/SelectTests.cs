@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;

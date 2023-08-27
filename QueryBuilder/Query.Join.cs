@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public partial class Query
@@ -22,8 +20,12 @@ namespace SqlKata
             string type = "inner join"
         )
         {
-            return Join(j => new Join(j.JoinWith(table)
-                .BaseQuery.WhereColumns(first, op, second)).AsType(type));
+            return Join(j =>
+            {
+                var join = new Join(j.JoinWith(table).BaseQuery);
+                join.BaseQuery.WhereColumns(first, op, second);
+                return join.AsType(type);
+            });
         }
 
         public Query Join(string table, Func<Join, Join> callback, string type = "inner join")
@@ -40,8 +42,9 @@ namespace SqlKata
         {
             return Join(j =>
             {
-                return new Join(j.JoinWith(query)
-                    .BaseQuery.Where(onCallback)).AsType(type);
+                var join = new Join(j.JoinWith(query).BaseQuery);
+                join.BaseQuery.Where(q => onCallback(new Join(q)).BaseQuery);
+                return join.AsType(type);
             });
         }
 

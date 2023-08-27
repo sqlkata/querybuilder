@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SqlKata.Compilers
 {
     public class OracleCompiler : Compiler
@@ -13,10 +9,10 @@ namespace SqlKata.Compilers
             ParameterPrefix = ":p";
             MultiInsertStartClause = "INSERT ALL INTO";
             EngineCode = EngineCodes.Oracle;
+            SingleRowDummyTableName = "DUAL";
         }
 
         public bool UseLegacyPagination { get; set; } = false;
-        protected override string SingleRowDummyTableName => "DUAL";
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
@@ -141,7 +137,7 @@ namespace SqlKata.Compilers
             foreach (var insert in inserts.Skip(1))
             {
                 var columns = GetInsertColumnsList(insert.Columns);
-                var values = string.Join(", ", Parameterize(ctx, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, insert.Values));
 
                 var intoFormat = " INTO {0}{1} VALUES ({2})";
                 var nextInsert = string.Format(intoFormat, table, columns, values);

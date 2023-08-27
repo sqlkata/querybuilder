@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler

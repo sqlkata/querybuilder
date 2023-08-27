@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query Where(string column, string op, object value)
+        public Query Where(string column, string op, object? value)
         {
             // If the value is "null", we will just assume the developer wants to add a
             // where null clause to the query. So, we will allow a short-cut here to
@@ -31,37 +28,37 @@ namespace SqlKata
             });
         }
 
-        public Query WhereNot(string column, string op, object value)
+        public Query WhereNot(string column, string op, object? value)
         {
             return Not().Where(column, op, value);
         }
 
-        public Query OrWhere(string column, string op, object value)
+        public Query OrWhere(string column, string op, object? value)
         {
             return Or().Where(column, op, value);
         }
 
-        public Query OrWhereNot(string column, string op, object value)
+        public Query OrWhereNot(string column, string op, object? value)
         {
             return Or().Not().Where(column, op, value);
         }
 
-        public Query Where(string column, object value)
+        public Query Where(string column, object? value)
         {
             return Where(column, "=", value);
         }
 
-        public Query WhereNot(string column, object value)
+        public Query WhereNot(string column, object? value)
         {
             return WhereNot(column, "=", value);
         }
 
-        public Query OrWhere(string column, object value)
+        public Query OrWhere(string column, object? value)
         {
             return OrWhere(column, "=", value);
         }
 
-        public Query OrWhereNot(string column, object value)
+        public Query OrWhereNot(string column, object? value)
         {
             return OrWhereNot(column, "=", value);
         }
@@ -73,7 +70,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query Where(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
+            var dictionary = new Dictionary<string, object?>();
 
             foreach (var item in constraints.GetType().GetRuntimeProperties())
                 dictionary.Add(item.Name, item.GetValue(constraints));
@@ -81,7 +78,7 @@ namespace SqlKata
             return Where(dictionary);
         }
 
-        public Query Where(IEnumerable<KeyValuePair<string, object>> values)
+        public Query Where(IEnumerable<KeyValuePair<string, object?>> values)
         {
             var query = this;
             var orFlag = GetOr();
@@ -126,7 +123,7 @@ namespace SqlKata
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Where(x => x.Component == "where").Any()) return this;
+            if (!query.Clauses.Any(x => x.Component == "where")) return this;
 
             return AddComponent("where", new NestedCondition<Query>
             {
@@ -225,7 +222,7 @@ namespace SqlKata
             return Or().WhereFalse(column);
         }
 
-        public Query WhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereLike(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return AddComponent("where", new BasicStringCondition
             {
@@ -584,7 +581,7 @@ namespace SqlKata
                 Operator = op,
                 Column = column,
                 Value = value,
-                Part = part?.ToLowerInvariant(),
+                Part = part.ToLowerInvariant(),
                 IsOr = GetOr(),
                 IsNot = GetNot()
             });

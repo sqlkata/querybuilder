@@ -8,7 +8,7 @@ namespace SqlKata
         /// <value>
         ///     The SQL engine.
         /// </value>
-        public string Engine { get; set; } = null;
+        public string? Engine { get; set; } = null;
 
         /// <summary>
         ///     Gets or sets the component name.

@@ -1,13 +1,10 @@
-using System.Collections.Generic;
-
 namespace SqlKata.Compilers
 {
-    public class CteFinder
+    public sealed class CteFinder
     {
         private readonly string _engineCode;
         private readonly Query _query;
-        private HashSet<string> _namesOfPreviousCtes;
-        private List<AbstractFrom> _orderedCteList;
+        private List<AbstractFrom>? _orderedCteList;
 
         public CteFinder(Query query, string engineCode)
         {
@@ -17,38 +14,31 @@ namespace SqlKata.Compilers
 
         public List<AbstractFrom> Find()
         {
-            if (null != _orderedCteList)
+            if (_orderedCteList != null)
                 return _orderedCteList;
 
-            _namesOfPreviousCtes = new HashSet<string>();
-
-            _orderedCteList = FindInternal(_query);
-
-            _namesOfPreviousCtes.Clear();
-            _namesOfPreviousCtes = null;
-
-            return _orderedCteList;
-        }
-
-        private List<AbstractFrom> FindInternal(Query queryToSearch)
-        {
-            var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", _engineCode);
-
-            var resultList = new List<AbstractFrom>();
-
-            foreach (var cte in cteList)
+            var namesOfPreviousCtes = new HashSet<string>();
+            List<AbstractFrom> FindInternal(Query queryToSearch)
             {
-                if (_namesOfPreviousCtes.Contains(cte.Alias))
-                    continue;
+                var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", _engineCode);
 
-                _namesOfPreviousCtes.Add(cte.Alias);
-                resultList.Add(cte);
+                var resultList = new List<AbstractFrom>();
 
-                if (cte is QueryFromClause queryFromClause)
-                    resultList.InsertRange(0, FindInternal(queryFromClause.Query));
+                foreach (var cte in cteList)
+                {
+                    if (namesOfPreviousCtes.Contains(cte.Alias))
+                        continue;
+
+                    namesOfPreviousCtes.Add(cte.Alias);
+                    resultList.Add(cte);
+
+                    if (cte is QueryFromClause queryFromClause)
+                        resultList.InsertRange(0, FindInternal(queryFromClause.Query));
+                }
+
+                return resultList;
             }
-
-            return resultList;
+            return _orderedCteList = FindInternal(_query);
         }
     }
 }

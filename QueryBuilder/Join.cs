@@ -1,5 +1,3 @@
-using System;
-
 namespace SqlKata
 {
     public sealed class Join 

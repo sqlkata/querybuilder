@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using SqlKata.Extensions;
 
 namespace SqlKata
@@ -8,14 +5,14 @@ namespace SqlKata
     public partial class Query
     {
         public Query Parent;
-        public string EngineScope;
+        public string? EngineScope;
         private bool _notFlag;
 
         private bool _orFlag;
 
-        public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
+        public List<AbstractClause> Clauses { get; set; } = new();
 
-        public Query SetEngineScope(string engine)
+        public Query SetEngineScope(string? engine)
         {
             EngineScope = engine;
 
@@ -46,10 +43,9 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Query AddComponent(string component, AbstractClause clause, string engineCode = null)
+        public Query AddComponent(string component, AbstractClause clause, string? engineCode = null)
         {
-            if (engineCode == null) engineCode = EngineScope;
-
+            engineCode ??= EngineScope;
             clause.Engine = engineCode;
             clause.Component = component;
             Clauses.Add(clause);
@@ -66,9 +62,9 @@ namespace SqlKata
         /// <param name="clause"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Query AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
+        public Query AddOrReplaceComponent(string component, AbstractClause clause, string? engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
 
             var current = GetComponents(component).SingleOrDefault(c => c.Engine == engineCode);
             if (current != null)
@@ -82,7 +78,7 @@ namespace SqlKata
         ///     Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
-        public List<TC> GetComponents<TC>(string component, string engineCode = null) where TC : AbstractClause
+        public List<TC> GetComponents<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
             if (engineCode == null) engineCode = EngineScope;
 
@@ -100,9 +96,9 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public List<AbstractClause> GetComponents(string component, string engineCode = null)
+        public List<AbstractClause> GetComponents(string component, string? engineCode = null)
         {
-            if (engineCode == null) engineCode = EngineScope;
+            engineCode ??= EngineScope;
 
             return GetComponents<AbstractClause>(component, engineCode);
         }
@@ -111,12 +107,13 @@ namespace SqlKata
         ///     Get a single component clause from the query.
         /// </summary>
         /// <returns></returns>
-        public TC GetOneComponent<TC>(string component, string engineCode = null) where TC : AbstractClause
+        public TC? GetOneComponent<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
 
             var all = GetComponents<TC>(component, engineCode);
-            return all.FirstOrDefault(c => c.Engine == engineCode) ?? all.FirstOrDefault(c => c.Engine == null);
+            return all.FirstOrDefault(c => c.Engine == engineCode) ??
+                   all.FirstOrDefault(c => c.Engine == null);
         }
 
         /// <summary>
@@ -125,9 +122,9 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public AbstractClause GetOneComponent(string component, string engineCode = null)
+        public AbstractClause? GetOneComponent(string component, string? engineCode = null)
         {
-            if (engineCode == null) engineCode = EngineScope;
+            engineCode ??= EngineScope;
 
             return GetOneComponent<AbstractClause>(component, engineCode);
         }
@@ -138,9 +135,9 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public bool HasComponent(string component, string engineCode = null)
+        public bool HasComponent(string component, string? engineCode = null)
         {
-            if (engineCode == null) engineCode = EngineScope;
+            engineCode ??= EngineScope;
 
             return GetComponents(component, engineCode).Any();
         }
@@ -151,9 +148,9 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Query ClearComponent(string component, string engineCode = null)
+        public Query ClearComponent(string component, string? engineCode = null)
         {
-            if (engineCode == null) engineCode = EngineScope;
+            engineCode ??= EngineScope;
 
             Clauses = Clauses
                 .Where(x => !(x.Component == component &&
@@ -167,7 +164,7 @@ namespace SqlKata
         ///     Set the next boolean operator to "and" for the "where" clause.
         /// </summary>
         /// <returns></returns>
-        protected Query And()
+        public Query And()
         {
             _orFlag = false;
             return this;
@@ -239,7 +236,7 @@ namespace SqlKata
             });
         }
 
-        public Query From(Query query, string alias = null)
+        public Query From(Query query, string? alias = null)
         {
             query = query.Clone();
             query.SetParent(this);
@@ -262,7 +259,7 @@ namespace SqlKata
             });
         }
 
-        public Query From(Func<Query, Query> callback, string alias = null)
+        public Query From(Func<Query, Query> callback, string? alias = null)
         {
             var query = new Query();
 

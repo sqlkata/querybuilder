@@ -1,4 +1,3 @@
-using System;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
@@ -26,13 +25,13 @@ public class DefineTest : TestSupport
     [Fact]
     public void Test_Define_SubQuery()
     {
-        var subquery = new Query("Products")
+        var subQuery = new Query("Products")
             .AsAverage("unitprice")
             .Define("@UnitsInSt", 10)
             .Where("UnitsInStock", ">", Variable("@UnitsInSt"));
 
         var query = new Query("Products")
-            .Where("unitprice", ">", subquery)
+            .Where("unitprice", ">", subQuery)
             .Where("UnitsOnOrder", ">", 5);
 
         var c = Compile(query);
@@ -146,14 +145,14 @@ public class DefineTest : TestSupport
     [Fact]
     public void Test_Define_WhereInSubquery()
     {
-        var subquery = new Query("Orders")
+        var subQuery = new Query("Orders")
             .Define("@shipId", 3)
             .Select("ShipVia").Where("ShipVia", Variable("@shipId"));
 
 
         var query1 = new Query("Shippers")
             .Select("ShipperID", "CompanyName")
-            .WhereIn("ShipperID", subquery);
+            .WhereIn("ShipperID", subQuery);
 
 
         var c1 = Compile(query1);
@@ -254,7 +253,6 @@ public class DefineTest : TestSupport
             .Define("@one", 1)
             .Where(q =>
                     q.Where("ShipRegion", "!=", Variable("@shipReg"))
-                //    .WhereRaw("1 = @one")
             ).AsCount();
 
         var c = Compile(query);

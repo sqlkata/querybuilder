@@ -1,4 +1,3 @@
-using System;
 using SqlKata.Compilers;
 
 namespace SqlKata.Extensions

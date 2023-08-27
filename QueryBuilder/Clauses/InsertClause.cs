@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace SqlKata
 {
     public abstract class AbstractInsertClause : AbstractClause

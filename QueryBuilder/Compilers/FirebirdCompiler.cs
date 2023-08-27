@@ -4,11 +4,10 @@ namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
-        protected override string SingleRowDummyTableName => "RDB$DATABASE";
-
         public FirebirdCompiler()
         {
             EngineCode = EngineCodes.Firebird;
+            SingleRowDummyTableName = "RDB$DATABASE";
         }
 
         protected override SqlResult CompileInsertQuery(Query query)
@@ -27,7 +26,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string? CompileLimit(SqlResult ctx)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
