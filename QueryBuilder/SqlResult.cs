@@ -33,8 +33,7 @@ namespace SqlKata
                     throw new Exception(
                         $"Failed to retrieve a binding at index {i}, the total bindings count is {Bindings.Count}");
 
-                var value = deepParameters[i];
-                return ChangeToSqlValue(value);
+                return ChangeToSqlValue(deepParameters[i]);
             });
         }
 
