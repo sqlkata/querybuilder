@@ -6,7 +6,7 @@ namespace SqlKata
     {
     }
 
-    public class Combine : AbstractCombine
+    public sealed class Combine : AbstractCombine
     {
         /// <summary>
         ///     Gets or sets the query to be combined with.
@@ -30,7 +30,7 @@ namespace SqlKata
         /// <value>
         ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
-        public bool All { get; init; }
+        public required bool All { get; init; }
     }
 
     public class RawCombine : AbstractCombine

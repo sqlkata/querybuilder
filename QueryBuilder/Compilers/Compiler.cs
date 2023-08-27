@@ -433,8 +433,7 @@ namespace SqlKata.Compilers
 
         protected SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
-            var cteFinder = new CteFinder(query, EngineCode);
-            var cteSearchResult = cteFinder.Find();
+            var cteSearchResult = CteFinder.Find(query, EngineCode);
 
             var rawSql = new StringBuilder("WITH ");
             var cteBindings = new List<object>();

@@ -2,6 +2,6 @@ namespace SqlKata
 {
     public sealed class OffsetClause : AbstractClause
     {
-        public long Offset { get; init; }
+        public required long Offset { get; init; }
     }
 }

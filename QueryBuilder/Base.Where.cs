@@ -253,22 +253,22 @@ namespace SqlKata
             });
         }
 
-        public Query WhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotLike(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Not().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereLike(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotLike(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().Not().WhereLike(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query WhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereStarts(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return AddComponent(new BasicStringCondition
             {
@@ -284,23 +284,23 @@ namespace SqlKata
             });
         }
 
-        public Query WhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotStarts(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereStarts(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
         public Query OrWhereNotStarts(string column, object value, bool caseSensitive = false,
-            string escapeCharacter = null)
+            string? escapeCharacter = null)
         {
             return Or().Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query WhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereEnds(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return AddComponent(new BasicStringCondition
             {
@@ -316,22 +316,22 @@ namespace SqlKata
             });
         }
 
-        public Query WhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotEnds(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereEnds(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotEnds(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query WhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereContains(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return AddComponent(new BasicStringCondition
             {
@@ -348,18 +348,18 @@ namespace SqlKata
         }
 
         public Query WhereNotContains(string column, object value, bool caseSensitive = false,
-            string escapeCharacter = null)
+            string? escapeCharacter = null)
         {
             return Not().WhereContains(column, value, caseSensitive, escapeCharacter);
         }
 
-        public Query OrWhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereContains(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
             return Or().WhereContains(column, value, caseSensitive, escapeCharacter);
         }
 
         public Query OrWhereNotContains(string column, object value, bool caseSensitive = false,
-            string escapeCharacter = null)
+            string? escapeCharacter = null)
         {
             return Or().Not().WhereContains(column, value, caseSensitive, escapeCharacter);
         }

@@ -8,14 +8,14 @@ namespace SqlKata
 
     public class InsertClause : AbstractInsertClause
     {
-        public required ImmutableArray<string> Columns { get; set; }
-        public required ImmutableArray<object?> Values { get; set; }
-        public required bool ReturnId { get; set; }
+        public required ImmutableArray<string> Columns { get; init; }
+        public required ImmutableArray<object?> Values { get; init; }
+        public required bool ReturnId { get; init; }
     }
 
-    public class InsertQueryClause : AbstractInsertClause
+    public sealed class InsertQueryClause : AbstractInsertClause
     {
-        public required ImmutableArray<string> Columns { get; set; }
-        public required Query Query { get; set; }
+        public required ImmutableArray<string> Columns { get; init; }
+        public required Query Query { get; init; }
     }
 }

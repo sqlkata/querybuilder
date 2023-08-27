@@ -43,9 +43,9 @@ namespace SqlKata
     /// <summary>
     ///     Represents a "from subQuery" clause.
     /// </summary>
-    public class QueryFromClause : AbstractFrom
+    public sealed class QueryFromClause : AbstractFrom
     {
-        public Query Query { get; init; }
+        public required Query Query { get; init; }
 
         public override string? Alias => string.IsNullOrEmpty(AliasField) ? Query.QueryAlias : AliasField;
     }
