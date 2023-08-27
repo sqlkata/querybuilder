@@ -13,7 +13,7 @@ internal class TestCompiler : Compiler
         EngineCode = "test";
     }
 
-    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
+    public MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
     {
         return FindCompilerMethodInfo(clauseType, methodName);
     }

@@ -4,12 +4,12 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
+        protected MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
         {
             return _compileConditionMethodsProvider.GetMethodInfo(clauseType, methodName);
         }
 
-        protected virtual string? CompileCondition(SqlResult ctx, AbstractCondition clause)
+        protected string? CompileCondition(SqlResult ctx, AbstractCondition clause)
         {
             var clauseType = clause.GetType();
 
@@ -37,7 +37,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
+        protected string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
         {
             var result = new List<string>();
 
@@ -55,13 +55,13 @@ namespace SqlKata.Compilers
             return string.Join(" ", result);
         }
 
-        protected virtual string CompileRawCondition(SqlResult ctx, RawCondition x)
+        protected string CompileRawCondition(SqlResult ctx, RawCondition x)
         {
             ctx.Bindings.AddRange(x.Bindings);
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileQueryCondition(SqlResult ctx, QueryCondition x) 
+        protected string CompileQueryCondition(SqlResult ctx, QueryCondition x) 
         {
             var subCtx = CompileSelectQuery(x.Query);
 
@@ -70,7 +70,7 @@ namespace SqlKata.Compilers
             return Wrap(x.Column) + " " + CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
-        protected virtual string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
+        protected string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
         {
             var subCtx = CompileSelectQuery(x.Query);
 
@@ -79,7 +79,7 @@ namespace SqlKata.Compilers
             return "(" + subCtx.RawSql + ") " + CheckOperator(x.Operator) + " " + Parameter(ctx, x.Value);
         }
 
-        protected virtual string CompileBasicCondition(SqlResult ctx, BasicCondition x)
+        protected string CompileBasicCondition(SqlResult ctx, BasicCondition x)
         {
             var sql = $"{Wrap(x.Column)} {CheckOperator(x.Operator)} {Parameter(ctx, x.Value)}";
 
@@ -189,7 +189,7 @@ namespace SqlKata.Compilers
             return column + $" {inOperator} ({values})";
         }
 
-        protected virtual string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
+        protected string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
         {
             var subCtx = CompileSelectQuery(item.Query);
 
@@ -200,13 +200,13 @@ namespace SqlKata.Compilers
             return Wrap(item.Column) + $" {inOperator} ({subCtx.RawSql})";
         }
 
-        protected virtual string CompileNullCondition(SqlResult ctx, NullCondition item)
+        protected string CompileNullCondition(SqlResult ctx, NullCondition item)
         {
             var op = item.IsNot ? "IS NOT NULL" : "IS NULL";
             return Wrap(item.Column) + " " + op;
         }
 
-        protected virtual string CompileBooleanCondition(SqlResult ctx, BooleanCondition item)
+        protected string CompileBooleanCondition(SqlResult ctx, BooleanCondition item)
         {
             var column = Wrap(item.Column);
             var value = item.Value ? CompileTrue() : CompileFalse();
@@ -216,7 +216,7 @@ namespace SqlKata.Compilers
             return $"{column} {op} {value}";
         }
 
-        protected virtual string CompileExistsCondition(SqlResult ctx, ExistsCondition item)
+        protected string CompileExistsCondition(SqlResult ctx, ExistsCondition item)
         {
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
 

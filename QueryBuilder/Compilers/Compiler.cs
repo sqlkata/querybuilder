@@ -156,7 +156,7 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public virtual SqlResult Compile(Query query)
+        public SqlResult Compile(Query query)
         {
             var ctx = CompileRaw(query);
 
@@ -165,7 +165,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public virtual SqlResult Compile(IEnumerable<Query> queries)
+        public SqlResult Compile(IEnumerable<Query> queries)
         {
             var compiled = queries.Select(CompileRaw).ToArray();
             var bindings = compiled.Select(r => r.Bindings).ToArray();
@@ -235,7 +235,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileDeleteQuery(Query query)
+        protected SqlResult CompileDeleteQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -281,7 +281,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileUpdateQuery(Query query)
+        protected SqlResult CompileUpdateQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -389,7 +389,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileValueInsertClauses(
+        protected SqlResult CompileValueInsertClauses(
             SqlResult ctx, string table, InsertClause[] insertClauses)
         {
             var isMultiValueInsert = insertClauses.Length > 1;
@@ -588,7 +588,7 @@ namespace SqlKata.Compilers
             return $"SELECT {distinct}{select}";
         }
 
-        public virtual string CompileUnion(SqlResult ctx)
+        public string CompileUnion(SqlResult ctx)
         {
             // Handle UNION, EXCEPT and INTERSECT
             if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return null;
@@ -621,7 +621,7 @@ namespace SqlKata.Compilers
             return string.Join(" ", combinedQueries);
         }
 
-        public virtual string CompileTableExpression(SqlResult ctx, AbstractFrom from)
+        public string CompileTableExpression(SqlResult ctx, AbstractFrom from)
         {
             if (from is RawFromClause raw)
             {
@@ -649,7 +649,7 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        public virtual string CompileFrom(SqlResult ctx)
+        public string CompileFrom(SqlResult ctx)
         {
             if (ctx.Query.HasComponent("from", EngineCode))
             {
@@ -661,7 +661,7 @@ namespace SqlKata.Compilers
             return string.Empty;
         }
 
-        public virtual string CompileJoins(SqlResult ctx)
+        public string CompileJoins(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("join", EngineCode)) return null;
 
@@ -672,7 +672,7 @@ namespace SqlKata.Compilers
             return "\n" + string.Join("\n", joins);
         }
 
-        public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
+        public string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
         {
             var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
@@ -685,7 +685,7 @@ namespace SqlKata.Compilers
             return $"{join.Type} {joinTable}{onClause}";
         }
 
-        public virtual string CompileWheres(SqlResult ctx)
+        public string CompileWheres(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("where", EngineCode)) return null;
 
@@ -695,7 +695,7 @@ namespace SqlKata.Compilers
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
 
-        public virtual string CompileGroups(SqlResult ctx)
+        public string CompileGroups(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("group", EngineCode)) return null;
 
@@ -706,7 +706,7 @@ namespace SqlKata.Compilers
             return "GROUP BY " + string.Join(", ", columns);
         }
 
-        public virtual string CompileOrders(SqlResult ctx)
+        public string CompileOrders(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("order", EngineCode)) return null;
 
@@ -728,12 +728,11 @@ namespace SqlKata.Compilers
             return "ORDER BY " + string.Join(", ", columns);
         }
 
-        public virtual string CompileHaving(SqlResult ctx)
+        public string CompileHaving(SqlResult ctx)
         {
             if (!ctx.Query.HasComponent("having", EngineCode)) return null;
 
             var sql = new List<string>();
-            string boolOperator;
 
             var having = ctx.Query.GetComponents("having", EngineCode)
                 .Cast<AbstractCondition>()
@@ -745,7 +744,7 @@ namespace SqlKata.Compilers
 
                 if (!string.IsNullOrEmpty(compiled))
                 {
-                    boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
+                    var boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
                     sql.Add(boolOperator + compiled);
                 }
@@ -789,12 +788,12 @@ namespace SqlKata.Compilers
             return "RANDOM()";
         }
 
-        public virtual string CompileLower(string value)
+        public string CompileLower(string value)
         {
             return $"LOWER({value})";
         }
 
-        public virtual string CompileUpper(string value)
+        public string CompileUpper(string value)
         {
             return $"UPPER({value})";
         }
@@ -833,7 +832,7 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public virtual string Wrap(string value)
+        public string Wrap(string value)
         {
             if (value.ToLowerInvariant().Contains(" as "))
             {
@@ -850,7 +849,7 @@ namespace SqlKata.Compilers
             return WrapValue(value);
         }
 
-        public virtual (string, string?) SplitAlias(string value)
+        public (string, string?) SplitAlias(string value)
         {
             var index = value.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
 

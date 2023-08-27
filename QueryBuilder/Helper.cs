@@ -6,6 +6,14 @@ namespace SqlKata
 {
     public static class Helper
     {
+        public static IEnumerable? AsArray(this object value)
+        {
+            if (value is string) return null;
+
+            if (value is byte[]) return null;
+
+            return value as IEnumerable;
+        }
         public static bool IsArray(object? value)
         {
             if (value == null) return false;
@@ -21,11 +29,11 @@ namespace SqlKata
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        public static IEnumerable<object> Flatten(IEnumerable<object> array)
+        public static IEnumerable<object?> Flatten(IEnumerable<object?> array)
         {
             foreach (var item in array)
-                if (IsArray(item))
-                    foreach (var sub in (IEnumerable)item)
+                if (item?.AsArray() is {} arr)
+                    foreach (var sub in arr)
                         yield return sub;
                 else
                     yield return item;
