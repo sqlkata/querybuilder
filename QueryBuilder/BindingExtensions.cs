@@ -44,7 +44,7 @@ namespace SqlKata
                 .Aggregate(new StringBuilder(split.First()), (prev, right) => prev.Append(right))
                 .ToString();
         }
-        public static string BindArgs(List<object?> bindings, string rawSql)
+        public static string BindArgs(this List<object?> bindings, string rawSql)
         {
             var deepParameters = bindings.FlattenOneLevel().ToList();
 
