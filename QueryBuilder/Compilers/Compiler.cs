@@ -66,7 +66,7 @@ namespace SqlKata.Compilers
                 .ToDictionary(x => ParameterPrefix + x.i, x => x.v);
         }
 
-        protected SqlResult PrepareResult(SqlResult ctx)
+        public SqlResult PrepareResult(SqlResult ctx)
         {
             ctx.NamedBindings = GenerateNamedBindings(ctx.Bindings.ToArray());
             ctx.Sql = Helper.ReplaceAll(ctx.RawSql, ParameterPlaceholder, i => ParameterPrefix + i);
@@ -104,7 +104,7 @@ namespace SqlKata.Compilers
                 .From(query, $"{clause.Type}Query");
         }
 
-        protected SqlResult CompileRaw(Query query)
+        public SqlResult CompileRaw(Query query)
         {
             SqlResult ctx;
 
@@ -157,14 +157,6 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public SqlResult Compile(Query query)
-        {
-            var ctx = CompileRaw(query);
-
-            ctx = PrepareResult(ctx);
-
-            return ctx;
-        }
 
         public SqlResult Compile(IEnumerable<Query> queries)
         {
