@@ -92,6 +92,10 @@ namespace SqlKata
             });
         }
 
+        /// <summary>
+        /// Converts "Users.{Id,Name, Last_Name }"
+        /// into ["Users.Id", "Users.Name", "Users.Last_Name"]
+        /// </summary>
         public static List<string> ExpandExpression(string expression)
         {
             var regex = @"^(?:\w+\.){1,2}{(.*)}";
