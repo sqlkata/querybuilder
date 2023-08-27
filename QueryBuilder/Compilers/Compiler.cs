@@ -31,8 +31,8 @@ namespace SqlKata.Compilers
             _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
-        protected const string ParameterPlaceholder = "?";
-        protected string ParameterPrefix { get; init; } = "@p";
+        public const string ParameterPlaceholder = "?";
+        public string ParameterPrefix { get; init; } = "@p";
         protected string OpeningIdentifier { get; init; } = "\"";
         protected string ClosingIdentifier { get; init; } = "\"";
         protected string ColumnAsKeyword { get; init; } = "AS ";
@@ -60,21 +60,10 @@ namespace SqlKata.Compilers
 
         protected string? SingleRowDummyTableName { get; init; }
 
-        protected Dictionary<string, object?> GenerateNamedBindings(object?[] bindings)
-        {
-            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => ParameterPrefix + x.i, x => x.v);
-        }
-
-        public SqlResult PrepareResult(SqlResult ctx)
-        {
-            ctx.NamedBindings = GenerateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, ParameterPlaceholder, i => ParameterPrefix + i);
-            return ctx;
-        }
 
 
-        private Query TransformAggregateQuery(Query query)
+
+        public Query TransformAggregateQuery(Query query)
         {
             var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode)!;
 
@@ -104,45 +93,6 @@ namespace SqlKata.Compilers
                 .From(query, $"{clause.Type}Query");
         }
 
-        public SqlResult CompileRaw(Query query)
-        {
-            SqlResult ctx;
-
-            if (query.Method == "insert")
-            {
-                ctx = CompileInsertQuery(query);
-            }
-            else if (query.Method == "update")
-            {
-                ctx = CompileUpdateQuery(query);
-            }
-            else if (query.Method == "delete")
-            {
-                ctx = CompileDeleteQuery(query);
-            }
-            else
-            {
-                if (query.Method == "aggregate")
-                {
-                    query.RemoveComponent("limit")
-                        .RemoveComponent("order")
-                        .RemoveComponent("group");
-
-                    query = TransformAggregateQuery(query);
-                }
-
-                ctx = CompileSelectQuery(query);
-            }
-
-            // handle CTEs
-            if (query.HasComponent("cte", EngineCode)) ctx = CompileCteQuery(ctx, query);
-
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql,
-                ParameterPlaceholder, ctx.Bindings.ToArray());
-
-            return ctx;
-        }
-
         /// <summary>
         ///     Add the passed operator(s) to the white list so they can be used with
         ///     the Where/Having methods, this prevent passing arbitrary operators
@@ -158,28 +108,8 @@ namespace SqlKata.Compilers
         }
 
 
-        public SqlResult Compile(IEnumerable<Query> queries)
-        {
-            var compiled = queries.Select(CompileRaw).ToArray();
-            var bindings = compiled.Select(r => r.Bindings).ToArray();
-            var totalBindingsCount = bindings.Select(b => b.Count).Aggregate((a, b) => a + b);
 
-            var combinedBindings = new List<object?>(totalBindingsCount);
-            foreach (var cb in bindings) combinedBindings.AddRange(cb);
-
-            var ctx = new SqlResult
-            {
-                Query = null,
-                RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
-                Bindings = combinedBindings
-            };
-
-            ctx = PrepareResult(ctx);
-
-            return ctx;
-        }
-
-        protected virtual SqlResult CompileSelectQuery(Query query)
+        public virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -228,7 +158,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected SqlResult CompileDeleteQuery(Query query)
+        public SqlResult CompileDeleteQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -274,7 +204,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected SqlResult CompileUpdateQuery(Query query)
+        public SqlResult CompileUpdateQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -337,7 +267,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileInsertQuery(Query query)
+        public virtual SqlResult CompileInsertQuery(Query query)
         {
             var ctx = new SqlResult
             {
@@ -425,7 +355,7 @@ namespace SqlKata.Compilers
             return columns;
         }
 
-        protected SqlResult CompileCteQuery(SqlResult ctx, Query query)
+        public SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {
             var cteSearchResult = CteFinder.Find(query, EngineCode);
 

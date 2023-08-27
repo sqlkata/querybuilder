@@ -10,7 +10,7 @@ namespace SqlKata.Compilers
             SingleRowDummyTableName = "RDB$DATABASE";
         }
 
-        protected override SqlResult CompileInsertQuery(Query query)
+        public override SqlResult CompileInsertQuery(Query query)
         {
             var ctx = base.CompileInsertQuery(query);
 

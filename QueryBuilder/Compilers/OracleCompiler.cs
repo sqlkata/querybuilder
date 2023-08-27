@@ -14,7 +14,7 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        protected override SqlResult CompileSelectQuery(Query query)
+        public override SqlResult CompileSelectQuery(Query query)
         {
             if (!UseLegacyPagination) return base.CompileSelectQuery(query);
 
