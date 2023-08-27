@@ -1,3 +1,4 @@
+using FluentAssertions;
 using Xunit;
 
 namespace SqlKata.Tests;
@@ -54,68 +55,19 @@ public class HelperTests
     }
 
     [Fact]
-    public void AllIndexesOf_ReturnIndexes_IfValueIsContainedInAString()
-    {
-        // Given
-        var input = "hello";
-
-        // When
-        var result = Helper.AllIndexesOf(input, "l");
-
-        // Then
-        Assert.Equal(new[] { 2, 3 }, result);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    public void AllIndexesOf_ReturnEmptyCollection_IfValueIsEmptyOrNull(string value)
-    {
-        // Given
-        var input = "hello";
-
-        // When
-        var result = Helper.AllIndexesOf(input, value);
-
-        // Then
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void AllIndexesOf_ReturnEmptyCollection_IfValueIsNotContainedInAString()
-    {
-        // Given
-        var input = "hello";
-
-        // When
-        var result = Helper.AllIndexesOf(input, "F");
-
-        // Then
-        Assert.Empty(result);
-    }
-
-    [Fact]
     public void Flatten_FlatOneLevel()
     {
-        // Given
-        var objects = new object[]
-        {
-            1,
-            new object[]
-            {
-                2,
-                3,
-                new[] { 4, 5, 6 }
-            }
-        };
+        // 3 levels
+        var objects = new object[] { 1, new object[] { 2, 3, new[] { 4, 5, 6 } } };
 
-        // When
-        var flatten = objects.Flatten();
+        // 2 levels
+        objects.FlattenOneLevel().Should().BeEquivalentTo(
+            new object[]{1, 2, 3, new[] { 4, 5, 6 }});
 
-        // Then
-        Assert.Equal(new[] { 4, 5, 6 }, flatten.ElementAt(3));
+        // 3 levels
+        objects.FlattenOneLevel().FlattenOneLevel().Should().BeEquivalentTo(
+            new []{1, 2, 3, 4, 5, 6 });
     }
-
 
     [Theory]
     [InlineData("Users.Id", "Users.Id")]

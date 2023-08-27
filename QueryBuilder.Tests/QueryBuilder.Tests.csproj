@@ -9,6 +9,7 @@
 		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="6.12.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2023.2.0" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.10" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />

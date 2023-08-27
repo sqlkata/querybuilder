@@ -4,22 +4,6 @@ namespace SqlKata
 {
     public static class Helper
     {
-        public static IEnumerable<int> AllIndexesOf(string str, string value)
-        {
-            if (string.IsNullOrEmpty(value)) yield break;
-
-            var index = 0;
-
-            do
-            {
-                index = str.IndexOf(value, index, StringComparison.Ordinal);
-
-                if (index == -1) yield break;
-
-                yield return index;
-            } while ((index += value.Length) < str.Length);
-        }
-
         /// <summary>
         /// Converts "Users.{Id,Name, Last_Name }"
         /// into ["Users.Id", "Users.Name", "Users.Last_Name"]

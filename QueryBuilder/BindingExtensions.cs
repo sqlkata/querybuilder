@@ -46,7 +46,7 @@ namespace SqlKata
         }
         public static string BindArgs(List<object?> bindings, string rawSql)
         {
-            var deepParameters = bindings.Flatten().ToList();
+            var deepParameters = bindings.FlattenOneLevel().ToList();
 
             return ReplaceAll(rawSql, "?", i =>
             {
@@ -85,7 +85,7 @@ namespace SqlKata
         }
         public static Dictionary<string, object?> GenerateNamedBindings(this IEnumerable<object?> bindings, string parameterPrefix)
         {
-            return bindings.Flatten().Select((v, i) => new { i, v })
+            return bindings.FlattenOneLevel().Select((v, i) => new { i, v })
                 .ToDictionary(x => parameterPrefix + x.i, x => x.v);
         }
 
@@ -98,13 +98,10 @@ namespace SqlKata
             return value as IEnumerable;
         }
 
-
         /// <summary>
-        ///     Flat IEnumerable one level down
+        ///     {1, { 2, 3, {4}}, 5} -> { 1, 2, 3, {4}, 5}
         /// </summary>
-        /// <param name="array"></param>
-        /// <returns></returns>
-        public static IEnumerable<T> Flatten<T>(this IEnumerable<T> array)
+        public static IEnumerable<T> FlattenOneLevel<T>(this IEnumerable<T> array)
         {
             foreach (var item in array)
                 if (item?.AsArray() is { } arr)
