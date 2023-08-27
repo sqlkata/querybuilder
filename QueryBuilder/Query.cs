@@ -130,38 +130,30 @@ namespace SqlKata
         /// <summary>
         ///     Constructs an ad-hoc table of the given data as a CTE.
         /// </summary>
-        public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
+        public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object?>> valuesCollection)
         {
             ArgumentNullException.ThrowIfNull(alias);
             ArgumentNullException.ThrowIfNull(columns);
             ArgumentNullException.ThrowIfNull(valuesCollection);
-            var columnsList = columns is ImmutableArray<string> l ? l : columns.ToImmutableArray();
-            var valuesCollectionList = valuesCollection is IReadOnlyList<ImmutableArray<object>> r
+            var col = columns is ImmutableArray<string> l ? l : columns.ToImmutableArray();
+            var values = valuesCollection is IReadOnlyList<ICollection<object?>> r
                 ? r
-                : valuesCollection.Select(v => v.ToImmutableArray()).ToImmutableArray();
+                : valuesCollection.Select(v => v.ToList()).ToList();
 
-            if (columnsList.Length == 0 || valuesCollectionList.Count == 0)
+            if (col.Length == 0 || values.Count == 0)
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
 
+            if (values.Any(row => row.Count != col.Length))
+                throw new InvalidOperationException("Columns count should be equal to each Values count");
 
-            var buffer = new List<object?>();
-            foreach (var values in valuesCollectionList)
-            {
-                var valuesList = values.ToList();
-                if (columnsList.Length != valuesList.Count)
-                    throw new InvalidOperationException("Columns count should be equal to each Values count");
-
-                buffer.AddRange(valuesList);
-            }
-            var clause = new AdHocTableFromClause
+            return AddComponent(new AdHocTableFromClause
             {
                 Engine = EngineScope,
                 Component = "cte",
                 Alias = alias,
-                Columns = columnsList.ToImmutableArray(),
-                Values = buffer.ToImmutableArray()
-            };
-            return AddComponent(clause);
+                Columns = col,
+                Values = values.SelectMany(x => x).ToImmutableArray()
+            });
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
