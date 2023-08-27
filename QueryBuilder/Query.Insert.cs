@@ -16,13 +16,13 @@ namespace SqlKata
             ArgumentNullException.ThrowIfNull(columns);
             ArgumentNullException.ThrowIfNull(values);
 
-            var columnsList = columns.ToList();
+            var columnsList = columns.ToImmutableArray();
             var valuesList = values.ToImmutableArray();
 
-            if (columnsList.Count == 0 || valuesList.Length == 0)
+            if (columnsList.Length == 0 || valuesList.Length == 0)
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
-            if (columnsList.Count != valuesList.Length)
+            if (columnsList.Length != valuesList.Length)
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
             Method = "insert";
@@ -32,7 +32,8 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "insert",
                 Columns = columnsList,
-                Values = valuesList
+                Values = valuesList,
+                ReturnId = false
             });
 
             return this;
@@ -53,7 +54,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "insert",
 
-                Columns = valuesCached.Select(x => x.Key).ToList(),
+                Columns = valuesCached.Select(x => x.Key).ToImmutableArray(),
                 Values = valuesCached.Select(x => x.Value).ToImmutableArray(),
                 ReturnId = returnId
             });
@@ -67,12 +68,17 @@ namespace SqlKata
         /// <param name="columns"></param>
         /// <param name="rowsValues"></param>
         /// <returns></returns>
-        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object>> rowsValues)
+        public Query AsInsert(IEnumerable<string> columns, IEnumerable<IEnumerable<object?>> rowsValues)
         {
-            var columnsList = columns?.ToList();
-            var valuesCollectionList = rowsValues?.ToList();
+            var columnsList = columns is ImmutableArray<string> l ? l : columns.ToImmutableArray();
+            var valuesCollectionList = rowsValues is IReadOnlyList<ImmutableArray<object?>> r
+                ? r
+                : rowsValues.Select(v => v.ToImmutableArray()).ToImmutableArray();
 
-            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
+           //var columnsList = columns.ToList();
+           //var valuesCollectionList = rowsValues.ToList();
+
+            if (columnsList.Length  == 0 || valuesCollectionList.Count == 0)
                 throw new InvalidOperationException(
                     $"{nameof(columns)} and {nameof(rowsValues)} cannot be null or empty");
 
@@ -83,7 +89,7 @@ namespace SqlKata
             foreach (var values in valuesCollectionList)
             {
                 var valuesList = values.ToImmutableArray();
-                if (columnsList.Count != valuesList.Length)
+                if (columnsList.Length != valuesList.Length)
                     throw new InvalidOperationException(
                         $"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
 
@@ -93,7 +99,8 @@ namespace SqlKata
                     Component = "insert",
 
                     Columns = columnsList,
-                    Values = valuesList
+                    Values = valuesList,
+                    ReturnId = false
                 });
             }
 
@@ -114,7 +121,7 @@ namespace SqlKata
             {
                 Engine = EngineScope,
                 Component = "insert",
-                Columns = columns.ToList(),
+                Columns = columns.ToImmutableArray(),
                 Query = query.Clone()
             });
 

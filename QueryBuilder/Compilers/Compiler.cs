@@ -326,9 +326,10 @@ namespace SqlKata.Compilers
 
 
             var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+            Debug.Assert(toUpdate != null);
             var parts = new List<string>();
 
-            for (var i = 0; i < toUpdate.Columns.Count; i++)
+            for (var i = 0; i < toUpdate.Columns.Length; i++)
                 parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
 
             var sets = string.Join(", ", parts);
@@ -421,7 +422,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected string GetInsertColumnsList(List<string> columnList)
+        protected string GetInsertColumnsList(ImmutableArray<string> columnList)
         {
             var columns = "";
             if (columnList.Any())
@@ -883,17 +884,14 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public virtual object Resolve(SqlResult ctx, object parameter)
+        protected static object? Resolve(SqlResult ctx, object parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
 
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
-            {
-                var value = ctx.Query.FindVariable(variable.Name);
-                return value;
-            }
+                return ctx.Query.FindVariable(variable.Name);
 
             return parameter;
         }
@@ -937,12 +935,12 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public virtual List<string> WrapArray(List<string> values)
+        public List<string> WrapArray(ImmutableArray<string> values)
         {
-            return values.Select(x => Wrap(x)).ToList();
+            return values.Select(Wrap).ToList();
         }
 
-        public virtual string WrapIdentifiers(string input)
+        public string WrapIdentifiers(string input)
         {
             return input
 

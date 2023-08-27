@@ -1,22 +1,24 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractOrderBy : AbstractClause
     {
     }
 
-    public class OrderBy : AbstractOrderBy
+    public sealed class OrderBy : AbstractOrderBy
     {
-        public string Column { get; set; }
-        public bool Ascending { get; set; } = true;
+        public required string Column { get; init; }
+        public required bool Ascending { get; init; }
     }
 
-    public class RawOrderBy : AbstractOrderBy
+    public sealed class RawOrderBy : AbstractOrderBy
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public required string Expression { get; init; }
+        public required ImmutableArray<object> Bindings { get; init; }
     }
 
-    public class OrderByRandom : AbstractOrderBy
+    public sealed class OrderByRandom : AbstractOrderBy
     {
     }
 }

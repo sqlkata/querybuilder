@@ -14,9 +14,8 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(x.Column);
 
-            var value = Resolve(ctx, x.Value) as string;
-
-            if (value == null) throw new ArgumentException("Expecting a non nullable string");
+            if (Resolve(ctx, x.Value) is not string value)
+                throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;
 

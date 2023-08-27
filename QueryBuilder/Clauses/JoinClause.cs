@@ -4,18 +4,18 @@ namespace SqlKata
     {
     }
 
-    public class BaseJoin : AbstractJoin
+    public sealed class BaseJoin : AbstractJoin
     {
-        public Join Join { get; set; }
+        public required Join Join { get; init; }
     }
 
-    public class DeepJoin : AbstractJoin
+    public sealed class DeepJoin : AbstractJoin
     {
-        public string Type { get; set; }
-        public string Expression { get; set; }
-        public string SourceKeySuffix { get; set; }
-        public string TargetKey { get; set; }
-        public Func<string, string> SourceKeyGenerator { get; set; }
-        public Func<string, string> TargetKeyGenerator { get; set; }
+        public required string Type { get; init; }
+        public required string Expression { get; init; }
+        public required string SourceKeySuffix { get; init; }
+        public required string TargetKey { get; init; }
+        public required Func<string, string> SourceKeyGenerator { get; init; }
+        public required Func<string, string> TargetKeyGenerator { get; init; }
     }
 }

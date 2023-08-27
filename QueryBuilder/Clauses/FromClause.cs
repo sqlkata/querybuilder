@@ -4,13 +4,13 @@ namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
     {
-        protected string AliasField;
+        protected string? AliasField;
 
         /// <summary>
         ///     Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
-        public virtual string Alias
+        public virtual string? Alias
         {
             get => AliasField;
             set => AliasField = value;
@@ -22,7 +22,7 @@ namespace SqlKata
     /// </summary>
     public sealed class FromClause : AbstractFrom
     {
-        public string Table { get; set; }
+        public required string Table { get; init; }
 
         public override string Alias
         {
@@ -45,23 +45,23 @@ namespace SqlKata
     /// </summary>
     public class QueryFromClause : AbstractFrom
     {
-        public Query Query { get; set; }
+        public Query Query { get; init; }
 
-        public override string Alias => string.IsNullOrEmpty(AliasField) ? Query.QueryAlias : AliasField;
+        public override string? Alias => string.IsNullOrEmpty(AliasField) ? Query.QueryAlias : AliasField;
     }
 
-    public class RawFromClause : AbstractFrom
+    public sealed class RawFromClause : AbstractFrom
     {
-        public string Expression { get; set; }
-        public object[] Bindings { set; get; }
+        public required string Expression { get; init; }
+        public required object[] Bindings { get; init; }
     }
 
     /// <summary>
     ///     Represents a FROM clause that is an ad-hoc table built with predefined values.
     /// </summary>
-    public class AdHocTableFromClause : AbstractFrom
+    public sealed class AdHocTableFromClause : AbstractFrom
     {
-        public ImmutableArray<string> Columns { get; set; }
-        public ImmutableArray<object> Values { get; set; }
+        public ImmutableArray<string> Columns { get; init; }
+        public ImmutableArray<object> Values { get; init; }
     }
 }

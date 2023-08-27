@@ -73,7 +73,7 @@ public class UpdateTests : TestSupport
         var query = new Query("Books")
             .With("OldBooks", q => q.From("Books").Where("Date", "<", now))
             .Where("Price", ">", 100)
-            .AsUpdate(new Dictionary<string, object>
+            .AsUpdate(new Dictionary<string, object?>
             {
                 { "Price", "150" }
             });
@@ -115,7 +115,9 @@ public class UpdateTests : TestSupport
             c[EngineCodes.SqlServer]);
 
         Assert.Equal(
-            "UPDATE \"ORDERPRODUCTCOMPOSITE\" SET \"ORDID\" = 'ORD01', \"PRODUCTID\" = 'PROD02', \"QUANTITY\" = 20, \"FAA\" = 'baz' WHERE \"ORDID\" = 'ORD01' AND \"PRODUCTID\" = 'PROD02'",
+            // ReSharper disable StringLiteralTypo
+            """UPDATE "ORDERPRODUCTCOMPOSITE" SET "ORDID" = 'ORD01', "PRODUCTID" = 'PROD02', "QUANTITY" = 20, "FAA" = 'baz' WHERE "ORDID" = 'ORD01' AND "PRODUCTID" = 'PROD02'""",
+            // ReSharper restore StringLiteralTypo
             c[EngineCodes.Firebird]);
     }
 
@@ -165,7 +167,7 @@ public class UpdateTests : TestSupport
     [Fact]
     public void UpdateUsingKeyValuePairs()
     {
-        var dictionaryUser = new Dictionary<string, object>
+        var dictionaryUser = new Dictionary<string, object?>
             {
                 { "Name", "The User" },
                 { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -185,7 +187,7 @@ public class UpdateTests : TestSupport
     [Fact]
     public void UpdateUsingDictionary()
     {
-        var dictionaryUser = new Dictionary<string, object>
+        var dictionaryUser = new Dictionary<string, object?>
         {
             { "Name", "The User" },
             { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -204,8 +206,8 @@ public class UpdateTests : TestSupport
     [Fact]
     public void UpdateUsingReadOnlyDictionary()
     {
-        var dictionaryUser = new ReadOnlyDictionary<string, object>(
-            new Dictionary<string, object>
+        var dictionaryUser = new ReadOnlyDictionary<string, object?>(
+            new Dictionary<string, object?>
             {
                 { "Name", "The User" },
                 { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -273,7 +275,7 @@ public class UpdateTests : TestSupport
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Book
     {
-        public Book(string name, string author, decimal price = 1.0m, string color = null)
+        public Book(string name, string author, decimal price = 1.0m, string? color = null)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             BookPrice = price;
@@ -287,16 +289,16 @@ public class UpdateTests : TestSupport
 
         [Column("Price")] public decimal BookPrice { get; set; }
 
-        [Ignore] public string Color { get; set; }
+        [Ignore] public string? Color { get; set; }
     }
 
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class OrderProductComposite
     {
-        public OrderProductComposite(string orderid, string productid, int quantity)
+        public OrderProductComposite(string orderId, string productId, int quantity)
         {
-            OrderIdRenamed = orderid;
-            ProductId = productid;
+            OrderIdRenamed = orderId;
+            ProductId = productId;
             Quantity = quantity;
             Foo = "baz";
         }

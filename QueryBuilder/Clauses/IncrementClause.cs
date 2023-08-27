@@ -1,8 +1,8 @@
 namespace SqlKata
 {
-    public class IncrementClause : InsertClause
+    public sealed class IncrementClause : InsertClause
     {
-        public string Column { get; set; }
-        public int Value { get; set; } = 1;
+        public required string Column { get; init; }
+        public required int Value { get; init; } 
     }
 }

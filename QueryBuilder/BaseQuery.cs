@@ -7,7 +7,7 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query Parent;
+        public Query? Parent;
         public string? EngineScope;
         private bool _notFlag;
 

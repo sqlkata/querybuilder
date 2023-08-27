@@ -92,9 +92,8 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(x.Column);
 
-            var value = Resolve(ctx, x.Value) as string;
-
-            if (value == null) throw new ArgumentException("Expecting a non nullable string");
+            if (Resolve(ctx, x.Value) is not string value)
+                throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;
 
@@ -145,9 +144,11 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        protected virtual string CompileNestedCondition(SqlResult ctx, NestedCondition x) 
+        protected string? CompileNestedCondition(SqlResult ctx, NestedCondition x) 
         {
-            if (!(x.Query.HasComponent("where", EngineCode) || x.Query.HasComponent("having", EngineCode))) return null;
+            if (!x.Query.HasComponent("where", EngineCode) &&
+                !x.Query.HasComponent("having", EngineCode))
+                return null;
 
             var clause = x.Query.HasComponent("where", EngineCode) ? "where" : "having";
 
@@ -164,7 +165,8 @@ namespace SqlKata.Compilers
             return $"{op}{Wrap(clause.First)} {CheckOperator(clause.Operator)} {Wrap(clause.Second)}";
         }
 
-        protected virtual string CompileBetweenCondition<T>(SqlResult ctx, BetweenCondition<T> item)
+        protected string CompileBetweenCondition<T>(SqlResult ctx, BetweenCondition<T> item)
+            where T: notnull
         {
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
             var lower = Parameter(ctx, item.Lower);

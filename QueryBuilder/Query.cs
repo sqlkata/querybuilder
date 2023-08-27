@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Reflection;
 
@@ -99,7 +98,7 @@ namespace SqlKata
 
             query = query.Clone();
 
-            var alias = query.QueryAlias.Trim();
+            var alias = query.QueryAlias?.Trim();
 
             // clear the query alias
             query.QueryAlias = null;
@@ -180,7 +179,7 @@ namespace SqlKata
             {
                 Engine = EngineScope,
                 Component = "limit",
-                Limit = value
+                Limit = value < 0 ? 0 : value
             });
         }
 
@@ -190,7 +189,7 @@ namespace SqlKata
             {
                 Engine = EngineScope,
                 Component = "offset",
-                Offset = value
+                Offset = value < 0 ? 0 : value
             });
         }
 
@@ -300,7 +299,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "order",
                 Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToArray()
+                Bindings = Helper.Flatten(bindings).ToImmutableArray()
             });
         }
 
@@ -339,7 +338,8 @@ namespace SqlKata
             return this;
         }
 
-        public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id",
+        public Query Include(string relationName, Query query,
+            string? foreignKey = null, string localKey = "Id",
             bool isMany = false)
         {
             Includes.Add(new Include
@@ -354,7 +354,8 @@ namespace SqlKata
             return this;
         }
 
-        public Query IncludeMany(string relationName, Query query, string foreignKey = null, string localKey = "Id")
+        public Query IncludeMany(string relationName, Query query,
+            string? foreignKey = null, string localKey = "Id")
         {
             return Include(relationName, query, foreignKey, localKey, true);
         }
@@ -372,7 +373,7 @@ namespace SqlKata
             return this;
         }
 
-        public object FindVariable(string variable)
+        public object? FindVariable(string variable)
         {
             var found = Variables.ContainsKey(variable);
 
@@ -392,10 +393,10 @@ namespace SqlKata
         ///     and will add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private IReadOnlyDictionary<string, object> BuildKeyValuePairsFromObject(object data,
+        private IReadOnlyDictionary<string, object?> BuildKeyValuePairsFromObject(object data,
             bool considerKeys = false)
         {
-            var dictionary = new Dictionary<string, object>();
+            var dictionary = new Dictionary<string, object?>();
             var props = CacheDictionaryProperties.GetOrAdd(data.GetType(),
                 type => type.GetRuntimeProperties().ToArray());
 
@@ -411,9 +412,8 @@ namespace SqlKata
 
                 dictionary.Add(name, value);
 
-                if (considerKeys && colAttr != null)
-                    if (colAttr as KeyAttribute != null)
-                        Where(name, value);
+                if (considerKeys && colAttr is KeyAttribute)
+                    Where(name, value);
             }
 
             return dictionary;

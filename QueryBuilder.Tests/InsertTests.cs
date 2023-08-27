@@ -63,9 +63,9 @@ public class InsertTests : TestSupport
                 new[] { "name", "brand", "year" },
                 new[]
                 {
-                    new object[] { "Chiron", "Bugatti", null },
-                    new object[] { "Huayra", "Pagani", 2012 },
-                    new object[] { "Reventon roadster", "Lamborghini", 2009 }
+                    new object?[] { "Chiron", "Bugatti", null },
+                    new object?[] { "Huayra", "Pagani", 2012 },
+                    new object?[] { "Reventon roadster", "Lamborghini", 2009 }
                 });
 
         var c = Compile(query);

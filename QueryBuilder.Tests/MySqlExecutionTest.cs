@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using MySql.Data.MySqlClient;
 using SqlKata.Compilers;
 using SqlKata.Execution;
@@ -8,9 +6,10 @@ using static SqlKata.Expressions;
 
 namespace SqlKata.Tests;
 
+[Collection("Sequential")]
 public class MySqlExecutionTest
 {
-    [Fact]
+    [Fact] 
     public void EmptySelect()
     {
         var db = Db().Create("Cars", new[]
