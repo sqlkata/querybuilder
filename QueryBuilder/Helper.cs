@@ -8,6 +8,7 @@ namespace SqlKata
     {
         public static bool IsArray(object? value)
         {
+            if (value == null) return false;
             if (value is string) return false;
 
             if (value is byte[]) return false;
@@ -32,7 +33,7 @@ namespace SqlKata
 
         public static IEnumerable<object> FlattenDeep(IEnumerable<object> array)
         {
-            return array.SelectMany(o => IsArray(o) ? FlattenDeep(o as IEnumerable<object>) : new[] { o });
+            return array.SelectMany(o => IsArray(o) ? FlattenDeep((IEnumerable<object>)o) : new[] { o });
         }
 
         public static IEnumerable<int> AllIndexesOf(string str, string value)
@@ -55,20 +56,21 @@ namespace SqlKata
         {
             if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match)) return subject;
 
-            var splitted = subject.Split(
+            var split = subject.Split(
                 new[] { match },
                 StringSplitOptions.None
             );
 
-            return splitted.Skip(1)
+            return split.Skip(1)
                 .Select((item, index) => callback(index) + item)
-                .Aggregate(new StringBuilder(splitted.First()), (prev, right) => prev.Append(right))
+                .Aggregate(new StringBuilder(split.First()), (prev, right) => prev.Append(right))
                 .ToString();
         }
 
+        //TODO: refactor
         public static string JoinArray(string glue, IEnumerable array)
         {
-            var result = new List<string>();
+            var result = new List<string?>();
 
             foreach (var item in array) result.Add(item.ToString());
 
@@ -81,13 +83,11 @@ namespace SqlKata
             {
                 var parameter = bindings[i];
 
-                if (IsArray(parameter))
-                {
-                    var count = EnumerableCount(parameter as IEnumerable);
-                    return string.Join(",", placeholder.Repeat(count));
-                }
+                if (!IsArray(parameter)) return placeholder;
 
-                return placeholder;
+                var count = EnumerableCount((IEnumerable)parameter);
+                return string.Join(",", placeholder.Repeat(count));
+
             });
         }
 

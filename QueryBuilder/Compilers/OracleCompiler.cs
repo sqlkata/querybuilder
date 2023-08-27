@@ -25,7 +25,7 @@ namespace SqlKata.Compilers
             return result;
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override string? CompileLimit(SqlResult ctx)
         {
             if (UseLegacyPagination)
                 // in pre-12c versions of Oracle, limit is handled by ROWNUM techniques

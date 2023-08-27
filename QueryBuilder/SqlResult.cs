@@ -18,7 +18,7 @@ namespace SqlKata
         };
 
         public Dictionary<string, object> NamedBindings = new();
-        public required Query Query { get; set; }
+        public required Query? Query { get; init; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new();
         public string Sql { get; set; } = "";
@@ -38,13 +38,15 @@ namespace SqlKata
             });
         }
 
-        private string ChangeToSqlValue(object value)
+        private static string ChangeToSqlValue(object? value)
         {
             if (value == null) return "NULL";
 
-            if (Helper.IsArray(value)) return Helper.JoinArray(",", value as IEnumerable);
+            if (Helper.IsArray(value))
+                return Helper.JoinArray(",", (IEnumerable)value);
 
-            if (NumberTypes.Contains(value.GetType())) return Convert.ToString(value, CultureInfo.InvariantCulture);
+            if (NumberTypes.Contains(value.GetType()))
+                return Convert.ToString(value, CultureInfo.InvariantCulture)!;
 
             if (value is DateTime date)
             {

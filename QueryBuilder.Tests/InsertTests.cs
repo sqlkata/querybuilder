@@ -85,7 +85,7 @@ public class InsertTests : TestSupport
         var query = new Query("Books")
             .AsInsert(
                 new[] { "Id", "Author", "ISBN", "Date" },
-                new object[] { 1, "Author 1", "123456", null });
+                new object?[] { 1, "Author 1", "123456", null });
 
         var c = Compile(query);
 
@@ -194,7 +194,7 @@ public class InsertTests : TestSupport
     [Fact]
     public void InsertKeyValuePairs()
     {
-        var dictionaryUser = new Dictionary<string, object>
+        var dictionaryUser = new Dictionary<string, object?>
             {
                 { "Name", "The User" },
                 { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -218,7 +218,7 @@ public class InsertTests : TestSupport
     [Fact]
     public void InsertDictionary()
     {
-        var dictionaryUser = new Dictionary<string, object>
+        var dictionaryUser = new Dictionary<string, object?>
         {
             { "Name", "The User" },
             { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -241,8 +241,8 @@ public class InsertTests : TestSupport
     [Fact]
     public void InsertReadOnlyDictionary()
     {
-        var dictionaryUser = new ReadOnlyDictionary<string, object>(
-            new Dictionary<string, object>
+        var dictionaryUser = new ReadOnlyDictionary<string, object?>(
+            new Dictionary<string, object?>
             {
                 { "Name", "The User" },
                 { "Age", new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
@@ -307,7 +307,7 @@ public class InsertTests : TestSupport
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     private class Account
     {
-        public Account(string name, string currency = null, string color = null)
+        public Account(string name, string? currency = null, string color = null)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Currency = currency;
@@ -316,7 +316,7 @@ public class InsertTests : TestSupport
 
         public string Name { get; set; }
 
-        [Column("currency_id")] public string Currency { get; set; }
+        [Column("currency_id")] public string? Currency { get; set; }
 
         [Ignore] public string Color { get; set; }
     }

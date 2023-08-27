@@ -1,10 +1,10 @@
 namespace SqlKata
 {
-    public class UnsafeLiteral
+    public sealed class UnsafeLiteral
     {
-        public UnsafeLiteral(string value, bool replaceQuotes = true)
+        public UnsafeLiteral(string? value, bool replaceQuotes = true)
         {
-            if (value == null) value = "";
+            value ??= "";
 
             if (replaceQuotes) value = value.Replace("'", "''");
 

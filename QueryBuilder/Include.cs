@@ -1,11 +1,12 @@
 namespace SqlKata
 {
-    public class Include
+    public sealed class Include
     {
-        public string Name { get; set; }
-        public Query Query { get; set; }
-        public string? ForeignKey { get; set; }
-        public string LocalKey { get; set; }
-        public bool IsMany { get; set; }
+        public required string Name { get; init; }
+        public required Query Query { get; init; }
+        public required string LocalKey { get; init; }
+        public required bool IsMany { get; init; }
+
+        public required string? ForeignKey { get; set; }
     }
 }

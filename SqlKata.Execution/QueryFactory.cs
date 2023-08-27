@@ -692,7 +692,7 @@ namespace SqlKata.Execution
                             throw new InvalidOperationException($"Cannot guess the foreign key for the included relation '{include.Name}'");
                         }
 
-                        var table = fromTable.Alias ?? fromTable.Table;
+                        var table = fromTable.Alias;
 
                         include.ForeignKey = table.Singularize(false) + "Id";
                     }
@@ -724,10 +724,7 @@ namespace SqlKata.Execution
                     continue;
                 }
 
-                if (include.ForeignKey == null)
-                {
-                    include.ForeignKey = include.Name + "Id";
-                }
+                include.ForeignKey ??= include.Name + "Id";
 
                 var foreignIds = dynamicResult
                     .Where(x => x[include.ForeignKey] != null)
@@ -793,7 +790,7 @@ namespace SqlKata.Execution
                             throw new InvalidOperationException($"Cannot guess the foreign key for the included relation '{include.Name}'");
                         }
 
-                        var table = fromTable.Alias ?? fromTable.Table;
+                        var table = fromTable.Alias;
 
                         include.ForeignKey = table.Singularize(false) + "Id";
                     }

@@ -176,6 +176,7 @@ namespace SqlKata.Compilers
 
             var ctx = new SqlResult
             {
+                Query = null,
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings
             };
@@ -217,7 +218,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult{Query = null};
 
             var row = "SELECT " +
                       string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {Wrap(col)}"));
@@ -514,15 +515,16 @@ namespace SqlKata.Compilers
             return CompileConditions(ctx, wheres);
         }
 
-        public SqlResult CompileCte(AbstractFrom cte)
+        public SqlResult CompileCte(AbstractFrom? cte)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult{Query = null};
 
-            if (null == cte) return ctx;
+            if (cte == null) return ctx;
 
             if (cte is RawFromClause raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
+                Debug.Assert(raw.Alias != null, "raw.Alias != null");
                 ctx.RawSql = $"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})";
             }
             else if (cte is QueryFromClause queryFromClause)
@@ -530,6 +532,7 @@ namespace SqlKata.Compilers
                 var subCtx = CompileSelectQuery(queryFromClause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
+                Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
             }
             else if (cte is AdHocTableFromClause adHoc)
@@ -537,13 +540,14 @@ namespace SqlKata.Compilers
                 var subCtx = CompileAdHocQuery(adHoc);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
+                Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
                 ctx.RawSql = $"{WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})";
             }
 
             return ctx;
         }
 
-        protected virtual SqlResult OnBeforeSelect(SqlResult ctx)
+        protected SqlResult OnBeforeSelect(SqlResult ctx)
         {
             return ctx;
         }
@@ -718,7 +722,7 @@ namespace SqlKata.Compilers
 
                     var direction = ((OrderBy)x).Ascending ? "" : " DESC";
 
-                    return Wrap((x as OrderBy)?.Column) + direction;
+                    return Wrap(((OrderBy)x).Column) + direction;
                 });
 
             return "ORDER BY " + string.Join(", ", columns);
