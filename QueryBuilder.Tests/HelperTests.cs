@@ -24,7 +24,7 @@ public class HelperTests
     [InlineData("?? hello", "@@ hello")]
     [InlineData("? ? hello", "@ @ hello")]
     [InlineData(" ? ? hello", " @ @ hello")]
-    public void ReplaceOnTheBegining(string input, string expected)
+    public void ReplaceOnTheBeginning(string input, string expected)
     {
         var output = Helper.ReplaceAll(input, "?", _ => "@");
         Assert.Equal(expected, output);

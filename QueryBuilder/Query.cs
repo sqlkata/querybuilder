@@ -323,7 +323,7 @@ namespace SqlKata
             return this;
         }
 
-        public Query GroupByRaw(string expression, params object[] bindings)
+        public Query GroupByRaw(string expression, params object?[] bindings)
         {
             AddComponent(new RawColumn
             {

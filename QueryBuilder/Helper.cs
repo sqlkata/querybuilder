@@ -29,12 +29,17 @@ namespace SqlKata
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        public static IEnumerable<object?> Flatten(IEnumerable<object?> array)
+        public static IEnumerable<T> Flatten<T>(IEnumerable<T> array)
         {
             foreach (var item in array)
                 if (item?.AsArray() is {} arr)
                     foreach (var sub in arr)
-                        yield return sub;
+                    {
+                        if (sub == null)
+                            throw new InvalidOperationException(
+                                "Sub-item cannot be null!");
+                        yield return (T)sub;
+                    }
                 else
                     yield return item;
         }
@@ -85,27 +90,16 @@ namespace SqlKata
             return string.Join(glue, result);
         }
 
-        public static string ExpandParameters(string sql, string placeholder, object[] bindings)
+        public static string ExpandParameters(string sql, string placeholder, object?[] bindings)
         {
             return ReplaceAll(sql, placeholder, i =>
             {
-                var parameter = bindings[i];
+                if (bindings[i]?.AsArray() is not {} arr) return placeholder;
 
-                if (!IsArray(parameter)) return placeholder;
-
-                var count = EnumerableCount((IEnumerable)parameter);
+                var count = arr.Cast<object>().Count();
                 return string.Join(",", placeholder.Repeat(count));
 
             });
-        }
-
-        public static int EnumerableCount(IEnumerable obj)
-        {
-            var count = 0;
-
-            foreach (var unused in obj) count++;
-
-            return count;
         }
 
         public static List<string> ExpandExpression(string expression)

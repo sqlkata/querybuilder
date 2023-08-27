@@ -31,7 +31,8 @@ namespace SqlKata.Compilers
 
             var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
 
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]",
+                ctx.Bindings.ToArray());
 
             query.RemoveComponent("order");
 

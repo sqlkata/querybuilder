@@ -34,7 +34,7 @@ namespace SqlKata
         ///     Add a new "raw" select expression to the query.
         /// </summary>
         /// <returns></returns>
-        public Query SelectRaw(string sql, params object[] bindings)
+        public Query SelectRaw(string sql, params object?[] bindings)
         {
             Method = "select";
 
