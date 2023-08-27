@@ -1,54 +1,9 @@
-using System.Collections;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SqlKata
 {
     public static class Helper
     {
-        public static IEnumerable? AsArray(this object value)
-        {
-            if (value is string) return null;
-
-            if (value is byte[]) return null;
-
-            return value as IEnumerable;
-        }
-        public static bool IsArray(object? value)
-        {
-            if (value == null) return false;
-            if (value is string) return false;
-
-            if (value is byte[]) return false;
-
-            return value is IEnumerable;
-        }
-
-        /// <summary>
-        ///     Flat IEnumerable one level down
-        /// </summary>
-        /// <param name="array"></param>
-        /// <returns></returns>
-        public static IEnumerable<T> Flatten<T>(IEnumerable<T> array)
-        {
-            foreach (var item in array)
-                if (item?.AsArray() is {} arr)
-                    foreach (var sub in arr)
-                    {
-                        if (sub == null)
-                            throw new InvalidOperationException(
-                                "Sub-item cannot be null!");
-                        yield return (T)sub;
-                    }
-                else
-                    yield return item;
-        }
-
-        public static IEnumerable<object> FlattenDeep(IEnumerable<object> array)
-        {
-            return array.SelectMany(o => IsArray(o) ? FlattenDeep((IEnumerable<object>)o) : new[] { o });
-        }
-
         public static IEnumerable<int> AllIndexesOf(string str, string value)
         {
             if (string.IsNullOrEmpty(value)) yield break;
@@ -63,33 +18,6 @@ namespace SqlKata
 
                 yield return index;
             } while ((index += value.Length) < str.Length);
-        }
-
-        public static string ReplaceAll(string subject, string match, Func<int, string> callback)
-        {
-            if (string.IsNullOrWhiteSpace(subject) || !subject.Contains(match)) return subject;
-
-            var split = subject.Split(
-                new[] { match },
-                StringSplitOptions.None
-            );
-
-            return split.Skip(1)
-                .Select((item, index) => callback(index) + item)
-                .Aggregate(new StringBuilder(split.First()), (prev, right) => prev.Append(right))
-                .ToString();
-        }
-
-        public static string ExpandParameters(string sql, string placeholder, object?[] bindings)
-        {
-            return ReplaceAll(sql, placeholder, i =>
-            {
-                if (bindings[i]?.AsArray() is not {} arr) return placeholder;
-
-                var count = arr.Cast<object>().Count();
-                return string.Join(",", placeholder.Repeat(count));
-
-            });
         }
 
         /// <summary>

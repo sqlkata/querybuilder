@@ -12,7 +12,7 @@ public class HelperTests
     [InlineData("   ")]
     public void ItShouldKeepItAsIs(string input)
     {
-        var output = Helper.ReplaceAll(input, "any", x => x + "");
+        var output = BindingExtensions.ReplaceAll(input, "any", x => x + "");
 
         Assert.Equal(input, output);
     }
@@ -26,7 +26,7 @@ public class HelperTests
     [InlineData(" ? ? hello", " @ @ hello")]
     public void ReplaceOnTheBeginning(string input, string expected)
     {
-        var output = Helper.ReplaceAll(input, "?", _ => "@");
+        var output = BindingExtensions.ReplaceAll(input, "?", _ => "@");
         Assert.Equal(expected, output);
     }
 
@@ -37,7 +37,7 @@ public class HelperTests
     [InlineData("hello ? ?? ? ", "hello @ @@ @ ")]
     public void ReplaceOnTheEnd(string input, string expected)
     {
-        var output = Helper.ReplaceAll(input, "?", _ => "@");
+        var output = BindingExtensions.ReplaceAll(input, "?", _ => "@");
         Assert.Equal(expected, output);
     }
 
@@ -49,7 +49,7 @@ public class HelperTests
     [InlineData("????", "0123")]
     public void ReplaceWithPositions(string input, string expected)
     {
-        var output = Helper.ReplaceAll(input, "?", x => x + "");
+        var output = BindingExtensions.ReplaceAll(input, "?", x => x + "");
         Assert.Equal(expected, output);
     }
 
@@ -116,7 +116,7 @@ public class HelperTests
         };
 
         // When
-        var flatten = Helper.FlattenDeep(objects);
+        var flatten = objects.FlattenDeep();
 
         // Then
         Assert.Equal(new object[] { 1, 0.1, 'A', 'A', "B", "C", 'D' }, flatten);
@@ -138,7 +138,7 @@ public class HelperTests
         };
 
         // When
-        var flatten = Helper.Flatten(objects);
+        var flatten = objects.Flatten();
 
         // Then
         Assert.Equal(new[] { 4, 5, 6 }, flatten.ElementAt(3));
@@ -160,7 +160,7 @@ public class HelperTests
         };
 
         // When
-        var flatten = Helper.Flatten(objects);
+        var flatten = objects.FlattenDeep();
 
         // Then
         Assert.Equal(new object[] { 1, 2, 3 }, flatten);
@@ -170,7 +170,7 @@ public class HelperTests
     public void IsArray_ReturnFalse_IfValueIsNull()
     {
         // When
-        var isArray = Helper.IsArray(null);
+        var isArray = BindingExtensions.IsArray(null);
 
         // Then
         Assert.False(isArray);
@@ -183,7 +183,7 @@ public class HelperTests
         var value = "string";
 
         // When
-        var isArray = Helper.IsArray(value);
+        var isArray = BindingExtensions.IsArray(value);
 
         // Then
         Assert.False(isArray);
@@ -196,7 +196,7 @@ public class HelperTests
         var value = new object[] { 1, 'B', "C" };
 
         // When
-        var isArray = Helper.IsArray(value);
+        var isArray = BindingExtensions.IsArray(value);
 
         // Then
         Assert.True(isArray);
@@ -216,7 +216,7 @@ public class HelperTests
     [Fact]
     public void ExpandParameters()
     {
-        var expanded = Helper.ExpandParameters("where id = ? or id in (?) or id in (?)", "?",
+        var expanded = BindingExtensions.ExpandParameters("where id = ? or id in (?) or id in (?)", "?",
             new object[] { 1, new[] { 1, 2 }, new object[] { } });
 
         Assert.Equal("where id = ? or id in (?,?) or id in ()", expanded);

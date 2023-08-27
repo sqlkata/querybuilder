@@ -297,7 +297,7 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "order",
                 Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToImmutableArray()
+                Bindings = bindings.Flatten().ToImmutableArray()
             });
         }
 

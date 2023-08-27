@@ -59,7 +59,7 @@ namespace SqlKata.Compilers
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode)) ctx = compiler.CompileCteQuery(ctx, query);
 
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql,
+            ctx.RawSql = BindingExtensions.ExpandParameters(ctx.RawSql,
                 Compiler.ParameterPlaceholder, ctx.Bindings.ToArray());
 
             return ctx;
@@ -67,16 +67,12 @@ namespace SqlKata.Compilers
 
         private static SqlResult PrepareResult(this Compiler compiler, SqlResult ctx)
         {
-            ctx.NamedBindings = compiler.GenerateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql,
+            ctx.NamedBindings = ctx.Bindings.GenerateNamedBindings(compiler.ParameterPrefix);
+            ctx.Sql = BindingExtensions.ReplaceAll(ctx.RawSql,
                 Compiler.ParameterPlaceholder, i => compiler.ParameterPrefix + i);
             return ctx;
         }
 
-        private static Dictionary<string, object?> GenerateNamedBindings(this Compiler compiler,object?[] bindings)
-        {
-            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => compiler.ParameterPrefix + x.i, x => x.v);
-        }
+
     }
 }
