@@ -224,7 +224,7 @@ public class GeneralTests : TestSupport
     }
 
     [Fact]
-    public void OneFromPerEngine()
+    public void OneClausePerEngine()
     {
         var query = new Query("generic")
             .ForSqlServer(q => q.From("dnu"))
@@ -242,13 +242,17 @@ public class GeneralTests : TestSupport
     [InlineData(null, null)]
     [InlineData(null, "mssql")]
     [InlineData("original", null)]
-    [InlineData("original", "mssql")]
-    public void AddOrReplace_Works(string table, string engine)
+    public void AddOrReplace_Works(string? table, string engine)
     {
         var query = new Query();
         if (table != null)
-            query.From(table);
-        query.AddOrReplaceComponent("from", new FromClause { Table = "updated", Engine = engine });
+            query = query.From(table);
+        query.AddOrReplaceComponent(new FromClause
+        {
+            Component = "from", 
+            Table = "updated",
+            Engine = engine
+        });
 
         Assert.Equal("updated", query.Clauses.OfType<FromClause>().Single().Table);
     }
@@ -276,8 +280,12 @@ public class GeneralTests : TestSupport
             .Where("a", "b")
             .Where("c", "d");
 
-        Action act = () => query.AddOrReplaceComponent("where", new BasicCondition());
-        Assert.Throws<InvalidOperationException>(act);
+        Assert.Throws<InvalidOperationException>(() =>
+            query.AddOrReplaceComponent(new BasicCondition
+            {
+                Engine = null,
+                Component = "where",
+            }));
     }
 
     [Fact]

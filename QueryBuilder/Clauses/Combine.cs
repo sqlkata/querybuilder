@@ -29,18 +29,6 @@ namespace SqlKata
         ///     <c>true</c> if all; otherwise, <c>false</c>.
         /// </value>
         public bool All { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new Combine
-            {
-                Engine = Engine,
-                Operation = Operation,
-                Component = Component,
-                Query = Query,
-                All = All
-            };
-        }
     }
 
     public class RawCombine : AbstractCombine
@@ -48,16 +36,5 @@ namespace SqlKata
         public string Expression { get; set; }
 
         public object[] Bindings { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new RawCombine
-            {
-                Engine = Engine,
-                Component = Component,
-                Expression = Expression,
-                Bindings = Bindings
-            };
-        }
     }
 }

@@ -21,8 +21,10 @@ namespace SqlKata
 
             Method = "update";
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            RemoveComponent("update").AddComponent(new InsertClause
             {
+                Engine = EngineScope,
+                Component = "update",
                 Columns = columnsCache.ToList(),
                 Values = valuesCache.ToList()
             });
@@ -40,8 +42,10 @@ namespace SqlKata
 
             Method = "update";
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            RemoveComponent("update").AddComponent(new InsertClause
             {
+                Engine = EngineScope,
+                Component = "update",
                 Columns = valuesCached.Select(x => x.Key).ToList(),
                 Values = valuesCached.Select(x => x.Value).ToList()
             });
@@ -52,8 +56,10 @@ namespace SqlKata
         public Query AsIncrement(string column, int value = 1)
         {
             Method = "update";
-            AddOrReplaceComponent("update", new IncrementClause
+            AddOrReplaceComponent(new IncrementClause
             {
+                Engine = EngineScope,
+                Component = "update",
                 Column = column,
                 Value = value
             });

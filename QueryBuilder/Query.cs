@@ -1,18 +1,11 @@
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Reflection;
 
 namespace SqlKata
 {
-    public partial class Query 
+    public partial class Query
     {
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
-
-        private string? _comment;
-        public List<Include> Includes = new();
-        public Dictionary<string, object?> Variables = new();
-        public bool IsDistinct { get; set; }
-        public string? QueryAlias { get; set; }
-        public string Method { get; set; } = "select";
 
         public Query()
         {
@@ -58,8 +51,8 @@ namespace SqlKata
 
         public virtual Query Clone()
         {
-            var clone = NewQuery();
-            clone.Clauses = Clauses.Select(x => x.Clone()).ToList();
+            var clone = new Query();
+            clone.Clauses = Clauses.ToList();
             clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
@@ -111,8 +104,10 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
+            return AddComponent(new QueryFromClause
             {
+                Engine = EngineScope,
+                Component = "cte",
                 Query = query,
                 Alias = alias
             });
@@ -138,35 +133,41 @@ namespace SqlKata
         /// </summary>
         public Query With(string alias, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection)
         {
-            var columnsList = columns?.ToList();
-            var valuesCollectionList = valuesCollection?.ToList();
+            var columnsList = columns is ImmutableArray<string> l ? l : columns.ToImmutableArray();
+            var valuesCollectionList = valuesCollection is IReadOnlyList<ImmutableArray<object>> r
+                ? r
+                : valuesCollection.Select(v => v.ToImmutableArray()).ToImmutableArray();
 
-            if ((columnsList?.Count ?? 0) == 0 || (valuesCollectionList?.Count ?? 0) == 0)
+            if (columnsList.Length == 0 || valuesCollectionList.Count == 0)
                 throw new InvalidOperationException("Columns and valuesCollection cannot be null or empty");
 
-            var clause = new AdHocTableFromClause
-            {
-                Alias = alias,
-                Columns = columnsList,
-                Values = new List<object>()
-            };
 
+            var buffer = new List<object>();
             foreach (var values in valuesCollectionList)
             {
                 var valuesList = values.ToList();
-                if (columnsList.Count != valuesList.Count)
+                if (columnsList.Length != valuesList.Count)
                     throw new InvalidOperationException("Columns count should be equal to each Values count");
 
-                clause.Values.AddRange(valuesList);
+                buffer.AddRange(valuesList);
             }
-
-            return AddComponent("cte", clause);
+            var clause = new AdHocTableFromClause
+            {
+                Engine = EngineScope,
+                Component = "cte",
+                Alias = alias,
+                Columns = columnsList.ToImmutableArray(),
+                Values = buffer.ToImmutableArray()
+            };
+            return AddComponent(clause);
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent("cte", new RawFromClause
+            return AddComponent(new RawFromClause
             {
+                Engine = EngineScope,
+                Component = "cte",
                 Alias = alias,
                 Expression = sql,
                 Bindings = bindings
@@ -175,22 +176,22 @@ namespace SqlKata
 
         public Query Limit(int value)
         {
-            var newClause = new LimitClause
+            return AddOrReplaceComponent(new LimitClause
             {
+                Engine = EngineScope,
+                Component = "limit",
                 Limit = value
-            };
-
-            return AddOrReplaceComponent("limit", newClause);
+            });
         }
 
         public Query Offset(long value)
         {
-            var newClause = new OffsetClause
+            return AddOrReplaceComponent(new OffsetClause
             {
+                Engine = EngineScope,
+                Component = "offset",
                 Offset = value
-            };
-
-            return AddOrReplaceComponent("offset", newClause);
+            });
         }
 
         public Query Offset(int value)
@@ -242,7 +243,7 @@ namespace SqlKata
         /// <param name="whenTrue">Invoked when the condition is true</param>
         /// <param name="whenFalse">Optional, invoked when the condition is false</param>
         /// <returns></returns>
-        public Query When(bool condition, Func<Query, Query> whenTrue, Func<Query, Query> whenFalse = null)
+        public Query When(bool condition, Func<Query, Query>? whenTrue, Func<Query, Query>? whenFalse = null)
         {
             if (condition && whenTrue != null) return whenTrue.Invoke(this);
 
@@ -267,8 +268,10 @@ namespace SqlKata
         public Query OrderBy(params string[] columns)
         {
             foreach (var column in columns)
-                AddComponent("order", new OrderBy
+                AddComponent(new OrderBy
                 {
+                    Engine = EngineScope,
+                    Component = "order",
                     Column = column,
                     Ascending = true
                 });
@@ -279,8 +282,10 @@ namespace SqlKata
         public Query OrderByDesc(params string[] columns)
         {
             foreach (var column in columns)
-                AddComponent("order", new OrderBy
+                AddComponent(new OrderBy
                 {
+                    Engine = EngineScope,
+                    Component = "order",
                     Column = column,
                     Ascending = false
                 });
@@ -290,8 +295,10 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent("order", new RawOrderBy
+            return AddComponent(new RawOrderBy
             {
+                Engine = EngineScope,
+                Component = "order",
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
             });
@@ -299,14 +306,20 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom());
+            return AddComponent(new OrderByRandom()
+            {
+                Engine = EngineScope,
+                Component = "order",
+            });
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
-                AddComponent("group", new Column
+                AddComponent(new Column
                 {
+                    Engine = EngineScope,
+                    Component = "group",
                     Name = column
                 });
 
@@ -315,18 +328,15 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent("group", new RawColumn
+            AddComponent(new RawColumn
             {
+                Engine = EngineScope,
+                Component = "group",
                 Expression = expression,
                 Bindings = bindings
             });
 
             return this;
-        }
-
-        public Query NewQuery()
-        {
-            return new Query();
         }
 
         public Query Include(string relationName, Query query, string foreignKey = null, string localKey = "Id",

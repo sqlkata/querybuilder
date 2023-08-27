@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                ctx.Query.RemoveComponent("limit");
 
                 return $"SELECT FIRST {ParameterPlaceholder}" + compiled.Substring(6);
             }
@@ -63,7 +63,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.Insert(0, offset);
 
-                ctx.Query.ClearComponent("offset");
+                ctx.Query.RemoveComponent("offset");
 
                 return $"SELECT SKIP {ParameterPlaceholder}" + compiled.Substring(6);
             }

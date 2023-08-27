@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Reflection;
 using SqlKata.Extensions;
 
 namespace SqlKata
@@ -12,6 +15,14 @@ namespace SqlKata
 
         public List<AbstractClause> Clauses { get; set; } = new();
 
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CacheDictionaryProperties = new();
+
+        private string? _comment;
+        public List<Include> Includes = new();
+        public Dictionary<string, object?> Variables = new();
+        public bool IsDistinct { get; set; }
+        public string? QueryAlias { get; set; }
+        public string Method { get; set; } = "select";
         public Query SetEngineScope(string? engine)
         {
             EngineScope = engine;
@@ -31,7 +42,7 @@ namespace SqlKata
 
         public Query NewChild()
         {
-            var newQuery = NewQuery().SetParent(this);
+            var newQuery = new Query().SetParent(this);
             newQuery.EngineScope = EngineScope;
             return newQuery;
         }
@@ -39,15 +50,9 @@ namespace SqlKata
         /// <summary>
         ///     Add a component clause to the query.
         /// </summary>
-        /// <param name="component"></param>
-        /// <param name="clause"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public Query AddComponent(string component, AbstractClause clause, string? engineCode = null)
+        public Query AddComponent(AbstractClause clause)
         {
-            engineCode ??= EngineScope;
-            clause.Engine = engineCode;
-            clause.Component = component;
+            Debug.Assert(clause.Component != null);
             Clauses.Add(clause);
 
             return this;
@@ -58,19 +63,17 @@ namespace SqlKata
         ///     and engine, replace it with the specified clause. Otherwise, just
         ///     add the clause.
         /// </summary>
-        /// <param name="component"></param>
         /// <param name="clause"></param>
-        /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Query AddOrReplaceComponent(string component, AbstractClause clause, string? engineCode = null)
+        public Query AddOrReplaceComponent(AbstractClause clause)
         {
-            engineCode ??= EngineScope;
+            var countRemoved = Clauses.RemoveAll(
+                c => c.Component == clause.Component &&
+                     c.Engine == clause.Engine);
+            if (countRemoved > 1) throw
+                new InvalidOperationException("AddOrReplaceComponent cannot replace a component when there is more than one component to replace!");
 
-            var current = GetComponents(component).SingleOrDefault(c => c.Engine == engineCode);
-            if (current != null)
-                Clauses.Remove(current);
-
-            return AddComponent(component, clause, engineCode);
+            return AddComponent(clause);
         }
 
 
@@ -148,7 +151,7 @@ namespace SqlKata
         /// <param name="component"></param>
         /// <param name="engineCode"></param>
         /// <returns></returns>
-        public Query ClearComponent(string component, string? engineCode = null)
+        public Query RemoveComponent(string component, string? engineCode = null)
         {
             engineCode ??= EngineScope;
 
@@ -223,15 +226,19 @@ namespace SqlKata
         /// <returns></returns>
         public Query From(GTable table)
         {
-            return AddOrReplaceComponent("from", new FromClause
+            return AddOrReplaceComponent(new FromClause
             {
+                Engine = EngineScope,
+                Component = "from",
                 Table = table.Name
             });
         }
         public Query From(string table)
         {
-            return AddOrReplaceComponent("from", new FromClause
+            return AddOrReplaceComponent(new FromClause
             {
+                Engine = EngineScope,
+                Component = "from",
                 Table = table
             });
         }
@@ -244,16 +251,18 @@ namespace SqlKata
             if (alias != null) query.As(alias);
             
 
-            return AddOrReplaceComponent("from", new QueryFromClause
-            {
+            return AddOrReplaceComponent(new QueryFromClause
+            {Engine = EngineScope,
+                Component = "from",
                 Query = query
             });
         }
 
         public Query FromRaw(string sql, params object[] bindings)
         {
-            return AddOrReplaceComponent("from", new RawFromClause
-            {
+            return AddOrReplaceComponent( new RawFromClause
+            {Engine = EngineScope,  
+                Component = "from",
                 Expression = sql,
                 Bindings = bindings
             });

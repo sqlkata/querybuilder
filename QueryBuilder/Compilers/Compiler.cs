@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 
 namespace SqlKata.Compilers
@@ -74,14 +76,14 @@ namespace SqlKata.Compilers
 
         private Query TransformAggregateQuery(Query query)
         {
-            var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode)!;
 
-            if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
+            if (clause.Columns.Length == 1 && !query.IsDistinct) return query;
 
             if (query.IsDistinct)
             {
-                query.ClearComponent("aggregate", EngineCode);
-                query.ClearComponent("select", EngineCode);
+                query.RemoveComponent("aggregate", EngineCode);
+                query.RemoveComponent("select", EngineCode);
                 query.Select(clause.Columns.ToArray());
             }
             else
@@ -91,16 +93,18 @@ namespace SqlKata.Compilers
 
             var outerClause = new AggregateClause
             {
-                Columns = new List<string> { "*" },
+                Engine = null,
+                Component = "aggregate",
+                Columns = ImmutableArray.Create<string>().Add("*"),
                 Type = clause.Type
             };
 
             return new Query()
-                .AddComponent("aggregate", outerClause)
+                .AddComponent(outerClause)
                 .From(query, $"{clause.Type}Query");
         }
 
-        protected virtual SqlResult CompileRaw(Query query)
+        protected SqlResult CompileRaw(Query query)
         {
             SqlResult ctx;
 
@@ -120,9 +124,9 @@ namespace SqlKata.Compilers
             {
                 if (query.Method == "aggregate")
                 {
-                    query.ClearComponent("limit")
-                        .ClearComponent("order")
-                        .ClearComponent("group");
+                    query.RemoveComponent("limit")
+                        .RemoveComponent("order")
+                        .RemoveComponent("group");
 
                     query = TransformAggregateQuery(query);
                 }
@@ -222,10 +226,10 @@ namespace SqlKata.Compilers
 
             if (fromTable != null) row += $" FROM {fromTable}";
 
-            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Count / adHoc.Columns.Count));
+            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Length / adHoc.Columns.Length));
 
             ctx.RawSql = rows;
-            ctx.Bindings = adHoc.Values;
+            ctx.Bindings = adHoc.Values.ToList();
 
             return ctx;
         }
@@ -549,9 +553,10 @@ namespace SqlKata.Compilers
             if (ctx.Query.HasComponent("aggregate", EngineCode))
             {
                 var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+                Debug.Assert(aggregate != null);
 
                 var aggregateColumns = aggregate.Columns
-                    .Select(x => CompileColumn(ctx, new Column { Name = x }))
+                    .Select(Wrap)
                     .ToList();
 
                 if (aggregateColumns.Count == 1)

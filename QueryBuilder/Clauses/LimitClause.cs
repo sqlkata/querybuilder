@@ -20,16 +20,5 @@ namespace SqlKata
             _limit = 0;
             return this;
         }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new LimitClause
-            {
-                Engine = Engine,
-                Limit = Limit,
-                Component = Component
-            };
-        }
     }
 }

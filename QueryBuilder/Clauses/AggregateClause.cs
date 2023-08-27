@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     /// <summary>
@@ -12,7 +14,7 @@ namespace SqlKata
         /// <value>
         ///     The columns to be aggregated.
         /// </value>
-        public List<string> Columns { get; set; }
+        public required ImmutableArray<string> Columns { get; init; }
 
         /// <summary>
         ///     Gets or sets the type of aggregate function.
@@ -20,18 +22,6 @@ namespace SqlKata
         /// <value>
         ///     The type of aggregate function, e.g. "MAX", "MIN", etc.
         /// </value>
-        public string Type { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new AggregateClause
-            {
-                Engine = Engine,
-                Type = Type,
-                Columns = new List<string>(Columns),
-                Component = Component
-            };
-        }
+        public required string Type { get; init; }
     }
 }

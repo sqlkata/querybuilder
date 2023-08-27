@@ -223,7 +223,7 @@ namespace SqlKata.Compilers
             // remove unneeded components
             var query = item.Query.Clone();
 
-            if (OmitSelectInsideExists) query.ClearComponent("select").SelectRaw("1");
+            if (OmitSelectInsideExists) query.RemoveComponent("select").SelectRaw("1");
 
             var subCtx = CompileSelectQuery(query);
 

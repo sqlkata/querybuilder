@@ -1,16 +1,20 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query AsAggregate(string type, string[] columns = null)
+        public Query AsAggregate(string type, string[]? columns = null)
         {
             Method = "aggregate";
 
-            ClearComponent("aggregate")
-                .AddComponent("aggregate", new AggregateClause
+            RemoveComponent("aggregate")
+                .AddComponent(new AggregateClause
                 {
+                    Engine = EngineScope,
+                    Component = "aggregate",
                     Type = type,
-                    Columns = columns?.ToList() ?? new List<string>()
+                    Columns = columns?.ToImmutableArray() ?? ImmutableArray<string>.Empty
                 });
 
             return this;

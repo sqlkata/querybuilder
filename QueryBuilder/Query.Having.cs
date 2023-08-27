@@ -4,15 +4,17 @@ namespace SqlKata
 {
     public partial class Query
     {
-        public Query Having(string column, string op, object value)
+        public Query Having(string column, string op, object? value)
         {
             // If the value is "null", we will just assume the developer wants to add a
             // Having null clause to the query. So, we will allow a short-cut here to
             // that method for convenience so the developer doesn't have to check.
             if (value == null) return Not(op != "=").HavingNull(column);
 
-            return AddComponent("having", new BasicCondition
+            return AddComponent(new BasicCondition
             {
+                Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 Operator = op,
                 Value = value,
@@ -92,8 +94,10 @@ namespace SqlKata
 
         public Query HavingRaw(string sql, params object[] bindings)
         {
-            return AddComponent("having", new RawCondition
+            return AddComponent(new RawCondition
             {
+                    Engine = EngineScope,
+                Component = "having",
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
@@ -115,8 +119,9 @@ namespace SqlKata
         {
             var query = callback.Invoke(NewChild());
 
-            return AddComponent("having", new NestedCondition<Query>
-            {
+            return AddComponent(new NestedCondition<Query>
+            {Engine = EngineScope,
+                Component = "having",
                 Query = query,
                 IsNot = GetNot(),
                 IsOr = GetOr()
@@ -140,8 +145,9 @@ namespace SqlKata
 
         public Query HavingColumns(string first, string op, string second)
         {
-            return AddComponent("having", new TwoColumnsCondition
-            {
+            return AddComponent(new TwoColumnsCondition
+            {Engine = EngineScope,
+                Component = "having",
                 First = first,
                 Second = second,
                 Operator = op,
@@ -157,8 +163,9 @@ namespace SqlKata
 
         public Query HavingNull(string column)
         {
-            return AddComponent("having", new NullCondition
-            {
+            return AddComponent(new NullCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot()
@@ -182,8 +189,9 @@ namespace SqlKata
 
         public Query HavingTrue(string column)
         {
-            return AddComponent("having", new BooleanCondition
-            {
+            return AddComponent(new BooleanCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 Value = true
             });
@@ -196,8 +204,10 @@ namespace SqlKata
 
         public Query HavingFalse(string column)
         {
-            return AddComponent("having", new BooleanCondition
+            return AddComponent(new BooleanCondition
             {
+                    Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 Value = false
             });
@@ -210,8 +220,10 @@ namespace SqlKata
 
         public Query HavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
+            return AddComponent(new BasicStringCondition
             {
+                    Engine = EngineScope,
+                Component = "having",
                 Operator = "like",
                 Column = column,
                 Value = value,
@@ -243,8 +255,9 @@ namespace SqlKata
         public Query HavingStarts(string column, object value, bool caseSensitive = false,
             string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Operator = "starts",
                 Column = column,
                 Value = value,
@@ -275,8 +288,9 @@ namespace SqlKata
 
         public Query HavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Operator = "ends",
                 Column = column,
                 Value = value,
@@ -308,8 +322,9 @@ namespace SqlKata
         public Query HavingContains(string column, object value, bool caseSensitive = false,
             string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Operator = "contains",
                 Column = column,
                 Value = value,
@@ -340,8 +355,9 @@ namespace SqlKata
 
         public Query HavingBetween<T>(string column, T lower, T higher)
         {
-            return AddComponent("having", new BetweenCondition<T>
-            {
+            return AddComponent(new BetweenCondition<T>
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -373,8 +389,9 @@ namespace SqlKata
             {
                 var val = values as string;
 
-                return AddComponent("having", new InCondition<string>
-                {
+                return AddComponent(new InCondition<string>
+                {Engine = EngineScope,
+                    Component = "having",
                     Column = column,
                     IsOr = GetOr(),
                     IsNot = GetNot(),
@@ -382,8 +399,9 @@ namespace SqlKata
                 });
             }
 
-            return AddComponent("having", new InCondition<T>
-            {
+            return AddComponent(new InCondition<T>
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -409,8 +427,9 @@ namespace SqlKata
 
         public Query HavingIn(string column, Query query)
         {
-            return AddComponent("having", new InQueryCondition
-            {
+            return AddComponent(new InQueryCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -472,8 +491,9 @@ namespace SqlKata
 
         public Query Having(string column, string op, Query query)
         {
-            return AddComponent("having", new QueryCondition<Query>
-            {
+            return AddComponent(new QueryCondition<Query>
+            {Engine = EngineScope,
+                Component = "having",
                 Column = column,
                 Operator = op,
                 Query = query,
@@ -499,12 +519,13 @@ namespace SqlKata
                     $"{nameof(FromClause)} cannot be empty if used inside a {nameof(HavingExists)} condition");
 
             // simplify the query as much as possible
-            query = query.Clone().ClearComponent("select")
+            query = query.Clone().RemoveComponent("select")
                 .SelectRaw("1")
                 .Limit(1);
 
-            return AddComponent("having", new ExistsCondition
-            {
+            return AddComponent(new ExistsCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Query = query,
                 IsNot = GetNot(),
                 IsOr = GetOr()
@@ -551,8 +572,9 @@ namespace SqlKata
 
         public Query HavingDatePart(string part, string column, string op, object value)
         {
-            return AddComponent("having", new BasicDateCondition
-            {
+            return AddComponent(new BasicDateCondition
+            {Engine = EngineScope,
+                Component = "having",
                 Operator = op,
                 Column = column,
                 Value = value,

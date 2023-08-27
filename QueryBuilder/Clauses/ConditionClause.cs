@@ -14,21 +14,6 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public object Value { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new BasicCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                Operator = Operator,
-                Value = Value,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     public class BasicStringCondition : BasicCondition
@@ -50,44 +35,11 @@ namespace SqlKata
                 _escapeCharacter = value;
             }
         }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new BasicStringCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                Operator = Operator,
-                Value = Value,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                CaseSensitive = CaseSensitive,
-                EscapeCharacter = EscapeCharacter,
-                Component = Component
-            };
-        }
     }
 
     public class BasicDateCondition : BasicCondition
     {
         public string Part { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new BasicDateCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                Operator = Operator,
-                Value = Value,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Part = Part,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -98,21 +50,6 @@ namespace SqlKata
         public string First { get; set; }
         public string Operator { get; set; }
         public string Second { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new TwoColumnsCondition
-            {
-                Engine = Engine,
-                First = First,
-                Operator = Operator,
-                Second = Second,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -123,21 +60,6 @@ namespace SqlKata
         public string Column { get; set; }
         public string Operator { get; set; }
         public Query Query { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new QueryCondition<T>
-            {
-                Engine = Engine,
-                Column = Column,
-                Operator = Operator,
-                Query = Query.Clone(),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -148,21 +70,6 @@ namespace SqlKata
         public object Value { get; set; }
         public string Operator { get; set; }
         public Query Query { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new SubQueryCondition<T>
-            {
-                Engine = Engine,
-                Value = Value,
-                Operator = Operator,
-                Query = Query.Clone(),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -172,19 +79,6 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public IEnumerable<T> Values { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new InCondition<T>
-            {
-                Engine = Engine,
-                Column = Column,
-                Values = new List<T>(Values),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -194,19 +88,6 @@ namespace SqlKata
     {
         public Query Query { get; set; }
         public string Column { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new InQueryCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                Query = Query.Clone(),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -217,20 +98,6 @@ namespace SqlKata
         public string Column { get; set; }
         public T Higher { get; set; }
         public T Lower { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new BetweenCondition<T>
-            {
-                Engine = Engine,
-                Column = Column,
-                Higher = Higher,
-                Lower = Lower,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -239,19 +106,6 @@ namespace SqlKata
     public class NullCondition : AbstractCondition
     {
         public string Column { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new NullCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -261,20 +115,6 @@ namespace SqlKata
     {
         public string Column { get; set; }
         public bool Value { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new BooleanCondition
-            {
-                Engine = Engine,
-                Column = Column,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component,
-                Value = Value
-            };
-        }
     }
 
     /// <summary>
@@ -284,18 +124,6 @@ namespace SqlKata
     public class NestedCondition<T> : AbstractCondition 
     {
         public Query Query { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new NestedCondition<T>
-            {
-                Engine = Engine,
-                Query = Query.Clone(),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -304,38 +132,11 @@ namespace SqlKata
     public class ExistsCondition : AbstractCondition
     {
         public Query Query { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new ExistsCondition
-            {
-                Engine = Engine,
-                Query = Query.Clone(),
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 
     public class RawCondition : AbstractCondition
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new RawCondition
-            {
-                Engine = Engine,
-                Expression = Expression,
-                Bindings = Bindings,
-                IsOr = IsOr,
-                IsNot = IsNot,
-                Component = Component
-            };
-        }
     }
 }

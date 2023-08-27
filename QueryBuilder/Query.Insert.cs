@@ -11,10 +11,13 @@ namespace SqlKata
 
         public Query AsInsert(IEnumerable<string> columns, IEnumerable<object> values)
         {
-            var columnsList = columns?.ToList();
-            var valuesList = values?.ToList();
+            ArgumentNullException.ThrowIfNull(columns);
+            ArgumentNullException.ThrowIfNull(values);
 
-            if ((columnsList?.Count ?? 0) == 0 || (valuesList?.Count ?? 0) == 0)
+            var columnsList = columns.ToList();
+            var valuesList = values.ToList();
+
+            if (columnsList.Count == 0 || valuesList.Count== 0)
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
             if (columnsList.Count != valuesList.Count)
@@ -22,8 +25,10 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
+            RemoveComponent("insert").AddComponent(new InsertClause
             {
+                    Engine = EngineScope,
+                Component = "insert", 
                 Columns = columnsList,
                 Values = valuesList
             });
@@ -41,8 +46,10 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
-            {
+            RemoveComponent("insert").AddComponent(new InsertClause
+            {Engine = EngineScope,
+                Component = "insert", 
+
                 Columns = valuesCached.Select(x => x.Key).ToList(),
                 Values = valuesCached.Select(x => x.Value).ToList(),
                 ReturnId = returnId
@@ -68,7 +75,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert");
+            RemoveComponent("insert");
 
             foreach (var values in valuesCollectionList)
             {
@@ -77,8 +84,10 @@ namespace SqlKata
                     throw new InvalidOperationException(
                         $"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
 
-                AddComponent("insert", new InsertClause
-                {
+                AddComponent(new InsertClause
+                {Engine = EngineScope,
+                    Component = "insert", 
+
                     Columns = columnsList,
                     Values = valuesList
                 });
@@ -97,8 +106,9 @@ namespace SqlKata
         {
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertQueryClause
-            {
+            RemoveComponent("insert").AddComponent(new InsertQueryClause
+            {Engine = EngineScope,  
+                Component = "insert", 
                 Columns = columns.ToList(),
                 Query = query.Clone()
             });

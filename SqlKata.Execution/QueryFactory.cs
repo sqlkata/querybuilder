@@ -56,7 +56,7 @@ namespace SqlKata.Execution
 
             xQuery.QueryFactory = this;
 
-            xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
+            xQuery.Clauses = query.Clauses.ToList();
 
             xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;
@@ -351,7 +351,7 @@ namespace SqlKata.Execution
         public bool Exists(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             var clone = query.Clone()
-                .ClearComponent("select")
+                .RemoveComponent("select")
                 .SelectRaw("1 as [Exists]")
                 .Limit(1);
 
@@ -363,7 +363,7 @@ namespace SqlKata.Execution
         public async Task<bool> ExistsAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var clone = query.Clone()
-                .ClearComponent("select")
+                .RemoveComponent("select")
                 .SelectRaw("1 as [Exists]")
                 .Limit(1);
 

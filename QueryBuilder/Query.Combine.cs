@@ -7,8 +7,10 @@ namespace SqlKata
             if (Method != "select" || query.Method != "select")
                 throw new InvalidOperationException("Only select queries can be combined.");
 
-            return AddComponent("combine", new Combine
+            return AddComponent(new Combine
             {
+                Engine = EngineScope,
+                Component = "combine",
                 Query = query,
                 Operation = operation,
                 All = all
@@ -19,8 +21,10 @@ namespace SqlKata
         {
             if (Method != "select") throw new InvalidOperationException("Only select queries can be combined.");
 
-            return AddComponent("combine", new RawCombine
+            return AddComponent(new RawCombine
             {
+                Engine = EngineScope,  
+                Component = "combine",
                 Expression = sql,
                 Bindings = bindings
             });

@@ -20,16 +20,5 @@ namespace SqlKata
             _offset = 0;
             return this;
         }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new OffsetClause
-            {
-                Engine = Engine,
-                Offset = Offset,
-                Component = Component
-            };
-        }
     }
 }

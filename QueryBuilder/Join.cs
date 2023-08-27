@@ -67,8 +67,10 @@ namespace SqlKata
 
         public Join On(string first, string second, string op = "=")
         {
-            return new Join(BaseQuery.AddComponent("where", new TwoColumnsCondition
+            return new Join(BaseQuery.AddComponent(new TwoColumnsCondition
             {
+                Engine = BaseQuery.EngineScope,
+                Component = "where",
                 First = first,
                 Second = second,
                 Operator = op,

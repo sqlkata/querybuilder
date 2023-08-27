@@ -17,17 +17,6 @@ namespace SqlKata
         ///     The column name.
         /// </value>
         public string Name { get; set; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new Column
-            {
-                Engine = Engine,
-                Name = Name,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -43,16 +32,6 @@ namespace SqlKata
         ///     The query for column value calculation.
         /// </value>
         public Query Query { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new QueryColumn
-            {
-                Engine = Engine,
-                Query = Query.Clone(),
-                Component = Component
-            };
-        }
     }
 
     public class RawColumn : AbstractColumn
@@ -66,18 +45,6 @@ namespace SqlKata
         public string Expression { get; set; }
 
         public object[] Bindings { set; get; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new RawColumn
-            {
-                Engine = Engine,
-                Expression = Expression,
-                Bindings = Bindings,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -97,17 +64,5 @@ namespace SqlKata
 
         public string Aggregate { get; set; }
         public AbstractColumn Column { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new AggregatedColumn
-            {
-                Engine = Engine,
-                Filter = Filter?.Clone(),
-                Column = Column.Clone() as AbstractColumn,
-                Aggregate = Aggregate,
-                Component = Component
-            };
-        }
     }
 }

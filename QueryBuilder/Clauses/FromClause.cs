@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata
 {
     public abstract class AbstractFrom : AbstractClause
@@ -36,18 +38,6 @@ namespace SqlKata
                 return Table;
             }
         }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new FromClause
-            {
-                Engine = Engine,
-                Alias = Alias,
-                Table = Table,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -58,37 +48,12 @@ namespace SqlKata
         public Query Query { get; set; }
 
         public override string Alias => string.IsNullOrEmpty(AliasField) ? Query.QueryAlias : AliasField;
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new QueryFromClause
-            {
-                Engine = Engine,
-                Alias = Alias,
-                Query = Query.Clone(),
-                Component = Component
-            };
-        }
     }
 
     public class RawFromClause : AbstractFrom
     {
         public string Expression { get; set; }
         public object[] Bindings { set; get; }
-
-        /// <inheritdoc />
-        public override AbstractClause Clone()
-        {
-            return new RawFromClause
-            {
-                Engine = Engine,
-                Alias = Alias,
-                Expression = Expression,
-                Bindings = Bindings,
-                Component = Component
-            };
-        }
     }
 
     /// <summary>
@@ -96,19 +61,7 @@ namespace SqlKata
     /// </summary>
     public class AdHocTableFromClause : AbstractFrom
     {
-        public List<string> Columns { get; set; }
-        public List<object> Values { get; set; }
-
-        public override AbstractClause Clone()
-        {
-            return new AdHocTableFromClause
-            {
-                Engine = Engine,
-                Alias = Alias,
-                Columns = Columns,
-                Values = Values,
-                Component = Component
-            };
-        }
+        public ImmutableArray<string> Columns { get; set; }
+        public ImmutableArray<object> Values { get; set; }
     }
 }

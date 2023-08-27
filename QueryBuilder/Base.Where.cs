@@ -18,8 +18,10 @@ namespace SqlKata
                 return boolValue ? WhereTrue(column) : WhereFalse(column);
             }
 
-            return AddComponent("where", new BasicCondition
+            return AddComponent(new BasicCondition
             {
+                Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 Operator = op,
                 Value = value,
@@ -99,8 +101,10 @@ namespace SqlKata
 
         public Query WhereRaw(string sql, params object[] bindings)
         {
-            return AddComponent("where", new RawCondition
+            return AddComponent(new RawCondition
             {
+                Engine = EngineScope,
+                Component = "where",
                 Expression = sql,
                 Bindings = bindings,
                 IsOr = GetOr(),
@@ -125,8 +129,10 @@ namespace SqlKata
             // omit empty queries
             if (!query.Clauses.Any(x => x.Component == "where")) return this;
 
-            return AddComponent("where", new NestedCondition<Query>
+            return AddComponent(new NestedCondition<Query>
             {
+                Engine = EngineScope,
+                Component = "where",
                 Query = query,
                 IsNot = GetNot(),
                 IsOr = GetOr()
@@ -150,8 +156,10 @@ namespace SqlKata
 
         public Query WhereColumns(string first, string op, string second)
         {
-            return AddComponent("where", new TwoColumnsCondition
+            return AddComponent(new TwoColumnsCondition
             {
+                Engine = EngineScope,
+                Component = "where",
                 First = first,
                 Second = second,
                 Operator = op,
@@ -167,8 +175,9 @@ namespace SqlKata
 
         public Query WhereNull(string column)
         {
-            return AddComponent("where", new NullCondition
-            {
+            return AddComponent(new NullCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot()
@@ -192,8 +201,9 @@ namespace SqlKata
 
         public Query WhereTrue(string column)
         {
-            return AddComponent("where", new BooleanCondition
-            {
+            return AddComponent(new BooleanCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 Value = true,
                 IsOr = GetOr(),
@@ -208,8 +218,9 @@ namespace SqlKata
 
         public Query WhereFalse(string column)
         {
-            return AddComponent("where", new BooleanCondition
-            {
+            return AddComponent(new BooleanCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 Value = false,
                 IsOr = GetOr(),
@@ -224,8 +235,10 @@ namespace SqlKata
 
         public Query WhereLike(string column, object value, bool caseSensitive = false, string? escapeCharacter = null)
         {
-            return AddComponent("where", new BasicStringCondition
+            return AddComponent(new BasicStringCondition
             {
+                Engine = EngineScope,
+                Component = "where",
                 Operator = "like",
                 Column = column,
                 Value = value,
@@ -253,8 +266,9 @@ namespace SqlKata
 
         public Query WhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("where", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Operator = "starts",
                 Column = column,
                 Value = value,
@@ -283,8 +297,9 @@ namespace SqlKata
 
         public Query WhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("where", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Operator = "ends",
                 Column = column,
                 Value = value,
@@ -312,8 +327,9 @@ namespace SqlKata
 
         public Query WhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("where", new BasicStringCondition
-            {
+            return AddComponent(new BasicStringCondition
+            {Engine = EngineScope,  
+                Component = "where",
                 Operator = "contains",
                 Column = column,
                 Value = value,
@@ -343,8 +359,9 @@ namespace SqlKata
 
         public Query WhereBetween<T>(string column, T lower, T higher)
         {
-            return AddComponent("where", new BetweenCondition<T>
-            {
+            return AddComponent(new BetweenCondition<T>
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -376,8 +393,9 @@ namespace SqlKata
             {
                 var val = values as string;
 
-                return AddComponent("where", new InCondition<string>
-                {
+                return AddComponent(new InCondition<string>
+                {Engine = EngineScope,
+                    Component = "where",
                     Column = column,
                     IsOr = GetOr(),
                     IsNot = GetNot(),
@@ -385,8 +403,9 @@ namespace SqlKata
                 });
             }
 
-            return AddComponent("where", new InCondition<T>
-            {
+            return AddComponent(new InCondition<T>
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -412,8 +431,9 @@ namespace SqlKata
 
         public Query WhereIn(string column, Query query)
         {
-            return AddComponent("where", new InQueryCondition
-            {
+            return AddComponent(new InQueryCondition
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
@@ -475,8 +495,9 @@ namespace SqlKata
 
         public Query Where(string column, string op, Query query)
         {
-            return AddComponent("where", new QueryCondition<Query>
-            {
+            return AddComponent(new QueryCondition<Query>
+            {Engine = EngineScope,
+                Component = "where",
                 Column = column,
                 Operator = op,
                 Query = query,
@@ -492,8 +513,9 @@ namespace SqlKata
 
         public Query WhereSub(Query query, string op, object value)
         {
-            return AddComponent("where", new SubQueryCondition<Query>
-            {
+            return AddComponent(new SubQueryCondition<Query>
+            {   Engine = EngineScope,
+                Component = "where",
                 Value = value,
                 Operator = op,
                 Query = query,
@@ -528,8 +550,10 @@ namespace SqlKata
                 throw new ArgumentException(
                     $"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
 
-            return AddComponent("where", new ExistsCondition
-            {
+            return AddComponent(new ExistsCondition
+            {     
+                Engine = EngineScope,
+                Component = "where",
                 Query = query,
                 IsNot = GetNot(),
                 IsOr = GetOr()
@@ -576,8 +600,9 @@ namespace SqlKata
 
         public Query WhereDatePart(string part, string column, string op, object value)
         {
-            return AddComponent("where", new BasicDateCondition
-            {
+            return AddComponent(new BasicDateCondition
+            {Engine = EngineScope,  
+                Component = "where",
                 Operator = op,
                 Column = column,
                 Value = value,

@@ -28,7 +28,7 @@ namespace SqlKata.Execution
                 query.QueryFactory.QueryTimeout = QueryFactory?.QueryTimeout ?? 30;
             }
 
-            query.Clauses = Clauses.Select(x => x.Clone()).ToList();
+            query.Clauses = Clauses.ToList();
             query.Logger = Logger;
 
             query.QueryAlias = QueryAlias;

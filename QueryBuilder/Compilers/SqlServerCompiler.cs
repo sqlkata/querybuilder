@@ -33,7 +33,7 @@ namespace SqlKata.Compilers
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
-            query.ClearComponent("order");
+            query.RemoveComponent("order");
 
 
             var result = base.CompileSelectQuery(query);
@@ -72,7 +72,7 @@ namespace SqlKata.Compilers
                 // top bindings should be inserted first
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                ctx.Query.RemoveComponent("limit");
 
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
@@ -151,13 +151,13 @@ namespace SqlKata.Compilers
 
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
 
-            var valueRow = string.Join(", ", Enumerable.Repeat(ParameterPlaceholder, adHoc.Columns.Count));
+            var valueRow = string.Join(", ", Enumerable.Repeat(ParameterPlaceholder, adHoc.Columns.Length));
             var valueRows = string.Join(", ",
-                Enumerable.Repeat($"({valueRow})", adHoc.Values.Count / adHoc.Columns.Count));
+                Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
             var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
             ctx.RawSql = sql;
-            ctx.Bindings = adHoc.Values;
+            ctx.Bindings = adHoc.Values.ToList();
 
             return ctx;
         }
