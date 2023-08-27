@@ -60,39 +60,6 @@ namespace SqlKata.Compilers
 
         protected string? SingleRowDummyTableName { get; init; }
 
-
-
-
-        public Query TransformAggregateQuery(Query query)
-        {
-            var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode)!;
-
-            if (clause.Columns.Length == 1 && !query.IsDistinct) return query;
-
-            if (query.IsDistinct)
-            {
-                query.RemoveComponent("aggregate", EngineCode);
-                query.RemoveComponent("select", EngineCode);
-                query.Select(clause.Columns.ToArray());
-            }
-            else
-            {
-                foreach (var column in clause.Columns) query.WhereNotNull(column);
-            }
-
-            var outerClause = new AggregateClause
-            {
-                Engine = null,
-                Component = "aggregate",
-                Columns = ImmutableArray.Create<string>().Add("*"),
-                Type = clause.Type
-            };
-
-            return new Query()
-                .AddComponent(outerClause)
-                .From(query, $"{clause.Type}Query");
-        }
-
         /// <summary>
         ///     Add the passed operator(s) to the white list so they can be used with
         ///     the Where/Having methods, this prevent passing arbitrary operators
@@ -106,7 +73,6 @@ namespace SqlKata.Compilers
 
             return this;
         }
-
 
 
         public virtual SqlResult CompileSelectQuery(Query query)

@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace SqlKata.Compilers
 {
     public static class CompilationExtensions
@@ -50,7 +52,7 @@ namespace SqlKata.Compilers
                         .RemoveComponent("order")
                         .RemoveComponent("group");
 
-                    query = compiler.TransformAggregateQuery(query);
+                    query = TransformAggregateQuery(query);
                 }
 
                 ctx = compiler.CompileSelectQuery(query);
@@ -63,6 +65,36 @@ namespace SqlKata.Compilers
                 Compiler.ParameterPlaceholder, ctx.Bindings.ToArray());
 
             return ctx;
+            Query TransformAggregateQuery(Query query1)
+            {
+                var clause = query1.GetOneComponent<AggregateClause>("aggregate", compiler.EngineCode)!;
+
+                if (clause.Columns.Length == 1 && !query1.IsDistinct) return query1;
+
+                if (query1.IsDistinct)
+                {
+                    query1.RemoveComponent("aggregate", compiler.EngineCode);
+                    query1.RemoveComponent("select", compiler.EngineCode);
+                    query1.Select(clause.Columns.ToArray());
+                }
+                else
+                {
+                    foreach (var column in clause.Columns) query1.WhereNotNull(column);
+                }
+
+                var outerClause = new AggregateClause
+                {
+                    Engine = compiler.EngineCode,
+                    Component = "aggregate",
+                    Columns = ImmutableArray.Create<string>().Add("*"),
+                    Type = clause.Type
+                };
+
+                return new Query()
+                    .AddComponent(outerClause)
+                    .From(query1, $"{clause.Type}Query");
+            }
+
         }
 
         private static SqlResult PrepareResult(this Compiler compiler, SqlResult ctx)
