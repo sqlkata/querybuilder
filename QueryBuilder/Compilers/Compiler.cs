@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         ///     A list of white-listed operators
         /// </summary>
         /// <value></value>
-        private readonly HashSet<string> Operators = new()
+        private readonly HashSet<string> _operators = new()
         {
             "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
             "like", "not like",
@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
-        private readonly HashSet<string> UserOperators = new();
+        private readonly HashSet<string> _userOperators = new();
 
 
         protected Compiler()
@@ -152,7 +152,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public Compiler Whitelist(params string[] operators)
         {
-            foreach (var op in operators) UserOperators.Add(op);
+            foreach (var op in operators) _userOperators.Add(op);
 
             return this;
         }
@@ -821,7 +821,7 @@ namespace SqlKata.Compilers
         {
             op = op.ToLowerInvariant();
 
-            var valid = Operators.Contains(op) || UserOperators.Contains(op);
+            var valid = _operators.Contains(op) || _userOperators.Contains(op);
 
             if (!valid)
                 throw new InvalidOperationException(

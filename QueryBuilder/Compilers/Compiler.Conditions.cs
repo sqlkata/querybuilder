@@ -124,10 +124,9 @@ namespace SqlKata.Compilers
                 value = value.ToLowerInvariant();
             }
 
-            if (x.Value is UnsafeLiteral)
-                sql = $"{column} {CheckOperator(method)} {value}";
-            else
-                sql = $"{column} {CheckOperator(method)} {Parameter(ctx, value)}";
+            sql = x.Value is UnsafeLiteral
+                ? $"{column} {CheckOperator(method)} {value}"
+                : $"{column} {CheckOperator(method)} {Parameter(ctx, value)}";
 
             if (!string.IsNullOrEmpty(x.EscapeCharacter)) sql = $"{sql} ESCAPE '{x.EscapeCharacter}'";
 
