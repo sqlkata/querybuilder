@@ -5,13 +5,10 @@ namespace SqlKata
 {
     public static class QExt
     {
-        public static string Render(this Q q, BindingMode bindingMode)
+        public static string Render(this Q q, Renderer renderer)
         {
             var sb = new StringBuilder();
-            q.Render(sb, new Renderer(new X("[", "]", "AS "))
-            {
-                BindingMode = bindingMode
-            });
+            q.Render(sb, renderer);
             return sb.ToString();
         }
     }

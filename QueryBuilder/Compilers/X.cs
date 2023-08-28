@@ -13,6 +13,8 @@ namespace SqlKata.Compilers
         public string MultiInsertStartClause { get; } = "INSERT INTO";
         public string LastId  { get; } = "SELECT scope_identity() as Id";
         public string ParameterPlaceholder { get; }= "?";
+        public string ParameterPrefix { get; set; }= "@p";
+
         public BindingMode BindingMode { get; set; } = BindingMode.Values;
         public Renderer(X x)
         {

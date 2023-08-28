@@ -13,7 +13,7 @@ namespace SqlKata
                     sb.Append(r.ParameterPlaceholder);
                     break;
                 case BindingMode.Params:
-                    sb.Append("@p");
+                    sb.Append(r.ParameterPrefix);
                     sb.Append(r.NextParameter());
                     break;
                 case BindingMode.Values:

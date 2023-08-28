@@ -18,16 +18,7 @@ namespace SqlKata
         // Mandatory for CTE queries
         public string? QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-
-        public Q Build()
-        {
-            return new QueryBuilder
-            {
-                Method = Method,
-                Components = Components
-            }.Build();
-        }
-
+        
         public Query SetEngineScope(string? engine)
         {
             EngineScope = engine;

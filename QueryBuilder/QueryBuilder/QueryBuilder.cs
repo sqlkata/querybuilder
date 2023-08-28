@@ -4,12 +4,16 @@ namespace SqlKata
 {
     public sealed class QueryBuilder
     {
-        public required string Method { get; init; }
-        public required IComponentList Components { get; init; }
+        private readonly Query _query;
+
+        public QueryBuilder(Query query)
+        {
+            _query = query;
+        }
 
         public Q Build()
         {
-            if (Method == "insert")
+            if (_query.Method == "insert")
             {
                 return CompileInsertQuery();
             }
@@ -19,10 +23,10 @@ namespace SqlKata
 
         private QValueInsert CompileInsertQuery()
         {
-            var fromClause = Components.GetOneComponent<AbstractFrom>("from");
+            var fromClause = _query.Components.GetOneComponent<AbstractFrom>("from");
             if (fromClause is null)
                 throw new InvalidOperationException("No table set to insert");
-            var inserts = Components.GetComponents<AbstractInsertClause>("insert");
+            var inserts = _query.Components.GetComponents<AbstractInsertClause>("insert");
             if (inserts[0] is InsertQueryClause)
                 throw new NotImplementedException();
 
