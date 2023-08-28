@@ -2,26 +2,21 @@ using System.Collections.Immutable;
 
 namespace SqlKata
 {
-    public sealed class QueryBuilder
+    public static class QueryBuilder
     {
-        private readonly Query _query;
 
-        public QueryBuilder(Query query)
-        {
-            _query = query;
-        }
 
-        public Q Build()
+        public static Q Build(Query query)
         {
-            return _query.Method switch
+            return query.Method switch
             {
-                "insert" => CompileInsertQuery(),
-                "select" => CompileSelectQuery(_query),
+                "insert" => CompileInsertQuery(query),
+                "select" => CompileSelectQuery(query),
                 _ => throw new NotImplementedException()
             };
         }
 
-        private Q CompileSelectQuery(Query query)
+        private static Q CompileSelectQuery(Query query)
         {
             return new QList(" ",
                 CompileColumns(query),
@@ -29,9 +24,9 @@ namespace SqlKata
                 CompileWheres(query));
         }
 
-        private Q CompileInsertQuery()
+        private static Q CompileInsertQuery(Query query)
         {
-            var from = _query.Components.GetOneComponent<AbstractFrom>("from");
+            var from = query.Components.GetOneComponent<AbstractFrom>("from");
             if (from is null)
                 throw new InvalidOperationException("No table set to insert");
 
@@ -39,7 +34,7 @@ namespace SqlKata
                 throw new InvalidOperationException("Invalid table expression");
 
 
-            var inserts = _query.Components.GetComponents<AbstractInsertClause>("insert");
+            var inserts = query.Components.GetComponents<AbstractInsertClause>("insert");
             if (inserts[0] is InsertQueryClause iqc)
                 return new QInsertQuery(iqc);
 
@@ -54,28 +49,21 @@ namespace SqlKata
             return new QValueInsert(from, columns, values, returnId);
         }
 
-        Q CompileColumns(Query query)
+        private static Q CompileColumns(Query query)
         {
-            // if (ctx.Query.HasComponent("aggregate", EngineCode))
-            // {
-            //     var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
-            //     Debug.Assert(aggregate != null);
-            //
-            //     var aggregateColumns = aggregate.Columns
-            //         .Select(value => XService.Wrap(value))
-            //         .ToList();
-            //
-            //     if (aggregateColumns.Count == 1)
-            //     {
-            //         var sql = string.Join(", ", aggregateColumns);
-            //
-            //         if (ctx.Query.IsDistinct) sql = "DISTINCT " + sql;
-            //
-            //         return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $"){XService.AsAlias(aggregate.Type)}";
-            //     }
-            //
-            //     return "SELECT 1";
-            // }
+            var aggregate = query.GetOneComponent<AggregateClause>("aggregate");
+            if (aggregate != null)
+            {
+                if (aggregate.Columns.Length != 1)
+                    return new QLiteral("SELECT 1");
+                return new QList(" ",
+                    new QLiteral("SELECT"),
+                    new QPrefix(aggregate.Type.ToUpperInvariant(),
+                        new QRoundBraces(
+                            new QCondHeader(query.IsDistinct, "DISTINCT",
+                                new QColumn(aggregate.Columns[0])))),
+                    new QAsAlias(aggregate.Type));
+            }
 
             var columns = query.Components
                 .GetComponents<AbstractColumn>("select")
@@ -87,7 +75,7 @@ namespace SqlKata
             return new QSelect(columns);
         }
 
-        public QColumn CompileColumn(AbstractColumn column)
+        private static QColumn CompileColumn(AbstractColumn column)
         {
             //if (column is RawColumn raw)
             //{
@@ -122,7 +110,8 @@ namespace SqlKata
 
             return new QColumn(((Column)column).Name);
         }
-        public QFrom? CompileFrom(Query query)
+
+        private static QFrom? CompileFrom(Query query)
         {
             var from = query.Components.GetOneComponent<AbstractFrom>("from");
             return from != null
@@ -159,7 +148,7 @@ namespace SqlKata
             }
         }
 
-        public QWhere? CompileWheres(Query query)
+        private static QWhere? CompileWheres(Query query)
         {
             var conditions = query.Components.GetComponents<AbstractCondition>("where");
             if (conditions.Count == 0) return null;
@@ -217,7 +206,7 @@ namespace SqlKata
             }
         }
 
-        private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
+        private static InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException(
                 $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");

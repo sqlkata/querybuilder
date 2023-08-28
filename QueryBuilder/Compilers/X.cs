@@ -20,11 +20,11 @@ namespace SqlKata.Compilers
         public X X { get; }
         public string SingleInsertStartClause { get; } = "INSERT INTO";
         public string MultiInsertStartClause { get; set; } = "INSERT INTO";
-        public string LastId  { get; } = "SELECT scope_identity() as Id";
-        public string ParameterPlaceholder { get; }= "?";
-        public string ParameterPrefix { get; set; }= "@p";
-        public string True { get; set; }= "true";
-        public string False { get; set; }= "false";
+        public string LastId { get; } = "SELECT scope_identity() as Id";
+        public string ParameterPlaceholder { get; } = "?";
+        public string ParameterPrefix { get; set; } = "@p";
+        public string True { get; set; } = "true";
+        public string False { get; set; } = "false";
         public string? SingleRowDummyTableName { get; set; } = null;
 
         public Dialect Dialect { get; set; }
@@ -123,9 +123,19 @@ namespace SqlKata.Compilers
         }
         public void WrapValue(StringBuilder sb, string value)
         {
-            sb.Append(_openingIdentifier);
-            sb.Append(_capitalize ? value.ToUpperInvariant() : value);
-            sb.Append(_closingIdentifier);
+            if (value == "*")
+            {
+                sb.Append("*");
+                return;
+            }
+            var val = _capitalize ? value.ToUpperInvariant() : value;
+            Brace(sb, val, _openingIdentifier, _closingIdentifier);
+        }
+        public void Brace(StringBuilder sb, string value, string opening, string closing)
+        {
+            sb.Append(opening);
+            sb.Append(value.Replace(closing, closing + closing));
+            sb.Append(closing);
         }
         public string WrapIdentifiers(string input)
         {
@@ -142,6 +152,12 @@ namespace SqlKata.Compilers
             return string.IsNullOrWhiteSpace(input)
                 ? ""
                 : $" {_columnAsKeyword}{WrapValue(input)}";
+        }
+        public void AsAlias(StringBuilder sb, string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return;
+            sb.Append(_columnAsKeyword);
+            WrapValue(sb, input);
         }
     }
 }

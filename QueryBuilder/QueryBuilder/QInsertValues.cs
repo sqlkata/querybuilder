@@ -4,6 +4,14 @@ using SqlKata.Compilers;
 
 namespace SqlKata
 {
+    public sealed record QLiteral(string Literal) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(Literal);
+        }
+    }
+
     public sealed record QNullCondition(bool IsNot) : QCondition
     {
         public override void Render(StringBuilder sb, Renderer r)
@@ -15,7 +23,7 @@ namespace SqlKata
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
-            sb.Append(Value ? r.True :  r.False);
+            sb.Append(Value ? r.True : r.False);
         }
     }
     public sealed record QOperator(string Operator) : Q
@@ -39,6 +47,13 @@ namespace SqlKata
         public override void Render(StringBuilder sb, Renderer r)
         {
             r.X.Wrap(sb, Name);
+        }
+    }
+    public sealed record QAsAlias(string Name) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            r.X.AsAlias(sb, Name);
         }
     }
 
@@ -70,6 +85,24 @@ namespace SqlKata
                 sb.Append(" ");
             }
 
+            Expression.Render(sb, r);
+        }
+    }
+
+    public record QPrefix(string Header, Q Expression) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(Header);
+            Expression.Render(sb, r);
+        }
+    }
+    public record QHeader(string Header, Q Expression) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(Header);
+            sb.Append(" ");
             Expression.Render(sb, r);
         }
     }

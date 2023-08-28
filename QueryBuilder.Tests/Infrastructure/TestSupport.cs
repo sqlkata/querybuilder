@@ -34,10 +34,7 @@ public abstract class TestSupport
         var compilerRun = Run(() => Compilers.Compile(query));
         foreach (var engine in Compilers.KnownEngineCodes)
         {
-            var queryBuilder = engine switch
-            {
-                _ => new QueryBuilder(query),
-            };
+         
             var renderer = engine switch
             {
                 EngineCodes.Generic => new Renderer(new X("[", "]", "AS ")),
@@ -79,7 +76,7 @@ public abstract class TestSupport
             (string?, Exception?) RunQuery(BindingMode mode)
             {
                 renderer.BindingMode = mode;
-                return Run(() => queryBuilder.Build().Render(renderer));
+                return Run(() => QueryBuilder.Build(query).Render(renderer));
             }
 
             (string?, Exception?) Expand(
