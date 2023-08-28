@@ -1,12 +1,9 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace SqlKata
 {
     public static class QueryBuilder
     {
-
-
         public static Q Build(Query query)
         {
             return query.Method switch
@@ -151,27 +148,10 @@ namespace SqlKata
         {
             var conditions = query.Components.GetComponents<AbstractCondition>("where");
             if (conditions.Count == 0) return null;
-            return new QWhere(CompileConditions(conditions).ToImmutableArray());
+            return new QWhere(conditions
+                .Select((t, i) => CompileCondition(t, i == 0))
+                .ToImmutableArray());
 
-
-            // TODO: refactor
-            List<QConditionTag> CompileConditions(List<AbstractCondition> src)
-            {
-                var result = new List<QConditionTag>();
-
-                for (var i = 0; i < src.Count; i++)
-                {
-                    var compiled = CompileCondition(src[i], i == 0);
-
-                    //if (compiled == null) continue;
-
-
-                    result.Add(compiled);
-                }
-
-                return result;
-
-            }
             QConditionTag CompileCondition(AbstractCondition clause, bool isFirst)
             {
                 return new QConditionTag(
