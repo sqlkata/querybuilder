@@ -84,15 +84,13 @@ namespace SqlKata.Tests
 
         }
 
-        //[Fact]
-        //public void PassingArrayAsParameter()
-        //{
-        //    var query = new Query("Table").WhereRaw("[Id] in (?)", new object[] { new object[] { 1, 2, 3 } });
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [Id] in (1,2,3)", c[EngineCodes.SqlServer]);
-        //}
+        [Fact]
+        public void PassingArrayAsParameter()
+        {
+            CompareWithCompiler(new Query("Table")
+                .WhereRaw("[Id] in (?)",
+                    new object[] { new object[] { 1, 2, 3 } }));
+        }
 
         //[Fact]
         //public void UsingJsonArray()

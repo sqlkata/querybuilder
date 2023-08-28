@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace SqlKata
@@ -175,33 +176,52 @@ namespace SqlKata
             {
                 return new QConditionTag(
                     isFirst ? null : clause.IsOr,
-                    clause switch
-                    {
-                        BasicCondition c =>
-                            new QNot(clause.IsNot, new QList(" ",
-                                new QColumn(c.Column),
-                                new QOperator(c.Operator),
-                                Parametrize(c.Value))),
-                        NullCondition n => new QList(" ",
-                            new QColumn(n.Column),
-                            new QNullCondition(clause.IsNot)),
-                        BooleanCondition b => new QList(" ",
-                            new QColumn(b.Column),
-                            new QOperator(clause.IsNot ? "!=" : "="),
-                            new QBoolean(b.Value)),
-                        SubQueryCondition sub => new QList(" ",
-                            new QRoundBraces(CompileSelectQuery(sub.Query)),
-                            new QOperator(sub.Operator),
-                            Parametrize(sub.Value)),
-                        TwoColumnsCondition cc =>
-                            new QCondHeader(clause.IsNot, "NOT",
-                                new QList(" ",
-                                    new QColumn(cc.First),
-                                    new QOperator(cc.Operator),
-                                    new QColumn(cc.Second))),
-                        _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
-                    });
+                    ChooseCondition(clause));
             }
+
+            Q ChooseCondition(AbstractCondition clause)
+            {
+                return clause switch
+                {
+                    BasicCondition c => BasicCondition(clause.IsNot, c),
+                    NullCondition n => NullCondition(clause.IsNot, n),
+                    BooleanCondition b => BooleanCondition(clause.IsNot, b),
+                    SubQueryCondition sub => Condition(sub),
+                    TwoColumnsCondition cc =>TwoColumnsCondition(clause.IsNot,cc),
+                          
+                    _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
+                };
+            }
+
+            Q BasicCondition(bool isNot, BasicCondition c) =>
+                new QNot(isNot, new QList(" ",
+                    new QColumn(c.Column),
+                    new QOperator(c.Operator),
+                    Parametrize(c.Value)));
+
+            Q NullCondition(bool isNot, NullCondition n) =>
+                new QList(" ",
+                    new QColumn(n.Column),
+                    new QNullCondition(isNot));
+
+            Q TwoColumnsCondition(bool isNot, TwoColumnsCondition cc) =>
+                new QCondHeader(isNot, "NOT",
+                    new QList(" ",
+                        new QColumn(cc.First),
+                        new QOperator(cc.Operator),
+                        new QColumn(cc.Second)));
+
+            Q BooleanCondition(bool isNot, BooleanCondition b) =>
+                new QList(" ",
+                    new QColumn(b.Column),
+                    new QOperator(isNot ? "!=" : "="),
+                    new QBoolean(b.Value));
+
+            Q Condition(SubQueryCondition sub) =>
+                new QList(" ",
+                    new QRoundBraces(CompileSelectQuery(sub.Query)),
+                    new QOperator(sub.Operator),
+                    Parametrize(sub.Value));
         }
 
         private static InvalidCastException InvalidClauseException(string section, AbstractClause clause)
