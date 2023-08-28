@@ -62,7 +62,7 @@ namespace SqlKata
             {
                 if (value == null) return "NULL";
 
-                if (AsArray(value) is {} arr)
+                if (AsArray(value) is { } arr)
                     return arr.StrJoin(",");
 
                 if (NumberTypes.Contains(value.GetType()))
@@ -114,6 +114,46 @@ namespace SqlKata
                     }
                 else
                     yield return item;
+        }
+
+
+        public static void RenderSqlValue(this StringBuilder sb, object? value)
+        {
+            if (value == null)
+            {
+                sb.Append("NULL");
+            }
+            else if (AsArray(value) is { } arr)
+            {
+                sb.RenderList(",", arr.Cast<object>());
+            }
+            else if (NumberTypes.Contains(value.GetType()))
+            {
+                sb.Append(value);
+            }
+            else if (value is DateTime date)
+            {
+                sb.Append('\'');
+                sb.Append(date.Date == date
+                    ? date.ToString("yyyy-MM-dd")
+                    : date.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.Append('\'');
+
+            }
+            else if (value is bool b)
+            {
+                sb.Append(b ? "true" : "false");
+            }
+            else if (value is Enum e)
+            {
+                sb.Append(Convert.ToInt32(e) + $" /* {e} */");
+            }
+            else
+            {
+                sb.Append('\'');
+                sb.Append(value.ToString()!.Replace("'", "''"));
+                sb.Append('\'');
+            }
         }
     }
 }

@@ -1,7 +1,4 @@
-using System.Collections.ObjectModel;
-using System.Dynamic;
 using FluentAssertions;
-using JetBrains.Annotations;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
@@ -21,12 +18,14 @@ public class IntermediateStageInsertTests : TestSupport
                     Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 });
 
-        var build = query.Build().Render()
-            .Should().Be("INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')");
+        var sqlResult = new SqlServerCompiler().Compile(query);
 
-        //Assert.Equal(
-        //    "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-        //    c[EngineCodes.SqlServer]);
+        query.Build().Render(BindingMode.Values)
+            .Should().Be(sqlResult.ToString());
+        query.Build().Render(BindingMode.Placeholders)
+            .Should().Be(sqlResult.RawSql);
+        query.Build().Render(BindingMode.Params)
+            .Should().Be(sqlResult.Sql);
     }
 
 }

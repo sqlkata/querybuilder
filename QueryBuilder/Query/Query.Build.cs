@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Net.Http.Headers;
 using System.Text;
 using SqlKata.Compilers;
 
@@ -23,7 +22,7 @@ namespace SqlKata
             if (fromClause is null)
                 throw new InvalidOperationException("No table set to insert");
             var inserts = GetComponents<AbstractInsertClause>("insert");
-            if (inserts[0] is InsertQueryClause insertQueryClause)
+            if (inserts[0] is InsertQueryClause)
                 throw new NotImplementedException();
 
             return new QValueInsert(fromClause, inserts
@@ -49,14 +48,17 @@ namespace SqlKata
 
     public static class QExt
     {
-        public static string Render(this Q q)
+        public static string Render(this Q q, BindingMode bindingMode)
         {
             var sb = new StringBuilder();
-            q.Render(sb, new Renderer(new X("[", "]", "AS ")));
+            q.Render(sb, new Renderer(new X("[", "]", "AS "))
+            {
+                BindingMode = bindingMode
+            });
             return sb.ToString();
         }
     }
-    public abstract record Q()
+    public abstract record Q
     {
         public abstract void Render(StringBuilder sb, Renderer r);
     }
@@ -82,8 +84,21 @@ namespace SqlKata
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
-            sb.Append(r.ParameterPlaceholder);
-
+            switch (r.BindingMode)
+            {
+                case BindingMode.Placeholders:
+                    sb.Append(r.ParameterPlaceholder);
+                    break;
+                case BindingMode.Params:
+                    sb.Append("@p");
+                    sb.Append(r.NextParameter());
+                    break;
+                case BindingMode.Values:
+                    sb.RenderSqlValue(Value);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
@@ -117,7 +132,7 @@ namespace SqlKata
             foreach (var item in list)
             {
                 renderItem(item);
-                sb.Append(", ");
+                sb.Append(separator);
                 any = true;
             }
 

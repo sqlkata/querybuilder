@@ -2,6 +2,10 @@ using System.Text;
 
 namespace SqlKata.Compilers
 {
+    public enum BindingMode
+    {
+        Placeholders, Params, Values
+    }
     public sealed class Renderer
     {
         public X X { get; }
@@ -9,11 +13,15 @@ namespace SqlKata.Compilers
         public string MultiInsertStartClause { get; } = "INSERT INTO";
         public string LastId  { get; } = "SELECT scope_identity() as Id";
         public string ParameterPlaceholder { get; }= "?";
-
+        public BindingMode BindingMode { get; set; } = BindingMode.Values;
         public Renderer(X x)
         {
             X = x;
         }
+
+        private int _parameter = -1;
+        public int NextParameter() => ++_parameter;
+
     }
     public sealed class X
     {
