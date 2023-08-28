@@ -1,6 +1,4 @@
 using System.Collections.Immutable;
-using System.Text;
-using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -15,12 +13,17 @@ namespace SqlKata
 
         public Q Build()
         {
-            if (_query.Method == "insert")
+            return _query.Method switch
             {
-                return CompileInsertQuery();
-            }
+                "insert" => CompileInsertQuery(),
+                "select" => CompileSelectQuery(),
+                _ => throw new NotImplementedException()
+            };
+        }
 
-            throw new NotImplementedException();
+        private Q CompileSelectQuery()
+        {
+            return new QList(" ", CompileColumns(), CompileFrom());
         }
 
         private Q CompileInsertQuery()
@@ -32,7 +35,7 @@ namespace SqlKata
             if (from is not FromClause and not RawFromClause)
                 throw new InvalidOperationException("Invalid table expression");
 
-            
+
             var inserts = _query.Components.GetComponents<AbstractInsertClause>("insert");
             if (inserts[0] is InsertQueryClause iqc)
                 return new QInsertQuery(iqc);
@@ -45,7 +48,117 @@ namespace SqlKata
                     c.Values.Select(Parametrize).ToImmutableArray()))
                 .ToArray();
             var returnId = first.ReturnId;
-            return new QValueInsert(from, columns,values, returnId);
+            return new QValueInsert(from, columns, values, returnId);
+        }
+
+        Q CompileColumns()
+        {
+            // if (ctx.Query.HasComponent("aggregate", EngineCode))
+            // {
+            //     var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            //     Debug.Assert(aggregate != null);
+            //
+            //     var aggregateColumns = aggregate.Columns
+            //         .Select(value => XService.Wrap(value))
+            //         .ToList();
+            //
+            //     if (aggregateColumns.Count == 1)
+            //     {
+            //         var sql = string.Join(", ", aggregateColumns);
+            //
+            //         if (ctx.Query.IsDistinct) sql = "DISTINCT " + sql;
+            //
+            //         return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $"){XService.AsAlias(aggregate.Type)}";
+            //     }
+            //
+            //     return "SELECT 1";
+            // }
+
+            var columns = _query.Components
+                .GetComponents<AbstractColumn>("select")
+                .Select(CompileColumn)
+                .ToImmutableArray();
+
+            //var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+
+            return new QSelect(columns);
+        }
+
+        public QColumn CompileColumn(AbstractColumn column)
+        {
+            //if (column is RawColumn raw)
+            //{
+            //    ctx.Bindings.AddRange(raw.Bindings);
+            //    return XService.WrapIdentifiers(raw.Expression);
+            //}
+            //
+            //if (column is QueryColumn queryColumn)
+            //{
+            //    var alias = XService.AsAlias(queryColumn.Query.QueryAlias);
+            //    var subCtx = CompileSelectQuery(queryColumn.Query);
+            //
+            //    ctx.Bindings.AddRange(subCtx.Bindings);
+            //
+            //    return "(" + subCtx.RawSql + $"){alias}";
+            //}
+            //
+            //if (column is AggregatedColumn aggregatedColumn)
+            //{
+            //    var agg = aggregatedColumn.Aggregate.ToUpperInvariant();
+            //
+            //    var (col, alias) = XService.SplitAlias(CompileColumn(ctx, aggregatedColumn.Column));
+            //
+            //    var filterCondition = CompileFilterConditions(ctx, aggregatedColumn);
+            //
+            //    if (string.IsNullOrEmpty(filterCondition)) return $"{agg}({col}){alias}";
+            //
+            //    if (SupportsFilterClause) return $"{agg}({col}) FILTER (WHERE {filterCondition}){alias}";
+            //
+            //    return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
+            //}
+
+            return new QColumn((Column)column);
+        }
+        public QFrom? CompileFrom()
+        {
+            var from = _query.Components.GetOneComponent<AbstractFrom>("from");
+            return from != null
+                ? new QFrom(CompileTableExpression(from))
+                : null;
+
+            QTableExpression CompileTableExpression(AbstractFrom arg)
+            {
+               // if (from is RawFromClause raw)
+               // {
+               //     ctx.Bindings.AddRange(raw.Bindings);
+               //     return XService.WrapIdentifiers(raw.Expression);
+               // }
+               //
+               // if (from is QueryFromClause queryFromClause)
+               // {
+               //     var fromQuery = queryFromClause.Query;
+               //
+               //     var alias = string.IsNullOrEmpty(fromQuery.QueryAlias)
+               //         ? ""
+               //         : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
+               //
+               //     var subCtx = CompileSelectQuery(fromQuery);
+               //
+               //     ctx.Bindings.AddRange(subCtx.Bindings);
+               //
+               //     return "(" + subCtx.RawSql + ")" + alias;
+               // }
+
+                if (arg is FromClause fromClause)
+                    return new QFromClause(fromClause);
+
+                throw InvalidClauseException("TableExpression", arg);
+            }
+        }
+        private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
+        {
+            return new InvalidCastException(
+                $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
 
         private static QParameter Parametrize(object? parameter)
@@ -56,14 +169,6 @@ namespace SqlKata
                 Variable variable => new QVariable(variable),
                 _ => new QObject(parameter)
             };
-        }
-    }
-
-    public record QInsertQuery(InsertQueryClause Iqc) : Q
-    {
-        public override void Render(StringBuilder sb, Renderer r)
-        {
-            throw new NotImplementedException();
         }
     }
 }

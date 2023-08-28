@@ -1,4 +1,3 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
