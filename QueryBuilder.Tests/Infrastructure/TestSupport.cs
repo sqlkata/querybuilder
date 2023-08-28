@@ -13,4 +13,5 @@ public abstract class TestSupport
     {
         return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
     }
+
 }

@@ -140,6 +140,14 @@ namespace SqlKata
             return GetComponents(component, engineCode).Any();
         }
 
+        //public T? TryGetOneComponent<T>(string component, string? engineCode = null)
+        //{
+        //    engineCode ??= EngineScope;
+        //
+        //    var all = GetComponents<TC>(component, engineCode);
+        //    return all.FirstOrDefault(c => c.Engine == engineCode) ??
+        //           all.FirstOrDefault(c => c.Engine == null);
+        //}
         /// <summary>
         ///     Remove all clauses for a component.
         /// </summary>

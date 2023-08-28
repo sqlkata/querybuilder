@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Text;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -17,6 +19,11 @@ namespace SqlKata
     public sealed class FromClause : AbstractFrom
     {
         public required string Table { get; init; }
+
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(r.X.Wrap(Table));
+        }
     }
 
     /// <summary>
@@ -31,6 +38,11 @@ namespace SqlKata
     {
         public required string Expression { get; init; }
         public required ImmutableArray<object> Bindings { get; init; }
+        
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(r.X.WrapIdentifiers(Expression));
+        }
     }
 
     /// <summary>

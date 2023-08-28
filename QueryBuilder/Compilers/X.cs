@@ -1,5 +1,20 @@
+using System.Text;
+
 namespace SqlKata.Compilers
 {
+    public sealed class Renderer
+    {
+        public X X { get; }
+        public string SingleInsertStartClause { get; } = "INSERT INTO";
+        public string MultiInsertStartClause { get; } = "INSERT INTO";
+        public string LastId  { get; } = "SELECT scope_identity() as Id";
+        public string ParameterPlaceholder { get; }= "?";
+
+        public Renderer(X x)
+        {
+            X = x;
+        }
+    }
     public sealed class X
     {
         private readonly bool _capitalize;
@@ -37,6 +52,28 @@ namespace SqlKata.Compilers
             // nor dot "." expression, so wrap it as regular value.
             return WrapValue(value);
         }
+        public void Wrap(StringBuilder sb, string value)
+        {
+            var segments = value.Split(" as ");
+            if (segments.Length > 1)
+            {
+                Wrap(sb, segments[0]);
+                sb.Append(" ");
+                sb.Append(_columnAsKeyword);
+                WrapValue(sb, segments[1]);
+            }
+
+            else if (value.Contains("."))
+            {
+                sb.RenderList(".", value.Split('.'), n => WrapValue(sb, n));
+            }
+            else
+            {
+                // If we reach here then the value does not contain an "AS" alias
+                // nor dot "." expression, so wrap it as regular value.
+                WrapValue(sb, value);
+            }
+        }
 
         public (string, string?) SplitAlias(string value)
         {
@@ -59,6 +96,12 @@ namespace SqlKata.Compilers
         {
             var result = value.Brace(_openingIdentifier, _closingIdentifier);
             return _capitalize ? result.ToUpperInvariant() : result;
+        }
+        public void WrapValue(StringBuilder sb, string value)
+        {
+            sb.Append(_openingIdentifier);
+            sb.Append(_capitalize ? value.ToUpperInvariant() : value);
+            sb.Append(_closingIdentifier);
         }
         public string WrapIdentifiers(string input)
         {
