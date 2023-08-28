@@ -17,9 +17,9 @@ public class TestCompilersContainer
         [EngineCodes.Firebird] = new FirebirdCompiler(),
     };
 
-    public IEnumerable<string> KnownEngineCodes
+    public ICollection<string> KnownEngineCodes
     {
-        get { return Compilers.Select(s => s.Key); }
+        get { return Compilers.Keys; }
     }
 
     /// <summary>

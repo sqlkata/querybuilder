@@ -28,6 +28,11 @@ namespace SqlKata
             var from = _query.Components.GetOneComponent<AbstractFrom>("from");
             if (from is null)
                 throw new InvalidOperationException("No table set to insert");
+
+            if (from is not FromClause and not RawFromClause)
+                throw new InvalidOperationException("Invalid table expression");
+
+            
             var inserts = _query.Components.GetComponents<AbstractInsertClause>("insert");
             if (inserts[0] is InsertQueryClause iqc)
                 return new QInsertQuery(iqc);

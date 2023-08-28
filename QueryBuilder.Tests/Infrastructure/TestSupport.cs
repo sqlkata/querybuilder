@@ -1,5 +1,6 @@
 using FluentAssertions;
 using SqlKata.Compilers;
+using Xunit;
 
 namespace SqlKata.Tests.Infrastructure;
 
@@ -17,22 +18,32 @@ public abstract class TestSupport
         return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
     }
 
+    private static (T?, Exception?) Run<T>(Func<T> action)
+        where T : notnull
+    {
+        try
+        {
+            return (action(), null);
+        }
+        catch (Exception x)
+        {
+            return (default, x);
+        }
+    }
     protected void CompareWithCompiler(Query query)
     {
-        var container = Compilers.Compile(query);
-        foreach (var engine in container.Keys)
+        var compilerRun = Run(() => Compilers.Compile(query));
+        foreach (var engine in Compilers.KnownEngineCodes)
         {
-            var sqlResult = container[engine];
             var queryBuilder = engine switch
             {
                 _ => new QueryBuilder(query),
             };
-            var build = queryBuilder.Build();
             var renderer = engine switch
             {
                 EngineCodes.Generic => new Renderer(new X("[", "]", "AS ")),
                 EngineCodes.SqlServer => new Renderer(new X("[", "]", "AS ")),
-                EngineCodes.Firebird => new Renderer(new ("\"", "\"", "AS ", true))
+                EngineCodes.Firebird => new Renderer(new("\"", "\"", "AS ", true))
                 {
                     SingleRowDummyTableName = "RDB$DATABASE",
                     Dialect = Dialect.Firebird,
@@ -51,17 +62,48 @@ public abstract class TestSupport
                 _ => throw new ArgumentOutOfRangeException(engine)
             };
 
-            renderer.BindingMode = BindingMode.Values;
-            build.Render(renderer)
-                .Should().Be(sqlResult.ToString(), engine);
+            Match(RunQuery(BindingMode.Values), Expand(compilerRun, BindingMode.Values));
+            Match(RunQuery(BindingMode.Params), Expand(compilerRun, BindingMode.Params));
+            Match(RunQuery(BindingMode.Placeholders), Expand(compilerRun, BindingMode.Placeholders));
 
-            renderer.BindingMode = BindingMode.Placeholders;
-            build.Render(renderer)
-                .Should().Be(sqlResult.RawSql, engine);
+            (string?, Exception?) RunQuery(BindingMode mode)
+            {
+                renderer.BindingMode = mode;
+                return Run(() => queryBuilder.Build().Render(renderer));
+            }
 
-            renderer.BindingMode = BindingMode.Params;
-            build.Render(renderer)
-                .Should().Be(sqlResult.Sql, engine);
+            (string?, Exception?) Expand(
+                (TestSqlResultContainer?, Exception?) input,
+                BindingMode mode)
+            {
+                return input switch
+                {
+                    ({ } r, null) => (mode switch
+                    {
+                        BindingMode.Placeholders => r[engine].RawSql,
+                        BindingMode.Params => r[engine].Sql,
+                        BindingMode.Values => r[engine].ToString(),
+                        _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+                    }, null),
+                    (null, { } x) => (null, x),
+                    _ => throw new ArgumentOutOfRangeException(nameof(input), input, null)
+                };
+            }
+            void Match((string? sql, Exception? exception) actual,
+                (string? sql, Exception? exception) expected)
+            {
+                if (expected.exception is {} x)
+                {
+                    actual.exception.Should().NotBeNull(expected.exception.Message);
+                    actual.exception!.Message.Should().Be(x.Message);
+                }
+                else
+                {
+                    expected.sql.Should().NotBeNull();
+                    actual.sql.Should().NotBeNull();
+                    actual.sql.Should().Be(expected.sql);
+                }
+            }
         }
     }
 }

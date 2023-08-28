@@ -68,4 +68,18 @@ public class IntermediateStageInsertTests : TestSupport
                     new byte[] { 0x1, 0x3, 0x3, 0x7 }
                 }));
     }
+    [Fact]
+    public void InsertFromQueryShouldFail()
+    {
+        CompareWithCompiler(new Query()
+            .From(new Query("InnerTable"))
+            .AsInsert(
+                new
+                {
+                    Name = "The User",
+                    Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }));
+
+    }
+
 }
