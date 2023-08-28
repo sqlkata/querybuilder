@@ -198,6 +198,10 @@ namespace SqlKata
                             new QColumn(n.Column),
                             // BUG: IsNot is being appended twice
                             new QNullCondition(clause.IsNot)),
+                        BooleanCondition b => new QList(" ",
+                            new QColumn(b.Column),
+                            new QOperator("="),
+                            new QBoolean(b.Value)),
                         _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                     });
             }

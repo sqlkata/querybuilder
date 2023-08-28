@@ -11,6 +11,13 @@ namespace SqlKata
             sb.Append(IsNot ? "IS NOT NULL" : "IS NULL");
         }
     }
+    public sealed record QBoolean(bool Value) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(Value ? r.True :  r.False);
+        }
+    }
     public sealed record QOperator(string Operator) : Q
     {
         public override void Render(StringBuilder sb, Renderer r)

@@ -208,9 +208,9 @@ namespace SqlKata.Compilers
         protected string CompileBooleanCondition(SqlResult ctx, BooleanCondition item)
         {
             var column = XService.Wrap(item.Column);
-            var value = item.Value ? CompileTrue() : CompileFalse();
 
             var op = item.IsNot ? "!=" : "=";
+            var value = item.Value ? CompileTrue() : CompileFalse();
 
             return $"{column} {op} {value}";
         }

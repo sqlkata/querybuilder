@@ -31,65 +31,28 @@ namespace SqlKata.Tests
                 .OrWhereNot("author", null));
         }
 
-        //[Fact]
-        //public void BasicSelectWithAlias()
-        //{
-        //    var q = new Query().From("users as u").Select("id", "name");
-        //    var c = Compile(q);
+        [Fact]
+        public void BasicSelectWithAlias()
+        {
+            CompareWithCompiler(new Query()
+                .From("users as u")
+                .Select("id", "name"));
+        }
 
-        //    Assert.Equal("SELECT [id], [name] FROM [users] AS [u]", c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT `id`, `name` FROM `users` AS `u`", c[EngineCodes.MySql]);
-        //    Assert.Equal("SELECT \"id\", \"name\" FROM \"users\" AS \"u\"", c[EngineCodes.PostgreSql]);
-        //    Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\" AS \"U\"", c[EngineCodes.Firebird]);
-        //}
+        [Fact]
+        public void NestedEmptyWhereAtFirstCondition()
+        {
+            CompareWithCompiler(new Query("table")
+                .Where(_ => new Query())
+                .Where("id", 1));
+        }
 
-        //[Fact]
-        //public void ExpandedSelect()
-        //{
-        //    var q = new Query().From("users").Select("users.{id,name, age}");
-        //    var c = Compile(q);
-
-        //    Assert.Equal("SELECT [users].[id], [users].[name], [users].[age] FROM [users]", c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT `users`.`id`, `users`.`name`, `users`.`age` FROM `users`", c[EngineCodes.MySql]);
-        //}
-
-        //[Fact]
-        //public void ExpandedSelectWithSchema()
-        //{
-        //    var q = new Query().From("users").Select("dbo.users.{id,name, age}");
-        //    var c = Compile(q);
-
-        //    Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name], [dbo].[users].[age] FROM [users]",
-        //        c[EngineCodes.SqlServer]);
-        //}
-
-        //[Fact]
-        //public void NestedEmptyWhereAtFirstCondition()
-        //{
-        //    var query = new Query("table")
-        //        .Where(_ => new Query())
-        //        .Where("id", 1);
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [table] WHERE [id] = 1", c[EngineCodes.SqlServer]);
-
-
-        //    Assert.Equal("SELECT * FROM \"TABLE\" WHERE \"ID\" = 1", c[EngineCodes.Firebird]);
-        //}
-
-        //[Fact]
-        //public void WhereTrue()
-        //{
-        //    var query = new Query("Table").WhereTrue("IsActive");
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(1 as bit)", c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = true", c[EngineCodes.MySql]);
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = true", c[EngineCodes.PostgreSql]);
-        //    Assert.Equal("SELECT * FROM \"TABLE\" WHERE \"ISACTIVE\" = 1", c[EngineCodes.Firebird]);
-        //}
+        [Fact]
+        public void WhereTrue()
+        {
+            CompareWithCompiler(
+                new Query("Table").WhereTrue("IsActive"));
+        }
 
         //[Fact]
         //public void WhereFalse()

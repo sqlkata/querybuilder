@@ -23,6 +23,8 @@ namespace SqlKata.Compilers
         public string LastId  { get; } = "SELECT scope_identity() as Id";
         public string ParameterPlaceholder { get; }= "?";
         public string ParameterPrefix { get; set; }= "@p";
+        public string True { get; set; }= "true";
+        public string False { get; set; }= "false";
         public string? SingleRowDummyTableName { get; set; } = null;
 
         public Dialect Dialect { get; set; }

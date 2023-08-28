@@ -41,16 +41,27 @@ public abstract class TestSupport
             var renderer = engine switch
             {
                 EngineCodes.Generic => new Renderer(new X("[", "]", "AS ")),
-                EngineCodes.SqlServer => new Renderer(new X("[", "]", "AS ")),
+                EngineCodes.SqlServer => new Renderer(new X("[", "]", "AS "))
+                {
+                    True = "cast(1 as bit)",
+                    False = "cast(0 as bit)"
+                },
                 EngineCodes.Firebird => new Renderer(new("\"", "\"", "AS ", true))
                 {
                     SingleRowDummyTableName = "RDB$DATABASE",
                     Dialect = Dialect.Firebird,
+                    True = "1",
+                    False = "0"
 
                 },
                 EngineCodes.MySql => new Renderer(new X("`", "`", "AS ")),
                 EngineCodes.PostgreSql => new Renderer(new("\"", "\"", "AS ")),
-                EngineCodes.Sqlite => new Renderer(new("\"", "\"", "AS ")),
+                EngineCodes.Sqlite => new Renderer(new("\"", "\"", "AS "))
+                {
+
+                    True = "1",
+                    False = "0"
+                },
                 EngineCodes.Oracle => new Renderer(new("\"", "\"", ""))
                 {
                     ParameterPrefix = ":p",
@@ -91,7 +102,7 @@ public abstract class TestSupport
             void Match((string? sql, Exception? exception) actual,
                 (string? sql, Exception? exception) expected)
             {
-                if (expected.exception is {} x)
+                if (expected.exception is { } x)
                 {
                     actual.exception.Should().NotBeNull(expected.exception.Message);
                     actual.exception!.Message.Should().Be(x.Message);
