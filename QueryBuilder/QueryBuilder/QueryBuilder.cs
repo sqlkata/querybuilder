@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using MoreLinq;
 using SqlKata.Compilers;
 
 namespace SqlKata
@@ -207,6 +208,7 @@ namespace SqlKata
                     BooleanCondition b => BooleanCondition(clause.IsNot, b),
                     SubQueryCondition sub => Condition(sub),
                     TwoColumnsCondition cc => TwoColumnsCondition(clause.IsNot, cc),
+                    RawCondition raw => RawCondition(raw),
 
                     _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                 };
@@ -241,6 +243,13 @@ namespace SqlKata
                     new QRoundBraces(CompileSelectQuery(sub.Query)),
                     new QOperator(sub.Operator),
                     Parametrize(sub.Value));
+
+            Q RawCondition(RawCondition raw) =>
+                new QList("",
+                    raw.Expression.Split('?')
+                        .Select(segment => new QRaw(segment))
+                        .Interleave(raw.Bindings.Select(Parametrize))
+                        .ToArray());
         }
 
         private static InvalidCastException InvalidClauseException(string section, AbstractClause clause)
@@ -249,14 +258,24 @@ namespace SqlKata
                 $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
 
-        private static QParameter Parametrize(object? parameter)
+        private static Q Parametrize(object? parameter)
         {
-            return parameter switch
+            if (parameter is UnsafeLiteral literal)
             {
-                UnsafeLiteral literal => new QUnsafeLiteral(literal),
-                Variable variable => new QVariable(variable),
-                _ => new QValue(parameter)
-            };
+                return new QUnsafeLiteral(literal);
+            }
+
+            if (parameter is Variable variable)
+            {
+                return new QVariable(variable);
+            }
+
+            if (parameter?.AsArray() is { } array)
+            {
+                return array.Cast<object>().ToList()
+                    .ToLazyQList(",", Parametrize);
+            }
+            return new QValue(parameter);
         }
     }
 }

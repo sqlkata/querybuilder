@@ -89,7 +89,7 @@ namespace SqlKata
                 .ToDictionary(x => parameterPrefix + x.i, x => x.v);
         }
 
-        private static IEnumerable? AsArray(this object value)
+        public static IEnumerable? AsArray(this object value)
         {
             if (value is string) return null;
 

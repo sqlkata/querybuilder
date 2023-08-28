@@ -3,7 +3,15 @@ using SqlKata.Compilers;
 
 namespace SqlKata
 {
-    public sealed record QValue(object? Value) : QParameter
+    public sealed record QRaw(string Expression) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append(r.X.WrapIdentifiers(Expression));
+        }
+    }
+
+    public sealed record QValue(object? Value) : Q
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
