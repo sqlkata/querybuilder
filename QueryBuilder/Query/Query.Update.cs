@@ -64,9 +64,6 @@ namespace SqlKata
                 Component = "update",
                 Column = column,
                 Value = value,
-                Columns = ImmutableArray<string>.Empty,
-                Values = ImmutableArray<object?>.Empty,
-                ReturnId = false
             });
 
             return this;

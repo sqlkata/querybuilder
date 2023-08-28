@@ -1,7 +1,17 @@
 using System.Collections.Immutable;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
+    public static class InsertColumnsExt
+    {
+        public static string GetInsertColumnsList(this ImmutableArray<string> columns ,X x)
+        {
+            return !columns.Any()
+                ? ""
+                : $" ({string.Join(", ", columns.Select(x.Wrap))})";
+        }
+    }
     public abstract class AbstractInsertClause : AbstractClause
     {
     }

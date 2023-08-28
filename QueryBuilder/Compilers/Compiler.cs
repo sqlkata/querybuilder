@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
 
@@ -256,43 +255,42 @@ namespace SqlKata.Compilers
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
-                return CompileInsertQueryClause(ctx, table, insertQueryClause);
-            return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>().ToArray());
-        }
+                return CompileInsertQueryClause(insertQueryClause);
+            return CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
 
-        protected SqlResult CompileInsertQueryClause(
-            SqlResult ctx, string table, InsertQueryClause clause)
-        {
-            var columns = GetInsertColumnsList(clause.Columns);
 
-            var subCtx = CompileSelectQuery(clause.Query);
-            ctx.Bindings.AddRange(subCtx.Bindings);
+            SqlResult CompileInsertQueryClause(InsertQueryClause clause)
+            {
+                var columns = clause.Columns.GetInsertColumnsList(XService);
 
-            ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
+                var subCtx = CompileSelectQuery(clause.Query);
+                ctx.Bindings.AddRange(subCtx.Bindings);
 
-            return ctx;
-        }
+                ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
 
-        protected SqlResult CompileValueInsertClauses(
-            SqlResult ctx, string table, InsertClause[] insertClauses)
-        {
-            var isMultiValueInsert = insertClauses.Length > 1;
+                return ctx;
+            }
 
-            var insertInto = isMultiValueInsert ? MultiInsertStartClause : SingleInsertStartClause;
+            SqlResult CompileValueInsertClauses(InsertClause[] insertClauses)
+            {
+                var isMultiValueInsert = insertClauses.Length > 1;
 
-            var firstInsert = insertClauses.First();
-            var columns = GetInsertColumnsList(firstInsert.Columns);
-            var values = string.Join(", ", Parametrize(ctx, firstInsert.Values));
+                var insertInto = isMultiValueInsert ? MultiInsertStartClause : SingleInsertStartClause;
 
-            ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
+                var firstInsert = insertClauses.First();
+                var columns = firstInsert.Columns.GetInsertColumnsList(XService);
+                var values = string.Join(", ", Parametrize(ctx, firstInsert.Values));
 
-            if (isMultiValueInsert)
-                return CompileRemainingInsertClauses(ctx, table, insertClauses);
+                ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
 
-            if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
-                ctx.RawSql += ";" + LastId;
+                if (isMultiValueInsert)
+                    return CompileRemainingInsertClauses(ctx, table, insertClauses);
 
-            return ctx;
+                if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
+                    ctx.RawSql += ";" + LastId;
+
+                return ctx;
+            }
         }
 
         protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table,
@@ -307,12 +305,6 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected string GetInsertColumnsList(ImmutableArray<string> columnList)
-        {
-            return !columnList.Any()
-                ? ""
-                : $" ({string.Join(", ", columnList.Select(value => XService.Wrap(value)))})";
-        }
 
         public SqlResult CompileCteQuery(SqlResult ctx, Query query)
         {

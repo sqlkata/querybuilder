@@ -136,7 +136,7 @@ namespace SqlKata.Compilers
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var columns = GetInsertColumnsList(insert.Columns);
+                var columns = insert.Columns.GetInsertColumnsList(XService);
                 var values = string.Join(", ", Parametrize(ctx, insert.Values));
 
                 var intoFormat = " INTO {0}{1} VALUES ({2})";
