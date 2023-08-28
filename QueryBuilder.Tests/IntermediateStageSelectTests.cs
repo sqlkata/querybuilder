@@ -67,35 +67,22 @@ namespace SqlKata.Tests
                     new Query("Table2")
                         .WhereColumns("Table2.Column", "=", "Table.MyCol")
                         .AsCount(), 1));
-
-            //var c = Compile(query);
-
-            //Assert.Equal(
-            //    "SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1",
-            //    c[EngineCodes.SqlServer]);
-
-            //Assert.Equal(
-            //    "SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1",
-            //    c[EngineCodes.PostgreSql]);
         }
 
-        //[Fact]
-        //public void OrWhereSub()
-        //{
-        //    var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
+        [Fact]
+        public void OrWhereSub()
+        {
+            var subQuery = new Query("Table2")
+                .WhereColumns("Table2.Column", "=", "Table.MyCol")
+                .Distinct()
+                .AsCount();
 
-        //    var query = new Query("Table").WhereNull("MyCol").OrWhereSub(subQuery, "<", 1);
+            CompareWithCompiler(new Query("Table")
+                .WhereNull("MyCol")
+                .Distinct()
+                .OrWhereSub(subQuery, "<", 1));
 
-        //    var c = Compile(query);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1",
-        //        c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"Table\" WHERE \"MyCol\" IS NULL OR (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") < 1",
-        //        c[EngineCodes.PostgreSql]);
-        //}
+        }
 
         //[Fact]
         //public void PassingArrayAsParameter()

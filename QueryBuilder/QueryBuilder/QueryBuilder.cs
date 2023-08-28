@@ -70,9 +70,7 @@ namespace SqlKata
                 .Select(CompileColumn)
                 .ToImmutableArray();
 
-            //var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
-
-            return new QSelect(columns);
+            return new QSelect(query.IsDistinct, columns);
         }
 
         private static QColumn CompileColumn(AbstractColumn column)
