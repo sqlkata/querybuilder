@@ -1,4 +1,3 @@
-using SqlKata.Compilers;
 using System.Collections.Immutable;
 
 namespace SqlKata
@@ -132,26 +131,26 @@ namespace SqlKata
 
             QTableExpression CompileTableExpression(AbstractFrom arg)
             {
-               // if (from is RawFromClause raw)
-               // {
-               //     ctx.Bindings.AddRange(raw.Bindings);
-               //     return XService.WrapIdentifiers(raw.Expression);
-               // }
-               //
-               // if (from is QueryFromClause queryFromClause)
-               // {
-               //     var fromQuery = queryFromClause.Query;
-               //
-               //     var alias = string.IsNullOrEmpty(fromQuery.QueryAlias)
-               //         ? ""
-               //         : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
-               //
-               //     var subCtx = CompileSelectQuery(fromQuery);
-               //
-               //     ctx.Bindings.AddRange(subCtx.Bindings);
-               //
-               //     return "(" + subCtx.RawSql + ")" + alias;
-               // }
+                // if (from is RawFromClause raw)
+                // {
+                //     ctx.Bindings.AddRange(raw.Bindings);
+                //     return XService.WrapIdentifiers(raw.Expression);
+                // }
+                //
+                // if (from is QueryFromClause queryFromClause)
+                // {
+                //     var fromQuery = queryFromClause.Query;
+                //
+                //     var alias = string.IsNullOrEmpty(fromQuery.QueryAlias)
+                //         ? ""
+                //         : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
+                //
+                //     var subCtx = CompileSelectQuery(fromQuery);
+                //
+                //     ctx.Bindings.AddRange(subCtx.Bindings);
+                //
+                //     return "(" + subCtx.RawSql + ")" + alias;
+                // }
 
                 if (arg is FromClause fromClause)
                     return new QFromClause(fromClause);
@@ -165,31 +164,27 @@ namespace SqlKata
             var conditions = _query.Components.GetComponents<AbstractCondition>("where");
             if (conditions.Count == 0) return null;
             return new QWhere(CompileConditions(conditions).ToImmutableArray());
-           // var sql = CompileConditions(conditions).Trim();
-
-           // return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
 
 
-            List<QConditionTag> CompileConditions(List<AbstractCondition> conditions)
+            // TODO: refactor
+            List<QConditionTag> CompileConditions(List<AbstractCondition> src)
             {
                 var result = new List<QConditionTag>();
 
-                for (var i = 0; i < conditions.Count; i++)
+                for (var i = 0; i < src.Count; i++)
                 {
-                    var compiled = CompileCondition(conditions[i], i == 0);
+                    var compiled = CompileCondition(src[i], i == 0);
 
-                    if (compiled == null) continue;
+                    //if (compiled == null) continue;
 
-                    //var boolOperator = i == 0 ? "" : conditions[i].IsOr ? "OR " : "AND ";
 
-                    result.Add( compiled);
+                    result.Add(compiled);
                 }
 
                 return result;
-                //return string.Join(" ", result);
 
             }
-            QConditionTag? CompileCondition(AbstractCondition clause, bool isFirst)
+            QConditionTag CompileCondition(AbstractCondition clause, bool isFirst)
             {
                 return new QConditionTag(
                     isFirst ? null : clause.IsOr, clause.IsNot,
@@ -201,6 +196,7 @@ namespace SqlKata
                             Parametrize(c.Value)),
                         NullCondition n => new QList(" ",
                             new QColumn(n.Column),
+                            // BUG: IsNot is being appended twice
                             new QNullCondition(clause.IsNot)),
                         _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                     });

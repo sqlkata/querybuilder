@@ -1,4 +1,3 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -20,6 +19,16 @@ namespace SqlKata.Tests
                 .Select("id", "name")
                 .Where("author", "")
                 .OrWhere("author", null));
+        }
+        [Fact]
+        public void NotNull()
+        {
+            // BUG: the second IsNOT is lost!
+            CompareWithCompiler(new Query()
+                .From("users")
+                .Select("id", "name")
+                .WhereNot("author", "")
+                .OrWhereNot("author", null));
         }
 
         //[Fact]
