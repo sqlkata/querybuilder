@@ -25,6 +25,15 @@ namespace SqlKata
             sb.Append(r.Operators.CheckOperator(Operator));
         }
     }
+    public sealed record QRoundBraces(Q Exp) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.Append("(");
+            Exp.Render(sb, r);
+            sb.Append(")");
+        }
+    }
     public sealed record QColumn(string Name) : Q
     {
         public override void Render(StringBuilder sb, Renderer r)

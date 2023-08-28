@@ -16,17 +16,17 @@ namespace SqlKata
             return _query.Method switch
             {
                 "insert" => CompileInsertQuery(),
-                "select" => CompileSelectQuery(),
+                "select" => CompileSelectQuery(_query),
                 _ => throw new NotImplementedException()
             };
         }
 
-        private Q CompileSelectQuery()
+        private Q CompileSelectQuery(Query query)
         {
             return new QList(" ",
-                CompileColumns(),
-                CompileFrom(),
-                CompileWheres());
+                CompileColumns(query),
+                CompileFrom(query),
+                CompileWheres(query));
         }
 
         private Q CompileInsertQuery()
@@ -54,7 +54,7 @@ namespace SqlKata
             return new QValueInsert(from, columns, values, returnId);
         }
 
-        Q CompileColumns()
+        Q CompileColumns(Query query)
         {
             // if (ctx.Query.HasComponent("aggregate", EngineCode))
             // {
@@ -77,7 +77,7 @@ namespace SqlKata
             //     return "SELECT 1";
             // }
 
-            var columns = _query.Components
+            var columns = query.Components
                 .GetComponents<AbstractColumn>("select")
                 .Select(CompileColumn)
                 .ToImmutableArray();
@@ -122,9 +122,9 @@ namespace SqlKata
 
             return new QColumn(((Column)column).Name);
         }
-        public QFrom? CompileFrom()
+        public QFrom? CompileFrom(Query query)
         {
-            var from = _query.Components.GetOneComponent<AbstractFrom>("from");
+            var from = query.Components.GetOneComponent<AbstractFrom>("from");
             return from != null
                 ? new QFrom(CompileTableExpression(from))
                 : null;
@@ -159,9 +159,9 @@ namespace SqlKata
             }
         }
 
-        public QWhere? CompileWheres()
+        public QWhere? CompileWheres(Query query)
         {
-            var conditions = _query.Components.GetComponents<AbstractCondition>("where");
+            var conditions = query.Components.GetComponents<AbstractCondition>("where");
             if (conditions.Count == 0) return null;
             return new QWhere(CompileConditions(conditions).ToImmutableArray());
 
@@ -203,6 +203,17 @@ namespace SqlKata
                             // BUG: IsNot should be appended here
                             new QOperator("="),
                             new QBoolean(b.Value)),
+                        SubQueryCondition sub => new QList(" ",
+                            new QRoundBraces(CompileSelectQuery(sub.Query)),
+                            new QOperator(sub.Operator),
+                            Parametrize(sub.Value)),
+                        // var op = clause.IsNot ? "NOT " : "";
+                        // return $"{op}{XService.Wrap(clause.First)} {Operators.CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
+                        TwoColumnsCondition cc => new QList(" ",
+                            new QColumn(cc.First),
+                            // BUG: IsNot should be appended here
+                            new QOperator(cc.Operator),
+                            new QColumn(cc.Second)),
                         _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                     });
             }
