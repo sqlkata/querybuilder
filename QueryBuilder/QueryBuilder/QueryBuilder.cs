@@ -38,19 +38,19 @@ namespace SqlKata
                 return new QInsertQuery(iqc);
 
             var first = (InsertClause)inserts[0];
-            var columns = new QInsertColumns(first.Columns);
+
             var values = inserts
                 .Cast<InsertClause>()
-                .Select(c => new QInsertValues(
-                    c.Values.Select(Parametrize).ToImmutableArray()))
+                .Select(c => c.Values.ToLazyQList(", ", Parametrize))
                 .ToArray();
-            var returnId = first.ReturnId;
-            return CompileValueInsert(from, columns, values, returnId);
+            return CompileValueInsert(from, first, values);
 
             static Q CompileValueInsert(
-                AbstractFrom from, QInsertColumns columns,
-                QInsertValues[] values, bool returnId)
+                AbstractFrom from, InsertClause insertClause,
+                QLazyList<object?>[] values)
             {
+                var columns = new QRoundBraces(
+                    insertClause.Columns.ToLazyQList(", ", c => new QColumn(c)));
                 var head = values.First();
                 var tail = values.Skip(1).ToArray();
                 var simple = new QHeader("VALUES", values
@@ -82,7 +82,7 @@ namespace SqlKata
                                 new QLiteral("SELECT 1 FROM DUAL"))
                             : simple
                     }),
-                    returnId ? new QLastId() : null);
+                    insertClause.ReturnId ? new QLastId() : null);
             }
         }
 
@@ -255,7 +255,7 @@ namespace SqlKata
             {
                 UnsafeLiteral literal => new QUnsafeLiteral(literal),
                 Variable variable => new QVariable(variable),
-                _ => new QObject(parameter)
+                _ => new QValue(parameter)
             };
         }
     }

@@ -3,7 +3,7 @@ using SqlKata.Compilers;
 
 namespace SqlKata
 {
-    public sealed record QObject(object? Value) : QParameter
+    public sealed record QValue(object? Value) : QParameter
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
