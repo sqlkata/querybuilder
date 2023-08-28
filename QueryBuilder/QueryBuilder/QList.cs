@@ -9,7 +9,6 @@ namespace SqlKata
         public override void Render(StringBuilder sb, Renderer r)
         {
             sb.RenderList(Separator, Elements.OfType<Q>(), r);
-
         }
     }
 }

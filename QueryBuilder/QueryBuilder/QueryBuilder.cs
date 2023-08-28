@@ -209,7 +209,7 @@ namespace SqlKata
                     BooleanCondition b => BooleanCondition(clause.IsNot, b),
                     SubQueryCondition sub => Condition(sub),
                     TwoColumnsCondition cc => TwoColumnsCondition(clause.IsNot, cc),
-                    RawCondition raw => RawCondition(raw),
+                    RawCondition raw => CompileRaw(raw.Expression, raw.Bindings),
 
                     _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                 };
@@ -244,40 +244,33 @@ namespace SqlKata
                     new QRoundBraces(CompileSelectQuery(sub.Query)),
                     new QOperator(sub.Operator),
                     Parametrize(sub.Value));
-
-            Q RawCondition(RawCondition raw) =>
-                new QList("",
-                    raw.Expression.Split('?')
-                        .Select(segment => new QRaw(segment))
-                        .Interleave(raw.Bindings.Select(Parametrize))
-                        .ToArray());
         }
 
-        public static Q? CompileUnion(Query query)
+        private static Q CompileRaw(string expression, IEnumerable<object?> bindings) =>
+            new QList("",
+                expression.Split('?')
+                    .Select(segment => new QRaw(segment))
+                    .Interleave(bindings.Select(Parametrize))
+                    .ToArray());
+
+        private static Q? CompileUnion(Query query)
         {
             // Handles UNION, EXCEPT and INTERSECT
             var clauses = query.GetComponents("combine");
             if (clauses.Count == 0) return null;
 
-            var result = new List<Q>();
-
-            foreach (var clause in clauses)
-                if (clause is Combine sub)
+            return new QList(" ", clauses
+                .Select(clause => clause switch
                 {
-                    result.Add(
+                    Combine sub =>
                         new QHeader(sub.Operation.ToUpperInvariant(),
                             new QCondHeader(sub.All, "ALL",
-                                CompileSelectQuery(sub.Query))));
-                }
-            // else
-            // {
-            //     var combineRawClause = (RawCombine)clause;
-            //
-            //     combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
-            // }
-
-            return new QList(" ", result.ToArray());
+                                CompileSelectQuery(sub.Query))),
+                    RawCombine raw => CompileRaw(raw.Expression, raw.Bindings),
+                    _ => throw new ArgumentOutOfRangeException(clause.ToString())
+                }).ToArray());
         }
+
         private static InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException(

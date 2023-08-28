@@ -98,37 +98,13 @@ namespace SqlKata.Tests
             CompareWithCompiler(new Query("Phones").Union(new Query("Laptops")));
         }
 
+        [Fact]
+        public void RawUnionWithBindings()
+        {
+            CompareWithCompiler(new Query("Phones")
+                .UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A"));
 
-        //[Fact]
-        //public void UnionWithBindings()
-        //{
-        //    var laptops = new Query("Laptops").Where("Type", "A");
-        //    var mobiles = new Query("Phones").Union(laptops);
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'",
-        //        c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'",
-        //        c[EngineCodes.Sqlite]);
-        //    Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'",
-        //        c[EngineCodes.MySql]);
-        //    Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" WHERE \"TYPE\" = 'A'",
-        //        c[EngineCodes.Firebird]);
-        //}
-
-        //[Fact]
-        //public void RawUnionWithBindings()
-        //{
-        //    var mobiles = new Query("Phones").UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A");
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'",
-        //        c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'",
-        //        c[EngineCodes.MySql]);
-        //}
+        }
 
         //[Fact]
         //public void MultipleUnion()
