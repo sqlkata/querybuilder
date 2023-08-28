@@ -44,7 +44,31 @@ namespace SqlKata
                     c.Values.Select(Parametrize).ToImmutableArray()))
                 .ToArray();
             var returnId = first.ReturnId;
-            return new QValueInsert(from, columns, values, returnId);
+            return CompileValueInsert(from, columns, values, returnId);
+
+            static Q CompileValueInsert(
+                AbstractFrom from, QInsertColumns columns,
+                QInsertValues[] values, bool returnId)
+            {
+                var list = new List<Q>()
+                {
+                    new QInsertStartClause(values.Length > 1),
+                    new QClause(from),
+                    columns
+                };
+                if (values.Length > 1)
+                {
+                    list.Add(new QHeadMultiValueInsert(values.First()));
+                    list.Add(new QTailMultiValueInsert(from, columns, values.Skip(1).ToArray()));
+                }
+                else
+                {
+                    list.Add(new QSingleValueInsert(values.Single()));
+                }
+                if (returnId) list.Add(new QLastId());
+
+                return new QList(" ", list.ToArray());
+            }
         }
 
         private static Q CompileColumns(Query query)
@@ -167,8 +191,8 @@ namespace SqlKata
                     NullCondition n => NullCondition(clause.IsNot, n),
                     BooleanCondition b => BooleanCondition(clause.IsNot, b),
                     SubQueryCondition sub => Condition(sub),
-                    TwoColumnsCondition cc =>TwoColumnsCondition(clause.IsNot,cc),
-                          
+                    TwoColumnsCondition cc => TwoColumnsCondition(clause.IsNot, cc),
+
                     _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                 };
             }

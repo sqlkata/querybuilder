@@ -8,7 +8,7 @@ namespace SqlKata
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
-            sb.Append(" (");
+            sb.Append("(");
             sb.RenderList(", ", Names, c => r.X.Wrap(sb, c));
             sb.Append(")");
         }

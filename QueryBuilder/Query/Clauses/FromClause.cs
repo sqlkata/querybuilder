@@ -22,7 +22,7 @@ namespace SqlKata
 
         public override void Render(StringBuilder sb, Renderer r)
         {
-            sb.Append(r.X.Wrap(Table));
+            r.X.Wrap(sb, Table);
         }
     }
 
