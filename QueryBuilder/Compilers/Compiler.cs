@@ -7,23 +7,7 @@ namespace SqlKata.Compilers
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
 
-        /// <summary>
-        ///     A list of white-listed operators
-        /// </summary>
-        /// <value></value>
-        private readonly HashSet<string> _operators = new()
-        {
-            "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-            "like", "not like",
-            "ilike", "not ilike",
-            "like binary", "not like binary",
-            "rlike", "not rlike",
-            "regexp", "not regexp",
-            "similar to", "not similar to"
-        };
-
-        private readonly HashSet<string> _userOperators = new();
-
+        public readonly WhiteList Operators = new();
 
         protected Compiler()
         {
@@ -54,7 +38,6 @@ namespace SqlKata.Compilers
         /// <value></value>
         public bool OmitSelectInsideExists { get; init; } = true;
 
-
         /// <summary>
         ///     Add the passed operator(s) to the white list so they can be used with
         ///     the Where/Having methods, this prevent passing arbitrary operators
@@ -64,7 +47,7 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         public Compiler Whitelist(params string[] operators)
         {
-            foreach (var op in operators) _userOperators.Add(op);
+            Operators.Whitelist(operators);
 
             return this;
         }
@@ -683,18 +666,6 @@ namespace SqlKata.Compilers
                 $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
 
-        protected string CheckOperator(string op)
-        {
-            op = op.ToLowerInvariant();
-
-            var valid = _operators.Contains(op) || _userOperators.Contains(op);
-
-            if (!valid)
-                throw new InvalidOperationException(
-                    $"The operator '{op}' cannot be used. Please consider white listing it before using it.");
-
-            return op;
-        }
 
         /// <summary>
         ///     Resolve a parameter

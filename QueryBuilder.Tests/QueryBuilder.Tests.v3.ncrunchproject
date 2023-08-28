@@ -4,6 +4,9 @@
       <NamedTestSelector>
         <TestName>SqlKata.Tests.IntermediateStageInsertTests.InsertFromSubQueryWithCte</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.MySqlExecutionTest</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

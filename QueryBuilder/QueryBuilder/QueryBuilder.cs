@@ -1,3 +1,4 @@
+using SqlKata.Compilers;
 using System.Collections.Immutable;
 
 namespace SqlKata
@@ -23,7 +24,10 @@ namespace SqlKata
 
         private Q CompileSelectQuery()
         {
-            return new QList(" ", CompileColumns(), CompileFrom());
+            return new QList(" ",
+                CompileColumns(),
+                CompileFrom(),
+                CompileWheres());
         }
 
         private Q CompileInsertQuery()
@@ -117,7 +121,7 @@ namespace SqlKata
             //    return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
             //}
 
-            return new QColumn((Column)column);
+            return new QColumn(((Column)column).Name);
         }
         public QFrom? CompileFrom()
         {
@@ -155,6 +159,54 @@ namespace SqlKata
                 throw InvalidClauseException("TableExpression", arg);
             }
         }
+
+        public QWhere? CompileWheres()
+        {
+            var conditions = _query.Components.GetComponents<AbstractCondition>("where");
+            if (conditions.Count == 0) return null;
+            return new QWhere(CompileConditions(conditions).ToImmutableArray());
+           // var sql = CompileConditions(conditions).Trim();
+
+           // return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
+
+
+            List<QConditionTag> CompileConditions(List<AbstractCondition> conditions)
+            {
+                var result = new List<QConditionTag>();
+
+                for (var i = 0; i < conditions.Count; i++)
+                {
+                    var compiled = CompileCondition(conditions[i], i == 0);
+
+                    if (compiled == null) continue;
+
+                    //var boolOperator = i == 0 ? "" : conditions[i].IsOr ? "OR " : "AND ";
+
+                    result.Add( compiled);
+                }
+
+                return result;
+                //return string.Join(" ", result);
+
+            }
+            QConditionTag? CompileCondition(AbstractCondition clause, bool isFirst)
+            {
+                return new QConditionTag(
+                    isFirst ? null : clause.IsOr, clause.IsNot,
+                    clause switch
+                    {
+                        BasicCondition c => new QList(" ",
+                            new QColumn(c.Column),
+                            new QOperator(c.Operator),
+                            Parametrize(c.Value)),
+                        NullCondition n => new QList(" ",
+                            new QColumn(n.Column),
+                            new QNullCondition(clause.IsNot)),
+                        _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
+                    });
+            }
+        }
+
         private InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException(

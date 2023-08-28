@@ -15,6 +15,8 @@ namespace SqlKata.Compilers
     }
     public sealed class Renderer
     {
+        public readonly WhiteList Operators = new();
+
         public X X { get; }
         public string SingleInsertStartClause { get; } = "INSERT INTO";
         public string MultiInsertStartClause { get; set; } = "INSERT INTO";

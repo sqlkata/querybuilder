@@ -40,9 +40,9 @@ namespace SqlKata.Compilers
             string sql;
 
             if (x.Value is UnsafeLiteral)
-                sql = $"{column} {CheckOperator(method)} {value}";
+                sql = $"{column} {Operators.CheckOperator(method)} {value}";
             else
-                sql = $"{column} {CheckOperator(method)} {Parameter(ctx, value)}";
+                sql = $"{column} {Operators.CheckOperator(method)} {Parameter(ctx, value)}";
 
             if (x.EscapeCharacter is {} esc) sql = $"{sql} ESCAPE '{esc}'";
 

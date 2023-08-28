@@ -67,7 +67,7 @@ namespace SqlKata.Compilers
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
-            return XService.Wrap(x.Column) + " " + CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
+            return XService.Wrap(x.Column) + " " + Operators.CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
         protected string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
@@ -76,12 +76,12 @@ namespace SqlKata.Compilers
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
-            return "(" + subCtx.RawSql + ") " + CheckOperator(x.Operator) + " " + Parameter(ctx, x.Value);
+            return "(" + subCtx.RawSql + ") " + Operators.CheckOperator(x.Operator) + " " + Parameter(ctx, x.Value);
         }
 
         protected string CompileBasicCondition(SqlResult ctx, BasicCondition x)
         {
-            var sql = $"{XService.Wrap(x.Column)} {CheckOperator(x.Operator)} {Parameter(ctx, x.Value)}";
+            var sql = $"{XService.Wrap(x.Column)} {Operators.CheckOperator(x.Operator)} {Parameter(ctx, x.Value)}";
 
             if (x.IsNot) return $"NOT ({sql})";
 
@@ -125,8 +125,8 @@ namespace SqlKata.Compilers
             }
 
             sql = x.Value is UnsafeLiteral
-                ? $"{column} {CheckOperator(method)} {value}"
-                : $"{column} {CheckOperator(method)} {Parameter(ctx, value)}";
+                ? $"{column} {Operators.CheckOperator(method)} {value}"
+                : $"{column} {Operators.CheckOperator(method)} {Parameter(ctx, value)}";
 
             if (x.EscapeCharacter is {} esc) sql = $"{sql} ESCAPE '{esc}'";
 
@@ -136,7 +136,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x)
         {
             var column = XService.Wrap(x.Column);
-            var op = CheckOperator(x.Operator);
+            var op = Operators.CheckOperator(x.Operator);
 
             var sql = $"{x.Part.ToUpperInvariant()}({column}) {op} {Parameter(ctx, x.Value)}";
 
@@ -161,7 +161,7 @@ namespace SqlKata.Compilers
         protected string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
         {
             var op = clause.IsNot ? "NOT " : "";
-            return $"{op}{XService.Wrap(clause.First)} {CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
+            return $"{op}{XService.Wrap(clause.First)} {Operators.CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
         }
 
         protected string CompileBetweenCondition<T>(SqlResult ctx, BetweenCondition<T> item)

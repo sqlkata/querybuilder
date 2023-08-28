@@ -99,7 +99,7 @@ public abstract class TestSupport
                 else
                 {
                     expected.sql.Should().NotBeNull();
-                    actual.sql.Should().NotBeNull();
+                    actual.sql.Should().NotBeNull(actual.exception?.Message);
                     actual.sql.Should().Be(expected.sql);
                 }
             }
