@@ -187,33 +187,31 @@ namespace SqlKata
             QConditionTag CompileCondition(AbstractCondition clause, bool isFirst)
             {
                 return new QConditionTag(
-                    isFirst ? null : clause.IsOr, clause.IsNot,
+                    isFirst ? null : clause.IsOr,
                     clause switch
                     {
-                        BasicCondition c => new QList(" ",
-                            new QColumn(c.Column),
-                            new QOperator(c.Operator),
-                            Parametrize(c.Value)),
+                        BasicCondition c =>
+                            new QNot(clause.IsNot, new QList(" ",
+                                new QColumn(c.Column),
+                                new QOperator(c.Operator),
+                                Parametrize(c.Value))),
                         NullCondition n => new QList(" ",
                             new QColumn(n.Column),
-                            // BUG: IsNot is being appended twice
                             new QNullCondition(clause.IsNot)),
                         BooleanCondition b => new QList(" ",
                             new QColumn(b.Column),
-                            // BUG: IsNot should be appended here
-                            new QOperator("="),
+                            new QOperator(clause.IsNot ? "!=" : "="),
                             new QBoolean(b.Value)),
                         SubQueryCondition sub => new QList(" ",
                             new QRoundBraces(CompileSelectQuery(sub.Query)),
                             new QOperator(sub.Operator),
                             Parametrize(sub.Value)),
-                        // var op = clause.IsNot ? "NOT " : "";
-                        // return $"{op}{XService.Wrap(clause.First)} {Operators.CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
-                        TwoColumnsCondition cc => new QList(" ",
-                            new QColumn(cc.First),
-                            // BUG: IsNot should be appended here
-                            new QOperator(cc.Operator),
-                            new QColumn(cc.Second)),
+                        TwoColumnsCondition cc =>
+                            new QCondHeader(clause.IsNot, "NOT",
+                                new QList(" ",
+                                    new QColumn(cc.First),
+                                    new QOperator(cc.Operator),
+                                    new QColumn(cc.Second))),
                         _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)
                     });
             }

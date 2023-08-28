@@ -44,11 +44,10 @@ namespace SqlKata
 
     public abstract record QTableExpression : Q;
     public abstract record QCondition : Q;
-    public record QConditionTag(bool? IsOr, bool IsNot, Q Condition) : Q
+    public record QConditionTag(bool? IsOr, Q Condition) : Q
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
-            //var boolOperator = i == 0 ? "" : conditions[i].IsOr ? "OR " : "AND ";
             if (IsOr is true)
             {
                 sb.Append("OR ");
@@ -57,7 +56,28 @@ namespace SqlKata
             {
                 sb.Append("AND ");
             }
+            Condition.Render(sb, r);
+        }
+    }
 
+    public record QCondHeader(bool Show, string Header, Q Expression) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            if (Show)
+            {
+                sb.Append(Header);
+                sb.Append(" ");
+            }
+
+            Expression.Render(sb, r);
+        }
+    }
+
+    public record QNot(bool IsNot, Q Condition) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
             if (IsNot)
             {
                 sb.Append("NOT (");
