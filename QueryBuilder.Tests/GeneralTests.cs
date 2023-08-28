@@ -251,7 +251,8 @@ public class GeneralTests : TestSupport
         {
             Component = "from", 
             Table = "updated",
-            Engine = engine
+            Engine = engine,
+            Alias = null,
         });
 
         Assert.Equal("updated", query.Clauses.OfType<FromClause>().Single().Table);

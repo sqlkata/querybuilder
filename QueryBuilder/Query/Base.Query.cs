@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
-using SqlKata.Extensions;
 
 namespace SqlKata
 {
@@ -215,27 +214,14 @@ namespace SqlKata
             return ret;
         }
 
-        /// <summary>
-        ///     Add a from Clause
-        /// </summary>
-        /// <param name="table"></param>
-        /// <returns></returns>
-        public Query From(GTable table)
-        {
-            return AddOrReplaceComponent(new FromClause
-            {
-                Engine = EngineScope,
-                Component = "from",
-                Table = table.Name
-            });
-        }
         public Query From(string table)
         {
             return AddOrReplaceComponent(new FromClause
             {
                 Engine = EngineScope,
                 Component = "from",
-                Table = table
+                Table = table,
+                Alias = table.Split(" as ").Last(),
             });
         }
 
@@ -246,12 +232,12 @@ namespace SqlKata
 
             if (alias != null) query.As(alias);
 
-
             return AddOrReplaceComponent(new QueryFromClause
             {
                 Engine = EngineScope,
                 Component = "from",
-                Query = query
+                Query = query,
+                Alias = alias ?? query.QueryAlias
             });
         }
 
@@ -264,7 +250,8 @@ namespace SqlKata
                 Engine = EngineScope,
                 Component = "from",
                 Expression = sql,
-                Bindings = bindings.ToImmutableArray()
+                Bindings = bindings.ToImmutableArray(),
+                Alias = null
             });
         }
 

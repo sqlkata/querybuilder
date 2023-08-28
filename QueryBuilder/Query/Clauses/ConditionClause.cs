@@ -21,7 +21,6 @@ namespace SqlKata
     public class BasicStringCondition : BasicCondition
     {
         public required bool CaseSensitive { get; init; }
-
         public required char? EscapeCharacter { get; init; }
     }
 
