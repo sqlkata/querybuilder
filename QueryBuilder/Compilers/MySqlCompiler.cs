@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
     {
         public MySqlCompiler()
         {
-            OpeningIdentifier = ClosingIdentifier = "`";
+            XService = new X("`", "`", "AS ");
             LastId = "SELECT last_insert_id() as Id";
             EngineCode = EngineCodes.MySql;
         }

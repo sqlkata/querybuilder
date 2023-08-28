@@ -4,7 +4,6 @@ namespace SqlKata.Compilers
     {
         public SqliteCompiler()
         {
-            OpeningIdentifier = ClosingIdentifier = "\"";
             LastId = "select last_insert_rowid() as id";
             EngineCode = EngineCodes.Sqlite;
             SupportsFilterClause = true;
@@ -36,7 +35,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
             var formatMap = new Dictionary<string, string>

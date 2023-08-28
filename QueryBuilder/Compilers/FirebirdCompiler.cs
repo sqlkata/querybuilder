@@ -8,6 +8,7 @@ namespace SqlKata.Compilers
         {
             EngineCode = EngineCodes.Firebird;
             SingleRowDummyTableName = "RDB$DATABASE";
+            XService = new ("\"", "\"", "AS ", true);
         }
 
         public override SqlResult CompileInsertQuery(Query query)
@@ -73,7 +74,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            var column = XService.Wrap(condition.Column);
 
             string left;
 
@@ -91,10 +92,6 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        public override string WrapValue(string value)
-        {
-            return base.WrapValue(value).ToUpperInvariant();
-        }
 
         public override string CompileTrue()
         {

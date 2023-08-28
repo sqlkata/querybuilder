@@ -4,8 +4,7 @@ namespace SqlKata.Compilers
     {
         public SqlServerCompiler()
         {
-            OpeningIdentifier = "[";
-            ClosingIdentifier = "]";
+            XService = new X("[", "]", "AS ");
             LastId = "SELECT scope_identity() as Id";
             EngineCode = EngineCodes.SqlServer;
         }
@@ -129,7 +128,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            var column = XService.Wrap(condition.Column);
             var part = condition.Part.ToUpperInvariant();
 
             string left;
@@ -150,7 +149,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult(){Query = null};
 
-            var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
+            var colNames = string.Join(", ", adHoc.Columns.Select(value => XService.Wrap(value)));
 
             var valueRow = string.Join(", ", Enumerable.Repeat(ParameterPlaceholder, adHoc.Columns.Length));
             var valueRows = string.Join(", ",

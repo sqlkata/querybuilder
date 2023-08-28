@@ -33,12 +33,9 @@ namespace SqlKata.Compilers
 
         public const string ParameterPlaceholder = "?";
         public string ParameterPrefix { get; init; } = "@p";
-        protected string OpeningIdentifier { get; init; } = "\"";
-        protected string ClosingIdentifier { get; init; } = "\"";
-        protected string ColumnAsKeyword { get; init; } = "AS ";
+        public X XService { get; init; } = new("\"", "\"", "AS ");
         protected string TableAsKeyword { get; init; } = "AS ";
         protected string LastId { get; init; } = "";
-        private const string EscapeCharacter = "\\";
 
 
         private const string SingleInsertStartClause = "INSERT INTO";
@@ -72,7 +69,7 @@ namespace SqlKata.Compilers
 
             return this;
         }
-        
+
         public virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult
@@ -108,7 +105,7 @@ namespace SqlKata.Compilers
             var ctx = new SqlResult { Query = null };
 
             var row = "SELECT " +
-                      string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {Wrap(col)}"));
+                      string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {XService.Wrap(col)}"));
 
             var fromTable = SingleRowDummyTableName;
 
@@ -136,11 +133,11 @@ namespace SqlKata.Compilers
 
             string? table = null;
 
-            if (fromClause is FromClause fromClauseCast) table = Wrap(fromClauseCast.Table);
+            if (fromClause is FromClause fromClauseCast) table = XService.Wrap(fromClauseCast.Table);
 
             if (fromClause is RawFromClause rawFromClause)
             {
-                table = WrapIdentifiers(rawFromClause.Expression);
+                table = XService.WrapIdentifiers(rawFromClause.Expression);
                 ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
@@ -160,7 +157,7 @@ namespace SqlKata.Compilers
             {
                 // check if we have alias 
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
-                    ctx.RawSql = $"DELETE {Wrap(fromClause.Alias)} FROM {table} {joins}{where}";
+                    ctx.RawSql = $"DELETE {XService.Wrap(fromClause.Alias)} FROM {table} {joins}{where}";
                 else
                     ctx.RawSql = $"DELETE {table} FROM {table} {joins}{where}";
             }
@@ -182,11 +179,11 @@ namespace SqlKata.Compilers
 
             string? table = null;
 
-            if (fromClause is FromClause fromClauseCast) table = Wrap(fromClauseCast.Table);
+            if (fromClause is FromClause fromClauseCast) table = XService.Wrap(fromClauseCast.Table);
 
             if (fromClause is RawFromClause rawFromClause)
             {
-                table = WrapIdentifiers(rawFromClause.Expression);
+                table = XService.WrapIdentifiers(rawFromClause.Expression);
                 ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
@@ -199,7 +196,7 @@ namespace SqlKata.Compilers
 
             if (clause is IncrementClause increment)
             {
-                var column = Wrap(increment.Column);
+                var column = XService.Wrap(increment.Column);
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
@@ -218,7 +215,7 @@ namespace SqlKata.Compilers
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Length; i++)
-                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
 
             var sets = string.Join(", ", parts);
 
@@ -247,10 +244,10 @@ namespace SqlKata.Compilers
 
             string? table = null;
             if (fromClause is FromClause fromClauseCast)
-                table = Wrap(fromClauseCast.Table);
+                table = XService.Wrap(fromClauseCast.Table);
             if (fromClause is RawFromClause rawFromClause)
             {
-                table = WrapIdentifiers(rawFromClause.Expression);
+                table = XService.WrapIdentifiers(rawFromClause.Expression);
                 ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
@@ -314,7 +311,7 @@ namespace SqlKata.Compilers
         {
             return !columnList.Any()
                 ? ""
-                : $" ({string.Join(", ", columnList.Select(Wrap))})";
+                : $" ({string.Join(", ", columnList.Select(value => XService.Wrap(value)))})";
         }
 
         public SqlResult CompileCteQuery(SqlResult ctx, Query query)
@@ -354,16 +351,12 @@ namespace SqlKata.Compilers
             if (column is RawColumn raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
-                return WrapIdentifiers(raw.Expression);
+                return XService.WrapIdentifiers(raw.Expression);
             }
 
             if (column is QueryColumn queryColumn)
             {
-                var alias = "";
-
-                if (!string.IsNullOrWhiteSpace(queryColumn.Query.QueryAlias))
-                    alias = $" {ColumnAsKeyword}{WrapValue(queryColumn.Query.QueryAlias)}";
-
+                var alias = XService.AsAlias(queryColumn.Query.QueryAlias);
                 var subCtx = CompileSelectQuery(queryColumn.Query);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
@@ -375,9 +368,7 @@ namespace SqlKata.Compilers
             {
                 var agg = aggregatedColumn.Aggregate.ToUpperInvariant();
 
-                var (col, alias) = SplitAlias(CompileColumn(ctx, aggregatedColumn.Column));
-
-                alias = string.IsNullOrEmpty(alias) ? "" : $" {ColumnAsKeyword}{alias}";
+                var (col, alias) = XService.SplitAlias(CompileColumn(ctx, aggregatedColumn.Column));
 
                 var filterCondition = CompileFilterConditions(ctx, aggregatedColumn);
 
@@ -388,7 +379,7 @@ namespace SqlKata.Compilers
                 return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
             }
 
-            return Wrap(((Column)column).Name);
+            return XService.Wrap(((Column)column).Name);
         }
 
         private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
@@ -410,7 +401,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.AddRange(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                ctx.RawSql = $"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})";
+                ctx.RawSql = $"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})";
             }
             else if (cte is QueryFromClause queryFromClause)
             {
@@ -418,7 +409,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
+                ctx.RawSql = $"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
@@ -426,7 +417,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
-                ctx.RawSql = $"{WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})";
+                ctx.RawSql = $"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})";
             }
 
             return ctx;
@@ -445,7 +436,7 @@ namespace SqlKata.Compilers
                 Debug.Assert(aggregate != null);
 
                 var aggregateColumns = aggregate.Columns
-                    .Select(Wrap)
+                    .Select(value => XService.Wrap(value))
                     .ToList();
 
                 if (aggregateColumns.Count == 1)
@@ -454,8 +445,7 @@ namespace SqlKata.Compilers
 
                     if (ctx.Query.IsDistinct) sql = "DISTINCT " + sql;
 
-                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" +
-                           WrapValue(aggregate.Type);
+                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $"){XService.AsAlias(aggregate.Type)}";
                 }
 
                 return "SELECT 1";
@@ -500,7 +490,7 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
 
-                    combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
+                    combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
                 }
 
             return string.Join(" ", combinedQueries);
@@ -511,7 +501,7 @@ namespace SqlKata.Compilers
             if (from is RawFromClause raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
-                return WrapIdentifiers(raw.Expression);
+                return XService.WrapIdentifiers(raw.Expression);
             }
 
             if (from is QueryFromClause queryFromClause)
@@ -520,7 +510,7 @@ namespace SqlKata.Compilers
 
                 var alias = string.IsNullOrEmpty(fromQuery.QueryAlias)
                     ? ""
-                    : $" {TableAsKeyword}" + WrapValue(fromQuery.QueryAlias);
+                    : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
 
                 var subCtx = CompileSelectQuery(fromQuery);
 
@@ -529,7 +519,7 @@ namespace SqlKata.Compilers
                 return "(" + subCtx.RawSql + ")" + alias;
             }
 
-            if (from is FromClause fromClause) return Wrap(fromClause.Table);
+            if (from is FromClause fromClause) return XService.Wrap(fromClause.Table);
 
             throw InvalidClauseException("TableExpression", from);
         }
@@ -604,12 +594,12 @@ namespace SqlKata.Compilers
                     if (x is RawOrderBy raw)
                     {
                         ctx.Bindings.AddRange(raw.Bindings);
-                        return WrapIdentifiers(raw.Expression);
+                        return XService.WrapIdentifiers(raw.Expression);
                     }
 
                     var direction = ((OrderBy)x).Ascending ? "" : " DESC";
 
-                    return Wrap(((OrderBy)x).Column) + direction;
+                    return XService.Wrap(((OrderBy)x).Column) + direction;
                 });
 
             return "ORDER BY " + string.Join(", ", columns);
@@ -715,49 +705,6 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
-        ///     Wrap a single string in a column identifier.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public string Wrap(string value)
-        {
-            var segments = value.Split(" as ");
-            if (segments.Length> 1)
-                return $"{Wrap(segments[0])} {ColumnAsKeyword}{WrapValue(segments[1])}";
-
-            if (value.Contains("."))
-                return string.Join(".", value.Split('.').Select((x, _) => WrapValue(x)));
-
-            // If we reach here then the value does not contain an "AS" alias
-            // nor dot "." expression, so wrap it as regular value.
-            return WrapValue(value);
-        }
-
-        public (string, string?) SplitAlias(string value)
-        {
-            var index = value.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
-
-            if (index > 0)
-            {
-                var before = value.Substring(0, index);
-                var after = value.Substring(index + 4);
-                return (before, after);
-            }
-
-            return (value, null);
-        }
-
-        /// <summary>
-        ///     Wrap a single string in keyword identifiers.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public virtual string WrapValue(string value)
-        {
-            return value.Brace(OpeningIdentifier, ClosingIdentifier);
-        }
-
-        /// <summary>
         ///     Resolve a parameter
         /// </summary>
         /// <param name="ctx"></param>
@@ -809,15 +756,6 @@ namespace SqlKata.Compilers
             return string.Join(", ", values.Select(x => Parameter(ctx, x)));
         }
 
-        public string WrapIdentifiers(string input)
-        {
-            return input
-
-                // deprecated
-                .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "{", OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "}", ClosingIdentifier)
-                .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "[", OpeningIdentifier)
-                .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "]", ClosingIdentifier);
-        }
+      
     }
 }

@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
         {
-            var column = Wrap(x.Column);
+            var column = XService.Wrap(x.Column);
 
             if (Resolve(ctx, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
@@ -52,7 +52,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            var column = XService.Wrap(condition.Column);
 
             string left;
 

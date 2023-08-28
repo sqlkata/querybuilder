@@ -55,6 +55,6 @@ internal class TestEmptyIdentifiersCompiler : TestCompiler
 {
     public TestEmptyIdentifiersCompiler()
     {
-        OpeningIdentifier = ClosingIdentifier = "";
+        XService = new X("", "", "AS ");
     }
 }

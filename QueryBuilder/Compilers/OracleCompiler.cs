@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
     {
         public OracleCompiler()
         {
-            ColumnAsKeyword = "";
+            XService = new("\"", "\"", "");
             TableAsKeyword = "";
             ParameterPrefix = ":p";
             MultiInsertStartClause = "INSERT ALL INTO";
@@ -84,7 +84,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
-            var column = Wrap(condition.Column);
+            var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
             string sql;
