@@ -51,39 +51,38 @@ namespace SqlKata
                 AbstractFrom from, QInsertColumns columns,
                 QInsertValues[] values, bool returnId)
             {
-                var list = new List<Q>()
-                {
-                    new QInsertStartClause(values.Length > 1),
-                    new QClause(from),
-                    columns
-                };
-                var list2 = new List<Q>();
                 var head = values.First();
                 var tail = values.Skip(1).ToArray();
-
-                list2.Add(new QDialect(new Dictionary<Dialect, Q>
-                {
-                    [Dialect.None] = values.Length > 1
-                        ? new QList("",
-                            new QHeader("VALUES", new QList(", ",
-                                values.Select(v => new QRoundBraces(v)).ToArray())))
-                        : new QHeader("VALUES", new QRoundBraces(values.Single())),
-                    [Dialect.Firebird] = values.Length > 1
-                        ? new QList(" ",
+                var simple = new QHeader("VALUES", values
+                    .ToLazyQList(", ", v => new QRoundBraces(v)));
+                const string union = "FROM RDB$DATABASE UNION ALL SELECT";
+                const string fromRdb = "FROM RDB$DATABASE";
+                return new QList(" ",
+                    new QInsertStartClause(values.Length > 1),
+                    new QClause(from),
+                    columns,
+                    new QDialect(new Dictionary<Dialect, Q>
+                    {
+                        [Dialect.None] = simple,
+                        [Dialect.Firebird] = values.Length > 1
+                            ? new QList(" ",
                                 new QHeader("SELECT", head),
-                                new QTailMultiValueInsertFirebird(tail))
-                        :new QHeader("VALUES", new QRoundBraces(values.Single())),
-                    [Dialect.Oracle] = values.Length > 1
-                            ?  new QList(" ",
+                                tail.ToLazyQList(" ", v => new QHeader(union, v)),
+                                new QLiteral(fromRdb))
+                            : simple,
+                        [Dialect.Oracle] = values.Length > 1
+                            ? new QList(" ",
                                 new QHeader("VALUES", new QRoundBraces(head)),
-                                new QTailMultiValueInsertOracle(from, columns, tail))
-                            :new QHeader("VALUES", new QRoundBraces(values.Single()))
-                }));
-
-                list.AddRange(list2);
-                if (returnId) list.Add(new QLastId());
-
-                return new QList(" ", list.ToArray());
+                                tail.ToLazyQList(" ", v => new QList(" ",
+                                        new QLiteral("INTO"),
+                                        new QClause(from),
+                                        columns,
+                                        new QLiteral("VALUES"),
+                                        new QRoundBraces(v))),
+                                new QLiteral("SELECT 1 FROM DUAL"))
+                            : simple
+                    }),
+                    returnId ? new QLastId() : null);
             }
         }
 

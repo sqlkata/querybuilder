@@ -168,6 +168,23 @@ namespace SqlKata
         }
     }
 
+    public static class Qx
+    {
+        public static QLazyList<T> ToLazyQList<T>(this ICollection<T> source,
+            string separator, Func<T, Q?> selector)
+        {
+            return new QLazyList<T>(separator, source, selector);
+        }
+    }
+    public sealed record QLazyList<T>(string Separator,
+        ICollection<T> Source, Func<T, Q?> Selector) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            sb.RenderList(Separator, Source.Select(Selector).OfType<Q>(), r);
+
+        }
+    }
     public sealed record QList(string Separator,
         params Q?[] Elements) : Q
     {
