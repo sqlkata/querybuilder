@@ -128,8 +128,8 @@ namespace SqlKata
             var query = callback.Invoke(NewChild());
 
             // omit empty queries
-            if (!query.Clauses.Any(x => x.Component == "where")) return this;
-
+            if (!query.Components.Any("where")) return this;
+            
             return AddComponent(new NestedCondition
             {
                 Engine = EngineScope,

@@ -1,19 +1,16 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 namespace SqlKata
 {
     public partial class Query
     {
-        public Query? Parent;
         public string? EngineScope;
+        public Query? Parent;
         private bool _notFlag;
 
         private bool _orFlag;
 
-        public List<AbstractClause> Clauses { get; set; } = new();
-
-
+        public ComponentList Components = new();
         private string? _comment;
         public List<Include> Includes = new();
         public Dictionary<string, object?> Variables = new();
@@ -21,6 +18,16 @@ namespace SqlKata
         // Mandatory for CTE queries
         public string? QueryAlias { get; set; }
         public string Method { get; set; } = "select";
+
+        public Q Build()
+        {
+            return new QueryBuilder
+            {
+                Method = Method,
+                Components = Components
+            }.Build();
+        }
+
         public Query SetEngineScope(string? engine)
         {
             EngineScope = engine;
@@ -44,14 +51,12 @@ namespace SqlKata
             return newQuery;
         }
 
-        /// <summary>
+          /// <summary>
         ///     Add a component clause to the query.
         /// </summary>
         public Query AddComponent(AbstractClause clause)
         {
-            Debug.Assert(clause.Component != null);
-            Clauses.Add(clause);
-
+            Components.AddComponent(clause);
             return this;
         }
 
@@ -64,28 +69,17 @@ namespace SqlKata
         /// <returns></returns>
         public Query AddOrReplaceComponent(AbstractClause clause)
         {
-            var countRemoved = Clauses.RemoveAll(
-                c => c.Component == clause.Component &&
-                     c.Engine == clause.Engine);
-            if (countRemoved > 1) throw
-                new InvalidOperationException("AddOrReplaceComponent cannot replace a component when there is more than one component to replace!");
-
-            return AddComponent(clause);
+            Components.AddOrReplaceComponent(clause);
+            return this;
         }
-
-
+        
         /// <summary>
         ///     Get the list of clauses for a component.
         /// </summary>
         /// <returns></returns>
         public List<TC> GetComponents<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
-            engineCode ??= EngineScope;
-            return Clauses
-                .Where(x => x.Component == component)
-                .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                .Cast<TC>()
-                .ToList();
+            return Components.GetComponents<TC>(component, engineCode ?? EngineScope);
         }
 
         /// <summary>
@@ -96,9 +90,7 @@ namespace SqlKata
         /// <returns></returns>
         public List<AbstractClause> GetComponents(string component, string? engineCode = null)
         {
-            engineCode ??= EngineScope;
-
-            return GetComponents<AbstractClause>(component, engineCode);
+            return Components.GetComponents(component, engineCode ?? EngineScope);
         }
 
         /// <summary>
@@ -107,11 +99,7 @@ namespace SqlKata
         /// <returns></returns>
         public TC? GetOneComponent<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
-            engineCode ??= EngineScope;
-
-            var all = GetComponents<TC>(component, engineCode);
-            return all.FirstOrDefault(c => c.Engine == engineCode) ??
-                   all.FirstOrDefault(c => c.Engine == null);
+            return Components.GetOneComponent<TC>(component, engineCode ?? EngineScope);
         }
 
         /// <summary>
@@ -122,9 +110,7 @@ namespace SqlKata
         /// <returns></returns>
         public AbstractClause? GetOneComponent(string component, string? engineCode = null)
         {
-            engineCode ??= EngineScope;
-
-            return GetOneComponent<AbstractClause>(component, engineCode);
+            return Components.GetOneComponent(component, engineCode ?? EngineScope);
         }
 
         /// <summary>
@@ -135,9 +121,7 @@ namespace SqlKata
         /// <returns></returns>
         public bool HasComponent(string component, string? engineCode = null)
         {
-            engineCode ??= EngineScope;
-
-            return GetComponents(component, engineCode).Any();
+            return Components.HasComponent(component, engineCode ?? EngineScope);
         }
 
         //public T? TryGetOneComponent<T>(string component, string? engineCode = null)
@@ -156,16 +140,9 @@ namespace SqlKata
         /// <returns></returns>
         public Query RemoveComponent(string component, string? engineCode = null)
         {
-            engineCode ??= EngineScope;
-
-            Clauses = Clauses
-                .Where(x => !(x.Component == component &&
-                              (engineCode == null || x.Engine == null || engineCode == x.Engine)))
-                .ToList();
-
+            Components.RemoveComponent(component, engineCode ?? EngineScope);
             return this;
         }
-
         /// <summary>
         ///     Set the next boolean operator to "and" for the "where" clause.
         /// </summary>

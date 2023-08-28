@@ -232,7 +232,7 @@ public class GeneralTests : TestSupport
         var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
         var c = Compilers.Compile(engines, query);
 
-        Assert.Equal(2, query.Clauses.OfType<AbstractFrom>().Count());
+        Assert.Equal(2, query.Components.Clauses.OfType<AbstractFrom>().Count());
         Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
         Assert.Equal("SELECT * FROM \"generic\"", c[EngineCodes.PostgreSql].RawSql);
         Assert.Equal("SELECT * FROM `generic`", c[EngineCodes.MySql].RawSql);
@@ -255,7 +255,7 @@ public class GeneralTests : TestSupport
             Alias = null,
         });
 
-        Assert.Equal("updated", query.Clauses.OfType<FromClause>().Single().Table);
+        Assert.Equal("updated", query.Components.Clauses.OfType<FromClause>().Single().Table);
     }
 
     [Theory]

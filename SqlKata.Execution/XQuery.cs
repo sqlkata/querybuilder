@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Linq;
 using SqlKata.Compilers;
 
 namespace SqlKata.Execution
@@ -28,7 +27,7 @@ namespace SqlKata.Execution
                 query.QueryFactory.QueryTimeout = QueryFactory?.QueryTimeout ?? 30;
             }
 
-            query.Clauses = Clauses.ToList();
+            query.Components = Components.Clone();
             query.Logger = Logger;
 
             query.QueryAlias = QueryAlias;

@@ -55,7 +55,7 @@ namespace SqlKata.Execution
             var xQuery = new XQuery(Connection, Compiler)
             {
                 QueryFactory = this,
-                Clauses = query.Clauses.ToList()
+                Components = query.Components.Clone()
             };
 
             xQuery.SetParent(query.Parent);

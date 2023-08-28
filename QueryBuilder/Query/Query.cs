@@ -47,15 +47,17 @@ namespace SqlKata
 
         public virtual Query Clone()
         {
-            var clone = new Query();
-            clone.Clauses = Clauses.ToList();
-            clone.Parent = Parent;
-            clone.QueryAlias = QueryAlias;
-            clone.IsDistinct = IsDistinct;
-            clone.Method = Method;
-            clone.Includes = Includes;
-            clone.Variables = Variables;
-            return clone;
+            return new Query
+            {
+                _comment = _comment,
+                Components = Components.Clone(),
+                Parent = Parent,
+                QueryAlias = QueryAlias,
+                IsDistinct = IsDistinct,
+                Method = Method,
+                Includes = Includes,
+                Variables = Variables
+            };
         }
 
         public Query As(string alias)
