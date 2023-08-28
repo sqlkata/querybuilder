@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Text;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -21,33 +23,42 @@ namespace SqlKata
             throw new NotImplementedException();
         }
 
-        private QValueInsert CompileInsertQuery()
+        private Q CompileInsertQuery()
         {
-            var fromClause = _query.Components.GetOneComponent<AbstractFrom>("from");
-            if (fromClause is null)
+            var from = _query.Components.GetOneComponent<AbstractFrom>("from");
+            if (from is null)
                 throw new InvalidOperationException("No table set to insert");
             var inserts = _query.Components.GetComponents<AbstractInsertClause>("insert");
-            if (inserts[0] is InsertQueryClause)
-                throw new NotImplementedException();
+            if (inserts[0] is InsertQueryClause iqc)
+                return new QInsertQuery(iqc);
 
-            return new QValueInsert(fromClause, inserts
-                    .Cast<InsertClause>()
-                    .Select(c => new QInsertClause(c.Columns,
-                        c.Values.Select(Parametrize).ToImmutableArray()))
-                    .ToArray(),
-                ((InsertClause)inserts[0]).ReturnId);
+            var first = (InsertClause)inserts[0];
+            var columns = new QInsertColumns(first.Columns);
+            var values = inserts
+                .Cast<InsertClause>()
+                .Select(c => new QInsertValues(
+                    c.Values.Select(Parametrize).ToImmutableArray()))
+                .ToArray();
+            var returnId = first.ReturnId;
+            return new QValueInsert(from, columns,values, returnId);
+        }
 
-            static QParameter Parametrize(object? parameter)
+        private static QParameter Parametrize(object? parameter)
+        {
+            return parameter switch
             {
-                return parameter switch
-                {
-                    UnsafeLiteral literal => new QUnsafeLiteral(literal),
-                    Variable variable => new QVariable(variable),
-                    _ => new QObject(parameter)
-                };
-            }
+                UnsafeLiteral literal => new QUnsafeLiteral(literal),
+                Variable variable => new QVariable(variable),
+                _ => new QObject(parameter)
+            };
+        }
+    }
 
-
+    public record QInsertQuery(InsertQueryClause Iqc) : Q
+    {
+        public override void Render(StringBuilder sb, Renderer r)
+        {
+            throw new NotImplementedException();
         }
     }
 }

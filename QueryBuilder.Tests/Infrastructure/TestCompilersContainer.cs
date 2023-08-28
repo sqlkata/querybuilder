@@ -6,7 +6,6 @@ public class TestCompilersContainer
 {
     protected readonly IDictionary<string, Compiler> Compilers = new Dictionary<string, Compiler>
     {
-        [EngineCodes.Firebird] = new FirebirdCompiler(),
         [EngineCodes.MySql] = new MySqlCompiler(),
         [EngineCodes.Oracle] = new OracleCompiler(),
         [EngineCodes.PostgreSql] = new PostgresCompiler(),
@@ -14,7 +13,8 @@ public class TestCompilersContainer
         [EngineCodes.SqlServer] = new SqlServerCompiler
         {
             UseLegacyPagination = true
-        }
+        },
+        [EngineCodes.Firebird] = new FirebirdCompiler(),
     };
 
     public IEnumerable<string> KnownEngineCodes

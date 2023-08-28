@@ -32,13 +32,21 @@ public abstract class TestSupport
             {
                 EngineCodes.Generic => new Renderer(new X("[", "]", "AS ")),
                 EngineCodes.SqlServer => new Renderer(new X("[", "]", "AS ")),
-                EngineCodes.Firebird => new Renderer(new ("\"", "\"", "AS ", true)),
+                EngineCodes.Firebird => new Renderer(new ("\"", "\"", "AS ", true))
+                {
+                    SingleRowDummyTableName = "RDB$DATABASE",
+                    Dialect = Dialect.Firebird,
+
+                },
                 EngineCodes.MySql => new Renderer(new X("`", "`", "AS ")),
                 EngineCodes.PostgreSql => new Renderer(new("\"", "\"", "AS ")),
                 EngineCodes.Sqlite => new Renderer(new("\"", "\"", "AS ")),
                 EngineCodes.Oracle => new Renderer(new("\"", "\"", ""))
                 {
-                    ParameterPrefix = ":p"
+                    ParameterPrefix = ":p",
+                    MultiInsertStartClause = "INSERT ALL INTO",
+                    Dialect = Dialect.Oracle
+
                 },
                 _ => throw new ArgumentOutOfRangeException(engine)
             };

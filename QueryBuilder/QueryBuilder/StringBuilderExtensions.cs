@@ -21,7 +21,7 @@ namespace SqlKata
                 any = true;
             }
 
-            if (any) sb.Remove(sb.Length - 2, 2);
+            if (any) sb.Remove(sb.Length - separator.Length, separator.Length);
         }
     }
 }

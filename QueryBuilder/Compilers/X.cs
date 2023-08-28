@@ -6,14 +6,24 @@ namespace SqlKata.Compilers
     {
         Placeholders, Params, Values
     }
+
+    public enum Dialect
+    {
+        None, MySql,
+        Oracle,
+        Firebird
+    }
     public sealed class Renderer
     {
         public X X { get; }
         public string SingleInsertStartClause { get; } = "INSERT INTO";
-        public string MultiInsertStartClause { get; } = "INSERT INTO";
+        public string MultiInsertStartClause { get; set; } = "INSERT INTO";
         public string LastId  { get; } = "SELECT scope_identity() as Id";
         public string ParameterPlaceholder { get; }= "?";
         public string ParameterPrefix { get; set; }= "@p";
+        public string? SingleRowDummyTableName { get; set; } = null;
+
+        public Dialect Dialect { get; set; }
 
         public BindingMode BindingMode { get; set; } = BindingMode.Values;
         public Renderer(X x)
