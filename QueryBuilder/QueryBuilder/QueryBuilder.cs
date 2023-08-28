@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -56,15 +57,30 @@ namespace SqlKata
                     new QClause(from),
                     columns
                 };
-                if (values.Length > 1)
+                var list2 = new List<Q>();
+                var head = values.First();
+                var tail = values.Skip(1).ToArray();
+
+                list2.Add(new QDialect(new Dictionary<Dialect, Q>
                 {
-                    list.Add(new QHeadMultiValueInsert(values.First()));
-                    list.Add(new QTailMultiValueInsert(from, columns, values.Skip(1).ToArray()));
-                }
-                else
-                {
-                    list.Add(new QSingleValueInsert(values.Single()));
-                }
+                    [Dialect.None] = values.Length > 1
+                        ? new QList("",
+                            new QHeader("VALUES", new QList(", ",
+                                values.Select(v => new QRoundBraces(v)).ToArray())))
+                        : new QHeader("VALUES", new QRoundBraces(values.Single())),
+                    [Dialect.Firebird] = values.Length > 1
+                        ? new QList(" ",
+                                new QHeader("SELECT", head),
+                                new QTailMultiValueInsertFirebird(tail))
+                        :new QHeader("VALUES", new QRoundBraces(values.Single())),
+                    [Dialect.Oracle] = values.Length > 1
+                            ?  new QList(" ",
+                                new QHeader("VALUES", new QRoundBraces(head)),
+                                new QTailMultiValueInsertOracle(from, columns, tail))
+                            :new QHeader("VALUES", new QRoundBraces(values.Single()))
+                }));
+
+                list.AddRange(list2);
                 if (returnId) list.Add(new QLastId());
 
                 return new QList(" ", list.ToArray());

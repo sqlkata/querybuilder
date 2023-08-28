@@ -43,24 +43,17 @@ namespace SqlKata
         }
     }
 
-    public sealed record QHeadMultiValueInsert(QInsertValues Value) : Q
+    public sealed record QDialect(Dictionary<Dialect, Q> Branches) : Q
     {
         public override void Render(StringBuilder sb, Renderer r)
         {
-            if (r.Dialect == Dialect.Firebird)
-            {
-                sb.Append("SELECT ");
-                Value.Render(sb, r);
-            }
-            else
-            {
-                sb.Append("VALUES ");
-                sb.Append("(");
-                Value.Render(sb, r);
-                sb.Append(")");
-            }
+            if (Branches.TryGetValue(r.Dialect, out var expression))
+                expression.Render(sb, r);
+            else if (Branches.TryGetValue(Dialect.None, out expression))
+                expression.Render(sb, r);
         }
     }
+
     public sealed record QSingleValueInsert(
         QInsertValues Value) : Q
     {
