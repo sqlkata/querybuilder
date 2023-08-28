@@ -92,29 +92,11 @@ namespace SqlKata.Tests
                     new object[] { new object[] { 1, 2, 3 } }));
         }
 
-        //[Fact]
-        //public void UsingJsonArray()
-        //{
-        //    var query = new Query("Table").WhereRaw("[Json]->'address'->>'country' in (?)", new[] { 1, 2, 3, 4 });
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"Json\"->'address'->>'country' in (1,2,3,4)",
-        //        c[EngineCodes.PostgreSql]);
-        //}
-
-        //[Fact]
-        //public void Union()
-        //{
-        //    var laptops = new Query("Laptops");
-        //    var mobiles = new Query("Phones").Union(laptops);
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops]", c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\"", c[EngineCodes.Sqlite]);
-        //    Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\"", c[EngineCodes.Firebird]);
-        //}
+        [Fact]
+        public void Union()
+        {
+            CompareWithCompiler(new Query("Phones").Union(new Query("Laptops")));
+        }
 
 
         //[Fact]

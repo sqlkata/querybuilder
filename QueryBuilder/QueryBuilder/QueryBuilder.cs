@@ -21,7 +21,8 @@ namespace SqlKata
             return new QList(" ",
                 CompileColumns(query),
                 CompileFrom(query),
-                CompileWheres(query));
+                CompileWheres(query),
+                CompileUnion(query));
         }
 
         private static Q CompileInsertQuery(Query query)
@@ -252,6 +253,31 @@ namespace SqlKata
                         .ToArray());
         }
 
+        public static Q? CompileUnion(Query query)
+        {
+            // Handles UNION, EXCEPT and INTERSECT
+            var clauses = query.GetComponents("combine");
+            if (clauses.Count == 0) return null;
+
+            var result = new List<Q>();
+
+            foreach (var clause in clauses)
+                if (clause is Combine sub)
+                {
+                    result.Add(
+                        new QHeader(sub.Operation.ToUpperInvariant(),
+                            new QCondHeader(sub.All, "ALL",
+                                CompileSelectQuery(sub.Query))));
+                }
+            // else
+            // {
+            //     var combineRawClause = (RawCombine)clause;
+            //
+            //     combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
+            // }
+
+            return new QList(" ", result.ToArray());
+        }
         private static InvalidCastException InvalidClauseException(string section, AbstractClause clause)
         {
             return new InvalidCastException(
