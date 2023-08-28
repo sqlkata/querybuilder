@@ -200,6 +200,7 @@ namespace SqlKata
                             new QNullCondition(clause.IsNot)),
                         BooleanCondition b => new QList(" ",
                             new QColumn(b.Column),
+                            // BUG: IsNot should be appended here
                             new QOperator("="),
                             new QBoolean(b.Value)),
                         _ => throw new ArgumentOutOfRangeException(clause.GetType().Name)

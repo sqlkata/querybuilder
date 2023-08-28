@@ -50,81 +50,34 @@ namespace SqlKata.Tests
         [Fact]
         public void WhereTrue()
         {
-            CompareWithCompiler(
-                new Query("Table").WhereTrue("IsActive"));
+            CompareWithCompiler(new Query("Table").WhereTrue("IsActive"));
+        }
+        [Fact]
+        public void WhereFalse()
+        {
+            CompareWithCompiler(new Query("Table").WhereFalse("IsActive"));
         }
 
-        //[Fact]
-        //public void WhereFalse()
-        //{
-        //    var query = new Query("Table").WhereFalse("IsActive");
 
-        //    var c = Compile(query);
+        [Fact]
+        public void WhereSub()
+        {
+            CompareWithCompiler(new Query("Table")
+                .WhereSub(
+                    new Query("Table2")
+                        .WhereColumns("Table2.Column", "=", "Table.MyCol")
+                        .AsCount(), 1));
 
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [IsActive] = cast(0 as bit)", c[EngineCodes.SqlServer]);
-        //    Assert.Equal("SELECT * FROM `Table` WHERE `IsActive` = false", c[EngineCodes.MySql]);
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"IsActive\" = false", c[EngineCodes.PostgreSql]);
-        //    Assert.Equal("SELECT * FROM \"TABLE\" WHERE \"ISACTIVE\" = 0", c[EngineCodes.Firebird]);
-        //}
+            //var c = Compile(query);
 
-        //[Fact]
-        //public void OrWhereFalse()
-        //{
-        //    var query = new Query("Table").Where("MyCol", "abc").OrWhereFalse("IsActive");
+            //Assert.Equal(
+            //    "SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1",
+            //    c[EngineCodes.SqlServer]);
 
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(0 as bit)",
-        //        c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = false",
-        //        c[EngineCodes.PostgreSql]);
-        //}
-
-        //[Fact]
-        //public void OrWhereTrue()
-        //{
-        //    var query = new Query("Table").Where("MyCol", "abc").OrWhereTrue("IsActive");
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(1 as bit)",
-        //        c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = true",
-        //        c[EngineCodes.PostgreSql]);
-        //}
-
-        //[Fact]
-        //public void OrWhereNull()
-        //{
-        //    var query = new Query("Table").Where("MyCol", "abc").OrWhereNull("IsActive");
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal("SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] IS NULL", c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" IS NULL",
-        //        c[EngineCodes.PostgreSql]);
-        //}
-
-        //[Fact]
-        //public void WhereSub()
-        //{
-        //    var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
-
-        //    var query = new Query("Table").WhereSub(subQuery, 1);
-
-        //    var c = Compile(query);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1",
-        //        c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1",
-        //        c[EngineCodes.PostgreSql]);
-        //}
+            //Assert.Equal(
+            //    "SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1",
+            //    c[EngineCodes.PostgreSql]);
+        }
 
         //[Fact]
         //public void OrWhereSub()
