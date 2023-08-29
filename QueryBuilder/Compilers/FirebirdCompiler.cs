@@ -78,7 +78,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
 

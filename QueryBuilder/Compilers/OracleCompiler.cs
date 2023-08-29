@@ -86,7 +86,7 @@ namespace SqlKata.Compilers
             ctx.ReplaceRaw(newSql);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);

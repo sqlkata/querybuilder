@@ -10,7 +10,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
+        protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
         {
             var column = XService.Wrap(x.Column);
 
@@ -50,7 +50,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
 

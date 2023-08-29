@@ -2,24 +2,24 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        private string? CompileCondition(SqlResult ctx, AbstractCondition clause)
+        private string? CompileCondition(SqlResult ctx, AbstractCondition clause, Writer writer)
         {
             return clause switch
             {
-                BasicDateCondition basicDateCondition => CompileBasicDateCondition(ctx, basicDateCondition),
-                BasicStringCondition basicStringCondition => CompileBasicStringCondition(ctx, basicStringCondition),
-                BasicCondition basicCondition => CompileBasicCondition(ctx, basicCondition),
-                BetweenCondition betweenCondition => CompileBetweenCondition(ctx, betweenCondition),
-                BooleanCondition booleanCondition => CompileBooleanCondition(booleanCondition),
-                ExistsCondition existsCondition => CompileExistsCondition(ctx, existsCondition),
-                InCondition inCondition => CompileInCondition(ctx, inCondition),
-                InQueryCondition inQueryCondition => CompileInQueryCondition(ctx, inQueryCondition),
-                NestedCondition nestedCondition => CompileNestedCondition(ctx, nestedCondition),
-                NullCondition nullCondition => CompileNullCondition(nullCondition),
-                QueryCondition queryCondition => CompileQueryCondition(ctx, queryCondition),
-                RawCondition rawCondition => CompileRawCondition(ctx, rawCondition),
-                SubQueryCondition subQueryCondition => CompileSubQueryCondition(ctx, subQueryCondition),
-                TwoColumnsCondition twoColumnsCondition => CompileTwoColumnsCondition(twoColumnsCondition),
+                BasicDateCondition basicDateCondition => CompileBasicDateCondition(ctx, basicDateCondition, writer),
+                BasicStringCondition basicStringCondition => CompileBasicStringCondition(ctx, basicStringCondition, writer),
+                BasicCondition basicCondition => CompileBasicCondition(ctx, basicCondition, writer),
+                BetweenCondition betweenCondition => CompileBetweenCondition(ctx, betweenCondition, writer),
+                BooleanCondition booleanCondition => CompileBooleanCondition(booleanCondition, writer),
+                ExistsCondition existsCondition => CompileExistsCondition(ctx, existsCondition, writer),
+                InCondition inCondition => CompileInCondition(ctx, inCondition, writer),
+                InQueryCondition inQueryCondition => CompileInQueryCondition(ctx, inQueryCondition, writer),
+                NestedCondition nestedCondition => CompileNestedCondition(ctx, nestedCondition, writer),
+                NullCondition nullCondition => CompileNullCondition(nullCondition, writer),
+                QueryCondition queryCondition => CompileQueryCondition(ctx, queryCondition, writer),
+                RawCondition rawCondition => CompileRawCondition(ctx, rawCondition, writer),
+                SubQueryCondition subQueryCondition => CompileSubQueryCondition(ctx, subQueryCondition, writer),
+                TwoColumnsCondition twoColumnsCondition => CompileTwoColumnsCondition(twoColumnsCondition, writer),
                 _ => throw new ArgumentOutOfRangeException(nameof(clause))
             };
         }
@@ -30,7 +30,7 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < conditions.Count; i++)
             {
-                var compiled = CompileCondition(ctx, conditions[i]);
+                var compiled = CompileCondition(ctx, conditions[i], writer.Sub());
 
                 if (string.IsNullOrEmpty(compiled)) continue;
 
@@ -42,13 +42,13 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        private string CompileRawCondition(SqlResult ctx, RawCondition x)
+        private string CompileRawCondition(SqlResult ctx, RawCondition x, Writer writer)
         {
             ctx.Bindings.AddRange(x.Bindings);
             return XService.WrapIdentifiers(x.Expression);
         }
 
-        private string CompileQueryCondition(SqlResult ctx, QueryCondition x)
+        private string CompileQueryCondition(SqlResult ctx, QueryCondition x, Writer writer)
         {
             var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
 
@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
             return XService.Wrap(x.Column) + " " + Operators.CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
-        private string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
+        private string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x, Writer writer)
         {
             var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
 
@@ -66,7 +66,7 @@ namespace SqlKata.Compilers
             return "(" + subCtx.RawSql + ") " + Operators.CheckOperator(x.Operator) + " " + Parameter(ctx, x.Value);
         }
 
-        private string CompileBasicCondition(SqlResult ctx, BasicCondition x)
+        private string CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
         {
             var sql = $"{XService.Wrap(x.Column)} {Operators.CheckOperator(x.Operator)} {Parameter(ctx, x.Value)}";
 
@@ -75,7 +75,7 @@ namespace SqlKata.Compilers
             return sql;
         }
 
-        protected virtual string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
+        protected virtual string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
         {
             var column = XService.Wrap(x.Column);
 
@@ -120,7 +120,7 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x)
+        protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
             var column = XService.Wrap(x.Column);
             var op = Operators.CheckOperator(x.Operator);
@@ -130,7 +130,7 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        private string? CompileNestedCondition(SqlResult ctx, NestedCondition x)
+        private string? CompileNestedCondition(SqlResult ctx, NestedCondition x, Writer writer)
         {
             if (!x.Query.HasComponent("where", EngineCode) &&
                 !x.Query.HasComponent("having", EngineCode))
@@ -145,13 +145,13 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
 
-        private string CompileTwoColumnsCondition(TwoColumnsCondition clause)
+        private string CompileTwoColumnsCondition(TwoColumnsCondition clause, Writer writer)
         {
             var op = clause.IsNot ? "NOT " : "";
             return $"{op}{XService.Wrap(clause.First)} {Operators.CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
         }
 
-        private string CompileBetweenCondition(SqlResult ctx, BetweenCondition item)
+        private string CompileBetweenCondition(SqlResult ctx, BetweenCondition item, Writer writer)
         {
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
             var lower = Parameter(ctx, item.Lower);
@@ -160,7 +160,7 @@ namespace SqlKata.Compilers
             return XService.Wrap(item.Column) + $" {between} {lower} AND {higher}";
         }
 
-        private string CompileInCondition(SqlResult ctx, InCondition item)
+        private string CompileInCondition(SqlResult ctx, InCondition item, Writer writer)
         {
             var column = XService.Wrap(item.Column);
 
@@ -174,7 +174,7 @@ namespace SqlKata.Compilers
             return column + $" {inOperator} ({values})";
         }
 
-        private string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
+        private string CompileInQueryCondition(SqlResult ctx, InQueryCondition item, Writer writer)
         {
             var subCtx = CompileSelectQuery(item.Query, new Writer(XService));
 
@@ -185,13 +185,13 @@ namespace SqlKata.Compilers
             return XService.Wrap(item.Column) + $" {inOperator} ({subCtx.RawSql})";
         }
 
-        private string CompileNullCondition(NullCondition item)
+        private string CompileNullCondition(NullCondition item, Writer writer)
         {
             var op = item.IsNot ? "IS NOT NULL" : "IS NULL";
             return XService.Wrap(item.Column) + " " + op;
         }
 
-        private string CompileBooleanCondition(BooleanCondition item)
+        private string CompileBooleanCondition(BooleanCondition item, Writer writer)
         {
             var column = XService.Wrap(item.Column);
 
@@ -201,7 +201,7 @@ namespace SqlKata.Compilers
             return $"{column} {op} {value}";
         }
 
-        private string CompileExistsCondition(SqlResult ctx, ExistsCondition item)
+        private string CompileExistsCondition(SqlResult ctx, ExistsCondition item, Writer writer)
         {
             var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
 

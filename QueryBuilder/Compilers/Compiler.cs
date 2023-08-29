@@ -590,7 +590,7 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < having.Count; i++)
             {
-                var compiled = CompileCondition(ctx, having[i]);
+                var compiled = CompileCondition(ctx, having[i], writer.Sub());
 
                 if (!string.IsNullOrEmpty(compiled))
                 {
