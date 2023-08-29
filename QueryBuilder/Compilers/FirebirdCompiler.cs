@@ -78,7 +78,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
                 writer.S.Append("NOT (");
@@ -107,7 +107,6 @@ namespace SqlKata.Compilers
             writer.S.Append(Parameter(ctx, x.Value));
             if (x.IsNot)
                 writer.S.Append(")");
-            return writer;
         }
 
 

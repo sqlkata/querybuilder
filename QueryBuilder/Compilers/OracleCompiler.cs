@@ -86,7 +86,7 @@ namespace SqlKata.Compilers
             ctx.ReplaceRaw(newSql);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
@@ -130,9 +130,7 @@ namespace SqlKata.Compilers
                     break;
             }
 
-            if (condition.IsNot) return $"NOT ({sql})";
-            writer.S.Append(sql);
-            return writer;
+            writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
         protected override SqlResult CompileRemainingInsertClauses(

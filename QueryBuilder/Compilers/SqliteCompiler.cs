@@ -35,7 +35,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
@@ -51,14 +51,19 @@ namespace SqlKata.Compilers
                 { "minute", "%M" }
             };
 
-            if (!formatMap.ContainsKey(condition.Part)) return $"{column} {condition.Operator} {value}";
+            if (!formatMap.ContainsKey(condition.Part))
+            {
+                writer.S.Append(column);
+                writer.S.Append(" ");
+                writer.S.Append(condition.Operator);
+                writer.S.Append(" ");
+                writer.S.Append(value);
+                return;
+            }
 
             var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
 
-            if (condition.IsNot) return $"NOT ({sql})";
-
-            writer.S.Append(sql);
-            return writer;
+            writer.S.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }
     }
 }

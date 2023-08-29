@@ -131,7 +131,7 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var part = condition.Part.ToUpperInvariant();
@@ -145,10 +145,7 @@ namespace SqlKata.Compilers
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
-            if (condition.IsNot) return $"NOT ({sql})";
-
-            writer.S.Append(sql);
-            return writer;
+            writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)

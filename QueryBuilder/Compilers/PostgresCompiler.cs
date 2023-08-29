@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
+        protected override void CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
         {
             var column = XService.Wrap(x.Column);
 
@@ -55,11 +55,10 @@ namespace SqlKata.Compilers
 
             if (x.IsNot)
                 writer.S.Append(")");
-            return writer;
         }
 
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
 
@@ -74,10 +73,7 @@ namespace SqlKata.Compilers
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
 
-            if (condition.IsNot) return $"NOT ({sql})";
-
-            writer.S.Append(sql);
-            return writer;
+            writer.S.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }
     }
 }
