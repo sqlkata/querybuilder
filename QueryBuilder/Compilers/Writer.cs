@@ -4,6 +4,8 @@ namespace SqlKata.Compilers
 {
     public sealed class Writer
     {
+        public List<object?> Bindings { get; } = new();
+
         private readonly X _x;
         public StringBuilder S { get; } = new();
         public static implicit operator string(Writer w) => w.S.ToString();
@@ -26,7 +28,7 @@ namespace SqlKata.Compilers
                     any = true;
                 }
 
-            if (any) S.Remove(S.Length - separator.Length, separator.Length);
+            if (any) S.Length -= separator.Length;
         }
 
         public void WhitespaceSeparated(params Action[] list)
@@ -36,7 +38,7 @@ namespace SqlKata.Compilers
                 item();
                 Whitespace();
             }
-            if (S.Length > 0 && S[^1] == ' ') S.Remove(S.Length - 1, 1);
+            if (S.Length > 0 && S[^1] == ' ') S.Length -= 1;
         }
 
         public void Assert(string s)
@@ -55,9 +57,9 @@ namespace SqlKata.Compilers
             S.Append(sqlKeyword.ToUpperInvariant());
         }
 
-        public void AppendAsAlias(string aggregateType)
+        public void AppendAsAlias(string? input)
         {
-            _x.AsAlias(S, aggregateType);
+            _x.AsAlias(S, input);
         }
 
         public void AppendRaw(string rawExpression)

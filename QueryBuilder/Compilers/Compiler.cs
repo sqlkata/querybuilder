@@ -45,13 +45,12 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public virtual SqlResult CompileSelectQuery(Query query)
+        public virtual SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
                 Query = query.Clone()
             };
-            var writer = new Writer(XService);
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, writer),
                 () => CompileFrom(ctx, writer),
@@ -62,7 +61,7 @@ namespace SqlKata.Compilers
                 () => CompileOrders(ctx, writer),
                 () => CompileLimit(ctx, writer),
                 () => CompileUnion(ctx, writer));
-           
+
             ctx.Raw.Append(writer);
 
             return ctx;
@@ -232,7 +231,7 @@ namespace SqlKata.Compilers
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
-                var subCtx = CompileSelectQuery(clause.Query);
+                var subCtx = CompileSelectQuery(clause.Query, new Writer(XService));
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
@@ -275,30 +274,22 @@ namespace SqlKata.Compilers
         }
 
 
-        public SqlResult CompileCteQuery(SqlResult ctx, Query query)
+        public void CompileCteQuery(Query query, Writer writer)
         {
             var cteSearchResult = CteFinder.Find(query, EngineCode);
-
-            var rawSql = new StringBuilder("WITH ");
-            var cteBindings = new List<object?>();
+            writer.S.Append("WITH ");
 
             foreach (var cte in cteSearchResult)
             {
                 var cteCtx = CompileCte(cte);
 
-                cteBindings.AddRange(cteCtx.Bindings);
-                rawSql.Append(cteCtx.RawSql.Trim());
-                rawSql.Append(",\n");
+                writer.Bindings.AddRange(cteCtx.Bindings);
+                writer.S.Append(cteCtx.RawSql.Trim());
+                writer.S.Append(",\n");
             }
 
-            rawSql.Length -= 2; // remove last comma
-            rawSql.Append('\n');
-            rawSql.Append(ctx.RawSql);
-
-            ctx.Bindings.InsertRange(0, cteBindings);
-            ctx.ReplaceRaw(rawSql.ToString());
-
-            return ctx;
+            writer.S.Length -= 2; // remove last comma
+            writer.S.Append('\n');
         }
 
         /// <summary>
@@ -319,30 +310,28 @@ namespace SqlKata.Compilers
 
             if (column is QueryColumn queryColumn)
             {
-                var alias = XService.AsAlias(queryColumn.Query.QueryAlias);
-                var subCtx = CompileSelectQuery(queryColumn.Query);
-
-                ctx.Bindings.AddRange(subCtx.Bindings);
-
                 writer.S.Append("(");
-                writer.S.Append(subCtx.RawSql);
-                writer.S.Append(")");
-                writer.S.Append(alias);
+                var subCtx = CompileSelectQuery(queryColumn.Query, writer);
+                ctx.Bindings.AddRange(subCtx.Bindings);
+                writer.S.Append(") ");
+                writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                 return;
             }
 
             if (column is AggregatedColumn aggregatedColumn)
             {
                 var agg = aggregatedColumn.Aggregate.ToUpperInvariant();
-                var filterCondition = CompileFilterConditions(ctx, aggregatedColumn);
 
                 var sub = writer.Sub();
                 CompileColumn(ctx, aggregatedColumn.Column, sub);
                 var (col, alias) = XService.SplitAlias(sub);
 
+                writer.S.Append(agg);
+
+                var filterCondition = CompileFilterConditions(ctx, aggregatedColumn, writer.Sub());
+
                 if (string.IsNullOrEmpty(filterCondition))
                 {
-                    writer.S.Append(agg);
                     writer.S.Append("(");
                     writer.S.Append(col);
                     writer.S.Append(")");
@@ -352,11 +341,11 @@ namespace SqlKata.Compilers
 
                 if (SupportsFilterClause)
                 {
-                    writer.S.Append($"{agg}({col}) FILTER (WHERE {filterCondition}){alias}");
+                    writer.S.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
                     return;
                 }
 
-                writer.S.Append($"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}");
+                writer.S.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
 
                 return;
             }
@@ -364,13 +353,14 @@ namespace SqlKata.Compilers
             writer.S.Append(XService.Wrap(((Column)column).Name));
         }
 
-        private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
+        private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn, Writer writer)
         {
             if (aggregatedColumn.Filter == null) return null;
 
             var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>("where");
 
-            return CompileConditions(ctx, wheres);
+            CompileConditions(ctx, wheres, writer);
+            return writer;
         }
 
         private SqlResult CompileCte(AbstractFrom? cte)
@@ -387,7 +377,7 @@ namespace SqlKata.Compilers
             }
             else if (cte is QueryFromClause queryFromClause)
             {
-                var subCtx = CompileSelectQuery(queryFromClause.Query);
+                var subCtx = CompileSelectQuery(queryFromClause.Query, new Writer(XService));
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
@@ -465,7 +455,7 @@ namespace SqlKata.Compilers
                     var combineOperator = combineClause.Operation.ToUpperInvariant() + " " +
                                           (combineClause.All ? "ALL " : "");
 
-                    var subCtx = CompileSelectQuery(combineClause.Query);
+                    var subCtx = CompileSelectQuery(combineClause.Query, new Writer(XService));
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -500,7 +490,7 @@ namespace SqlKata.Compilers
                     ? ""
                     : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
 
-                var subCtx = CompileSelectQuery(fromQuery);
+                var subCtx = CompileSelectQuery(fromQuery, new Writer(XService));
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
                 writer.S.Append("(" + subCtx.RawSql + ")" + alias);
@@ -532,7 +522,7 @@ namespace SqlKata.Compilers
 
             writer.S.Append("\n");
             writer.List("\n", baseJoins, x => CompileJoin(ctx, x.Join, writer));
-            return writer; 
+            return writer;
         }
 
         private void CompileJoin(SqlResult ctx, Join join, Writer writer)
@@ -541,7 +531,7 @@ namespace SqlKata.Compilers
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
             Debug.Assert(from != null, nameof(from) + " != null");
-            var constraints = CompileConditions(ctx, conditions);
+            var constraints = CompileConditions(ctx, conditions, writer.Sub());
 
             var onClause = conditions.Any() ? $" ON {constraints}" : "";
 
@@ -556,7 +546,7 @@ namespace SqlKata.Compilers
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
 
-            var sql = CompileConditions(ctx, conditions).Trim();
+            var sql = CompileConditions(ctx, conditions, writer.Sub()).Trim();
             if (string.IsNullOrEmpty(sql)) return null;
             writer.S.Append("WHERE ");
             writer.S.Append(sql);

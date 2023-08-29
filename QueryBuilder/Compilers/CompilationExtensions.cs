@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Security.AccessControl;
 
 namespace SqlKata.Compilers
 {
@@ -55,12 +56,19 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
 
-                ctx = compiler.CompileSelectQuery(query);
+                ctx = compiler.CompileSelectQuery(query, new Writer(compiler.XService));
             }
 
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
-                ctx = compiler.CompileCteQuery(ctx, query);
+            {
+                var writer = new Writer(compiler.XService);
+                compiler.CompileCteQuery(query, writer);
+                writer.S.Append(ctx.RawSql);
+
+                ctx.Bindings.InsertRange(0, writer.Bindings);
+                ctx.ReplaceRaw(writer);
+            }
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
             ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,

@@ -24,7 +24,7 @@ namespace SqlKata.Compilers
             };
         }
 
-        private string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
+        private string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)
         {
             var result = new List<string>();
 
@@ -38,8 +38,8 @@ namespace SqlKata.Compilers
 
                 result.Add(boolOperator + compiled);
             }
-
-            return string.Join(" ", result);
+            writer.List(" ", result);
+            return writer;
         }
 
         private string CompileRawCondition(SqlResult ctx, RawCondition x)
@@ -50,7 +50,7 @@ namespace SqlKata.Compilers
 
         private string CompileQueryCondition(SqlResult ctx, QueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -59,7 +59,7 @@ namespace SqlKata.Compilers
 
         private string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -140,7 +140,7 @@ namespace SqlKata.Compilers
 
             var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
 
-            var sql = CompileConditions(ctx, clauses);
+            var sql = CompileConditions(ctx, clauses, new Writer(XService));
 
             return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
@@ -176,7 +176,7 @@ namespace SqlKata.Compilers
 
         private string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
         {
-            var subCtx = CompileSelectQuery(item.Query);
+            var subCtx = CompileSelectQuery(item.Query, new Writer(XService));
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -211,7 +211,7 @@ namespace SqlKata.Compilers
 
             if (OmitSelectInsideExists) query.RemoveComponent("select").SelectRaw("1");
 
-            var subCtx = CompileSelectQuery(query);
+            var subCtx = CompileSelectQuery(query, new Writer(XService));
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 

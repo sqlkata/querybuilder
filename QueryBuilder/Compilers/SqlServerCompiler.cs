@@ -11,10 +11,10 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        public override SqlResult CompileSelectQuery(Query query)
+        public override SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             if (!UseLegacyPagination || !query.HasOffset(EngineCode))
-                return base.CompileSelectQuery(query);
+                return base.CompileSelectQuery(query, writer);
 
             query = query.Clone();
 
@@ -37,7 +37,7 @@ namespace SqlKata.Compilers
             query.RemoveComponent("order");
 
 
-            var result = base.CompileSelectQuery(query);
+            var result = base.CompileSelectQuery(query, writer);
 
             if (limit == 0)
             {

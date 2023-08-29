@@ -14,11 +14,11 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        public override SqlResult CompileSelectQuery(Query query)
+        public override SqlResult CompileSelectQuery(Query query, Writer writer)
         {
-            if (!UseLegacyPagination) return base.CompileSelectQuery(query);
+            if (!UseLegacyPagination) return base.CompileSelectQuery(query, writer);
 
-            var result = base.CompileSelectQuery(query);
+            var result = base.CompileSelectQuery(query, writer);
 
             ApplyLegacyLimit(result);
 
