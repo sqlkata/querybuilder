@@ -2,6 +2,8 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
+        private static readonly string[] LikeOperators = { "starts", "ends", "contains", "like" };
+
         private string? CompileCondition(SqlResult ctx, AbstractCondition clause, Writer writer)
         {
             return clause switch
@@ -45,7 +47,9 @@ namespace SqlKata.Compilers
         private string CompileRawCondition(SqlResult ctx, RawCondition x, Writer writer)
         {
             ctx.Bindings.AddRange(x.Bindings);
-            return XService.WrapIdentifiers(x.Expression);
+            writer.Bindings.AddRange(x.Bindings);
+            writer.AppendRaw(x.Expression);
+            return writer;
         }
 
         private string CompileQueryCondition(SqlResult ctx, QueryCondition x, Writer writer)
@@ -54,25 +58,40 @@ namespace SqlKata.Compilers
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
-            return XService.Wrap(x.Column) + " " + Operators.CheckOperator(x.Operator) + " (" + subCtx.RawSql + ")";
+            writer.AppendName(x.Column);
+            writer.S.Append(" ");
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" (");
+            writer.S.Append(subCtx.RawSql);
+            writer.S.Append(")");
+            return writer;
         }
 
         private string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x, Writer writer)
         {
-            var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
-
+            writer.S.Append("(");
+            var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.Bindings.AddRange(subCtx.Bindings);
-
-            return "(" + subCtx.RawSql + ") " + Operators.CheckOperator(x.Operator) + " " + Parameter(ctx, x.Value);
+            writer.S.Append(") ");
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" ");
+            writer.S.Append(Parameter(ctx, x.Value));
+            return writer;
         }
 
         private string CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
         {
-            var sql = $"{XService.Wrap(x.Column)} {Operators.CheckOperator(x.Operator)} {Parameter(ctx, x.Value)}";
+            if (x.IsNot)
+                writer.S.Append("NOT (");
+            writer.AppendName(x.Column);
+            writer.S.Append(" ");
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" ");
+            writer.S.Append(Parameter(ctx, x.Value));
+            if (x.IsNot)
+                writer.S.Append(")");
 
-            if (x.IsNot) return $"NOT ({sql})";
-
-            return sql;
+            return writer;
         }
 
         protected virtual string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
@@ -84,7 +103,7 @@ namespace SqlKata.Compilers
 
             var method = x.Operator;
 
-            if (new[] { "starts", "ends", "contains", "like" }.Contains(x.Operator))
+            if (LikeOperators.Contains(x.Operator))
             {
                 method = "LIKE";
 
@@ -102,32 +121,46 @@ namespace SqlKata.Compilers
                 }
             }
 
-            string sql;
-
 
             if (!x.CaseSensitive)
             {
-                column = CompileLower(column);
+                column = $"LOWER({column})";
                 value = value.ToLowerInvariant();
             }
 
-            sql = x.Value is UnsafeLiteral
-                ? $"{column} {Operators.CheckOperator(method)} {value}"
-                : $"{column} {Operators.CheckOperator(method)} {Parameter(ctx, value)}";
+            if (x.IsNot)
+                writer.S.Append("NOT (");
+            writer.S.Append(column);
+            writer.S.Append(" ");
+            writer.S.Append(Operators.CheckOperator(method));
+            writer.S.Append(" ");
+            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, value));
+            if (x.EscapeCharacter is { } esc1)
+            {
+                writer.S.Append(" ESCAPE '");
+                writer.S.Append(esc1);
+                writer.S.Append('\'');
+            }
 
-            if (x.EscapeCharacter is { } esc) sql = $"{sql} ESCAPE '{esc}'";
-
-            return x.IsNot ? $"NOT ({sql})" : sql;
+            if (x.IsNot)
+                writer.S.Append(")");
+            return writer;
         }
 
         protected virtual string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
-            var column = XService.Wrap(x.Column);
-            var op = Operators.CheckOperator(x.Operator);
-
-            var sql = $"{x.Part.ToUpperInvariant()}({column}) {op} {Parameter(ctx, x.Value)}";
-
-            return x.IsNot ? $"NOT ({sql})" : sql;
+            if (x.IsNot)
+                writer.S.Append("NOT (");
+            writer.S.Append(x.Part.ToUpperInvariant());
+            writer.S.Append("(");
+            writer.AppendName(x.Column);
+            writer.S.Append(") ");
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" ");
+            writer.S.Append(Parameter(ctx, x.Value));
+            if (x.IsNot)
+                writer.S.Append(")");
+            return writer;
         }
 
         private string? CompileNestedCondition(SqlResult ctx, NestedCondition x, Writer writer)
@@ -145,77 +178,83 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
 
-        private string CompileTwoColumnsCondition(TwoColumnsCondition clause, Writer writer)
+        private string CompileTwoColumnsCondition(TwoColumnsCondition x, Writer writer)
         {
-            var op = clause.IsNot ? "NOT " : "";
-            return $"{op}{XService.Wrap(clause.First)} {Operators.CheckOperator(clause.Operator)} {XService.Wrap(clause.Second)}";
+            if (x.IsNot)
+                writer.S.Append("NOT ");
+            writer.AppendName(x.First);
+            writer.S.Append(" ");
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" ");
+            writer.AppendName(x.Second);
+            return writer;
         }
 
-        private string CompileBetweenCondition(SqlResult ctx, BetweenCondition item, Writer writer)
+        private string CompileBetweenCondition(SqlResult ctx, BetweenCondition x, Writer writer)
         {
-            var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
-            var lower = Parameter(ctx, item.Lower);
-            var higher = Parameter(ctx, item.Higher);
-
-            return XService.Wrap(item.Column) + $" {between} {lower} AND {higher}";
+            writer.AppendName(x.Column);
+            writer.S.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
+            writer.S.Append(Parameter(ctx, x.Lower));
+            writer.S.Append(" AND ");
+            writer.S.Append(Parameter(ctx, x.Higher));
+            return writer;
         }
 
-        private string CompileInCondition(SqlResult ctx, InCondition item, Writer writer)
+        private string CompileInCondition(SqlResult ctx, InCondition x, Writer writer)
         {
-            var column = XService.Wrap(item.Column);
+            if (!x.Values.Any())
+            {
+                writer.S.Append(x.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */");
+                return writer;
+            }
 
-            if (!item.Values.Any())
-                return item.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */";
-
-            var inOperator = item.IsNot ? "NOT IN" : "IN";
-
-            var values = Parametrize(ctx, item.Values.OfType<object>());
-
-            return column + $" {inOperator} ({values})";
+            writer.AppendName(x.Column);
+            writer.S.Append(x.IsNot ? " NOT IN (" : " IN (");
+            writer.S.Append(Parametrize(ctx, x.Values.OfType<object>()));
+            writer.S.Append(")");
+            return writer;
         }
 
-        private string CompileInQueryCondition(SqlResult ctx, InQueryCondition item, Writer writer)
+        private string CompileInQueryCondition(SqlResult ctx, InQueryCondition x, Writer writer)
         {
-            var subCtx = CompileSelectQuery(item.Query, new Writer(XService));
-
+            writer.AppendName(x.Column);
+            writer.S.Append(x.IsNot ? " NOT IN (" : " IN (");
+            var subCtx = CompileSelectQuery(x.Query, writer.Sub());
             ctx.Bindings.AddRange(subCtx.Bindings);
-
-            var inOperator = item.IsNot ? "NOT IN" : "IN";
-
-            return XService.Wrap(item.Column) + $" {inOperator} ({subCtx.RawSql})";
+            writer.S.Append(subCtx.RawSql);
+            writer.S.Append(")");
+            return writer;
         }
 
-        private string CompileNullCondition(NullCondition item, Writer writer)
+        private string CompileNullCondition(NullCondition x, Writer writer)
         {
-            var op = item.IsNot ? "IS NOT NULL" : "IS NULL";
-            return XService.Wrap(item.Column) + " " + op;
+            writer.AppendName(x.Column);
+            writer.S.Append(x.IsNot ? " IS NOT NULL" : " IS NULL");
+            return writer;
         }
 
-        private string CompileBooleanCondition(BooleanCondition item, Writer writer)
+        private string CompileBooleanCondition(BooleanCondition x, Writer writer)
         {
-            var column = XService.Wrap(item.Column);
-
-            var op = item.IsNot ? "!=" : "=";
-            var value = item.Value ? CompileTrue() : CompileFalse();
-
-            return $"{column} {op} {value}";
+            writer.AppendName(x.Column);
+            writer.S.Append(x.IsNot ? " != " : " = ");
+            writer.S.Append(x.Value ? CompileTrue() : CompileFalse());
+            return writer;
         }
 
         private string CompileExistsCondition(SqlResult ctx, ExistsCondition item, Writer writer)
         {
-            var op = item.IsNot ? "NOT EXISTS" : "EXISTS";
+            writer.S.Append(item.IsNot ? "NOT EXISTS (" : "EXISTS (");
 
+            var query = OmitSelectInsideExists
+                ? item.Query.Clone().RemoveComponent("select").SelectRaw("1")
+                : item.Query;
 
-            // remove unneeded components
-            var query = item.Query.Clone();
-
-            if (OmitSelectInsideExists) query.RemoveComponent("select").SelectRaw("1");
-
-            var subCtx = CompileSelectQuery(query, new Writer(XService));
-
+            var subCtx = CompileSelectQuery(query, writer.Sub());
             ctx.Bindings.AddRange(subCtx.Bindings);
+            writer.S.Append(subCtx.RawSql);
 
-            return $"{op} ({subCtx.RawSql})";
+            writer.S.Append(")");
+            return writer;
         }
     }
 }

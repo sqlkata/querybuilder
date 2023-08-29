@@ -40,5 +40,29 @@ namespace SqlKata.Tests
                     "(SELECT * FROM [R] WHERE [c] = 1) " +
                     "ON ([a] = [b])");
         }
+        [Fact]
+        public void InCondition()
+        {
+            var query = new Query("L").WhereIn("a", 1, 2);
+
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM [L] WHERE [a] IN (1, 2)");
+        }
+        [Fact]
+        public void InCondition_When_Empty_Bindings()
+        {
+            var query = new Query("L").WhereIn<int>("a");
+
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM [L] WHERE 1 = 0 /* IN [empty list] */");
+        }
+        [Fact]
+        public void InCondition_When_Not()
+        {
+            var query = new Query("L").WhereNotIn("a", "blah");
+
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM [L] WHERE [a] NOT IN ('blah')");
+        }
     }
 }

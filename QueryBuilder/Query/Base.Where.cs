@@ -397,6 +397,8 @@ namespace SqlKata
             return Or().Not().WhereBetween(column, lower, higher);
         }
 
+        public Query WhereIn<T>(string column, params T[] values) =>
+            WhereIn(column, (IEnumerable<T>)values);
         public Query WhereIn<T>(string column, IEnumerable<T> values)
         {
             // If the developer has passed a string they most likely want a List<string>

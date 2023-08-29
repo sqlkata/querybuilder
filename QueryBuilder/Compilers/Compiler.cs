@@ -623,11 +623,6 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        private string CompileLower(string value)
-        {
-            return $"LOWER({value})";
-        }
-
         protected virtual string CompileTrue()
         {
             return "true";
