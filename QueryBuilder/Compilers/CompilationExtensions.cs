@@ -62,6 +62,7 @@ namespace SqlKata.Compilers
             if (query.HasComponent("cte", compiler.EngineCode))
                 ctx = compiler.CompileCteQuery(ctx, query);
 
+            // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
             ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
                 Compiler.ParameterPlaceholder, ctx.Bindings.ToArray()));
 

@@ -19,6 +19,9 @@ namespace SqlKata
             typeof(ulong)
         };
 
+        /// <summary>
+        /// For example replaces "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
+        /// </summary>
         public static string ExpandParameters(string sql, string placeholder, object?[] bindings)
         {
             return ReplaceAll(sql, placeholder, i =>
