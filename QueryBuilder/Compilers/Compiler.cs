@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
             var results = new[]
                 {
                     CompileColumns(ctx, writer),
-                    CompileFrom(ctx),
+                    CompileFrom(ctx, writer.Sub()),
                     CompileJoins(ctx),
                     CompileWheres(ctx),
                     CompileGroups(ctx, writer.Sub()),
@@ -525,17 +525,13 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        public string CompileFrom(SqlResult ctx)
+        public string CompileFrom(SqlResult ctx, Writer writer)
         {
-            if (ctx.Query.HasComponent("from", EngineCode))
-            {
-                var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            if (from == null) return string.Empty;
 
-                Debug.Assert(from != null, nameof(from) + " != null");
-                return "FROM " + CompileTableExpression(ctx, from);
-            }
+            return "FROM " + CompileTableExpression(ctx, from);
 
-            return string.Empty;
         }
 
         public string? CompileJoins(SqlResult ctx)
