@@ -556,12 +556,15 @@ namespace SqlKata.Compilers
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
             Debug.Assert(from != null, nameof(from) + " != null");
-            var joinTable = CompileTableExpression(ctx, from, writer);
             var constraints = CompileConditions(ctx, conditions);
 
             var onClause = conditions.Any() ? $" ON {constraints}" : "";
 
-            return $"{join.Type} {joinTable}{onClause}";
+            writer.S.Append(join.Type);
+            writer.S.Append(" ");
+            CompileTableExpression(ctx, from, writer);
+            writer.S.Append(onClause);
+            return writer;
         }
 
         public string? CompileWheres(SqlResult ctx)
