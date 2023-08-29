@@ -2,6 +2,8 @@ namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
+        private static readonly string[] LikeOperators = { "starts", "ends", "contains", "like", "ilike" };
+
         public PostgresCompiler()
         {
             LastId = "SELECT lastval() AS id";
@@ -19,7 +21,7 @@ namespace SqlKata.Compilers
 
             var method = x.Operator;
 
-            if (new[] { "starts", "ends", "contains", "like", "ilike" }.Contains(x.Operator))
+            if (LikeOperators.Contains(x.Operator))
             {
                 method = x.CaseSensitive ? "LIKE" : "ILIKE";
 
@@ -37,16 +39,23 @@ namespace SqlKata.Compilers
                 }
             }
 
-            string sql;
+            if (x.IsNot)
+                writer.S.Append("NOT (");
+            writer.S.Append(column);
+            writer.S.Append(" ");
+            writer.S.Append(Operators.CheckOperator(method));
+            writer.S.Append(" ");
+            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, value));
+            if (x.EscapeCharacter is { } esc1)
+            {
+                writer.S.Append(" ESCAPE '");
+                writer.S.Append(esc1);
+                writer.S.Append('\'');
+            }
 
-            if (x.Value is UnsafeLiteral)
-                sql = $"{column} {Operators.CheckOperator(method)} {value}";
-            else
-                sql = $"{column} {Operators.CheckOperator(method)} {Parameter(ctx, value)}";
-
-            if (x.EscapeCharacter is {} esc) sql = $"{sql} ESCAPE '{esc}'";
-
-            return x.IsNot ? $"NOT ({sql})" : sql;
+            if (x.IsNot)
+                writer.S.Append(")");
+            return writer;
         }
 
 
@@ -67,7 +76,8 @@ namespace SqlKata.Compilers
 
             if (condition.IsNot) return $"NOT ({sql})";
 
-            return sql;
+            writer.S.Append(sql);
+            return writer;
         }
     }
 }

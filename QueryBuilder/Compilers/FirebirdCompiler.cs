@@ -78,24 +78,36 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
-            var column = XService.Wrap(condition.Column);
-
-            string left;
-
-            if (condition.Part == "time")
-                left = $"CAST({column} as TIME)";
-            else if (condition.Part == "date")
-                left = $"CAST({column} as DATE)";
+            if (x.IsNot)
+                writer.S.Append("NOT (");
+            if (x.Part == "time")
+            {
+                writer.S.Append("CAST(");
+                writer.AppendName(x.Column);
+                writer.S.Append(" as TIME) ");
+            }
+            else if (x.Part == "date")
+            {
+                writer.S.Append("CAST(");
+                writer.AppendName(x.Column);
+                writer.S.Append(" as DATE) ");
+            }
             else
-                left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
-
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
-
-            if (condition.IsNot) return $"NOT ({sql})";
-
-            return sql;
+            {
+                writer.S.Append("EXTRACT(");
+                writer.AppendName(x.Part.ToUpperInvariant());
+                writer.S.Append(" FROM ");
+                writer.AppendName(x.Column);
+                writer.S.Append(") ");
+            }
+            writer.S.Append(Operators.CheckOperator(x.Operator));
+            writer.S.Append(" ");
+            writer.S.Append(Parameter(ctx, x.Value));
+            if (x.IsNot)
+                writer.S.Append(")");
+            return writer;
         }
 
 

@@ -147,7 +147,8 @@ namespace SqlKata.Compilers
 
             if (condition.IsNot) return $"NOT ({sql})";
 
-            return sql;
+            writer.S.Append(sql);
+            return writer;
         }
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
