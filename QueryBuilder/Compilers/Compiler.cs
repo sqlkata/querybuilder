@@ -497,13 +497,13 @@ namespace SqlKata.Compilers
             return string.Join(" ", combinedQueries);
         }
 
-        public string CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
+        private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
         {
             if (from is RawFromClause raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
                 writer.AppendRaw(raw.Expression);
-                return writer;
+                return;
             }
 
             if (from is QueryFromClause queryFromClause)
@@ -518,13 +518,13 @@ namespace SqlKata.Compilers
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
                 writer.S.Append("(" + subCtx.RawSql + ")" + alias);
-                return writer;
+                return;
             }
 
             if (from is FromClause fromClause)
             {
                 writer.AppendName(fromClause.Table);
-                return writer;
+                return;
             }
 
             throw InvalidClauseException("TableExpression", from);
@@ -535,7 +535,9 @@ namespace SqlKata.Compilers
             var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (from == null) return string.Empty;
 
-            return "FROM " + CompileTableExpression(ctx, from, writer);
+            writer.S.Append("FROM ");
+            CompileTableExpression(ctx, from, writer);
+            return writer;
 
         }
 
