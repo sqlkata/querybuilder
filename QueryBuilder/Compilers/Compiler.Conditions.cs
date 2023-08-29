@@ -28,19 +28,12 @@ namespace SqlKata.Compilers
 
         private string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)
         {
-            var result = new List<string>();
-
-            for (var i = 0; i < conditions.Count; i++)
+            writer.List(" ", conditions, (c, i) =>
             {
-                var compiled = CompileCondition(ctx, conditions[i], writer.Sub());
-
-                if (string.IsNullOrEmpty(compiled)) continue;
-
-                var boolOperator = i == 0 ? "" : conditions[i].IsOr ? "OR " : "AND ";
-
-                result.Add(boolOperator + compiled);
-            }
-            writer.List(" ", result);
+                if (i != 0)
+                    writer.S.Append(c.IsOr ? "OR " : "AND ");
+                CompileCondition(ctx, c, writer);
+            });
             return writer;
         }
 

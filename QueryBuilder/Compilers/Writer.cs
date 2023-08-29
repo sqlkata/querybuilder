@@ -31,6 +31,22 @@ namespace SqlKata.Compilers
             if (any) S.Length -= separator.Length;
         }
 
+        public void List<T>(string separator, IEnumerable<T?> list, Action<T, int>? renderItem)
+            where T: notnull
+        {
+            renderItem ??= (i, _) => S.Append(i);
+            var counter = 0;
+            foreach (var item in list)
+                if (item != null)
+                {
+                    renderItem(item, counter);
+                    S.Append(separator);
+                    counter++;
+                }
+
+            if (counter > 0) S.Length -= separator.Length;
+        }
+
         public void WhitespaceSeparated(params Action[] list)
         {
             foreach (var item in list)
