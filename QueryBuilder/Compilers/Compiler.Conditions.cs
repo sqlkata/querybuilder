@@ -4,7 +4,7 @@ namespace SqlKata.Compilers
     {
         private static readonly string[] LikeOperators = { "starts", "ends", "contains", "like" };
 
-        private string CompileCondition(SqlResult ctx, AbstractCondition clause, Writer writer)
+        private void CompileCondition(SqlResult ctx, AbstractCondition clause, Writer writer)
         {
             switch (clause)
             {
@@ -53,8 +53,6 @@ namespace SqlKata.Compilers
                 default:
                     throw new ArgumentOutOfRangeException(nameof(clause));
             }
-
-            return writer;
         }
 
         private string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)

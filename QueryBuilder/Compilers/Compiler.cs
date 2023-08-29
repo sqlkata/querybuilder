@@ -539,10 +539,8 @@ namespace SqlKata.Compilers
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
 
-            var sql = CompileConditions(ctx, conditions, writer.Sub()).Trim();
-            if (string.IsNullOrEmpty(sql)) return null;
             writer.S.Append("WHERE ");
-            writer.S.Append(sql);
+            CompileConditions(ctx, conditions, writer);
             return writer;
         }
 
@@ -580,28 +578,13 @@ namespace SqlKata.Compilers
 
         private void CompileHaving(SqlResult ctx, Writer writer)
         {
-            if (!ctx.Query.HasComponent("having", EngineCode)) return;
-
-            var sql = new List<string>();
-
-            var having = ctx.Query.GetComponents("having", EngineCode)
-                .Cast<AbstractCondition>()
-                .ToList();
-
-            for (var i = 0; i < having.Count; i++)
-            {
-                var compiled = CompileCondition(ctx, having[i], writer.Sub());
-
-                if (!string.IsNullOrEmpty(compiled))
-                {
-                    var boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
-
-                    sql.Add(boolOperator + compiled);
-                }
-            }
+            var havingClauses = ctx.Query.GetComponents("having", EngineCode);
+            if (havingClauses.Count == 0) return;
 
             writer.S.Append("HAVING ");
-            writer.List(" ", sql);
+            CompileConditions(ctx,
+                havingClauses.Cast<AbstractCondition>().ToList(),
+                writer);
         }
 
         protected virtual string? CompileLimit(SqlResult ctx, Writer writer)
