@@ -27,10 +27,12 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"LIMIT -1 OFFSET {ParameterPlaceholder}";
+                writer.S.Append("LIMIT -1 OFFSET ?");
+                return writer;
             }
 
-            return base.CompileLimit(ctx, writer.Sub());
+            if (base.CompileLimit(ctx, writer) == null) return null;
+            return writer;
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)

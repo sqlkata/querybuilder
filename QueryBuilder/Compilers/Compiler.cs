@@ -8,7 +8,6 @@ namespace SqlKata.Compilers
         protected WhiteList Operators { get; } = new();
 
 
-        public const string ParameterPlaceholder = "?";
         public string ParameterPrefix { get; init; } = "@p";
         public X XService { get; init; } = new("\"", "\"", "AS ");
         protected string TableAsKeyword { get; init; } = "AS ";
@@ -64,7 +63,7 @@ namespace SqlKata.Compilers
                     CompileHaving(ctx, writer.Sub()),
                     CompileOrders(ctx, writer.Sub()),
                     CompileLimit(ctx, writer.Sub()),
-                    CompileUnion(ctx)
+                    CompileUnion(ctx, writer.Sub())
                 }
                 .Where(x => x != null)
                 .Where(x => !string.IsNullOrEmpty(x))
@@ -82,7 +81,7 @@ namespace SqlKata.Compilers
             var ctx = new SqlResult { Query = null };
 
             var row = "SELECT " +
-                      string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {XService.Wrap(col)}"));
+                      string.Join(", ", adHoc.Columns.Select(col => $"? AS {XService.Wrap(col)}"));
 
             var fromTable = SingleRowDummyTableName;
 
@@ -459,7 +458,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public string? CompileUnion(SqlResult ctx)
+        public string? CompileUnion(SqlResult ctx, Writer writer)
         {
             // Handle UNION, EXCEPT and INTERSECT
             if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return null;
@@ -489,7 +488,8 @@ namespace SqlKata.Compilers
                     combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
                 }
 
-            return string.Join(" ", combinedQueries);
+            writer.List(" ", combinedQueries);
+            return writer;
         }
 
         private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
@@ -638,26 +638,20 @@ namespace SqlKata.Compilers
         public virtual string? CompileLimit(SqlResult ctx, Writer writer)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
-
-            if (limit == 0 && offset == 0) return null;
-
-            if (offset == 0)
+            if (limit != 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"LIMIT {ParameterPlaceholder}";
+                writer.S.Append("LIMIT ?");
             }
 
-            if (limit == 0)
+            var offset = ctx.Query.GetOffset(EngineCode);
+            if (offset != 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"OFFSET {ParameterPlaceholder}";
+                writer.Whitespace();
+                writer.S.Append("OFFSET ?");
             }
-
-            ctx.Bindings.Add(limit);
-            ctx.Bindings.Add(offset);
-
-            return $"LIMIT {ParameterPlaceholder} OFFSET {ParameterPlaceholder}";
+            return writer;
         }
 
         public virtual string CompileRandom(string seed)
@@ -726,11 +720,11 @@ namespace SqlKata.Compilers
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
-                return ParameterPlaceholder;
+                return "?";
             }
 
             ctx.Bindings.Add(parameter);
-            return ParameterPlaceholder;
+            return "?";
         }
 
         /// <summary>

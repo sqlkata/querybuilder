@@ -14,13 +14,13 @@ namespace SqlKata.Compilers
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
 
-
             if (offset == 0 && limit == 0) return null;
 
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"LIMIT {ParameterPlaceholder}";
+                writer.S.Append("LIMIT ?");
+                return writer;
             }
 
             if (limit == 0)
@@ -29,7 +29,8 @@ namespace SqlKata.Compilers
                 // to avoid this error.
 
                 ctx.Bindings.Add(offset);
-                return $"LIMIT 18446744073709551615 OFFSET {ParameterPlaceholder}";
+                writer.S.Append("LIMIT 18446744073709551615 OFFSET ?");
+                return writer;
             }
 
             // We have both values
@@ -37,7 +38,8 @@ namespace SqlKata.Compilers
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
 
-            return $"LIMIT {ParameterPlaceholder} OFFSET {ParameterPlaceholder}";
+            writer.S.Append("LIMIT ? OFFSET ?");
+            return writer;
         }
     }
 }

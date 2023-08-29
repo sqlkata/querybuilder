@@ -37,20 +37,23 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset == 0) return null;
 
-            var safeOrder = "";
-
-            if (!ctx.Query.HasComponent("order")) safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
+            if (!ctx.Query.HasComponent("order"))
+            {
+                writer.S.Append("ORDER BY (SELECT 0 FROM DUAL) ");
+            }
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS";
+                writer.S.Append("OFFSET ? ROWS");
+                return writer;
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS FETCH NEXT {ParameterPlaceholder} ROWS ONLY";
+            writer.S.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            return writer;
         }
 
         internal void ApplyLegacyLimit(SqlResult ctx)
@@ -64,18 +67,18 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 newSql =
-                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {ParameterPlaceholder}";
+                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {ParameterPlaceholder}";
+                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
                 ctx.Bindings.Add(limit);
             }
             else
             {
                 newSql =
-                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {ParameterPlaceholder}) WHERE \"row_num\" > {ParameterPlaceholder}";
+                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }

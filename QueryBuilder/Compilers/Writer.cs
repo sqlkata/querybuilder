@@ -59,5 +59,10 @@ namespace SqlKata.Compilers
         {
             return new Writer(_x);
         }
+
+        public void Whitespace()
+        {
+            if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
+        }
     }
 }

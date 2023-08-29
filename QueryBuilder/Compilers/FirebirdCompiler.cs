@@ -8,7 +8,7 @@ namespace SqlKata.Compilers
         {
             EngineCode = EngineCodes.Firebird;
             SingleRowDummyTableName = "RDB$DATABASE";
-            XService = new ("\"", "\"", "AS ", true);
+            XService = new("\"", "\"", "AS ", true);
         }
 
         public override SqlResult CompileInsertQuery(Query query)
@@ -37,7 +37,8 @@ namespace SqlKata.Compilers
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return $"ROWS {ParameterPlaceholder} TO {ParameterPlaceholder}";
+                writer.S.Append("ROWS ? TO ?");
+                return writer;
             }
 
             return null;
@@ -57,7 +58,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("limit");
 
-                return $"SELECT FIRST {ParameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT FIRST ?" + compiled.Substring(6);
             }
 
             if (limit == 0 && offset > 0)
@@ -66,7 +67,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("offset");
 
-                return $"SELECT SKIP {ParameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT SKIP ?" + compiled.Substring(6);
             }
 
             return compiled;

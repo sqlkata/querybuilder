@@ -64,7 +64,7 @@ namespace SqlKata.Compilers
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
             ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
-                Compiler.ParameterPlaceholder, ctx.Bindings.ToArray()));
+                "?", ctx.Bindings.ToArray()));
 
             return ctx;
             Query TransformAggregateQuery(Query query1)
@@ -103,7 +103,7 @@ namespace SqlKata.Compilers
         {
             ctx.NamedBindings = ctx.Bindings.GenerateNamedBindings(compiler.ParameterPrefix);
             ctx.Sql = BindingExtensions.ReplaceAll(ctx.RawSql,
-                Compiler.ParameterPlaceholder, i => compiler.ParameterPrefix + i);
+                "?", i => compiler.ParameterPrefix + i);
             return ctx;
         }
 
