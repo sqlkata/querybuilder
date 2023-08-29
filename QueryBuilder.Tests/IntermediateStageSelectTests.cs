@@ -103,67 +103,22 @@ namespace SqlKata.Tests
         {
             CompareWithCompiler(new Query("Phones")
                 .UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A"));
-
         }
 
-        //[Fact]
-        //public void MultipleUnion()
-        //{
-        //    var laptops = new Query("Laptops");
-        //    var tablets = new Query("Tablets");
-
-        //    var mobiles = new Query("Phones").Union(laptops).Union(tablets);
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal("SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] UNION SELECT * FROM [Tablets]",
-        //        c[EngineCodes.SqlServer]);
-
-
-        //    Assert.Equal("SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" UNION SELECT * FROM \"TABLETS\"",
-        //        c[EngineCodes.Firebird]);
-        //}
-
-        //[Fact]
-        //public void MultipleUnionWithBindings()
-        //{
-        //    var laptops = new Query("Laptops").Where("Price", ">", 1000);
-        //    var tablets = new Query("Tablets").Where("Price", ">", 2000);
-
-        //    var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).Union(tablets);
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION SELECT * FROM [Tablets] WHERE [Price] > 2000",
-        //        c[EngineCodes.SqlServer]);
-
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000",
-        //        c[EngineCodes.Firebird]);
-        //}
-
-        //[Fact]
-        //public void MultipleUnionWithBindingsAndPagination()
-        //{
-        //    var laptops = new Query("Laptops").Where("Price", ">", 1000);
-        //    var tablets = new Query("Tablets").Where("Price", ">", 2000).ForPage(2);
-
-        //    var mobiles = new Query("Phones").Where("Price", "<", 3000).Union(laptops).UnionAll(tablets);
-
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION ALL SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30",
-        //        c[EngineCodes.SqlServer]);
-
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000 ROWS 16 TO 30",
-        //        c[EngineCodes.Firebird]);
-        //}
+        [Fact]
+        public void MultipleUnionWithBindingsAndPagination()
+        {
+            var laptops = new Query("Laptops")
+                .Where("Price", ">", 1000);
+            var tablets = new Query("Tablets")
+                .Where("Price", ">", 2000)
+                .ForPage(2);
+            CompareWithCompiler(
+                new Query("Phones")
+                    .Where("Price", "<", 3000)
+                    .Union(laptops)
+                    .UnionAll(tablets));
+        }
 
         //[Fact]
         //public void UnionWithCallbacks()

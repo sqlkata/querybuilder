@@ -108,7 +108,7 @@ public abstract class TestSupport
                 {
                     expected.sql.Should().NotBeNull();
                     actual.sql.Should().NotBeNull(actual.exception?.Message);
-                    actual.sql.Should().Be(expected.sql);
+                    actual.sql.Should().Be(expected.sql, engine);
                 }
             }
         }

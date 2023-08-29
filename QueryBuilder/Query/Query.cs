@@ -29,6 +29,7 @@ namespace SqlKata
             return GetLimit(engineCode) > 0;
         }
 
+        // TODO: Refactor: inline and remove
         internal long GetOffset(string? engineCode = null)
         {
             engineCode ??= EngineScope;
@@ -36,7 +37,7 @@ namespace SqlKata
 
             return offset?.Offset ?? 0;
         }
-
+        // TODO: Refactor: inline and remove
         internal int GetLimit(string? engineCode = null)
         {
             engineCode ??= EngineScope;

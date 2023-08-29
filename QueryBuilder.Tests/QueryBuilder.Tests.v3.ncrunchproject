@@ -7,6 +7,9 @@
       <FixtureTestSelector>
         <FixtureName>SqlKata.Tests.MySqlExecutionTest</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>SqlKata.Tests.IntermediateStageSelectTests.MultipleUnionWithBindingsAndPagination</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -11,7 +11,8 @@ namespace SqlKata.Compilers
     {
         None, MySql,
         Oracle,
-        Firebird
+        Firebird,
+        SqlServer
     }
     public sealed class Renderer
     {

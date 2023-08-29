@@ -18,10 +18,12 @@ namespace SqlKata
 
         private static Q CompileSelectQuery(Query query)
         {
+
             return new QList(" ",
                 CompileColumns(query),
                 CompileFrom(query),
                 CompileWheres(query),
+                CompileAllLimits(query),
                 CompileUnion(query));
         }
 
@@ -63,7 +65,7 @@ namespace SqlKata
                     new QInsertStartClause(values.Length > 1),
                     new QClause(from),
                     columns,
-                    new QDialect(new Dictionary<Dialect, Q>
+                    new QDialect(new Dictionary<Dialect, Q?>
                     {
                         [Dialect.None] = simple,
                         [Dialect.Firebird] = values.Length > 1
@@ -252,6 +254,46 @@ namespace SqlKata
                     .Select(segment => new QRaw(segment))
                     .Interleave(bindings.Select(Parametrize))
                     .ToArray());
+
+        private static QDialect? CompileAllLimits(Query query)
+        {
+            var limit = query.GetLimit();
+            var offset = query.GetOffset();
+            if (limit == 0 && offset == 0) return null;
+            return new QDialect(new Dictionary<Dialect, Q?>
+            {
+                [Dialect.None] = CompileLimit(limit, offset),
+                [Dialect.Oracle] = CompileLimitOracle(query, limit, offset),
+                [Dialect.SqlServer] = CompileLimitSqlServer(query, limit, offset)
+            });
+
+            static Q CompileLimit(int limit, long offset) =>
+                new QList(" ",
+                    limit == 0 ? null : new QHeader("LIMIT", new QValue(limit)),
+                    offset == 0 ? null : new QHeader("OFFSET", new QValue(offset)));
+
+            static Q CompileLimitOracle(Query query, int limit, long offset) =>
+                new QCondHeader(
+                    !query.HasComponent("order"),
+                    "ORDER BY (SELECT 0 FROM DUAL)",
+                    new QList(" ",
+                        new QCondSandwich(offset != 0,
+                            "OFFSET", new QValue(offset), "ROWS"),
+                        new QCondSandwich(limit != 0,
+                            "FETCH NEXT", new QValue(limit), "ROWS ONLY")));
+
+            static Q CompileLimitSqlServer(Query query, int limit, long offset)
+                => new QCondHeader(
+                        !query.HasComponent("order"),
+                        "ORDER BY (SELECT 0)",
+                        new QList(" ",
+                            new QCondSandwich(offset != 0,
+                                "OFFSET", new QValue(offset), "ROWS"),
+                            new QCondSandwich(limit != 0,
+                                "FETCH NEXT", new QValue(limit), "ROWS ONLY")));
+
+        }
+
 
         private static Q? CompileUnion(Query query)
         {
