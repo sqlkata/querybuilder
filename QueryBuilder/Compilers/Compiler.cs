@@ -463,11 +463,11 @@ namespace SqlKata.Compilers
             writer.List(" ", combinedQueries);
         }
 
-        private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
+        private void CompileTableExpression(AbstractFrom from, Writer writer)
         {
             if (from is RawFromClause raw)
             {
-                ctx.Bindings.AddRange(raw.Bindings);
+                writer.Bindings.AddRange(raw.Bindings);
                 writer.AppendRaw(raw.Expression);
                 return;
             }
@@ -482,7 +482,7 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(fromQuery, new Writer(XService));
 
-                ctx.Bindings.AddRange(subCtx.Bindings);
+                writer.Bindings.AddRange(subCtx.Bindings);
                 writer.S.Append("(" + subCtx.RawSql + ")" + alias);
                 return;
             }
@@ -502,7 +502,8 @@ namespace SqlKata.Compilers
             if (from == null) return;
 
             writer.S.Append("FROM ");
-            CompileTableExpression(ctx, from, writer);
+            CompileTableExpression(from, writer);
+            ctx.Bindings.AddRange(writer.Bindings);
         }
 
         private string? CompileJoins(SqlResult ctx, Writer writer)
@@ -527,7 +528,9 @@ namespace SqlKata.Compilers
 
             writer.S.Append(join.Type);
             writer.S.Append(" ");
-            CompileTableExpression(ctx, from, writer);
+            CompileTableExpression(from, writer);
+            ctx.Bindings.AddRange(writer.Bindings);
+
             writer.S.Append(onClause);
         }
 

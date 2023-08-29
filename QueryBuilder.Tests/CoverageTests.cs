@@ -17,5 +17,28 @@ namespace SqlKata.Tests
                 .Be("WITH [prodCTE] AS (SELECT * FROM B)\n" +
                     "SELECT * FROM [prodCTE]");
         }
+        [Fact]
+        public void From_QueryFromClause_With_Bindings()
+        {
+            var query = new Query("T")
+                .From(new Query("S").Where("c", 1));
+
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM " +
+                    "(SELECT * FROM [S] WHERE [c] = 1)");
+        }
+        [Fact]
+        public void Join_QueryFromClause_With_Bindings()
+        {
+            var query = new Query("L")
+                .Join(new Query("R").Where("c", 1),
+                    join => join.On("a", "b"));
+
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM [L] \n" +
+                    "INNER JOIN " +
+                    "(SELECT * FROM [R] WHERE [c] = 1) " +
+                    "ON ([a] = [b])");
+        }
     }
 }
