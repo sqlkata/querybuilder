@@ -365,8 +365,9 @@ namespace SqlKata
         }
 
         public Query WhereBetween<T>(string column, T lower, T higher)
+            where T: notnull
         {
-            return AddComponent(new BetweenCondition<T>
+            return AddComponent(new BetweenCondition
             {
                 Engine = EngineScope,
                 Component = "where",
@@ -379,16 +380,19 @@ namespace SqlKata
         }
 
         public Query OrWhereBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Or().WhereBetween(column, lower, higher);
         }
 
         public Query WhereNotBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Not().WhereBetween(column, lower, higher);
         }
 
         public Query OrWhereNotBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Or().Not().WhereBetween(column, lower, higher);
         }
@@ -399,25 +403,25 @@ namespace SqlKata
             // since string is considered as List<char>
             if (values is string val)
             {
-                return AddComponent(new InCondition<string>
+                return AddComponent(new InCondition
                 {
                     Engine = EngineScope,
                     Component = "where",
                     Column = column,
                     IsOr = GetOr(),
                     IsNot = GetNot(),
-                    Values = ImmutableArray.Create(val)
+                    Values = ImmutableArray.Create<object>(val)
                 });
             }
 
-            return AddComponent(new InCondition<T>
+            return AddComponent(new InCondition
             {
                 Engine = EngineScope,
                 Component = "where",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Values = values.Distinct().ToImmutableArray()
+                Values = values.Distinct().Cast<object>().ToImmutableArray()
             });
         }
 

@@ -5,14 +5,8 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
+        protected WhiteList Operators { get;  }= new();
 
-        public readonly WhiteList Operators = new();
-
-        protected Compiler()
-        {
-            _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
-        }
 
         public const string ParameterPlaceholder = "?";
         public string ParameterPrefix { get; init; } = "@p";

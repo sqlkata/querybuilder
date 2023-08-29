@@ -366,8 +366,9 @@ namespace SqlKata
         }
 
         public Query HavingBetween<T>(string column, T lower, T higher)
+            where T: notnull
         {
-            return AddComponent(new BetweenCondition<T>
+            return AddComponent(new BetweenCondition
             {
                 Engine = EngineScope,
                 Component = "having",
@@ -380,59 +381,66 @@ namespace SqlKata
         }
 
         public Query OrHavingBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Or().HavingBetween(column, lower, higher);
         }
 
         public Query HavingNotBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Not().HavingBetween(column, lower, higher);
         }
 
         public Query OrHavingNotBetween<T>(string column, T lower, T higher)
+            where T : notnull
         {
             return Or().Not().HavingBetween(column, lower, higher);
         }
 
         public Query HavingIn<T>(string column, IEnumerable<T> values)
+            where T : notnull
         {
             // If the developer has passed a string they most likely want a List<string>
             // since string is considered as List<char>
             if (values is string val)
             {
-                return AddComponent(new InCondition<string>
+                return AddComponent(new InCondition
                 {
                     Engine = EngineScope,
                     Component = "having",
                     Column = column,
                     IsOr = GetOr(),
                     IsNot = GetNot(),
-                    Values = ImmutableArray.Create(val)
+                    Values = ImmutableArray.Create<object>(val)
                 });
             }
 
-            return AddComponent(new InCondition<T>
+            return AddComponent(new InCondition
             {
                 Engine = EngineScope,
                 Component = "having",
                 Column = column,
                 IsOr = GetOr(),
                 IsNot = GetNot(),
-                Values = values.Distinct().ToImmutableArray()
+                Values = values.Distinct().Cast<object>().ToImmutableArray()
             });
         }
 
         public Query OrHavingIn<T>(string column, IEnumerable<T> values)
+            where T : notnull
         {
             return Or().HavingIn(column, values);
         }
 
         public Query HavingNotIn<T>(string column, IEnumerable<T> values)
+            where T : notnull
         {
             return Not().HavingIn(column, values);
         }
 
         public Query OrHavingNotIn<T>(string column, IEnumerable<T> values)
+            where T : notnull
         {
             return Or().Not().HavingIn(column, values);
         }

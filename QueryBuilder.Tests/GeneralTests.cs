@@ -59,38 +59,6 @@ public class GeneralTests : TestSupport
     }
 
     [Fact]
-    public void ItShouldCacheMethodInfoByType()
-    {
-        var compiler = new TestSqlServerCompiler();
-
-        var call1 = compiler.Call_FindCompilerMethodInfo(
-            typeof(BasicCondition), "CompileBasicCondition"
-        );
-
-        var call2 = compiler.Call_FindCompilerMethodInfo(
-            typeof(BasicCondition), "CompileBasicCondition"
-        );
-
-        Assert.Same(call1, call2);
-    }
-
-    [Fact]
-    public void Return_Different_MethodInfo_WhenSame_Method_With_Different_GenericTypes()
-    {
-        var compiler = new TestSqlServerCompiler();
-
-        var call1 = compiler.Call_FindCompilerMethodInfo(
-            typeof(InCondition<int>), "CompileInCondition"
-        );
-
-        var call2 = compiler.Call_FindCompilerMethodInfo(
-            typeof(InCondition<bool>), "CompileInCondition"
-        );
-
-        Assert.NotSame(call1, call2);
-    }
-
-    [Fact]
     public void Custom_compiler_with_empty_identifier_overrides_should_remove_identifiers()
     {
         var compiler = new TestEmptyIdentifiersCompiler();

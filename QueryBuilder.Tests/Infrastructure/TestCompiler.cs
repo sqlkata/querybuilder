@@ -1,4 +1,3 @@
-using System.Reflection;
 using SqlKata.Compilers;
 
 namespace SqlKata.Tests.Infrastructure;
@@ -13,42 +12,6 @@ internal class TestCompiler : Compiler
         EngineCode = "test";
     }
 
-    public MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-    {
-        return FindCompilerMethodInfo(clauseType, methodName);
-    }
-}
-
-internal class TestSqlServerCompiler : SqlServerCompiler
-{
-    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-    {
-        return FindCompilerMethodInfo(clauseType, methodName);
-    }
-}
-
-internal class TestMySqlCompiler : MySqlCompiler
-{
-    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-    {
-        return FindCompilerMethodInfo(clauseType, methodName);
-    }
-}
-
-internal class TestPostgresCompiler : PostgresCompiler
-{
-    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-    {
-        return FindCompilerMethodInfo(clauseType, methodName);
-    }
-}
-
-internal class TestFirebirdCompiler : FirebirdCompiler
-{
-    public virtual MethodInfo Call_FindCompilerMethodInfo(Type clauseType, string methodName)
-    {
-        return FindCompilerMethodInfo(clauseType, methodName);
-    }
 }
 
 internal class TestEmptyIdentifiersCompiler : TestCompiler

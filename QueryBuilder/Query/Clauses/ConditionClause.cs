@@ -62,10 +62,10 @@ namespace SqlKata
     /// <summary>
     ///     Represents a "is in" condition.
     /// </summary>
-    public class InCondition<T> : AbstractCondition
+    public class InCondition : AbstractCondition
     {
         public required string Column { get; init; }
-        public required ImmutableArray<T> Values { get; init; }
+        public required ImmutableArray<object> Values { get; init; }
     }
 
     /// <summary>
@@ -80,11 +80,11 @@ namespace SqlKata
     /// <summary>
     ///     Represents a "is between" condition.
     /// </summary>
-    public class BetweenCondition<T> : AbstractCondition
+    public class BetweenCondition : AbstractCondition
     {
         public required string Column { get; init; }
-        public required T Higher { get; init; }
-        public required T Lower { get; init; }
+        public required object Higher { get; init; }
+        public required object Lower { get; init; }
     }
 
     /// <summary>
