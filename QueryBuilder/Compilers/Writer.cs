@@ -44,5 +44,15 @@ namespace SqlKata.Compilers
         {
             _x.AsAlias(S, aggregateType);
         }
+
+        public void AppendRaw(string rawExpression)
+        {
+            S.Append(_x.WrapIdentifiers(rawExpression));
+        }
+
+        public Writer Sub()
+        {
+            return new Writer(_x);
+        }
     }
 }

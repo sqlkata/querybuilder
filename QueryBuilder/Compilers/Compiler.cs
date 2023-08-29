@@ -60,7 +60,7 @@ namespace SqlKata.Compilers
                     CompileFrom(ctx),
                     CompileJoins(ctx),
                     CompileWheres(ctx),
-                    CompileGroups(ctx),
+                    CompileGroups(ctx, writer.Sub()),
                     CompileHaving(ctx),
                     CompileOrders(ctx),
                     CompileLimit(ctx),
@@ -315,13 +315,15 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="column"></param>
+        /// <param name="writer"></param>
         /// <returns></returns>
-        public string CompileColumn(SqlResult ctx, AbstractColumn column)
+        public void CompileColumn(SqlResult ctx, AbstractColumn column, Writer writer)
         {
             if (column is RawColumn raw)
             {
+                writer.AppendRaw(raw.Expression);
                 ctx.Bindings.AddRange(raw.Bindings);
-                return XService.WrapIdentifiers(raw.Expression);
+                return;
             }
 
             if (column is QueryColumn queryColumn)
@@ -331,25 +333,44 @@ namespace SqlKata.Compilers
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
-                return "(" + subCtx.RawSql + $"){alias}";
+                writer.S.Append("(");
+                writer.S.Append(subCtx.RawSql);
+                writer.S.Append(")");
+                writer.S.Append(alias);
+                return;
             }
 
             if (column is AggregatedColumn aggregatedColumn)
             {
                 var agg = aggregatedColumn.Aggregate.ToUpperInvariant();
-
-                var (col, alias) = XService.SplitAlias(CompileColumn(ctx, aggregatedColumn.Column));
-
                 var filterCondition = CompileFilterConditions(ctx, aggregatedColumn);
 
-                if (string.IsNullOrEmpty(filterCondition)) return $"{agg}({col}){alias}";
+                var sub = writer.Sub();
+                CompileColumn(ctx, aggregatedColumn.Column, sub);
+                var (col, alias) = XService.SplitAlias(sub);
 
-                if (SupportsFilterClause) return $"{agg}({col}) FILTER (WHERE {filterCondition}){alias}";
+                if (string.IsNullOrEmpty(filterCondition))
+                {
+                    writer.S.Append(agg);
+                    writer.S.Append("(");
+                    writer.S.Append(col);
+                    writer.S.Append(")");
+                    writer.S.Append(alias);
+                    return;
+                }
 
-                return $"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}";
+                if (SupportsFilterClause)
+                {
+                    writer.S.Append($"{agg}({col}) FILTER (WHERE {filterCondition}){alias}");
+                    return;
+                }
+
+                writer.S.Append($"{agg}(CASE WHEN {filterCondition} THEN {col} END){alias}");
+
+                return;
             }
 
-            return XService.Wrap(((Column)column).Name);
+            writer.S.Append(XService.Wrap(((Column)column).Name));
         }
 
         private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn)
@@ -425,16 +446,16 @@ namespace SqlKata.Compilers
             }
 
             var columns = ctx.Query
-                .GetComponents<AbstractColumn>("select", EngineCode)
-                .Select(x => CompileColumn(ctx, x))
-                .ToList();
+                .GetComponents<AbstractColumn>("select", EngineCode);
+            // .Select(x => CompileColumn(ctx, x, writer))
+            // .ToList();
 
             writer.S.Append("SELECT ");
             if (ctx.Query.IsDistinct) writer.S.Append("DISTINCT ");
 
             if (columns.Any())
             {
-                writer.List(", ", columns);
+                writer.List(", ", columns, x => CompileColumn(ctx, x, writer));
             }
             else
             {
@@ -552,15 +573,14 @@ namespace SqlKata.Compilers
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
         }
 
-        public string? CompileGroups(SqlResult ctx)
+        public string? CompileGroups(SqlResult ctx, Writer writer)
         {
-            if (!ctx.Query.HasComponent("group", EngineCode)) return null;
+            var components = ctx.Query.GetComponents<AbstractColumn>("group", EngineCode);
+            if (!components.Any()) return null;
+            writer.S.Append("GROUP BY ");
+            writer.List(", ", components, x => CompileColumn(ctx, x, writer));
 
-            var columns = ctx.Query
-                .GetComponents<AbstractColumn>("group", EngineCode)
-                .Select(x => CompileColumn(ctx, x));
-
-            return "GROUP BY " + string.Join(", ", columns);
+            return writer;
         }
 
         public string? CompileOrders(SqlResult ctx)
