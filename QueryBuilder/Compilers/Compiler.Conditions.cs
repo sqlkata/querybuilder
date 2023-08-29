@@ -173,9 +173,13 @@ namespace SqlKata.Compilers
 
             var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
 
-            var sql = CompileConditions(ctx, clauses, new Writer(XService));
+            if (x.IsNot)
+                writer.S.Append("NOT ");
+            writer.S.Append("(");
+            CompileConditions(ctx, clauses, writer);
+            writer.S.Append(")");
 
-            return x.IsNot ? $"NOT ({sql})" : $"({sql})";
+            return writer;
         }
 
         private string CompileTwoColumnsCondition(TwoColumnsCondition x, Writer writer)
