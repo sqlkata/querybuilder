@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Security.AccessControl;
 
 namespace SqlKata.Compilers
 {

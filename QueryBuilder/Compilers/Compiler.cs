@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -281,10 +280,7 @@ namespace SqlKata.Compilers
 
             foreach (var cte in cteSearchResult)
             {
-                var cteCtx = CompileCte(cte);
-
-                writer.Bindings.AddRange(cteCtx.Bindings);
-                writer.S.Append(cteCtx.RawSql.Trim());
+                CompileCte(cte, writer);
                 writer.S.Append(",\n");
             }
 
@@ -363,36 +359,30 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        private SqlResult CompileCte(AbstractFrom? cte)
+        private void CompileCte(AbstractFrom? cte, Writer writer)
         {
-            var ctx = new SqlResult { Query = null };
-
-            if (cte == null) return ctx;
-
             if (cte is RawFromClause raw)
             {
-                ctx.Bindings.AddRange(raw.Bindings);
+                writer.Bindings.AddRange(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                ctx.Raw.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
+                writer.S.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
                 var subCtx = CompileSelectQuery(queryFromClause.Query, new Writer(XService));
-                ctx.Bindings.AddRange(subCtx.Bindings);
+                writer.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                ctx.Raw.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
+                writer.S.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
                 var subCtx = CompileAdHocQuery(adHoc);
-                ctx.Bindings.AddRange(subCtx.Bindings);
+                writer.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
-                ctx.Raw.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
+                writer.S.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
             }
-
-            return ctx;
         }
 
         protected virtual string CompileColumns(SqlResult ctx, Writer writer)
