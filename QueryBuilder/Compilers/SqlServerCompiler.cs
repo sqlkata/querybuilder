@@ -154,7 +154,7 @@ namespace SqlKata.Compilers
                 Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
             var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
-            ctx.ReplaceRaw(sql);
+            ctx.Raw.Append(sql);
             ctx.Bindings = adHoc.Values.ToList();
 
             return ctx;

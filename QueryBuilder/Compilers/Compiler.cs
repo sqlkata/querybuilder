@@ -71,7 +71,7 @@ namespace SqlKata.Compilers
 
             var sql = string.Join(" ", results);
 
-            ctx.ReplaceRaw(sql);
+            ctx.Raw.Append(sql);
 
             return ctx;
         }
@@ -89,7 +89,7 @@ namespace SqlKata.Compilers
 
             var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Length / adHoc.Columns.Length));
 
-            ctx.ReplaceRaw(rows);
+            ctx.Raw.Append(rows);
             ctx.Bindings = adHoc.Values.ToList();
 
             return ctx;
@@ -127,15 +127,15 @@ namespace SqlKata.Compilers
 
             if (string.IsNullOrEmpty(joins))
             {
-                ctx.ReplaceRaw($"DELETE FROM {table}{where}");
+                ctx.Raw.Append($"DELETE FROM {table}{where}");
             }
             else
             {
                 // check if we have alias 
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
-                    ctx.ReplaceRaw($"DELETE {XService.Wrap(fromClause.Alias)} FROM {table} {joins}{where}");
+                    ctx.Raw.Append($"DELETE {XService.Wrap(fromClause.Alias)} FROM {table} {joins}{where}");
                 else
-                    ctx.ReplaceRaw($"DELETE {table} FROM {table} {joins}{where}");
+                    ctx.Raw.Append($"DELETE {table} FROM {table} {joins}{where}");
             }
 
             return ctx;
@@ -180,7 +180,7 @@ namespace SqlKata.Compilers
 
                 if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
-                ctx.ReplaceRaw($"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}");
+                ctx.Raw.Append($"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}");
 
                 return ctx;
             }
@@ -199,7 +199,7 @@ namespace SqlKata.Compilers
 
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
-            ctx.ReplaceRaw($"UPDATE {table} SET {sets}{wheres}");
+            ctx.Raw.Append($"UPDATE {table} SET {sets}{wheres}");
 
             return ctx;
         }
@@ -243,7 +243,7 @@ namespace SqlKata.Compilers
                 var subCtx = CompileSelectQuery(clause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
-                ctx.ReplaceRaw($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
+                ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
 
                 return ctx;
             }
@@ -258,7 +258,7 @@ namespace SqlKata.Compilers
                 var columns = firstInsert.Columns.GetInsertColumnsList(XService);
                 var values = string.Join(", ", Parametrize(ctx, firstInsert.Values));
 
-                ctx.ReplaceRaw($"{insertInto} {table}{columns} VALUES ({values})");
+                ctx.Raw.Append($"{insertInto} {table}{columns} VALUES ({values})");
 
                 if (isMultiValueInsert)
                     return CompileRemainingInsertClauses(ctx, table, insertClauses);
@@ -370,7 +370,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.AddRange(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                ctx.ReplaceRaw($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
+                ctx.Raw.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
@@ -378,7 +378,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                ctx.ReplaceRaw($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
+                ctx.Raw.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
@@ -386,7 +386,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
-                ctx.ReplaceRaw($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
+                ctx.Raw.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
             }
 
             return ctx;
