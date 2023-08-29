@@ -44,9 +44,9 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileColumns(SqlResult ctx, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx);
+            var compiled = base.CompileColumns(ctx, writer);
 
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);

@@ -53,9 +53,9 @@ namespace SqlKata.Compilers
             return result;
         }
 
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileColumns(SqlResult ctx, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx);
+            var compiled = base.CompileColumns(ctx, writer);
 
             if (!UseLegacyPagination) return compiled;
 

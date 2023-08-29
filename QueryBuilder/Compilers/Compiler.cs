@@ -5,7 +5,7 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        protected WhiteList Operators { get;  }= new();
+        protected WhiteList Operators { get; } = new();
 
 
         public const string ParameterPlaceholder = "?";
@@ -52,10 +52,11 @@ namespace SqlKata.Compilers
             {
                 Query = query.Clone()
             };
+            var writer = new Writer(XService);
 
             var results = new[]
                 {
-                    CompileColumns(ctx),
+                    CompileColumns(ctx, writer),
                     CompileFrom(ctx),
                     CompileJoins(ctx),
                     CompileWheres(ctx),
@@ -397,27 +398,30 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual string CompileColumns(SqlResult ctx)
+        protected virtual string CompileColumns(SqlResult ctx, Writer writer)
         {
-            if (ctx.Query.HasComponent("aggregate", EngineCode))
+            var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            if (aggregate != null)
             {
-                var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
-                Debug.Assert(aggregate != null);
-
                 var aggregateColumns = aggregate.Columns
                     .Select(value => XService.Wrap(value))
                     .ToList();
 
                 if (aggregateColumns.Count == 1)
                 {
-                    var sql = string.Join(", ", aggregateColumns);
-
-                    if (ctx.Query.IsDistinct) sql = "DISTINCT " + sql;
-
-                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $"){XService.AsAlias(aggregate.Type)}";
+                    writer.S.Append("SELECT ");
+                    writer.AppendKeyword(aggregate.Type);
+                    writer.S.Append("(");
+                    if (ctx.Query.IsDistinct)
+                        writer.S.Append("DISTINCT ");
+                    writer.List(", ", aggregateColumns);
+                    writer.S.Append(") ");
+                    writer.AppendAsAlias(aggregate.Type);
+                    return writer;
                 }
 
-                return "SELECT 1";
+                writer.S.Append("SELECT 1");
+                return writer;
             }
 
             var columns = ctx.Query
@@ -425,11 +429,18 @@ namespace SqlKata.Compilers
                 .Select(x => CompileColumn(ctx, x))
                 .ToList();
 
-            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+            writer.S.Append("SELECT ");
+            if (ctx.Query.IsDistinct) writer.S.Append("DISTINCT ");
 
-            var select = columns.Any() ? string.Join(", ", columns) : "*";
-
-            return $"SELECT {distinct}{select}";
+            if (columns.Any())
+            {
+                writer.List(", ", columns);
+            }
+            else
+            {
+                writer.S.Append("*");
+            }
+            return writer;
         }
 
         public string? CompileUnion(SqlResult ctx)
@@ -713,6 +724,6 @@ namespace SqlKata.Compilers
             return string.Join(", ", values.Select(x => Parameter(ctx, x)));
         }
 
-      
+
     }
 }
