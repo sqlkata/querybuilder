@@ -64,5 +64,15 @@ namespace SqlKata.Tests
             Compile(query)[EngineCodes.SqlServer].Should()
                 .Be("SELECT * FROM [L] WHERE [a] NOT IN ('blah')");
         }
+           
+        [Fact]
+        public void WhereDate_When_Unknown_DatePart()
+        {
+            var query = new Query("Orders")
+                .Define("@d", 1996)
+                .WhereDatePart("blah", "RequiredDate", "=", Expressions.Variable("@d"));
+            Compile(query)[EngineCodes.SqlServer].Should()
+                .Be("SELECT * FROM [Orders] WHERE DATEPART(BLAH, [RequiredDate]) = 1996");
+        }
     }
 }
