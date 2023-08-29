@@ -59,9 +59,9 @@ namespace SqlKata.Compilers
                     CompileColumns(ctx, writer),
                     CompileFrom(ctx, writer.Sub()),
                     CompileJoins(ctx, writer.Sub()),
-                    CompileWheres(ctx),
+                    CompileWheres(ctx, writer.Sub()),
                     CompileGroups(ctx, writer.Sub()),
-                    CompileHaving(ctx),
+                    CompileHaving(ctx, writer.Sub()),
                     CompileOrders(ctx),
                     CompileLimit(ctx),
                     CompileUnion(ctx)
@@ -122,7 +122,7 @@ namespace SqlKata.Compilers
 
             var joins = CompileJoins(ctx, new Writer(XService));
 
-            var where = CompileWheres(ctx);
+            var where = CompileWheres(ctx, new Writer(XService));
 
             if (!string.IsNullOrEmpty(where)) where = " " + where;
 
@@ -177,7 +177,7 @@ namespace SqlKata.Compilers
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                wheres = CompileWheres(ctx);
+                wheres = CompileWheres(ctx, new Writer(XService));
 
                 if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -196,7 +196,7 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            wheres = CompileWheres(ctx);
+            wheres = CompileWheres(ctx, new Writer(XService));
 
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -414,11 +414,6 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected SqlResult OnBeforeSelect(SqlResult ctx)
-        {
-            return ctx;
-        }
-
         protected virtual string CompileColumns(SqlResult ctx, Writer writer)
         {
             var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
@@ -567,14 +562,16 @@ namespace SqlKata.Compilers
             writer.S.Append(onClause);
         }
 
-        public string? CompileWheres(SqlResult ctx)
+        public string? CompileWheres(SqlResult ctx, Writer writer)
         {
-            if (!ctx.Query.HasComponent("where", EngineCode)) return null;
-
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
-            var sql = CompileConditions(ctx, conditions).Trim();
+            if (!conditions.Any()) return null;
 
-            return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
+            var sql = CompileConditions(ctx, conditions).Trim();
+            if (string.IsNullOrEmpty(sql)) return null;
+            writer.S.Append("WHERE ");
+            writer.S.Append(sql);
+            return writer;
         }
 
         public string? CompileGroups(SqlResult ctx, Writer writer)
@@ -609,7 +606,7 @@ namespace SqlKata.Compilers
             return "ORDER BY " + string.Join(", ", columns);
         }
 
-        public string? CompileHaving(SqlResult ctx)
+        public string? CompileHaving(SqlResult ctx, Writer writer)
         {
             if (!ctx.Query.HasComponent("having", EngineCode)) return null;
 
@@ -631,7 +628,9 @@ namespace SqlKata.Compilers
                 }
             }
 
-            return $"HAVING {string.Join(" ", sql)}";
+            writer.S.Append("HAVING ");
+            writer.List(" ", sql);
+            return writer;
         }
 
         public virtual string? CompileLimit(SqlResult ctx)
@@ -659,11 +658,6 @@ namespace SqlKata.Compilers
             return $"LIMIT {ParameterPlaceholder} OFFSET {ParameterPlaceholder}";
         }
 
-        /// <summary>
-        ///     Compile the random statement into SQL.
-        /// </summary>
-        /// <param name="seed"></param>
-        /// <returns></returns>
         public virtual string CompileRandom(string seed)
         {
             return "RANDOM()";
