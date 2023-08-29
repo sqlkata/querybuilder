@@ -35,6 +35,11 @@ namespace SqlKata.Compilers
                 throw new Exception($"\n\n------Expected------\n{s}\n--------Got---------\n{S}\n\n");
         }
 
+        public void AppendName(string userObjectName)
+        {
+            _x.Wrap(S, userObjectName);
+        }
+
         public void AppendKeyword(string sqlKeyword)
         {
             S.Append(sqlKeyword.ToUpperInvariant());

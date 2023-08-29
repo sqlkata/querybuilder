@@ -502,7 +502,8 @@ namespace SqlKata.Compilers
             if (from is RawFromClause raw)
             {
                 ctx.Bindings.AddRange(raw.Bindings);
-                return XService.WrapIdentifiers(raw.Expression);
+                writer.AppendRaw(raw.Expression);
+                return writer;
             }
 
             if (from is QueryFromClause queryFromClause)
@@ -516,11 +517,15 @@ namespace SqlKata.Compilers
                 var subCtx = CompileSelectQuery(fromQuery);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
-
-                return "(" + subCtx.RawSql + ")" + alias;
+                writer.S.Append("(" + subCtx.RawSql + ")" + alias);
+                return writer;
             }
 
-            if (from is FromClause fromClause) return XService.Wrap(fromClause.Table);
+            if (from is FromClause fromClause)
+            {
+                writer.AppendName(fromClause.Table);
+                return writer;
+            }
 
             throw InvalidClauseException("TableExpression", from);
         }
