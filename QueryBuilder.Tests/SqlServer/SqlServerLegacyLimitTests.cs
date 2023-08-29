@@ -1,53 +1,52 @@
+using FluentAssertions;
 using SqlKata.Compilers;
-using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests.SqlServer;
 
-public class SqlServerLegacyLimitTests : TestSupport
+public sealed class SqlServerLegacyLimitTests 
 {
-    private readonly SqlServerCompiler _compiler;
-
-    public SqlServerLegacyLimitTests()
+    private readonly SqlServerCompiler _compiler = new()
     {
-        _compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
-        _compiler.UseLegacyPagination = true;
-    }
+        UseLegacyPagination = true
+    };
 
     [Fact]
     public void NoLimitNorOffset()
     {
         var query = new Query("Table");
-        var ctx = new SqlResult { Query = query };
-
-        Assert.Null(_compiler.CompileLimit(ctx));
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM [Table]");
     }
 
     [Fact]
     public void LimitOnly()
     {
         var query = new Query("Table").Limit(10);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.Null(_compiler.CompileLimit(ctx));
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT TOP (10) * FROM [Table]");
     }
 
     [Fact]
     public void OffsetOnly()
     {
         var query = new Query("Table").Offset(20);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.Null(_compiler.CompileLimit(ctx));
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM (SELECT *, ROW_NUMBER() " +
+                "OVER (ORDER BY (SELECT 0)) AS [row_num] " +
+                "FROM [Table]) AS [results_wrapper] " +
+                "WHERE [row_num] >= 21");
     }
 
     [Fact]
     public void LimitAndOffset()
     {
         var query = new Query("Table").Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.Null(_compiler.CompileLimit(ctx));
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM (SELECT *, ROW_NUMBER() " +
+                "OVER (ORDER BY (SELECT 0)) AS [row_num] " +
+                "FROM [Table]) AS [results_wrapper] " +
+                "WHERE [row_num] BETWEEN 21 AND 25");
     }
 
     [Fact]

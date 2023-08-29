@@ -13,7 +13,8 @@ namespace SqlKata.Compilers
 
         public override SqlResult CompileSelectQuery(Query query)
         {
-            if (!UseLegacyPagination || !query.HasOffset(EngineCode)) return base.CompileSelectQuery(query);
+            if (!UseLegacyPagination || !query.HasOffset(EngineCode))
+                return base.CompileSelectQuery(query);
 
             query = query.Clone();
 
@@ -28,7 +29,7 @@ namespace SqlKata.Compilers
 
             if (!query.HasComponent("select")) query.Select("*");
 
-            var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            var order = CompileOrders(ctx, new Writer(XService)) ?? "ORDER BY (SELECT 0)";
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]",
                 ctx.Bindings.ToArray());
@@ -82,7 +83,7 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
-        public override string? CompileLimit(SqlResult ctx)
+        public override string? CompileLimit(SqlResult ctx, Writer writer)
         {
             if (UseLegacyPagination)
                 // in legacy versions of Sql Server, limit is handled by TOP

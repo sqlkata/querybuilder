@@ -62,8 +62,8 @@ namespace SqlKata.Compilers
                     CompileWheres(ctx, writer.Sub()),
                     CompileGroups(ctx, writer.Sub()),
                     CompileHaving(ctx, writer.Sub()),
-                    CompileOrders(ctx),
-                    CompileLimit(ctx),
+                    CompileOrders(ctx, writer.Sub()),
+                    CompileLimit(ctx, writer.Sub()),
                     CompileUnion(ctx)
                 }
                 .Where(x => x != null)
@@ -584,7 +584,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public string? CompileOrders(SqlResult ctx)
+        public string? CompileOrders(SqlResult ctx, Writer writer)
         {
             if (!ctx.Query.HasComponent("order", EngineCode)) return null;
 
@@ -603,7 +603,9 @@ namespace SqlKata.Compilers
                     return XService.Wrap(((OrderBy)x).Column) + direction;
                 });
 
-            return "ORDER BY " + string.Join(", ", columns);
+            writer.S.Append("ORDER BY ");
+            writer.List(", ", columns);
+            return writer;
         }
 
         public string? CompileHaving(SqlResult ctx, Writer writer)
@@ -633,7 +635,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public virtual string? CompileLimit(SqlResult ctx)
+        public virtual string? CompileLimit(SqlResult ctx, Writer writer)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);

@@ -1,77 +1,46 @@
+using FluentAssertions;
 using SqlKata.Compilers;
-using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests.Oracle;
 
-public class OracleLimitTests : TestSupport
+public sealed class OracleLimitTests
 {
-    private const string TableName = "Table";
-    private const string SqlPlaceholder = "GENERATED_SQL";
-
-    private readonly OracleCompiler _compiler;
-
-    public OracleLimitTests()
-    {
-        _compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
-    }
+    private readonly OracleCompiler _compiler = new ();
 
     [Fact]
     public void NoLimitNorOffset()
     {
-        // Arrange:
-        var query = new Query(TableName);
-        var ctx = new SqlResult { Query = query };
-        ctx.Raw.Append(SqlPlaceholder);
-        
-        // Act & Assert:
-        Assert.Null(_compiler.CompileLimit(ctx));
+        var query = new Query("Table");
+        _compiler.Compile(query).ToString().Should()
+            .Be("""
+                SELECT * FROM "Table"
+                """);
     }
 
     [Fact]
     public void LimitOnly()
     {
-        // Arrange:
-        var query = new Query(TableName).Limit(10);
-        var ctx = new SqlResult { Query = query };
-        ctx.Raw.Append(SqlPlaceholder);
-
-        //  Act & Assert:
-        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));
-        Assert.Equal(2, ctx.Bindings.Count);
-        Assert.Equal(0L, ctx.Bindings[0]);
-        Assert.Equal(10, ctx.Bindings[1]);
+        var query = new Query("Table").Limit(10);
+        _compiler.Compile(query).ToString().Should()
+            .Be("""SELECT * FROM "Table" ORDER BY (SELECT 0 FROM DUAL) OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY""");
     }
 
     [Fact]
     public void OffsetOnly()
     {
-        // Arrange:
-        var query = new Query(TableName).Offset(20);
-        var ctx = new SqlResult { Query = query };
-        ctx.Raw.Append(SqlPlaceholder);
-
-        // Act & Assert:
-        Assert.EndsWith("OFFSET ? ROWS", _compiler.CompileLimit(ctx));
-
-        Assert.Single(ctx.Bindings);
-        Assert.Equal(20L, ctx.Bindings[0]);
+        var query = new Query("Table").Offset(20);
+        _compiler.Compile(query).ToString().Should()
+            .Be("""
+                SELECT * FROM "Table" ORDER BY (SELECT 0 FROM DUAL) OFFSET 20 ROWS
+                """);
     }
 
     [Fact]
     public void LimitAndOffset()
     {
-        // Arrange:
-        var query = new Query(TableName).Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query };
-
-        // Act & Assert:
-        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));
-
-        Assert.Equal(2, ctx.Bindings.Count);
-        Assert.Equal(20L, ctx.Bindings[0]);
-        Assert.Equal(5, ctx.Bindings[1]);
-
-        _compiler.CompileLimit(ctx);
+        var query = new Query("Table").Limit(5).Offset(20);
+        _compiler.Compile(query).ToString().Should()
+            .Be("""SELECT * FROM "Table" ORDER BY (SELECT 0 FROM DUAL) OFFSET 20 ROWS FETCH NEXT 5 ROWS ONLY""");
     }
 }

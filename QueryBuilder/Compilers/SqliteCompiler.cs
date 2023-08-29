@@ -19,7 +19,7 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        public override string? CompileLimit(SqlResult ctx)
+        public override string? CompileLimit(SqlResult ctx, Writer writer)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
@@ -30,7 +30,7 @@ namespace SqlKata.Compilers
                 return $"LIMIT -1 OFFSET {ParameterPlaceholder}";
             }
 
-            return base.CompileLimit(ctx);
+            return base.CompileLimit(ctx, writer.Sub());
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)

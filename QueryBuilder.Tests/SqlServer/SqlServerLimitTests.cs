@@ -1,63 +1,45 @@
+using FluentAssertions;
 using SqlKata.Compilers;
-using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests.SqlServer;
 
-public class SqlServerLimitTests : TestSupport
+public sealed class SqlServerLimitTests
 {
-    private readonly SqlServerCompiler _compiler;
-
-    public SqlServerLimitTests()
-    {
-        _compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
-        _compiler.UseLegacyPagination = false;
-    }
+    private readonly SqlServerCompiler _compiler = new();
 
     [Fact]
     public void NoLimitNorOffset()
     {
         var query = new Query("Table");
-        var ctx = new SqlResult { Query = query };
-
-        Assert.Null(_compiler.CompileLimit(ctx));
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM [Table]");
     }
 
     [Fact]
     public void LimitOnly()
     {
         var query = new Query("Table").Limit(10);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));
-        Assert.Equal(2, ctx.Bindings.Count);
-        Assert.Equal(0L, ctx.Bindings[0]);
-        Assert.Equal(10, ctx.Bindings[1]);
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM [Table] ORDER BY (SELECT 0) " +
+                "OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
     }
 
     [Fact]
     public void OffsetOnly()
     {
         var query = new Query("Table").Offset(20);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.EndsWith("OFFSET ? ROWS", _compiler.CompileLimit(ctx));
-
-        Assert.Single(ctx.Bindings);
-        Assert.Equal(20L, ctx.Bindings[0]);
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM [Table] ORDER BY (SELECT 0) OFFSET 20 ROWS");
     }
 
     [Fact]
     public void LimitAndOffset()
     {
         var query = new Query("Table").Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query };
-
-        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));
-
-        Assert.Equal(2, ctx.Bindings.Count);
-        Assert.Equal(20L, ctx.Bindings[0]);
-        Assert.Equal(5, ctx.Bindings[1]);
+        _compiler.Compile(query).ToString().Should()
+            .Be("SELECT * FROM [Table] ORDER BY (SELECT 0) " +
+                "OFFSET 20 ROWS FETCH NEXT 5 ROWS ONLY");
     }
 
     [Fact]
