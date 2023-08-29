@@ -25,7 +25,7 @@ namespace SqlKata.Compilers
             return result;
         }
 
-        public override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Writer writer)
         {
             if (UseLegacyPagination)
                 // in pre-12c versions of Oracle,

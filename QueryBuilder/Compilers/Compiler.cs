@@ -8,8 +8,8 @@ namespace SqlKata.Compilers
         protected WhiteList Operators { get; } = new();
 
 
-        public string ParameterPrefix { get; init; } = "@p";
-        public X XService { get; init; } = new("\"", "\"", "AS ");
+        public string ParameterPrefix { get; protected init; } = "@p";
+        public X XService { get; protected init; } = new("\"", "\"", "AS ");
         protected string TableAsKeyword { get; init; } = "AS ";
         protected string LastId { get; init; } = "";
 
@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
         ///     Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
         /// <value></value>
-        public bool SupportsFilterClause { get; init; }
+        protected bool SupportsFilterClause { get; init; }
 
         /// <summary>
         ///     If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
@@ -308,7 +308,7 @@ namespace SqlKata.Compilers
         /// <param name="column"></param>
         /// <param name="writer"></param>
         /// <returns></returns>
-        public void CompileColumn(SqlResult ctx, AbstractColumn column, Writer writer)
+        private void CompileColumn(SqlResult ctx, AbstractColumn column, Writer writer)
         {
             if (column is RawColumn raw)
             {
@@ -373,7 +373,7 @@ namespace SqlKata.Compilers
             return CompileConditions(ctx, wheres);
         }
 
-        public SqlResult CompileCte(AbstractFrom? cte)
+        private SqlResult CompileCte(AbstractFrom? cte)
         {
             var ctx = new SqlResult { Query = null };
 
@@ -450,7 +450,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public void CompileUnion(SqlResult ctx, Writer writer)
+        private void CompileUnion(SqlResult ctx, Writer writer)
         {
             // Handle UNION, EXCEPT and INTERSECT
             if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return;
@@ -516,7 +516,7 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        public void CompileFrom(SqlResult ctx, Writer writer)
+        private void CompileFrom(SqlResult ctx, Writer writer)
         {
             var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (from == null) return;
@@ -525,7 +525,7 @@ namespace SqlKata.Compilers
             CompileTableExpression(ctx, from, writer);
         }
 
-        public string? CompileJoins(SqlResult ctx, Writer writer)
+        private string? CompileJoins(SqlResult ctx, Writer writer)
         {
             var baseJoins = ctx.Query.GetComponents<BaseJoin>("join", EngineCode);
             if (!baseJoins.Any()) return null;
@@ -551,7 +551,7 @@ namespace SqlKata.Compilers
             writer.S.Append(onClause);
         }
 
-        public string? CompileWheres(SqlResult ctx, Writer writer)
+        private string? CompileWheres(SqlResult ctx, Writer writer)
         {
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
@@ -563,7 +563,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public void CompileGroups(SqlResult ctx, Writer writer)
+        private void CompileGroups(SqlResult ctx, Writer writer)
         {
             var components = ctx.Query.GetComponents<AbstractColumn>("group", EngineCode);
             if (!components.Any()) return;
@@ -571,7 +571,7 @@ namespace SqlKata.Compilers
             writer.List(", ", components, x => CompileColumn(ctx, x, writer));
         }
 
-        public string? CompileOrders(SqlResult ctx, Writer writer)
+        protected string? CompileOrders(SqlResult ctx, Writer writer)
         {
             if (!ctx.Query.HasComponent("order", EngineCode)) return null;
 
@@ -595,7 +595,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public void CompileHaving(SqlResult ctx, Writer writer)
+        private void CompileHaving(SqlResult ctx, Writer writer)
         {
             if (!ctx.Query.HasComponent("having", EngineCode)) return;
 
@@ -621,7 +621,7 @@ namespace SqlKata.Compilers
             writer.List(" ", sql);
         }
 
-        public virtual string? CompileLimit(SqlResult ctx, Writer writer)
+        protected virtual string? CompileLimit(SqlResult ctx, Writer writer)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             if (limit != 0)
@@ -640,27 +640,17 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public virtual string CompileRandom(string seed)
-        {
-            return "RANDOM()";
-        }
-
-        public string CompileLower(string value)
+        private string CompileLower(string value)
         {
             return $"LOWER({value})";
         }
 
-        public string CompileUpper(string value)
-        {
-            return $"UPPER({value})";
-        }
-
-        public virtual string CompileTrue()
+        protected virtual string CompileTrue()
         {
             return "true";
         }
 
-        public virtual string CompileFalse()
+        protected virtual string CompileFalse()
         {
             return "false";
         }
@@ -719,7 +709,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public string Parametrize(SqlResult ctx, IEnumerable<object> values)
+        protected string Parametrize(SqlResult ctx, IEnumerable<object> values)
         {
             return string.Join(", ", values.Select(x => Parameter(ctx, x)));
         }

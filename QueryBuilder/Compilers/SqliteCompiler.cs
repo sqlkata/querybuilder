@@ -9,17 +9,17 @@ namespace SqlKata.Compilers
             SupportsFilterClause = true;
         }
 
-        public override string CompileTrue()
+        protected override string CompileTrue()
         {
             return "1";
         }
 
-        public override string CompileFalse()
+        protected override string CompileFalse()
         {
             return "0";
         }
 
-        public override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Writer writer)
         {
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);

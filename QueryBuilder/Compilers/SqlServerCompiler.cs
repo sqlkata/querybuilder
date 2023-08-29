@@ -94,7 +94,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Writer writer)
         {
             if (UseLegacyPagination)
                 // in legacy versions of Sql Server, limit is handled by TOP
@@ -121,17 +121,12 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public override string CompileRandom(string seed)
-        {
-            return "NEWID()";
-        }
-
-        public override string CompileTrue()
+        protected override string CompileTrue()
         {
             return "cast(1 as bit)";
         }
 
-        public override string CompileFalse()
+        protected override string CompileFalse()
         {
             return "cast(0 as bit)";
         }
