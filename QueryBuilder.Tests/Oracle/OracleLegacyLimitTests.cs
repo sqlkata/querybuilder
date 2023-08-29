@@ -21,7 +21,8 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
 
         // Act:
         _compiler.ApplyLegacyLimit(ctx);
@@ -35,7 +36,9 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(10);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
+
 
         // Act:
         _compiler.ApplyLegacyLimit(ctx);
@@ -51,7 +54,8 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Offset(20);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
 
         // Act:
         _compiler.ApplyLegacyLimit(ctx);
@@ -69,7 +73,9 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
+
 
         // Act:
         _compiler.ApplyLegacyLimit(ctx);

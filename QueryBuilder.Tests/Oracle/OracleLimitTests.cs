@@ -21,8 +21,9 @@ public class OracleLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
-
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
+        
         // Act & Assert:
         Assert.Null(_compiler.CompileLimit(ctx));
     }
@@ -32,7 +33,8 @@ public class OracleLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(10);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
 
         //  Act & Assert:
         Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));
@@ -46,7 +48,8 @@ public class OracleLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Offset(20);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
+        ctx.Raw.Append(SqlPlaceholder);
 
         // Act & Assert:
         Assert.EndsWith("OFFSET ? ROWS", _compiler.CompileLimit(ctx));
@@ -60,7 +63,7 @@ public class OracleLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+        var ctx = new SqlResult { Query = query };
 
         // Act & Assert:
         Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", _compiler.CompileLimit(ctx));

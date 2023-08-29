@@ -40,14 +40,12 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                result.RawSql =
-                    $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= {ParameterPlaceholder}";
+                result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= {ParameterPlaceholder}");
                 result.Bindings.Add(offset + 1);
             }
             else
             {
-                result.RawSql =
-                    $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {ParameterPlaceholder} AND {ParameterPlaceholder}";
+                result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {ParameterPlaceholder} AND {ParameterPlaceholder}");
                 result.Bindings.Add(offset + 1);
                 result.Bindings.Add(limit + offset);
             }
@@ -156,7 +154,7 @@ namespace SqlKata.Compilers
                 Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
             var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
-            ctx.RawSql = sql;
+            ctx.ReplaceRaw(sql);
             ctx.Bindings = adHoc.Values.ToList();
 
             return ctx;

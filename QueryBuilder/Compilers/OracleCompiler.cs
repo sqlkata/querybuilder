@@ -80,7 +80,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.Add(offset);
             }
 
-            ctx.RawSql = newSql;
+            ctx.ReplaceRaw(newSql);
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
@@ -143,10 +143,10 @@ namespace SqlKata.Compilers
                 var intoFormat = " INTO {0}{1} VALUES ({2})";
                 var nextInsert = string.Format(intoFormat, table, columns, values);
 
-                ctx.RawSql += nextInsert;
+                ctx.Raw.Append(nextInsert);
             }
 
-            ctx.RawSql += " SELECT 1 FROM DUAL";
+            ctx.Raw.Append(" SELECT 1 FROM DUAL");
             return ctx;
         }
     }

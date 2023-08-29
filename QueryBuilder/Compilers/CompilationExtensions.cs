@@ -18,10 +18,10 @@ namespace SqlKata.Compilers
             var ctx = new SqlResult
             {
                 Query = null,
-                RawSql = compiled.Select(r => r.RawSql)
-                    .Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings
             };
+            ctx.Raw.Append(compiled.Select(r => r.RawSql)
+                .Aggregate((a, b) => a + ";\n" + b));
 
             ctx = compiler.PrepareResult(ctx);
 
@@ -61,8 +61,8 @@ namespace SqlKata.Compilers
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode)) ctx = compiler.CompileCteQuery(ctx, query);
 
-            ctx.RawSql = BindingExtensions.ExpandParameters(ctx.RawSql,
-                Compiler.ParameterPlaceholder, ctx.Bindings.ToArray());
+            ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
+                Compiler.ParameterPlaceholder, ctx.Bindings.ToArray()));
 
             return ctx;
             Query TransformAggregateQuery(Query query1)
