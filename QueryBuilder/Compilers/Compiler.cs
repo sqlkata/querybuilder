@@ -522,16 +522,17 @@ namespace SqlKata.Compilers
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
             Debug.Assert(from != null, nameof(from) + " != null");
-            var constraints = CompileConditions(ctx, conditions, writer.Sub());
-
-            var onClause = conditions.Any() ? $" ON {constraints}" : "";
 
             writer.S.Append(join.Type);
             writer.S.Append(" ");
             CompileTableExpression(from, writer);
             ctx.Bindings.AddRange(writer.Bindings);
 
-            writer.S.Append(onClause);
+            if (conditions.Any())
+            {
+                writer.S.Append(" ON ");
+                CompileConditions(ctx, conditions, writer);
+            }
         }
 
         private string? CompileWheres(SqlResult ctx, Writer writer)

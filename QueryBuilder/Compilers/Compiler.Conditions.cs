@@ -55,7 +55,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        private string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)
+        private void CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)
         {
             writer.List(" ", conditions, (c, i) =>
             {
@@ -63,7 +63,6 @@ namespace SqlKata.Compilers
                     writer.S.Append(c.IsOr ? "OR " : "AND ");
                 CompileCondition(ctx, c, writer);
             });
-            return writer;
         }
 
         private void CompileRawCondition(SqlResult ctx, RawCondition x, Writer writer)
