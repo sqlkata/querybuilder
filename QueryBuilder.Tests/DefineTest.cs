@@ -143,7 +143,7 @@ public class DefineTest : TestSupport
 
 
     [Fact]
-    public void Test_Define_WhereInSubquery()
+    public void Test_Define_WhereInSubQuery()
     {
         var subQuery = new Query("Orders")
             .Define("@shipId", 3)
