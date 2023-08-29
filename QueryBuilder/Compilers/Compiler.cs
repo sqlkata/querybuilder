@@ -543,16 +543,15 @@ namespace SqlKata.Compilers
 
         public string? CompileJoins(SqlResult ctx, Writer writer)
         {
-            if (!ctx.Query.HasComponent("join", EngineCode)) return null;
+            var baseJoins = ctx.Query.GetComponents<BaseJoin>("join", EngineCode);
+            if (!baseJoins.Any()) return null;
 
-            var joins = ctx.Query
-                .GetComponents<BaseJoin>("join", EngineCode)
-                .Select(x => CompileJoin(ctx, x.Join, writer));
-
-            return "\n" + string.Join("\n", joins);
+            writer.S.Append("\n");
+            writer.List("\n", baseJoins, x => CompileJoin(ctx, x.Join, writer));
+            return writer; 
         }
 
-        public string CompileJoin(SqlResult ctx, Join join, Writer writer)
+        private void CompileJoin(SqlResult ctx, Join join, Writer writer)
         {
             var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
@@ -566,7 +565,6 @@ namespace SqlKata.Compilers
             writer.S.Append(" ");
             CompileTableExpression(ctx, from, writer);
             writer.S.Append(onClause);
-            return writer;
         }
 
         public string? CompileWheres(SqlResult ctx)
