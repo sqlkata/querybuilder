@@ -1,3 +1,4 @@
+using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
@@ -120,55 +121,22 @@ namespace SqlKata.Tests
                     .UnionAll(tablets));
         }
 
-        //[Fact]
-        //public void UnionWithCallbacks()
-        //{
-        //    var mobiles = new Query("Phones")
-        //        .Where("Price", "<", 3000)
-        //        .Union(q => q.From("Laptops"))
-        //        .UnionAll(q => q.From("Tablets"));
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] UNION ALL SELECT * FROM [Tablets]",
-        //        c[EngineCodes.SqlServer]);
-
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" UNION ALL SELECT * FROM \"TABLETS\"",
-        //        c[EngineCodes.Firebird]);
-        //}
-
-        //[Fact]
-        //public void UnionWithDifferentEngine()
-        //{
-        //    var mobiles = new Query("Phones")
-        //        .Where("Price", "<", 300)
-        //        .ForSqlServer(scope => scope.Except(q => q.From("Phones").WhereNot("Os", "iOS")))
-        //        .ForPostgreSql(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
-        //        .ForMySql(scope => scope.IntersectAll(q => q.From("Watches").Where("Os", "Android")))
-        //        .ForFirebird(scope => scope.Union(q => q.From("Laptops").Where("Price", "<", 800)))
-        //        .UnionAll(q => q.From("Tablets").Where("Price", "<", 100));
-
-        //    var c = Compile(mobiles);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS') UNION ALL SELECT * FROM [Tablets] WHERE [Price] < 100",
-        //        c[EngineCodes.SqlServer]);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM `Phones` WHERE `Price` < 300 INTERSECT ALL SELECT * FROM `Watches` WHERE `Os` = 'Android' UNION ALL SELECT * FROM `Tablets` WHERE `Price` < 100",
-        //        c[EngineCodes.MySql]);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION SELECT * FROM \"Laptops\" WHERE \"Price\" < 800 UNION ALL SELECT * FROM \"Tablets\" WHERE \"Price\" < 100",
-        //        c[EngineCodes.PostgreSql]);
-
-        //    Assert.Equal(
-        //        "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 300 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" < 800 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" < 100",
-        //        c[EngineCodes.Firebird]);
-        //}
+        [Fact]
+        public void UnionWithDifferentEngine()
+        {
+            CompareWithCompiler(
+                new Query("Phones")
+                    .Where("Price", "<", 300)
+                    .ForSqlServer(scope => scope.Except(
+                        q => q.From("Phones").WhereNot("Os", "iOS")))
+                    .ForPostgreSql(scope => scope.Union(
+                        q => q.From("Laptops").Where("Price", "<", 800)))
+                    .ForMySql(scope => scope.IntersectAll(
+                        q => q.From("Watches").Where("Os", "Android")))
+                    .ForFirebird(scope => scope.Union(
+                        q => q.From("Laptops").Where("Price", "<", 800)))
+                    .UnionAll(q => q.From("Tablets").Where("Price", "<", 100)));
+        }
 
         //[Fact]
         //public void CombineRaw()
