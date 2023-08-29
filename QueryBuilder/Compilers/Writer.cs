@@ -29,6 +29,16 @@ namespace SqlKata.Compilers
             if (any) S.Remove(S.Length - separator.Length, separator.Length);
         }
 
+        public void WhitespaceSeparated(params Action[] list)
+        {
+            foreach (var item in list)
+            {
+                item();
+                Whitespace();
+            }
+            if (S.Length > 0 && S[^1] == ' ') S.Remove(S.Length - 1, 1);
+        }
+
         public void Assert(string s)
         {
             if (s != S.ToString())

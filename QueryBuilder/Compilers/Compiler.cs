@@ -52,26 +52,18 @@ namespace SqlKata.Compilers
                 Query = query.Clone()
             };
             var writer = new Writer(XService);
-
-            var results = new[]
-                {
-                    CompileColumns(ctx, writer),
-                    CompileFrom(ctx, writer.Sub()),
-                    CompileJoins(ctx, writer.Sub()),
-                    CompileWheres(ctx, writer.Sub()),
-                    CompileGroups(ctx, writer.Sub()),
-                    CompileHaving(ctx, writer.Sub()),
-                    CompileOrders(ctx, writer.Sub()),
-                    CompileLimit(ctx, writer.Sub()),
-                    CompileUnion(ctx, writer.Sub())
-                }
-                .Where(x => x != null)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
-
-            var sql = string.Join(" ", results);
-
-            ctx.Raw.Append(sql);
+            writer.WhitespaceSeparated(
+                () => CompileColumns(ctx, writer),
+                () => CompileFrom(ctx, writer),
+                () => CompileJoins(ctx, writer),
+                () => CompileWheres(ctx, writer),
+                () => CompileGroups(ctx, writer),
+                () => CompileHaving(ctx, writer),
+                () => CompileOrders(ctx, writer),
+                () => CompileLimit(ctx, writer),
+                () => CompileUnion(ctx, writer));
+           
+            ctx.Raw.Append(writer);
 
             return ctx;
         }
@@ -458,10 +450,10 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public string? CompileUnion(SqlResult ctx, Writer writer)
+        public void CompileUnion(SqlResult ctx, Writer writer)
         {
             // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return null;
+            if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return;
 
             var combinedQueries = new List<string>();
 
@@ -489,7 +481,6 @@ namespace SqlKata.Compilers
                 }
 
             writer.List(" ", combinedQueries);
-            return writer;
         }
 
         private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
@@ -525,15 +516,13 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        public string CompileFrom(SqlResult ctx, Writer writer)
+        public void CompileFrom(SqlResult ctx, Writer writer)
         {
             var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            if (from == null) return string.Empty;
+            if (from == null) return;
 
             writer.S.Append("FROM ");
             CompileTableExpression(ctx, from, writer);
-            return writer;
-
         }
 
         public string? CompileJoins(SqlResult ctx, Writer writer)
@@ -574,14 +563,12 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public string? CompileGroups(SqlResult ctx, Writer writer)
+        public void CompileGroups(SqlResult ctx, Writer writer)
         {
             var components = ctx.Query.GetComponents<AbstractColumn>("group", EngineCode);
-            if (!components.Any()) return null;
+            if (!components.Any()) return;
             writer.S.Append("GROUP BY ");
             writer.List(", ", components, x => CompileColumn(ctx, x, writer));
-
-            return writer;
         }
 
         public string? CompileOrders(SqlResult ctx, Writer writer)
@@ -608,9 +595,9 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        public string? CompileHaving(SqlResult ctx, Writer writer)
+        public void CompileHaving(SqlResult ctx, Writer writer)
         {
-            if (!ctx.Query.HasComponent("having", EngineCode)) return null;
+            if (!ctx.Query.HasComponent("having", EngineCode)) return;
 
             var sql = new List<string>();
 
@@ -632,7 +619,6 @@ namespace SqlKata.Compilers
 
             writer.S.Append("HAVING ");
             writer.List(" ", sql);
-            return writer;
         }
 
         public virtual string? CompileLimit(SqlResult ctx, Writer writer)

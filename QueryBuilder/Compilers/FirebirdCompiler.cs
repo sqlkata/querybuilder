@@ -47,7 +47,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx, writer);
+            var compiled = base.CompileColumns(ctx, writer.Sub());
 
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
@@ -58,7 +58,9 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("limit");
 
-                return $"SELECT FIRST ?" + compiled.Substring(6);
+                writer.S.Append("SELECT FIRST ?");
+                writer.S.Append(compiled.Substring(6));
+                return writer;
             }
 
             if (limit == 0 && offset > 0)
@@ -67,10 +69,13 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("offset");
 
-                return $"SELECT SKIP ?" + compiled.Substring(6);
+                writer.S.Append("SELECT SKIP ?");
+                writer.S.Append(compiled.Substring(6));
+                return writer;
             }
 
-            return compiled;
+            writer.S.Append(compiled);
+            return writer;
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)

@@ -56,9 +56,13 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx, writer);
+            var compiled = base.CompileColumns(ctx, writer.Sub());
 
-            if (!UseLegacyPagination) return compiled;
+            if (!UseLegacyPagination)
+            {
+                writer.S.Append(compiled);
+                return writer;
+            }
 
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
@@ -75,12 +79,19 @@ namespace SqlKata.Compilers
 
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
-                    return $"SELECT DISTINCT TOP (?){compiled.Substring(15)}";
+                {
+                    writer.S.Append("SELECT DISTINCT TOP (?)");
+                    writer.S.Append(compiled.Substring(15));
+                    return writer;
+                }
 
-                return $"SELECT TOP (?){compiled.Substring(6)}";
+                writer.S.Append("SELECT TOP (?)");
+                writer.S.Append(compiled.Substring(6));
+                return writer;
             }
 
-            return compiled;
+            writer.S.Append(compiled);
+            return writer;
         }
 
         public override string? CompileLimit(SqlResult ctx, Writer writer)
