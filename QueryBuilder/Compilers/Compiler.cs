@@ -58,7 +58,7 @@ namespace SqlKata.Compilers
                 {
                     CompileColumns(ctx, writer),
                     CompileFrom(ctx, writer.Sub()),
-                    CompileJoins(ctx),
+                    CompileJoins(ctx, writer.Sub()),
                     CompileWheres(ctx),
                     CompileGroups(ctx, writer.Sub()),
                     CompileHaving(ctx),
@@ -120,7 +120,7 @@ namespace SqlKata.Compilers
 
             if (table is null) throw new InvalidOperationException("Invalid table expression");
 
-            var joins = CompileJoins(ctx);
+            var joins = CompileJoins(ctx, new Writer(XService));
 
             var where = CompileWheres(ctx);
 
@@ -497,7 +497,7 @@ namespace SqlKata.Compilers
             return string.Join(" ", combinedQueries);
         }
 
-        public string CompileTableExpression(SqlResult ctx, AbstractFrom from)
+        public string CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
         {
             if (from is RawFromClause raw)
             {
@@ -530,28 +530,28 @@ namespace SqlKata.Compilers
             var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (from == null) return string.Empty;
 
-            return "FROM " + CompileTableExpression(ctx, from);
+            return "FROM " + CompileTableExpression(ctx, from, writer);
 
         }
 
-        public string? CompileJoins(SqlResult ctx)
+        public string? CompileJoins(SqlResult ctx, Writer writer)
         {
             if (!ctx.Query.HasComponent("join", EngineCode)) return null;
 
             var joins = ctx.Query
                 .GetComponents<BaseJoin>("join", EngineCode)
-                .Select(x => CompileJoin(ctx, x.Join));
+                .Select(x => CompileJoin(ctx, x.Join, writer));
 
             return "\n" + string.Join("\n", joins);
         }
 
-        public string CompileJoin(SqlResult ctx, Join join)
+        public string CompileJoin(SqlResult ctx, Join join, Writer writer)
         {
             var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
 
             Debug.Assert(from != null, nameof(from) + " != null");
-            var joinTable = CompileTableExpression(ctx, from);
+            var joinTable = CompileTableExpression(ctx, from, writer);
             var constraints = CompileConditions(ctx, conditions);
 
             var onClause = conditions.Any() ? $" ON {constraints}" : "";
