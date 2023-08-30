@@ -84,31 +84,27 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx, query, writer.Sub());
-
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
-                ctx.PrependOne(limit);
-
-                writer.Append("SELECT FIRST ?");
-                writer.Append(compiled.Substring(6));
-                return writer;
+                ctx.BindingsAdd(limit);
+                writer.BindOne(limit);
+                writer.Append("SELECT FIRST ? ");
+                return CompileColumnsAfterSelect(ctx, query, writer);
             }
 
             if (limit == 0 && offset > 0)
             {
-                ctx.PrependOne(offset);
+                ctx.BindingsAdd(offset);
+                writer.BindOne(offset);
 
-                writer.Append("SELECT SKIP ?");
-                writer.Append(compiled.Substring(6));
-                return writer;
+                writer.Append("SELECT SKIP ? ");
+                return CompileColumnsAfterSelect(ctx, query, writer);
             }
-
-            writer.Append(compiled);
-            return writer;
+            writer.AssertMatches(ctx);
+            return base.CompileColumns(ctx, query, writer);
         }
 
         protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition x,
