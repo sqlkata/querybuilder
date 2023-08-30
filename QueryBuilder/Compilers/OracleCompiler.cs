@@ -24,23 +24,23 @@ namespace SqlKata.Compilers
 
             base.CompileSelectQueryInner(ctx, query, writer);
 
-            ApplyLegacyLimit(ctx);
+            ApplyLegacyLimit(ctx, query);
 
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
             if (UseLegacyPagination)
                 // in pre-12c versions of Oracle,
                 // limit is handled by ROWNUM techniques
                 return null;
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0) return null;
 
-            if (!ctx.Query.HasComponent("order"))
+            if (!query.HasComponent("order"))
             {
                 writer.Append("ORDER BY (SELECT 0 FROM DUAL) ");
             }
@@ -59,10 +59,10 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        internal void ApplyLegacyLimit(SqlResult ctx)
+        internal void ApplyLegacyLimit(SqlResult ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0) return;
 
@@ -89,10 +89,11 @@ namespace SqlKata.Compilers
             ctx.ReplaceRaw(newSql);
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
+            Writer writer)
         {
             var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, writer, condition.Value);
+            var value = Parameter(ctx, query, writer, condition.Value);
 
             string sql;
             string valueFormat;
@@ -136,13 +137,14 @@ namespace SqlKata.Compilers
             writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
-        protected override SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, Writer writer,
+        protected override SqlResult CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+            Writer writer,
             IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
                 var columns = insert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, writer, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, query, insert.Values));
 
                 var intoFormat = " INTO {0}{1} VALUES ({2})";
                 var nextInsert = string.Format(intoFormat, table, columns, values);

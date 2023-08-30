@@ -12,11 +12,12 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override void CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
+        protected override void CompileBasicStringCondition(SqlResult ctx, Query query, BasicStringCondition x,
+            Writer writer)
         {
             var column = XService.Wrap(x.Column);
 
-            if (Resolve(ctx, x.Value) is not string value)
+            if (Resolve(ctx, query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;
@@ -45,7 +46,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(method));
             writer.Append(" ");
-            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
+            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, query, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.Append(" ESCAPE '");
@@ -58,7 +59,8 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
+            Writer writer)
         {
             var column = XService.Wrap(condition.Column);
 
@@ -71,7 +73,7 @@ namespace SqlKata.Compilers
             else
                 left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, query, writer, condition.Value)}";
 
             writer.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }

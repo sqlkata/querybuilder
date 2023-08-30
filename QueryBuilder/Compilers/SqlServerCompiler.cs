@@ -23,7 +23,6 @@ namespace SqlKata.Compilers
             var offset = original.GetOffset(EngineCode);
 
             var modified = ModifyQuery(original.Clone());
-            ctx.Query = modified;
             writer.Append("SELECT * FROM (");
             base.CompileSelectQueryInner(ctx, modified, writer);
             writer.Append(") AS [results_wrapper] WHERE [row_num] ");
@@ -46,15 +45,11 @@ namespace SqlKata.Compilers
 
         private Query ModifyQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
-
+            var ctx = new SqlResult();
 
             if (!query.HasComponent("select")) query.Select("*");
 
-            var order = CompileOrders(ctx, new Writer(XService)) ?? "ORDER BY (SELECT 0)";
+            var order = CompileOrders(ctx, query, new Writer(XService)) ?? "ORDER BY (SELECT 0)";
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
@@ -62,9 +57,10 @@ namespace SqlKata.Compilers
             return query;
         }
 
-        protected override string CompileColumns(SqlResult ctx, Writer writer)
+        protected override string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx,/*text manipulation */ writer.Sub());
+            var compiled = base.CompileColumns(
+                ctx, query, /*text manipulation */ writer.Sub());
 
             if (!UseLegacyPagination)
             {
@@ -75,15 +71,15 @@ namespace SqlKata.Compilers
             // If there is a limit on the query, but not an offset, we will add the top
             // clause to the query, which serves as a "limit" type clause within the
             // SQL Server system similar to the limit keywords available in MySQL.
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
                 // top bindings should be inserted first
                 ctx.PrependOne(limit);
 
-                ctx.Query.RemoveComponent("limit");
+                query.RemoveComponent("limit");
 
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
@@ -102,19 +98,19 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
             if (UseLegacyPagination)
                 // in legacy versions of Sql Server, limit is handled by TOP
                 // and ROW_NUMBER techniques
                 return null;
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0) return null;
 
-            if (!ctx.Query.HasComponent("order")) writer.Append("ORDER BY (SELECT 0) ");
+            if (!query.HasComponent("order")) writer.Append("ORDER BY (SELECT 0) ");
 
             if (limit == 0)
             {
@@ -139,7 +135,8 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
+            Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var part = condition.Part.ToUpperInvariant();
@@ -151,7 +148,7 @@ namespace SqlKata.Compilers
             else
                 left = $"DATEPART({part.ToUpperInvariant()}, {column})";
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, query, writer, condition.Value)}";
 
             writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }

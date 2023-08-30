@@ -21,11 +21,11 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName);
-        var ctx = new SqlResult { Query = query };
+        var ctx = new SqlResult();
         ctx.Raw.Append(SqlPlaceholder);
 
         // Act:
-        _compiler.ApplyLegacyLimit(ctx);
+        _compiler.ApplyLegacyLimit(ctx, query);
 
         // Assert:
         Assert.Equal(SqlPlaceholder, ctx.RawSql);
@@ -36,12 +36,13 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(10);
-        var ctx = new SqlResult { Query = query };
+        var ctx = new SqlResult();
+
         ctx.Raw.Append(SqlPlaceholder);
 
 
         // Act:
-        _compiler.ApplyLegacyLimit(ctx);
+        _compiler.ApplyLegacyLimit(ctx, query);
 
         // Assert:
         Assert.Matches($"SELECT \\* FROM \\({SqlPlaceholder}\\) WHERE ROWNUM <= ?", ctx.RawSql);
@@ -54,11 +55,11 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Offset(20);
-        var ctx = new SqlResult { Query = query };
+        var ctx = new SqlResult ();
         ctx.Raw.Append(SqlPlaceholder);
 
         // Act:
-        _compiler.ApplyLegacyLimit(ctx);
+        _compiler.ApplyLegacyLimit(ctx, query);
 
         // Assert:
         Assert.Equal(
@@ -73,12 +74,12 @@ public class OracleLegacyLimitTests : TestSupport
     {
         // Arrange:
         var query = new Query(TableName).Limit(5).Offset(20);
-        var ctx = new SqlResult { Query = query };
+        var ctx = new SqlResult();
         ctx.Raw.Append(SqlPlaceholder);
 
 
         // Act:
-        _compiler.ApplyLegacyLimit(ctx);
+        _compiler.ApplyLegacyLimit(ctx, query);
 
         // Assert:
         Assert.Equal(

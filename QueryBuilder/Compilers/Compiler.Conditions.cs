@@ -4,21 +4,21 @@ namespace SqlKata.Compilers
     {
         private static readonly string[] LikeOperators = { "starts", "ends", "contains", "like" };
 
-        private void CompileCondition(SqlResult ctx, AbstractCondition clause, Writer writer)
+        private void CompileCondition(SqlResult ctx, Query query, AbstractCondition clause, Writer writer)
         {
             switch (clause)
             {
                 case BasicDateCondition basicDateCondition:
-                    CompileBasicDateCondition(ctx, basicDateCondition, writer);
+                    CompileBasicDateCondition(ctx, query, basicDateCondition, writer);
                     break;
                 case BasicStringCondition basicStringCondition:
-                    CompileBasicStringCondition(ctx, basicStringCondition, writer);
+                    CompileBasicStringCondition(ctx, query, basicStringCondition, writer);
                     break;
                 case BasicCondition basicCondition:
-                    CompileBasicCondition(ctx, basicCondition, writer);
+                    CompileBasicCondition(ctx, query, basicCondition, writer);
                     break;
                 case BetweenCondition betweenCondition:
-                    CompileBetweenCondition(ctx, betweenCondition, writer);
+                    CompileBetweenCondition(ctx, query, betweenCondition, writer);
                     break;
                 case BooleanCondition booleanCondition:
                     CompileBooleanCondition(booleanCondition, writer);
@@ -27,13 +27,13 @@ namespace SqlKata.Compilers
                     CompileExistsCondition(ctx, existsCondition, writer);
                     break;
                 case InCondition inCondition:
-                    CompileInCondition(ctx, inCondition, writer);
+                    CompileInCondition(ctx, query, inCondition, writer);
                     break;
                 case InQueryCondition inQueryCondition:
                     CompileInQueryCondition(ctx, inQueryCondition, writer);
                     break;
                 case NestedCondition nestedCondition:
-                    CompileNestedCondition(ctx, nestedCondition, writer);
+                    CompileNestedCondition(ctx, query, nestedCondition, writer);
                     break;
                 case NullCondition nullCondition:
                     CompileNullCondition(nullCondition, writer);
@@ -45,7 +45,7 @@ namespace SqlKata.Compilers
                     CompileRawCondition(ctx, rawCondition, writer);
                     break;
                 case SubQueryCondition subQueryCondition:
-                    CompileSubQueryCondition(ctx, subQueryCondition, writer);
+                    CompileSubQueryCondition(ctx, query, subQueryCondition, writer);
                     break;
                 case TwoColumnsCondition twoColumnsCondition:
                     CompileTwoColumnsCondition(twoColumnsCondition, writer);
@@ -55,13 +55,13 @@ namespace SqlKata.Compilers
             }
         }
 
-        private void CompileConditions(SqlResult ctx, List<AbstractCondition> conditions, Writer writer)
+        private void CompileConditions(SqlResult ctx, Query query, List<AbstractCondition> conditions, Writer writer)
         {
             writer.List(" ", conditions, (c, i) =>
             {
                 if (i != 0)
                     writer.Append(c.IsOr ? "OR " : "AND ");
-                CompileCondition(ctx, c, writer);
+                CompileCondition(ctx, query, c, writer);
             });
         }
 
@@ -87,7 +87,7 @@ namespace SqlKata.Compilers
             writer.AssertMatches(ctx);
         }
 
-        private void CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x, Writer writer)
+        private void CompileSubQueryCondition(SqlResult ctx, Query query, SubQueryCondition x, Writer writer)
         {
             writer.Append("(");
             var subCtx = CompileSelectQuery(x.Query, writer);
@@ -97,11 +97,11 @@ namespace SqlKata.Compilers
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Parameter(ctx, query, writer, x.Value));
             writer.AssertMatches(ctx);
         }
 
-        private void CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
+        private void CompileBasicCondition(SqlResult ctx, Query query, BasicCondition x, Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");
@@ -110,16 +110,17 @@ namespace SqlKata.Compilers
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
             // TODO: writer.AssertMatches();
-            writer.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Parameter(ctx, query, writer, x.Value));
             if (x.IsNot)
                 writer.Append(")");
         }
 
-        protected virtual void CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
+        protected virtual void CompileBasicStringCondition(SqlResult ctx, Query query, BasicStringCondition x,
+            Writer writer)
         {
             var column = XService.Wrap(x.Column);
 
-            if (Resolve(ctx, x.Value) is not string value)
+            if (Resolve(ctx, query,  x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;
@@ -155,7 +156,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(method));
             writer.Append(" ");
-            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
+            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, query, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.Append(" ESCAPE '");
@@ -168,7 +169,8 @@ namespace SqlKata.Compilers
             writer.AssertMatches(ctx);
         }
 
-        protected virtual void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
+        protected virtual void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition x,
+            Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");
@@ -178,13 +180,13 @@ namespace SqlKata.Compilers
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Parameter(ctx, query, writer, x.Value));
             if (x.IsNot)
                 writer.Append(")");
             writer.AssertMatches(ctx);
         }
 
-        private void CompileNestedCondition(SqlResult ctx, NestedCondition x, Writer writer)
+        private void CompileNestedCondition(SqlResult ctx, Query query, NestedCondition x, Writer writer)
         {
             if (!x.Query.HasComponent("where", EngineCode) &&
                 !x.Query.HasComponent("having", EngineCode))
@@ -197,7 +199,7 @@ namespace SqlKata.Compilers
             if (x.IsNot)
                 writer.Append("NOT ");
             writer.Append("(");
-            CompileConditions(ctx, clauses, writer);
+            CompileConditions(ctx, query, clauses, writer);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -214,17 +216,17 @@ namespace SqlKata.Compilers
             writer.AssertMatches();
         }
 
-        private void CompileBetweenCondition(SqlResult ctx, BetweenCondition x, Writer writer)
+        private void CompileBetweenCondition(SqlResult ctx, Query query, BetweenCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
-            writer.Append(Parameter(ctx, writer, x.Lower));
+            writer.Append(Parameter(ctx, query, writer, x.Lower));
             writer.Append(" AND ");
-            writer.Append(Parameter(ctx, writer, x.Higher));
+            writer.Append(Parameter(ctx, query, writer, x.Higher));
             writer.AssertMatches(ctx);
         }
 
-        private void CompileInCondition(SqlResult ctx, InCondition x, Writer writer)
+        private void CompileInCondition(SqlResult ctx, Query query, InCondition x, Writer writer)
         {
             if (!x.Values.Any())
             {
@@ -234,7 +236,7 @@ namespace SqlKata.Compilers
 
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
-            writer.Append(Parametrize(ctx, writer, x.Values.OfType<object>()));
+            writer.Append(Parametrize(ctx, writer, query, x.Values.OfType<object>()));
             writer.Append(")");
             writer.AssertMatches(ctx);
         }

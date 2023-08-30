@@ -19,10 +19,10 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset > 0)
             {
@@ -31,14 +31,15 @@ namespace SqlKata.Compilers
                 return writer;
             }
 
-            if (base.CompileLimit(ctx, writer) == null) return null;
+            if (base.CompileLimit(ctx, query, writer) == null) return null;
             return writer;
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
+            Writer writer)
         {
             var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, writer, condition.Value);
+            var value = Parameter(ctx, query, writer, condition.Value);
 
             var formatMap = new Dictionary<string, string>
             {

@@ -118,10 +118,15 @@ namespace SqlKata.Compilers
         }
 
         private readonly Stack<SqlResult> _contexts = new();
+        // ReSharper disable once CollectionNeverQueried.Local
         private readonly List<SqlResult> _discards = new();
         public void Push(SqlResult ctx)
         {
-            _contexts.Push(_ctx);
+            if (_ctx != null)
+            {
+                _contexts.Push(_ctx);
+            }
+
             _ctx = ctx;
             AssertMatches();
         }

@@ -29,10 +29,7 @@ namespace SqlKata.Compilers
 
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = new SqlResult();
             writer.Push(ctx);
             writer.AssertMatches(ctx);
 
@@ -61,7 +58,6 @@ namespace SqlKata.Compilers
                         .RemoveComponent("group");
 
                     query = TransformAggregateQuery(query);
-                    ctx.Query = query;
                 }
               
                 compiler.CompileSelectQueryInner(ctx, query, writer);

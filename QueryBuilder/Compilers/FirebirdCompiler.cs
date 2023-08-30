@@ -15,7 +15,7 @@ namespace SqlKata.Compilers
         {
             base.CompileInsertQueryInner(ctx, query, writer);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
             if (inserts.Count > 1)
             {
@@ -25,10 +25,10 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Writer writer)
+        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset > 0)
             {
@@ -43,18 +43,18 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileColumns(SqlResult ctx, Writer writer)
+        protected override string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx, writer.Sub());
+            var compiled = base.CompileColumns(ctx, query, writer.Sub());
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
                 ctx.PrependOne(limit);
 
-                ctx.Query.RemoveComponent("limit");
+                query.RemoveComponent("limit");
 
                 writer.Append("SELECT FIRST ?");
                 writer.Append(compiled.Substring(6));
@@ -65,7 +65,7 @@ namespace SqlKata.Compilers
             {
                 ctx.PrependOne(offset);
 
-                ctx.Query.RemoveComponent("offset");
+                query.RemoveComponent("offset");
 
                 writer.Append("SELECT SKIP ?");
                 writer.Append(compiled.Substring(6));
@@ -76,7 +76,8 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition x,
+            Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");
@@ -102,7 +103,7 @@ namespace SqlKata.Compilers
             }
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Parameter(ctx, query, writer, x.Value));
             if (x.IsNot)
                 writer.Append(")");
         }

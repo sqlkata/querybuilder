@@ -45,10 +45,7 @@ namespace SqlKata.Compilers
 
         public SqlResult CompileSelectQuery(Query query, Writer writer)
         {
-            var ctx = new SqlResult
-            {
-                Query = query.Clone()
-            };
+            var ctx = new SqlResult();
             writer.Push(ctx);
             CompileSelectQueryInner(ctx, query, writer);
 
@@ -59,15 +56,15 @@ namespace SqlKata.Compilers
         public virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
         {
             writer.WhitespaceSeparated(
-                () => CompileColumns(ctx, writer),
-                () => CompileFrom(ctx, writer),
-                () => CompileJoins(ctx, writer),
-                () => CompileWheres(ctx, writer),
-                () => CompileGroups(ctx, writer),
-                () => CompileHaving(ctx, writer),
-                () => CompileOrders(ctx, writer),
-                () => CompileLimit(ctx, writer),
-                () => CompileUnion(ctx, writer));
+                () => CompileColumns(ctx, query, writer),
+                () => CompileFrom(ctx, query, writer),
+                () => CompileJoins(ctx, query, writer),
+                () => CompileWheres(ctx, query, writer),
+                () => CompileGroups(ctx, query, writer),
+                () => CompileHaving(ctx, query, writer),
+                () => CompileOrders(ctx, query, writer),
+                () => CompileLimit(ctx, query, writer),
+                () => CompileUnion(ctx, query, writer));
             ctx.Raw.Append(writer);
         }
 
@@ -90,10 +87,10 @@ namespace SqlKata.Compilers
 
         public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            if (!query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to delete");
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             string? table = null;
 
@@ -107,9 +104,9 @@ namespace SqlKata.Compilers
 
             if (table is null) throw new InvalidOperationException("Invalid table expression");
 
-            var joins = CompileJoins(ctx, writer.Sub());
+            var joins = CompileJoins(ctx, query, writer.Sub());
 
-            var where = CompileWheres(ctx, writer);
+            var where = CompileWheres(ctx, query, writer);
 
             if (!string.IsNullOrEmpty(where)) where = " " + where;
 
@@ -129,10 +126,10 @@ namespace SqlKata.Compilers
 
         public SqlResult CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            if (!query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to update");
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             string? table = null;
 
@@ -147,17 +144,17 @@ namespace SqlKata.Compilers
             if (table is null) throw new InvalidOperationException("Invalid table expression");
 
             // check for increment statements
-            var clause = ctx.Query.GetOneComponent("update", EngineCode);
+            var clause = query.GetOneComponent("update", EngineCode);
 
             string? wheres;
 
             if (clause is IncrementClause increment)
             {
                 var column = XService.Wrap(increment.Column);
-                var value = Parameter(ctx, writer, Math.Abs(increment.Value));
+                var value = Parameter(ctx, query, writer, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                wheres = CompileWheres(ctx, writer);
+                wheres = CompileWheres(ctx, query, writer);
 
                 if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -167,16 +164,16 @@ namespace SqlKata.Compilers
             }
 
 
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+            var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
             Debug.Assert(toUpdate != null);
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Length; i++)
-                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, writer, toUpdate.Values[i]));
+                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, query, writer, toUpdate.Values[i]));
 
             var sets = string.Join(", ", parts);
 
-            wheres = CompileWheres(ctx, writer);
+            wheres = CompileWheres(ctx, query, writer);
 
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -187,10 +184,7 @@ namespace SqlKata.Compilers
 
         public SqlResult CompileInsertQuery(Query query, Writer writer)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = new SqlResult();
             writer.Push(ctx);
             writer.AssertMatches(ctx);
             CompileInsertQueryInner(ctx, query, writer);
@@ -198,10 +192,10 @@ namespace SqlKata.Compilers
         }
         public virtual void CompileInsertQueryInner(SqlResult ctx, Query query, Writer writer)
         {
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            if (!query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (fromClause is null)
                 throw new InvalidOperationException("Invalid table expression");
 
@@ -218,7 +212,7 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             writer.AssertMatches(ctx);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
                 writer.AssertMatches(ctx);
@@ -251,13 +245,13 @@ namespace SqlKata.Compilers
 
                 var firstInsert = insertClauses.First();
                 var columns = firstInsert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, writer, firstInsert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, query, firstInsert.Values));
 
                 ctx.Raw.Append($"{insertInto} {table}{columns} VALUES ({values})");
 
                 if (isMultiValueInsert)
                 {
-                    CompileRemainingInsertClauses(ctx, table, writer, insertClauses);
+                    CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
                     return;
                 }
 
@@ -267,13 +261,13 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table,
+        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
             Writer writer,
             IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var values = string.Join(", ", Parametrize(ctx, writer, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, query, insert.Values));
                 ctx.Raw.Append($", ({values})");
             }
 
@@ -300,10 +294,11 @@ namespace SqlKata.Compilers
         ///     Compile a single column clause
         /// </summary>
         /// <param name="ctx"></param>
+        /// <param name="query"></param>
         /// <param name="column"></param>
         /// <param name="writer"></param>
         /// <returns></returns>
-        private void CompileColumn(SqlResult ctx, AbstractColumn column, Writer writer)
+        private void CompileColumn(SqlResult ctx, Query query, AbstractColumn column, Writer writer)
         {
             if (column is RawColumn raw)
             {
@@ -329,7 +324,7 @@ namespace SqlKata.Compilers
 
             if (column is AggregatedColumn aggregatedColumn)
             {
-                CompileAggregatedColumn(ctx, writer, aggregatedColumn);
+                CompileAggregatedColumn(ctx, query, writer, aggregatedColumn);
                 writer.AssertMatches(ctx);
                 return;
             }
@@ -338,7 +333,7 @@ namespace SqlKata.Compilers
             writer.AssertMatches(ctx);
         }
 
-        private void CompileAggregatedColumn(SqlResult ctx, Writer writer, AggregatedColumn c)
+        private void CompileAggregatedColumn(SqlResult ctx, Query query, Writer writer, AggregatedColumn c)
         {
             writer.AssertMatches(ctx);
             writer.Append(c.Aggregate.ToUpperInvariant());
@@ -364,7 +359,7 @@ namespace SqlKata.Compilers
                 writer.Append("(");
                 writer.Append(col);
                 writer.Append(") FILTER (WHERE ");
-                CompileConditions(ctx, filterConditions, writer);
+                CompileConditions(ctx, query, filterConditions, writer);
                 writer.Append(")");
                 writer.Append(alias);
                 writer.AssertMatches(ctx);
@@ -372,7 +367,7 @@ namespace SqlKata.Compilers
             }
 
             writer.Append("(CASE WHEN ");
-            CompileConditions(ctx, filterConditions, writer);
+            CompileConditions(ctx, query, filterConditions, writer);
             writer.Append(" THEN ");
             writer.Append(col);
             writer.Append(" END)");
@@ -414,10 +409,10 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual string CompileColumns(SqlResult ctx, Writer writer)
+        protected virtual string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
             writer.AssertMatches(ctx);
-            var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            var aggregate = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
                 var aggregateColumns = aggregate.Columns
@@ -429,7 +424,7 @@ namespace SqlKata.Compilers
                     writer.Append("SELECT ");
                     writer.AppendKeyword(aggregate.Type);
                     writer.Append("(");
-                    if (ctx.Query.IsDistinct)
+                    if (query.IsDistinct)
                         writer.Append("DISTINCT ");
                     writer.List(", ", aggregateColumns);
                     writer.Append(") ");
@@ -443,15 +438,15 @@ namespace SqlKata.Compilers
                 return writer;
             }
 
-            var columns = ctx.Query
+            var columns = query
                 .GetComponents<AbstractColumn>("select", EngineCode);
 
             writer.Append("SELECT ");
-            if (ctx.Query.IsDistinct) writer.Append("DISTINCT ");
+            if (query.IsDistinct) writer.Append("DISTINCT ");
 
             if (columns.Any())
             {
-                writer.List(", ", columns, x => CompileColumn(ctx, x, writer));
+                writer.List(", ", columns, x => CompileColumn(ctx, query, x, writer));
             }
             else
             {
@@ -460,14 +455,14 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        private void CompileUnion(SqlResult ctx, Writer writer)
+        private void CompileUnion(SqlResult ctx, Query query, Writer writer)
         {
             // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents("combine", EngineCode).Any()) return;
+            if (!query.GetComponents("combine", EngineCode).Any()) return;
 
             var combinedQueries = new List<string>();
 
-            var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
+            var clauses = query.GetComponents<AbstractCombine>("combine", EngineCode);
 
             foreach (var clause in clauses)
                 if (clause is Combine combineClause)
@@ -534,26 +529,26 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        private void CompileFrom(SqlResult ctx, Writer writer)
+        private void CompileFrom(SqlResult ctx, Query query, Writer writer)
         {
-            var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (from == null) return;
 
             writer.Append("FROM ");
             CompileTableExpression(ctx, from, writer);
         }
 
-        private string? CompileJoins(SqlResult ctx, Writer writer)
+        private string? CompileJoins(SqlResult ctx, Query query, Writer writer)
         {
-            var baseJoins = ctx.Query.GetComponents<BaseJoin>("join", EngineCode);
+            var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
             if (!baseJoins.Any()) return null;
 
             writer.Append("\n");
-            writer.List("\n", baseJoins, x => CompileJoin(ctx, x.Join, writer));
+            writer.List("\n", baseJoins, x => CompileJoin(ctx, query, x.Join, writer));
             return writer;
         }
 
-        private void CompileJoin(SqlResult ctx, Join join, Writer writer)
+        private void CompileJoin(SqlResult ctx, Query query, Join join, Writer writer)
         {
             var from = join.BaseQuery.GetOneComponent<AbstractFrom>("from", EngineCode);
             var conditions = join.BaseQuery.GetComponents<AbstractCondition>("where", EngineCode);
@@ -567,33 +562,33 @@ namespace SqlKata.Compilers
             if (conditions.Any())
             {
                 writer.Append(" ON ");
-                CompileConditions(ctx, conditions, writer);
+                CompileConditions(ctx, query, conditions, writer);
             }
         }
 
-        private string? CompileWheres(SqlResult ctx, Writer writer)
+        private string? CompileWheres(SqlResult ctx, Query query, Writer writer)
         {
-            var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
+            var conditions = query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
 
             writer.Append("WHERE ");
-            CompileConditions(ctx, conditions, writer);
+            CompileConditions(ctx, query, conditions, writer);
             return writer;
         }
 
-        private void CompileGroups(SqlResult ctx, Writer writer)
+        private void CompileGroups(SqlResult ctx, Query query, Writer writer)
         {
-            var components = ctx.Query.GetComponents<AbstractColumn>("group", EngineCode);
+            var components = query.GetComponents<AbstractColumn>("group", EngineCode);
             if (!components.Any()) return;
             writer.Append("GROUP BY ");
-            writer.List(", ", components, x => CompileColumn(ctx, x, writer));
+            writer.List(", ", components, x => CompileColumn(ctx, query, x, writer));
         }
 
-        protected string? CompileOrders(SqlResult ctx, Writer writer)
+        protected string? CompileOrders(SqlResult ctx, Query query, Writer writer)
         {
-            if (!ctx.Query.HasComponent("order", EngineCode)) return null;
+            if (!query.HasComponent("order", EngineCode)) return null;
 
-            var columns = ctx.Query
+            var columns = query
                 .GetComponents<AbstractOrderBy>("order", EngineCode)
                 .Select(x =>
                 {
@@ -613,27 +608,27 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        private void CompileHaving(SqlResult ctx, Writer writer)
+        private void CompileHaving(SqlResult ctx, Query query, Writer writer)
         {
-            var havingClauses = ctx.Query.GetComponents("having", EngineCode);
+            var havingClauses = query.GetComponents("having", EngineCode);
             if (havingClauses.Count == 0) return;
 
             writer.Append("HAVING ");
-            CompileConditions(ctx,
+            CompileConditions(ctx,query, 
                 havingClauses.Cast<AbstractCondition>().ToList(),
                 writer);
         }
 
-        protected virtual string? CompileLimit(SqlResult ctx, Writer writer)
+        protected virtual string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
+            var limit = query.GetLimit(EngineCode);
             if (limit != 0)
             {
                 ctx.BindingsAdd(limit);
                 writer.Append("LIMIT ?");
             }
 
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var offset = query.GetOffset(EngineCode);
             if (offset != 0)
             {
                 ctx.BindingsAdd(offset);
@@ -660,19 +655,19 @@ namespace SqlKata.Compilers
         }
 
 
-        protected static object? Resolve(SqlResult ctx, object parameter)
+        protected static object? Resolve(SqlResult ctx, Query query, object parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
 
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
-                return ctx.Query.FindVariable(variable.Name);
+                return query.FindVariable(variable.Name);
 
             return parameter;
         }
 
-        protected static string Parameter(SqlResult ctx, Writer writer, object? parameter)
+        protected static string Parameter(SqlResult ctx, Query query, Writer writer, object? parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
@@ -680,7 +675,7 @@ namespace SqlKata.Compilers
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
             {
-                var value = ctx.Query.FindVariable(variable.Name);
+                var value = query.FindVariable(variable.Name);
                 ctx.BindingsAdd(value);
                 writer.BindOne(value);
                 return "?";
@@ -691,9 +686,9 @@ namespace SqlKata.Compilers
             return "?";
         }
 
-        protected string Parametrize(SqlResult ctx, Writer writer, IEnumerable<object> values)
+        protected string Parametrize(SqlResult ctx, Writer writer, Query query, IEnumerable<object> values)
         {
-            return string.Join(", ", values.Select(x => Parameter(ctx, writer, x)));
+            return string.Join(", ", values.Select(x => Parameter(ctx, query, writer, x)));
         }
     }
 }
