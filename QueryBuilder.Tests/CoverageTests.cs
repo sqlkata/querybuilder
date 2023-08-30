@@ -74,5 +74,17 @@ namespace SqlKata.Tests
             Compile(query)[EngineCodes.SqlServer].Should()
                 .Be("SELECT * FROM [Orders] WHERE DATEPART(BLAH, [RequiredDate]) = 1996");
         }
+
+        [Fact]
+        public void Compile_Multiple()
+        {
+            new SqlServerCompiler().Compile(new[]{
+                new Query("A"), new Query("B")})
+                .ToString().Should().Be(
+                    "SELECT * FROM [A];\n" +
+                    "SELECT * FROM [B]");
+
+        }
+
     }
 }
