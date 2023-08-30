@@ -75,7 +75,7 @@ namespace SqlKata.Compilers
                 throw new Exception($"\n\n------Expected------\n{s}\n--------Got---------\n{S}\n\n");
         }
 
-        public void Append(string value) => S.Append(value);
+        public void Append(string? value) => S.Append(value);
         public void Append(char value) => S.Append(value);
         public void RemoveLast(int howMany) => S.Length -= howMany;
 

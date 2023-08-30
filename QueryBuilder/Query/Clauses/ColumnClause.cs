@@ -65,6 +65,6 @@ namespace SqlKata
         public required Query? Filter { get; init; }
 
         public required string Aggregate { get; init; }
-        public required AbstractColumn Column { get; init; }
+        public required Column Column { get; init; }
     }
 }

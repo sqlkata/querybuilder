@@ -6,7 +6,6 @@ namespace SqlKata.Compilers
     {
         protected WhiteList Operators { get; } = new();
 
-
         public string ParameterPrefix { get; protected init; } = "@p";
         public X XService { get; protected init; } = new("\"", "\"", "AS ");
         protected string TableAsKeyword { get; init; } = "AS ";
@@ -321,38 +320,39 @@ namespace SqlKata.Compilers
 
             if (column is AggregatedColumn aggregatedColumn)
             {
-                var agg = aggregatedColumn.Aggregate.ToUpperInvariant();
-
-                var sub = writer.Sub();
-                CompileColumn(ctx, aggregatedColumn.Column, sub);
-                var (col, alias) = XService.SplitAlias(sub);
-
-                writer.Append(agg);
-
-                var filterCondition = CompileFilterConditions(
-                    ctx, aggregatedColumn, writer.Sub());
-
-                if (string.IsNullOrEmpty(filterCondition))
-                {
-                    writer.Append("(");
-                    writer.Append(col);
-                    writer.Append(")");
-                    writer.Append(alias);
-                    return;
-                }
-
-                if (SupportsFilterClause)
-                {
-                    writer.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
-                    return;
-                }
-
-                writer.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
-
+                CompileAggregatedColumn(ctx, writer, aggregatedColumn);
                 return;
             }
 
             writer.Append(XService.Wrap(((Column)column).Name));
+        }
+
+        private void CompileAggregatedColumn(SqlResult ctx, Writer writer, AggregatedColumn c)
+        {
+            var (col, alias) = XService.SplitAlias(
+                XService.Wrap(c.Column.Name));
+
+            writer.Append(c.Aggregate.ToUpperInvariant());
+
+            var filterCondition = CompileFilterConditions(
+                ctx, c, writer.Sub());
+
+            if (string.IsNullOrEmpty(filterCondition))
+            {
+                writer.Append("(");
+                writer.Append(col);
+                writer.Append(")");
+                writer.Append(alias);
+                return;
+            }
+
+            if (SupportsFilterClause)
+            {
+                writer.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
+                return;
+            }
+
+            writer.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
         }
 
         private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn, Writer writer)
