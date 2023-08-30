@@ -158,31 +158,6 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
-        {
-            switch (abstractFrom)
-            {
-                case null:
-                    throw new InvalidOperationException($"No table set to {operationName}");
-                case FromClause fromClauseCast:
-                    writer.AppendName(fromClauseCast.Table);
-                    return writer.X.Wrap(fromClauseCast.Table);
-                case RawFromClause rawFromClause:
-                {
-                    writer.AppendRaw(rawFromClause.Expression);
-                    if (rawFromClause.Bindings.Length > 0)
-                    {
-                        //TODO: test!
-                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                        writer.BindMany(rawFromClause.Bindings);
-                    }
-                    return writer.X.WrapIdentifiers(rawFromClause.Expression);
-                }
-                default:
-                    throw new InvalidOperationException("Invalid table expression");
-            }
-        }
-
         public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
@@ -517,11 +492,36 @@ namespace SqlKata.Compilers
             if (from is FromClause fromClause)
             {
                 writer.AppendName(fromClause.Table);
-                ctx.BindingsAddRange(writer.Bindings);
                 return;
             }
 
             throw InvalidClauseException("TableExpression", from);
+        }
+
+        protected static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
+        {
+            switch (abstractFrom)
+            {
+                case null:
+                    throw new InvalidOperationException($"No table set to {operationName}");
+             
+                case FromClause fromClauseCast:
+                    writer.AppendName(fromClauseCast.Table);
+                    return writer.X.Wrap(fromClauseCast.Table);
+                case RawFromClause rawFromClause:
+                {
+                    writer.AppendRaw(rawFromClause.Expression);
+                    if (rawFromClause.Bindings.Length > 0)
+                    {
+                        //TODO: test!
+                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                        writer.BindMany(rawFromClause.Bindings);
+                    }
+                    return writer.X.WrapIdentifiers(rawFromClause.Expression);
+                }
+                default:
+                    throw new InvalidOperationException("Invalid table expression");
+            }
         }
 
         private void CompileFrom(SqlResult ctx, Query query, Writer writer)
