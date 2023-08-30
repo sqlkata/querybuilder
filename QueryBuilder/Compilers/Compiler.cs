@@ -315,6 +315,7 @@ namespace SqlKata.Compilers
                 writer.S.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
                 ctx.Bindings.AddRange(subCtx.Bindings);
+                writer.BindMany(subCtx.Bindings);
                 writer.S.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                 return;
@@ -393,6 +394,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileColumns(SqlResult ctx, Writer writer)
         {
+            writer.AssertMatches();
             var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
@@ -410,17 +412,17 @@ namespace SqlKata.Compilers
                     writer.List(", ", aggregateColumns);
                     writer.S.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
+                    writer.AssertMatches();
                     return writer;
                 }
 
                 writer.S.Append("SELECT 1");
+                writer.AssertMatches();
                 return writer;
             }
 
             var columns = ctx.Query
                 .GetComponents<AbstractColumn>("select", EngineCode);
-            // .Select(x => CompileColumn(ctx, x, writer))
-            // .ToList();
 
             writer.S.Append("SELECT ");
             if (ctx.Query.IsDistinct) writer.S.Append("DISTINCT ");
