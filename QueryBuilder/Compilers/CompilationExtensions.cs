@@ -34,6 +34,7 @@ namespace SqlKata.Compilers
             if (query.Method == "insert")
             {
                 ctx = compiler.CompileInsertQuery(query, writer);
+                writer.AssertMatches(ctx);
             }
             else if (query.Method == "update")
             {
@@ -60,6 +61,7 @@ namespace SqlKata.Compilers
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
+                writer.AssertMatches(ctx);
                 writer = writer.Sub();
                 compiler.CompileCteQuery(query, writer);
                 writer.Append(ctx.RawSql);

@@ -128,7 +128,6 @@ namespace SqlKata.Compilers
         public void Pop()
         {
             _discards.Add(_ctx = _contexts.Pop());
-            AssertMatches();
         }
         public void AssertMatches()
         {

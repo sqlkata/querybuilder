@@ -201,6 +201,7 @@ namespace SqlKata.Compilers
                 Query = query
             };
             writer.Push(ctx);
+            writer.AssertMatches(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
@@ -220,10 +221,15 @@ namespace SqlKata.Compilers
 
             if (table is null)
                 throw new InvalidOperationException("Invalid table expression");
+            writer.AssertMatches(ctx);
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
+            {
+                writer.AssertMatches(ctx);
                 return CompileInsertQueryClause(insertQueryClause, writer);
+            }
+            writer.AssertMatches(ctx);
             return CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
 
 
@@ -233,6 +239,9 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(clause.Query, writer1);
                 ctx.BindingsAddRange(subCtx.Bindings);
+                writer1.BindMany(subCtx.Bindings);
+                writer1.Pop();
+                writer1.AssertMatches(ctx);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
 
