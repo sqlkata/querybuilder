@@ -165,7 +165,7 @@ namespace SqlKata.Compilers
             if (clause is IncrementClause increment)
             {
                 var column = XService.Wrap(increment.Column);
-                var value = Parameter(ctx, Math.Abs(increment.Value));
+                var value = Parameter(ctx, writer, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
                 wheres = CompileWheres(ctx, writer.Sub());
@@ -183,7 +183,7 @@ namespace SqlKata.Compilers
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Length; i++)
-                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, writer, toUpdate.Values[i]));
 
             var sets = string.Join(", ", parts);
 
@@ -249,12 +249,12 @@ namespace SqlKata.Compilers
 
                 var firstInsert = insertClauses.First();
                 var columns = firstInsert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, firstInsert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, firstInsert.Values));
 
                 ctx.Raw.Append($"{insertInto} {table}{columns} VALUES ({values})");
 
                 if (isMultiValueInsert)
-                    return CompileRemainingInsertClauses(ctx, table, insertClauses);
+                    return CompileRemainingInsertClauses(ctx, table, writer, insertClauses);
 
                 if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
                     ctx.Raw.Append(";" + LastId);
@@ -264,11 +264,12 @@ namespace SqlKata.Compilers
         }
 
         protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table,
+            Writer writer,
             IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var values = string.Join(", ", Parametrize(ctx, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, insert.Values));
                 ctx.Raw.Append($", ({values})");
             }
 
@@ -652,7 +653,7 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        protected static string Parameter(SqlResult ctx, object? parameter)
+        protected static string Parameter(SqlResult ctx, Writer writer, object? parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
@@ -662,10 +663,12 @@ namespace SqlKata.Compilers
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.BindingsAdd(value);
+                writer.BindOne(value);
                 return "?";
             }
 
             ctx.BindingsAdd(parameter);
+            writer.BindOne(parameter);
             return "?";
         }
 
@@ -675,9 +678,9 @@ namespace SqlKata.Compilers
         /// <param name="ctx"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        protected string Parametrize(SqlResult ctx, IEnumerable<object> values)
+        protected string Parametrize(SqlResult ctx, Writer writer, IEnumerable<object> values)
         {
-            return string.Join(", ", values.Select(x => Parameter(ctx, x)));
+            return string.Join(", ", values.Select(x => Parameter(ctx, writer, x)));
         }
 
 

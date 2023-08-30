@@ -89,7 +89,7 @@ namespace SqlKata.Compilers
         protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, condition.Value);
+            var value = Parameter(ctx, writer, condition.Value);
 
             string sql;
             string valueFormat;
@@ -133,13 +133,13 @@ namespace SqlKata.Compilers
             writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
-        protected override SqlResult CompileRemainingInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        protected override SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, Writer writer,
+            IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
                 var columns = insert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, insert.Values));
+                var values = string.Join(", ", Parametrize(ctx, writer, insert.Values));
 
                 var intoFormat = " INTO {0}{1} VALUES ({2})";
                 var nextInsert = string.Format(intoFormat, table, columns, values);

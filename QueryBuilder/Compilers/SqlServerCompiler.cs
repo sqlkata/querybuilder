@@ -144,7 +144,7 @@ namespace SqlKata.Compilers
             else
                 left = $"DATEPART({part.ToUpperInvariant()}, {column})";
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
 
             writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }

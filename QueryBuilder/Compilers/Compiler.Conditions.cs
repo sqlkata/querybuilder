@@ -94,7 +94,7 @@ namespace SqlKata.Compilers
             writer.S.Append(") ");
             writer.S.Append(Operators.CheckOperator(x.Operator));
             writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, x.Value));
+            writer.S.Append(Parameter(ctx, writer, x.Value));
         }
 
         private void CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
@@ -105,7 +105,7 @@ namespace SqlKata.Compilers
             writer.S.Append(" ");
             writer.S.Append(Operators.CheckOperator(x.Operator));
             writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, x.Value));
+            writer.S.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
                 writer.S.Append(")");
         }
@@ -150,7 +150,7 @@ namespace SqlKata.Compilers
             writer.S.Append(" ");
             writer.S.Append(Operators.CheckOperator(method));
             writer.S.Append(" ");
-            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, value));
+            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.S.Append(" ESCAPE '");
@@ -172,7 +172,7 @@ namespace SqlKata.Compilers
             writer.S.Append(") ");
             writer.S.Append(Operators.CheckOperator(x.Operator));
             writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, x.Value));
+            writer.S.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
                 writer.S.Append(")");
         }
@@ -210,9 +210,9 @@ namespace SqlKata.Compilers
         {
             writer.AppendName(x.Column);
             writer.S.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
-            writer.S.Append(Parameter(ctx, x.Lower));
+            writer.S.Append(Parameter(ctx, writer, x.Lower));
             writer.S.Append(" AND ");
-            writer.S.Append(Parameter(ctx, x.Higher));
+            writer.S.Append(Parameter(ctx, writer, x.Higher));
         }
 
         private void CompileInCondition(SqlResult ctx, InCondition x, Writer writer)
@@ -225,7 +225,7 @@ namespace SqlKata.Compilers
 
             writer.AppendName(x.Column);
             writer.S.Append(x.IsNot ? " NOT IN (" : " IN (");
-            writer.S.Append(Parametrize(ctx, x.Values.OfType<object>()));
+            writer.S.Append(Parametrize(ctx, writer, x.Values.OfType<object>()));
             writer.S.Append(")");
         }
 

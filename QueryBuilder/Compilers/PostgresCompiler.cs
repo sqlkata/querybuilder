@@ -45,7 +45,7 @@ namespace SqlKata.Compilers
             writer.S.Append(" ");
             writer.S.Append(Operators.CheckOperator(method));
             writer.S.Append(" ");
-            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, value));
+            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.S.Append(" ESCAPE '");
@@ -71,7 +71,7 @@ namespace SqlKata.Compilers
             else
                 left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
 
             writer.S.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }

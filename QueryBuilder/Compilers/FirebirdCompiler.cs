@@ -104,7 +104,7 @@ namespace SqlKata.Compilers
             }
             writer.S.Append(Operators.CheckOperator(x.Operator));
             writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, x.Value));
+            writer.S.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
                 writer.S.Append(")");
         }

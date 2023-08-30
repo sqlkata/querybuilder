@@ -38,7 +38,7 @@ namespace SqlKata.Compilers
         protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, condition.Value);
+            var value = Parameter(ctx, writer, condition.Value);
 
             var formatMap = new Dictionary<string, string>
             {
