@@ -27,24 +27,22 @@ namespace SqlKata.Compilers
             _x = x;
         }
 
-        public void List<T>(string separator, IEnumerable<T?> list, Action<T>? renderItem = null)
-            where T: notnull
+        public void List<T>(string separator, IEnumerable<T> list, Action<T>? renderItem = null)
         {
             renderItem ??= i => S.Append(i);
             var any = false;
             foreach (var item in list)
-                if (item != null)
-                {
-                    renderItem(item);
-                    S.Append(separator);
-                    any = true;
-                }
+            {
+                renderItem(item);
+                S.Append(separator);
+                any = true;
+            }
 
             if (any) S.Length -= separator.Length;
         }
 
         public void List<T>(string separator, IEnumerable<T?> list, Action<T, int>? renderItem)
-            where T: notnull
+            where T : notnull
         {
             renderItem ??= (i, _) => S.Append(i);
             var counter = 0;

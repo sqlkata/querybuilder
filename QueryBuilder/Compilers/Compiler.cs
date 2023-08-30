@@ -237,9 +237,19 @@ namespace SqlKata.Compilers
 
                 var firstInsert = insertClauses.First();
                 var columns = firstInsert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, writer, query, firstInsert.Values));
 
-                ctx.Raw.Append($"{insertInto} {table}{columns} VALUES ({values})");
+
+                writer.Append(insertInto);
+                writer.Append(" ");
+                writer.Append(table);
+                writer.Append(columns);
+                writer.Append(" VALUES (");
+                writer.List(", ", firstInsert.Values, p =>
+                {
+                    writer.Append(Parameter(ctx, query, writer, p));
+                });
+                writer.Append(")");
+                ctx.Raw.Append(writer);
 
                 if (isMultiValueInsert)
                 {
