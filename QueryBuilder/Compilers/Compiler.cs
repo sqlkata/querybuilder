@@ -130,7 +130,9 @@ namespace SqlKata.Compilers
             if (fromClause == null)
                 throw new InvalidOperationException("No table set to update");
 
-            var table = GetTable(ctx, fromClause, XService, writer);
+            writer.Append("UPDATE ");
+
+            WriteTable(ctx, fromClause, writer);
 
             var clause = query.GetOneComponent("update", EngineCode);
             if (clause is IncrementClause increment)
@@ -143,31 +145,32 @@ namespace SqlKata.Compilers
             Debug.Assert(toUpdate != null);
             CompileUpdate(toUpdate);
 
-            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x, Writer w)
+            static void WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer w)
             {
-                string? table = null;
 
-                if (abstractFrom is FromClause fromClauseCast) table = x.Wrap(fromClauseCast.Table);
-
-                if (abstractFrom is RawFromClause rawFromClause)
+                switch (abstractFrom)
                 {
-                    table = x.WrapIdentifiers(rawFromClause.Expression);
-                    if (rawFromClause.Bindings.Length > 0)
-                    {
-                        //TODO: test!
-                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                        w.BindMany(rawFromClause.Bindings);
-                    }
+                    case FromClause fromClauseCast:
+                        w.AppendName(fromClauseCast.Table);
+                        break;
+                    case RawFromClause rawFromClause:
+                        {
+                            w.AppendRaw(rawFromClause.Expression);
+                            if (rawFromClause.Bindings.Length > 0)
+                            {
+                                //TODO: test!
+                                sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                                w.BindMany(rawFromClause.Bindings);
+                            }
+                            break;
+                        }
+                    default:
+                        throw new InvalidOperationException("Invalid table expression");
                 }
-
-                if (table is null) throw new InvalidOperationException("Invalid table expression");
-                return table;
             }
 
             void CompileIncrement(IncrementClause incrementClause)
             {
-                writer.Append("UPDATE ");
-                writer.Append(table);
                 writer.Append(" SET ");
                 writer.AppendName(incrementClause.Column);
                 writer.Append(" = ");
@@ -182,8 +185,6 @@ namespace SqlKata.Compilers
 
             void CompileUpdate(InsertClause insertClause)
             {
-                writer.Append("UPDATE ");
-                writer.Append(table);
                 writer.Append(" SET ");
                 writer.List(", ", insertClause.Columns, (column, i) =>
                 {

@@ -83,6 +83,9 @@ namespace SqlKata.Compilers
         public void Append(char value) => S.Append(value);
         public void RemoveLast(int howMany) => S.Length -= howMany;
 
+        /// <summary>
+        /// Wraps objects like table names, columns, etc.
+        /// </summary>
         public void AppendName(string userObjectName)
         {
             _x.Wrap(S, userObjectName);
