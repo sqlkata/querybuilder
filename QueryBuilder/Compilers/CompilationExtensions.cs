@@ -17,11 +17,7 @@ namespace SqlKata.Compilers
                 .CompileRaw(x, new Writer(compiler.XService)))
                 .ToArray();
             var combinedBindings = compiled.SelectMany(r => r.Bindings).ToList();
-            var ctx = new SqlResult
-            {
-                Query = null,
-                Bindings = combinedBindings
-            };
+            var ctx = new SqlResult(combinedBindings);
             
             ctx.Raw.Append(compiled.Select(r => r.RawSql)
                 .Aggregate((a, b) => a + ";\n" + b));
@@ -68,7 +64,7 @@ namespace SqlKata.Compilers
                 compiler.CompileCteQuery(query, writer);
                 writer.S.Append(ctx.RawSql);
 
-                ctx.Bindings.InsertRange(0, writer.Bindings);
+                ctx.Prepend(writer.Bindings);
                 ctx.ReplaceRaw(writer);
             }
 

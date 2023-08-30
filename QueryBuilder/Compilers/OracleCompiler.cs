@@ -44,13 +44,13 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
+                ctx.BindingsAdd(offset);
                 writer.S.Append("OFFSET ? ROWS");
                 return writer;
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
+            ctx.BindingsAdd(offset);
+            ctx.BindingsAdd(limit);
 
             writer.S.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             return writer;
@@ -68,19 +68,19 @@ namespace SqlKata.Compilers
             {
                 newSql =
                     $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
-                ctx.Bindings.Add(offset);
+                ctx.BindingsAdd(offset);
             }
             else if (offset == 0)
             {
                 newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
-                ctx.Bindings.Add(limit);
+                ctx.BindingsAdd(limit);
             }
             else
             {
                 newSql =
                     $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
-                ctx.Bindings.Add(limit + offset);
-                ctx.Bindings.Add(offset);
+                ctx.BindingsAdd(limit + offset);
+                ctx.BindingsAdd(offset);
             }
 
             ctx.ReplaceRaw(newSql);

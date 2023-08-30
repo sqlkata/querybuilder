@@ -43,13 +43,13 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= ?");
-                result.Bindings.Add(offset + 1);
+                result.BindingsAdd(offset + 1);
             }
             else
             {
                 result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?");
-                result.Bindings.Add(offset + 1);
-                result.Bindings.Add(limit + offset);
+                result.BindingsAdd(offset + 1);
+                result.BindingsAdd(limit + offset);
             }
 
             return result;
@@ -74,7 +74,7 @@ namespace SqlKata.Compilers
             if (limit > 0 && offset == 0)
             {
                 // top bindings should be inserted first
-                ctx.Bindings.Insert(0, limit);
+                ctx.PrependOne(limit);
 
                 ctx.Query.RemoveComponent("limit");
 
@@ -111,13 +111,13 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
+                ctx.BindingsAdd(offset);
                 writer.S.Append("OFFSET ? ROWS");
                 return writer;
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
+            ctx.BindingsAdd(offset);
+            ctx.BindingsAdd(limit);
             writer.S.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             return writer;
         }
@@ -151,9 +151,6 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
-            var ctx = new SqlResult(){Query = null};
-            writer.SetCtx(ctx);
-
             var colNames = string.Join(", ", adHoc.Columns.Select(value => XService.Wrap(value)));
 
             var valueRow = string.Join(", ", Enumerable.Repeat("?", adHoc.Columns.Length));
@@ -161,9 +158,9 @@ namespace SqlKata.Compilers
                 Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
             var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
-            ctx.Raw.Append(sql);
-            ctx.Bindings = adHoc.Values.ToList();
-
+            var ctx = new SqlResult(adHoc.Values, sql);
+            writer.BindMany(adHoc.Values);
+            writer.SetCtx(ctx);
             return ctx;
         }
     }

@@ -70,9 +70,6 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
-            var ctx = new SqlResult { Query = null };
-            writer.SetCtx(ctx);
-
             var row = "SELECT " +
                       string.Join(", ", adHoc.Columns.Select(col => $"? AS {XService.Wrap(col)}"));
 
@@ -82,9 +79,9 @@ namespace SqlKata.Compilers
 
             var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Length / adHoc.Columns.Length));
 
-            ctx.Raw.Append(rows);
-            ctx.Bindings = adHoc.Values.ToList();
-
+            var ctx = new SqlResult(adHoc.Values, rows);
+            writer.BindMany(adHoc.Values);
+            writer.SetCtx(ctx);
             return ctx;
         }
 
@@ -108,7 +105,7 @@ namespace SqlKata.Compilers
             if (fromClause is RawFromClause rawFromClause)
             {
                 table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
+                ctx.BindingsAddRange(rawFromClause.Bindings);
             }
 
             if (table is null) throw new InvalidOperationException("Invalid table expression");
@@ -155,7 +152,7 @@ namespace SqlKata.Compilers
             if (fromClause is RawFromClause rawFromClause)
             {
                 table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
+                ctx.BindingsAddRange(rawFromClause.Bindings);
             }
 
             if (table is null) throw new InvalidOperationException("Invalid table expression");
@@ -220,7 +217,7 @@ namespace SqlKata.Compilers
             if (fromClause is RawFromClause rawFromClause)
             {
                 table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
+                ctx.BindingsAddRange(rawFromClause.Bindings);
             }
 
             if (table is null)
@@ -237,7 +234,7 @@ namespace SqlKata.Compilers
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
                 var subCtx = CompileSelectQuery(clause.Query, writer.Sub());
-                ctx.Bindings.AddRange(subCtx.Bindings);
+                ctx.BindingsAddRange(subCtx.Bindings);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
 
@@ -306,7 +303,7 @@ namespace SqlKata.Compilers
             if (column is RawColumn raw)
             {
                 writer.AppendRaw(raw.Expression);
-                ctx.Bindings.AddRange(raw.Bindings);
+                ctx.BindingsAddRange(raw.Bindings);
                 return;
             }
 
@@ -314,7 +311,7 @@ namespace SqlKata.Compilers
             {
                 writer.S.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
-                ctx.Bindings.AddRange(subCtx.Bindings);
+                ctx.BindingsAddRange(subCtx.Bindings);
                 writer.BindMany(subCtx.Bindings);
                 writer.S.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
@@ -385,7 +382,6 @@ namespace SqlKata.Compilers
             else if (cte is AdHocTableFromClause adHoc)
             {
                 var subCtx = CompileAdHocQuery(adHoc, writer);
-                writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
                 writer.S.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
@@ -455,7 +451,7 @@ namespace SqlKata.Compilers
 
                     var subCtx = CompileSelectQuery(combineClause.Query, writer.Sub());
 
-                    ctx.Bindings.AddRange(subCtx.Bindings);
+                    ctx.BindingsAddRange(subCtx.Bindings);
 
                     combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
                 }
@@ -463,7 +459,7 @@ namespace SqlKata.Compilers
                 {
                     var combineRawClause = (RawCombine)clause;
 
-                    ctx.Bindings.AddRange(combineRawClause.Bindings);
+                    ctx.BindingsAddRange(combineRawClause.Bindings);
 
                     combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
                 }
@@ -511,7 +507,7 @@ namespace SqlKata.Compilers
 
             writer.S.Append("FROM ");
             CompileTableExpression(from, writer);
-            ctx.Bindings.AddRange(writer.Bindings);
+            ctx.BindingsAddRange(writer.Bindings);
         }
 
         private string? CompileJoins(SqlResult ctx, Writer writer)
@@ -534,7 +530,7 @@ namespace SqlKata.Compilers
             writer.S.Append(join.Type);
             writer.S.Append(" ");
             CompileTableExpression(from, writer);
-            ctx.Bindings.AddRange(writer.Bindings);
+            ctx.BindingsAddRange(writer.Bindings);
 
             if (conditions.Any())
             {
@@ -571,7 +567,7 @@ namespace SqlKata.Compilers
                 {
                     if (x is RawOrderBy raw)
                     {
-                        ctx.Bindings.AddRange(raw.Bindings);
+                        ctx.BindingsAddRange(raw.Bindings);
                         return XService.WrapIdentifiers(raw.Expression);
                     }
 
@@ -601,14 +597,14 @@ namespace SqlKata.Compilers
             var limit = ctx.Query.GetLimit(EngineCode);
             if (limit != 0)
             {
-                ctx.Bindings.Add(limit);
+                ctx.BindingsAdd(limit);
                 writer.S.Append("LIMIT ?");
             }
 
             var offset = ctx.Query.GetOffset(EngineCode);
             if (offset != 0)
             {
-                ctx.Bindings.Add(offset);
+                ctx.BindingsAdd(offset);
                 writer.Whitespace();
                 writer.S.Append("OFFSET ?");
             }
@@ -665,11 +661,11 @@ namespace SqlKata.Compilers
             if (parameter is Variable variable)
             {
                 var value = ctx.Query.FindVariable(variable.Name);
-                ctx.Bindings.Add(value);
+                ctx.BindingsAdd(value);
                 return "?";
             }
 
-            ctx.Bindings.Add(parameter);
+            ctx.BindingsAdd(parameter);
             return "?";
         }
 

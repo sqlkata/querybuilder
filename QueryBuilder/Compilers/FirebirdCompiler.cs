@@ -34,8 +34,8 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset > 0)
             {
-                ctx.Bindings.Add(offset + 1);
-                ctx.Bindings.Add(limit + offset);
+                ctx.BindingsAdd(offset + 1);
+                ctx.BindingsAdd(limit + offset);
 
                 writer.S.Append("ROWS ? TO ?");
                 return writer;
@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Insert(0, limit);
+                ctx.PrependOne(limit);
 
                 ctx.Query.RemoveComponent("limit");
 
@@ -65,7 +65,7 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Insert(0, offset);
+                ctx.PrependOne(offset);
 
                 ctx.Query.RemoveComponent("offset");
 
