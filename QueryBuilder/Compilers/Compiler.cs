@@ -232,17 +232,14 @@ namespace SqlKata.Compilers
             void CompileValueInsertClauses(InsertClause[] insertClauses)
             {
                 var isMultiValueInsert = insertClauses.Length > 1;
-
-                var insertInto = isMultiValueInsert ? MultiInsertStartClause : SingleInsertStartClause;
-
                 var firstInsert = insertClauses.First();
-                var columns = firstInsert.Columns.GetInsertColumnsList(XService);
 
-
-                writer.Append(insertInto);
+                writer.Append(isMultiValueInsert
+                    ? MultiInsertStartClause
+                    : SingleInsertStartClause);
                 writer.Append(" ");
                 writer.Append(table);
-                writer.Append(columns);
+                writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" VALUES (");
                 writer.List(", ", firstInsert.Values, p =>
                 {
@@ -259,7 +256,6 @@ namespace SqlKata.Compilers
 
                 if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
                     ctx.Raw.Append(";" + LastId);
-
             }
 
             static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
