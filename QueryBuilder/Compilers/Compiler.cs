@@ -234,19 +234,20 @@ namespace SqlKata.Compilers
                 var isMultiValueInsert = insertClauses.Length > 1;
                 var firstInsert = insertClauses.First();
 
-                writer.Append(isMultiValueInsert
+                var inner = writer.Sub();
+                inner.Append(isMultiValueInsert
                     ? MultiInsertStartClause
                     : SingleInsertStartClause);
-                writer.Append(" ");
-                writer.Append(table);
-                writer.WriteInsertColumnsList(firstInsert.Columns);
-                writer.Append(" VALUES (");
-                writer.List(", ", firstInsert.Values, p =>
+                inner.Append(" ");
+                inner.Append(table);
+                inner.WriteInsertColumnsList(firstInsert.Columns);
+                inner.Append(" VALUES (");
+                inner.List(", ", firstInsert.Values, p =>
                 {
-                    writer.Append(Parameter(ctx, query, writer, p));
+                    inner.Append(Parameter(ctx, query, writer, p));
                 });
-                writer.Append(")");
-                ctx.Raw.Append(writer);
+                inner.Append(")");
+                ctx.Raw.Append(inner);
 
                 if (isMultiValueInsert)
                 {

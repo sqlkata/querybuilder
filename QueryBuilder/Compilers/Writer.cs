@@ -113,7 +113,7 @@ namespace SqlKata.Compilers
         {
             return new Writer(_x)
             {
-                _ctx = _ctx
+                _ctx = _ctx,
             };
         }
 
