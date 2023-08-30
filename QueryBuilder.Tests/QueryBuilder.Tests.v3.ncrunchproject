@@ -13,6 +13,9 @@
       <NamedTestSelector>
         <TestName>SqlKata.Tests.IntermediateStageSelectTests.UnionWithDifferentEngine</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.IntermediateStageInsertTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

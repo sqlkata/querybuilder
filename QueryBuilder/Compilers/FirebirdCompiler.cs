@@ -17,10 +17,9 @@ namespace SqlKata.Compilers
 
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
-            if (inserts[0] is InsertQueryClause insertQueryClause)
+            if (inserts[0] is InsertQueryClause)
             {
-                CompileInsertQueryClause(insertQueryClause, writer);
-                writer.AssertMatches(ctx);
+                base.CompileInsertQuery(ctx, query, writer);
                 return;
             }
 
@@ -34,48 +33,22 @@ namespace SqlKata.Compilers
             writer.AssertMatches(ctx);
             return;
 
-
-            void CompileInsertQueryClause(InsertQueryClause clause, Writer w)
-            {
-                var columns = clause.Columns.GetInsertColumnsList(XService);
-
-                var subCtx = CompileSelectQuery(clause.Query, w);
-                ctx.BindingsAddRange(subCtx.Bindings);
-                w.BindMany(subCtx.Bindings);
-                w.Pop();
-                w.AssertMatches(ctx);
-
-                ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
-            }
-
             void CompileValueInsertClauses(InsertClause[] insertClauses)
             {
-                var isMultiValueInsert = insertClauses.Length > 1;
                 var firstInsert = insertClauses.First();
 
-                var inner = writer.Sub();
-                inner.Append(isMultiValueInsert
-                    ? MultiInsertStartClause
-                    : SingleInsertStartClause);
-                inner.Append(" ");
-                inner.Append(table);
-                inner.WriteInsertColumnsList(firstInsert.Columns);
-                inner.Append(" SELECT ");
-                inner.List(", ", firstInsert.Values, p =>
+                writer.Append(MultiInsertStartClause);
+                writer.Append(" ");
+                writer.Append(table);
+                writer.WriteInsertColumnsList(firstInsert.Columns);
+                writer.Append(" SELECT ");
+                writer.List(", ", firstInsert.Values, p =>
                 {
-                    inner.Append(Parameter(ctx, query, writer, p));
+                    writer.Append(Parameter(ctx, query, writer, p));
                 });
-                ctx.Raw.Append(inner);
 
-                if (isMultiValueInsert)
-                {
-                    writer.Assert("");
-                    CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
-                    return;
-                }
-
-                if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
-                    ctx.Raw.Append(";" + LastId);
+                CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
+                ctx.Raw.Append(writer);
             }
 
             static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
@@ -116,7 +89,6 @@ namespace SqlKata.Compilers
                 });
             }
             writer.Append(" FROM RDB$DATABASE");
-            ctx.Raw.Append(writer);
         }
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {

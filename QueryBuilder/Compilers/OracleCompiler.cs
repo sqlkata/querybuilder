@@ -154,8 +154,6 @@ namespace SqlKata.Compilers
                 writer.Append(")");
             }
             writer.Append(" SELECT 1 FROM DUAL");
-
-            ctx.Raw.Append(writer);
         }
     }
 }

@@ -234,30 +234,33 @@ namespace SqlKata.Compilers
                 var isMultiValueInsert = insertClauses.Length > 1;
                 var firstInsert = insertClauses.First();
 
-                var inner = writer.Sub();
-                inner.Append(isMultiValueInsert
+                writer.Append(isMultiValueInsert
                     ? MultiInsertStartClause
                     : SingleInsertStartClause);
-                inner.Append(" ");
-                inner.Append(table);
-                inner.WriteInsertColumnsList(firstInsert.Columns);
-                inner.Append(" VALUES (");
-                inner.List(", ", firstInsert.Values, p =>
+                writer.Append(" ");
+                writer.Append(table);
+                writer.WriteInsertColumnsList(firstInsert.Columns);
+                writer.Append(" VALUES (");
+                writer.List(", ", firstInsert.Values, p =>
                 {
-                    inner.Append(Parameter(ctx, query, writer, p));
+                    writer.Append(Parameter(ctx, query, writer, p));
                 });
-                inner.Append(")");
-                ctx.Raw.Append(inner);
+                writer.Append(")");
 
                 if (isMultiValueInsert)
                 {
-                    writer.Assert("");
                     CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
+                    ctx.Raw.Append(writer);
+
                     return;
                 }
-
                 if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
-                    ctx.Raw.Append(";" + LastId);
+                {
+                    writer.Append(";");
+                    writer.Append(LastId);
+                }
+                ctx.Raw.Append(writer);
+                writer.AssertMatches(ctx);
             }
 
             static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
@@ -297,7 +300,7 @@ namespace SqlKata.Compilers
                 });
                 writer.Append(")");
             }
-            ctx.Raw.Append(writer);
+          //  ctx.Raw.Append(writer);
         }
 
 
