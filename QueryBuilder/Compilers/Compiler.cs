@@ -50,6 +50,8 @@ namespace SqlKata.Compilers
             {
                 Query = query.Clone()
             };
+            writer.SetCtx(ctx);
+
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, writer),
                 () => CompileFrom(ctx, writer),
@@ -66,9 +68,10 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
             var ctx = new SqlResult { Query = null };
+            writer.SetCtx(ctx);
 
             var row = "SELECT " +
                       string.Join(", ", adHoc.Columns.Select(col => $"? AS {XService.Wrap(col)}"));
@@ -91,6 +94,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
+            writer.SetCtx(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to delete");
@@ -137,6 +141,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
+            writer.SetCtx(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to update");
@@ -200,6 +205,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
+            writer.SetCtx(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
@@ -377,7 +383,7 @@ namespace SqlKata.Compilers
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
-                var subCtx = CompileAdHocQuery(adHoc);
+                var subCtx = CompileAdHocQuery(adHoc, writer);
                 writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");

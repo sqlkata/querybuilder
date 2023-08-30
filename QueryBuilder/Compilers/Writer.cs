@@ -6,7 +6,11 @@ namespace SqlKata.Compilers
     public sealed class Writer
     {
         public IReadOnlyList<object?> Bindings => _bindings;
-        public void BindOne(object? value) => _bindings.Add(value);
+        public void BindOne(object? value)
+        {
+            _bindings.Add(value);
+        }
+
         public void BindMany(IEnumerable<object?> values)
         {
             foreach (var binding in values) BindOne(binding);
@@ -14,6 +18,7 @@ namespace SqlKata.Compilers
 
         private readonly X _x;
         private readonly List<object?> _bindings = new();
+        private SqlResult? _ctx;
         public StringBuilder S { get; } = new();
         public static implicit operator string(Writer w) => w.S.ToString();
 
@@ -92,7 +97,10 @@ namespace SqlKata.Compilers
 
         public Writer Sub()
         {
-            return new Writer(_x);
+            return new Writer(_x)
+            {
+                _ctx = _ctx
+            };
         }
 
         public void Whitespace()
@@ -100,9 +108,14 @@ namespace SqlKata.Compilers
             if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
         }
 
-        public void AssertMatches(SqlResult ctx)
+        public void SetCtx(SqlResult ctx)
         {
-            ctx.Bindings.Should().Equal(Bindings);
+            _ctx = ctx;
+            AssertMatches();
+        }
+        public void AssertMatches()
+        {
+            Bindings.Should().EndWith(_ctx.Bindings);
         }
     }
 }

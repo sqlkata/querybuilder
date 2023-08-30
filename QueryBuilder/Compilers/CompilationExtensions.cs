@@ -22,6 +22,7 @@ namespace SqlKata.Compilers
                 Query = null,
                 Bindings = combinedBindings
             };
+            
             ctx.Raw.Append(compiled.Select(r => r.RawSql)
                 .Aggregate((a, b) => a + ";\n" + b));
 

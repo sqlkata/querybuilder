@@ -22,6 +22,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
+            writer.SetCtx(ctx);
 
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -148,9 +149,10 @@ namespace SqlKata.Compilers
             writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
-        protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
             var ctx = new SqlResult(){Query = null};
+            writer.SetCtx(ctx);
 
             var colNames = string.Join(", ", adHoc.Columns.Select(value => XService.Wrap(value)));
 
