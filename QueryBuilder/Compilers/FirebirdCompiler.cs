@@ -63,6 +63,7 @@ namespace SqlKata.Compilers
                 });
             }
             writer.Append(" FROM RDB$DATABASE");
+            writer.AssertMatches(ctx);
         }
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
@@ -78,7 +79,7 @@ namespace SqlKata.Compilers
                 writer.Append("ROWS ? TO ?");
                 return writer;
             }
-
+            writer.AssertMatches(ctx);
             return null;
         }
 

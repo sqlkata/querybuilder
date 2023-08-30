@@ -92,6 +92,7 @@ namespace SqlKata.Compilers
                 writer.Append("SELECT TOP (?) ");
                 CompileColumnsAfterSelect(ctx, query, writer);
                 // writer.Append(compiled.Substring(6));
+                writer.AssertMatches(ctx);
                 return writer;
             }
 
@@ -115,13 +116,18 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
+                writer.BindOne(offset);
                 writer.Append("OFFSET ? ROWS");
+                writer.AssertMatches(ctx);
                 return writer;
             }
 
             ctx.BindingsAdd(offset);
+            writer.BindOne(offset);
             ctx.BindingsAdd(limit);
+            writer.BindOne(limit);
             writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            writer.AssertMatches(ctx);
             return writer;
         }
 
