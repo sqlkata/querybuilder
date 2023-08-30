@@ -11,8 +11,8 @@ namespace SqlKata.Compilers
 
         public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var fromClause = GetFromClause(query, EngineCode);
-            var table = GetTable(ctx, fromClause, XService);
+           // var fromClause = GetFromClause(query, EngineCode);
+           // var table = GetTable(ctx, fromClause, XService);
             writer.AssertMatches(ctx);
 
 
@@ -39,7 +39,7 @@ namespace SqlKata.Compilers
 
                 writer.Append(MultiInsertStartClause);
                 writer.Append(" ");
-                writer.Append(table);
+                var table = WriteTable(ctx, query.GetOneComponent<AbstractFrom>("from", EngineCode), writer, "insert");
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" SELECT ");
                 writer.List(", ", firstInsert.Values, p =>
@@ -50,30 +50,6 @@ namespace SqlKata.Compilers
                 CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
                 ctx.Raw.Append(writer);
             }
-
-            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
-            {
-                if (abstractFrom is FromClause fromClauseCast)
-                    return x.Wrap(fromClauseCast.Table);
-                if (abstractFrom is RawFromClause rawFromClause)
-                {
-                    sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                    return x.WrapIdentifiers(rawFromClause.Expression);
-                }
-                throw new InvalidOperationException("Invalid table expression");
-            }
-
-            static AbstractFrom GetFromClause(Query q, string? engineCode)
-            {
-                if (!q.HasComponent("from", engineCode))
-                    throw new InvalidOperationException("No table set to insert");
-
-                var fromClause = q.GetOneComponent<AbstractFrom>("from", engineCode);
-                if (fromClause is null)
-                    throw new InvalidOperationException("Invalid table expression");
-                return fromClause;
-            }
-
         }
 
         protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,

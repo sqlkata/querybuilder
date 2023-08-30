@@ -87,22 +87,9 @@ namespace SqlKata.Compilers
 
         public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
         {
-            if (!query.HasComponent("from", EngineCode))
-                throw new InvalidOperationException("No table set to delete");
-
             var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            string? table = null;
-
-            if (fromClause is FromClause fromClauseCast) table = XService.Wrap(fromClauseCast.Table);
-
-            if (fromClause is RawFromClause rawFromClause)
-            {
-                table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.BindingsAddRange(rawFromClause.Bindings);
-            }
-
-            if (table is null) throw new InvalidOperationException("Invalid table expression");
+            
+            string table = WriteTable(ctx, fromClause, writer.Sub(), "delete");
 
             var joins = CompileJoins(ctx, query, writer.Sub());
 
@@ -127,12 +114,10 @@ namespace SqlKata.Compilers
         public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
             var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            if (fromClause == null)
-                throw new InvalidOperationException("No table set to update");
 
             writer.Append("UPDATE ");
 
-            WriteTable(ctx, fromClause, writer);
+            WriteTable(ctx, fromClause, writer, "update");
 
             var clause = query.GetOneComponent("update", EngineCode);
             if (clause is IncrementClause increment)
@@ -173,10 +158,12 @@ namespace SqlKata.Compilers
             }
         }
 
-        private static string WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer writer)
+        protected static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
         {
             switch (abstractFrom)
             {
+                case null:
+                    throw new InvalidOperationException($"No table set to {operationName}");
                 case FromClause fromClauseCast:
                     writer.AppendName(fromClauseCast.Table);
                     return writer.X.Wrap(fromClauseCast.Table);
@@ -198,9 +185,6 @@ namespace SqlKata.Compilers
 
         public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var fromClause = GetFromClause(query, EngineCode);
-
-
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             var isMultiValueInsert = inserts.OfType<InsertClause>().Skip(1).Any();
             
@@ -208,7 +192,7 @@ namespace SqlKata.Compilers
                 ? MultiInsertStartClause
                 : SingleInsertStartClause);
             writer.Append(" ");
-            var table = WriteTable(ctx, fromClause, writer);
+            var table = WriteTable(ctx, query.GetOneComponent<AbstractFrom>("from", EngineCode), writer, "insert");
             writer.AssertMatches(ctx);
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
@@ -266,17 +250,6 @@ namespace SqlKata.Compilers
                 ctx.Raw.Append(writer);
                 writer.AssertMatches(ctx);
             }
-
-            static AbstractFrom GetFromClause(Query q, string? engineCode)
-            {
-                if (!q.HasComponent("from", engineCode))
-                    throw new InvalidOperationException("No table set to insert");
-
-                var fromClause = q.GetOneComponent<AbstractFrom>("from", engineCode);
-                if (fromClause is null)
-                    throw new InvalidOperationException("Invalid table expression");
-                return fromClause;
-            }
         }
 
         protected virtual void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
@@ -292,7 +265,6 @@ namespace SqlKata.Compilers
                 });
                 writer.Append(")");
             }
-          //  ctx.Raw.Append(writer);
         }
 
 
