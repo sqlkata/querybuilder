@@ -93,21 +93,33 @@ namespace SqlKata.Compilers
 
             var joins = CompileJoins(ctx, query, writer.Sub());
 
-            var where = CompileWheres(ctx, query, writer);
 
-            if (!string.IsNullOrEmpty(where)) where = " " + where;
-
-            if (string.IsNullOrEmpty(joins))
+            if (!query.HasComponent("join", EngineCode))
             {
+                var where = CompileWheres(ctx, query, writer);
+                if (query.HasComponent("where", EngineCode))
+                    where = " " + where;
+
                 ctx.Raw.Append($"DELETE FROM {table}{where}");
             }
             else
             {
                 // check if we have alias 
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
+                {
+                    var where = CompileWheres(ctx, query, writer);
+                    if (query.HasComponent("where", EngineCode))
+                        where = " " + where;
                     ctx.Raw.Append($"DELETE {XService.Wrap(fromClause.Alias)} FROM {table} {joins}{where}");
+                }
                 else
+                {
+                    var where = CompileWheres(ctx, query, writer);
+                    if (query.HasComponent("where", EngineCode))
+                        where = " " + where;
+
                     ctx.Raw.Append($"DELETE {table} FROM {table} {joins}{where}");
+                }
             }
         }
 
