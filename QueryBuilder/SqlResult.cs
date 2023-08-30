@@ -18,7 +18,7 @@ namespace SqlKata
             Raw.Append(rawSql);
         }
 
-        public Query? Query { get; init; }
+        public Query? Query { get; set; }
         public string RawSql => Raw.ToString();
         public StringBuilder Raw { get; set; } = new ();
         public IReadOnlyList<object?> Bindings => _bindings;

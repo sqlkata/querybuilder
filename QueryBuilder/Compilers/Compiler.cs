@@ -43,14 +43,21 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public virtual SqlResult CompileSelectQuery(Query query, Writer writer)
+        public SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
                 Query = query.Clone()
             };
             writer.Push(ctx);
+            CompileSelectQueryInner(ctx, query, writer);
 
+            return ctx;
+
+        }
+
+        protected virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
+        {
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, writer),
                 () => CompileFrom(ctx, writer),
@@ -61,9 +68,7 @@ namespace SqlKata.Compilers
                 () => CompileOrders(ctx, writer),
                 () => CompileLimit(ctx, writer),
                 () => CompileUnion(ctx, writer));
-
             ctx.Raw.Append(writer);
-            return ctx;
         }
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)

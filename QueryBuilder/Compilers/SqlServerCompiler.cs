@@ -11,35 +11,37 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        public override SqlResult CompileSelectQuery(Query original, Writer writer)
+        protected override void CompileSelectQueryInner(SqlResult ctx, Query original, Writer writer)
         {
             if (!UseLegacyPagination || !original.HasOffset(EngineCode))
-                return base.CompileSelectQuery(original, writer);
+            {
+                base.CompileSelectQueryInner(ctx, original, writer);
+                return;
+            }
 
             var limit = original.GetLimit(EngineCode);
             var offset = original.GetOffset(EngineCode);
 
             var modified = ModifyQuery(original.Clone());
-
+            ctx.Query = modified;
             writer.Append("SELECT * FROM (");
-            var ctx2 = base.CompileSelectQuery(modified, writer);
+            base.CompileSelectQueryInner(ctx, modified, writer);
             writer.Append(") AS [results_wrapper] WHERE [row_num] ");
             if (limit == 0)
             {
                 writer.Append(">= ?");
-                ctx2.BindingsAdd(offset + 1);
+                ctx.BindingsAdd(offset + 1);
                 writer.BindOne(offset + 1);
             }
             else
             {
                 writer.Append("BETWEEN ? AND ?");
-                ctx2.BindingsAdd(offset + 1);
+                ctx.BindingsAdd(offset + 1);
                 writer.BindOne(offset + 1);
-                ctx2.BindingsAdd(limit + offset);
+                ctx.BindingsAdd(limit + offset);
                 writer.BindOne(limit + offset);
             }
-            ctx2.ReplaceRaw(writer);
-            return ctx2;
+            ctx.ReplaceRaw(writer);
         }
 
         private Query ModifyQuery(Query query)

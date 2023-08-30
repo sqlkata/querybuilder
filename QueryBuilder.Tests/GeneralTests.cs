@@ -80,7 +80,11 @@ public class GeneralTests : TestSupport
 
         var first = Compile(query);
         Assert.Equal(
-            "SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [results_wrapper] WHERE [row_num] BETWEEN 2 AND 21",
+            "SELECT * FROM (" +
+            "SELECT [Id], [Name], ROW_NUMBER() " +
+            "OVER (ORDER BY [Name]) AS [row_num] " +
+            "FROM [Table]) AS [results_wrapper] " +
+            "WHERE [row_num] BETWEEN 2 AND 21",
             first[EngineCodes.SqlServer]);
         Assert.Equal("SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1", first[EngineCodes.MySql]);
         Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1",
