@@ -690,7 +690,7 @@ namespace SqlKata.Compilers
             return parameter;
         }
 
-        protected static string Parameter(SqlResult ctx, Query query, Writer writer, object? parameter)
+        public static string Parameter(SqlResult ctx, Query query, Writer writer, object? parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
