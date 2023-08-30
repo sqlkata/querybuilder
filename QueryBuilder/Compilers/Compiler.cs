@@ -363,14 +363,14 @@ namespace SqlKata.Compilers
         {
             if (cte is RawFromClause raw)
             {
-                writer.Bindings.AddRange(raw.Bindings);
+                writer.BindMany(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
                 writer.S.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
                 var subCtx = CompileSelectQuery(queryFromClause.Query, new Writer(XService));
-                writer.Bindings.AddRange(subCtx.Bindings);
+                writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
                 writer.S.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
@@ -378,7 +378,7 @@ namespace SqlKata.Compilers
             else if (cte is AdHocTableFromClause adHoc)
             {
                 var subCtx = CompileAdHocQuery(adHoc);
-                writer.Bindings.AddRange(subCtx.Bindings);
+                writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
                 writer.S.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
@@ -467,7 +467,7 @@ namespace SqlKata.Compilers
         {
             if (from is RawFromClause raw)
             {
-                writer.Bindings.AddRange(raw.Bindings);
+                writer.BindMany(raw.Bindings);
                 writer.AppendRaw(raw.Expression);
                 return;
             }
@@ -482,7 +482,7 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(fromQuery, new Writer(XService));
 
-                writer.Bindings.AddRange(subCtx.Bindings);
+                writer.BindMany(subCtx.Bindings);
                 writer.S.Append("(" + subCtx.RawSql + ")" + alias);
                 return;
             }

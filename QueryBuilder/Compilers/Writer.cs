@@ -1,12 +1,19 @@
 using System.Text;
+using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
     public sealed class Writer
     {
-        public List<object?> Bindings { get; } = new();
+        public IReadOnlyList<object?> Bindings => _bindings;
+        public void BindOne(object? value) => _bindings.Add(value);
+        public void BindMany(IEnumerable<object?> values)
+        {
+            foreach (var binding in values) BindOne(binding);
+        }
 
         private readonly X _x;
+        private readonly List<object?> _bindings = new();
         public StringBuilder S { get; } = new();
         public static implicit operator string(Writer w) => w.S.ToString();
 
@@ -91,6 +98,11 @@ namespace SqlKata.Compilers
         public void Whitespace()
         {
             if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
+        }
+
+        public void AssertMatches(SqlResult ctx)
+        {
+            ctx.Bindings.Should().Equal(Bindings);
         }
     }
 }
