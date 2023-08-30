@@ -357,11 +357,11 @@ namespace SqlKata.Compilers
             }
             else if (cte is QueryFromClause queryFromClause)
             {
-                var subCtx = CompileSelectQuery(queryFromClause.Query, writer.Sub());
-                writer.BindMany(subCtx.Bindings);
-
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                writer.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
+                writer.AppendValue(queryFromClause.Alias);
+                writer.Append(" AS (");
+                CompileSelectQuery(queryFromClause.Query, writer);
+                writer.Append(")");
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
