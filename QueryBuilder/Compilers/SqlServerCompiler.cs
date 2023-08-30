@@ -22,7 +22,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
 
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx, Writer writer)
         {
-            var compiled = base.CompileColumns(ctx, writer.Sub());
+            var compiled = base.CompileColumns(ctx,/*text manipulation */ writer.Sub());
 
             if (!UseLegacyPagination)
             {
@@ -160,7 +160,7 @@ namespace SqlKata.Compilers
 
             var ctx = new SqlResult(adHoc.Values, sql);
             writer.BindMany(adHoc.Values);
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
             return ctx;
         }
     }

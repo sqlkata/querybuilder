@@ -70,7 +70,7 @@ namespace SqlKata.Compilers
             ctx.BindingsAddRange(x.Bindings);
             writer.BindMany(x.Bindings);
             writer.AppendRaw(x.Expression);
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileQueryCondition(SqlResult ctx, QueryCondition x, Writer writer)
@@ -81,9 +81,10 @@ namespace SqlKata.Compilers
             writer.Append(" (");
             var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
+            writer.Pop();
             writer.BindMany(subCtx.Bindings);
             writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x, Writer writer)
@@ -92,11 +93,12 @@ namespace SqlKata.Compilers
             var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
             writer.BindMany(subCtx.Bindings);
+            writer.Pop();
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
             writer.Append(Parameter(ctx, writer, x.Value));
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
@@ -163,7 +165,7 @@ namespace SqlKata.Compilers
 
             if (x.IsNot)
                 writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         protected virtual void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
@@ -179,7 +181,7 @@ namespace SqlKata.Compilers
             writer.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
                 writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileNestedCondition(SqlResult ctx, NestedCondition x, Writer writer)
@@ -197,7 +199,7 @@ namespace SqlKata.Compilers
             writer.Append("(");
             CompileConditions(ctx, clauses, writer);
             writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileTwoColumnsCondition(TwoColumnsCondition x, Writer writer)
@@ -219,7 +221,7 @@ namespace SqlKata.Compilers
             writer.Append(Parameter(ctx, writer, x.Lower));
             writer.Append(" AND ");
             writer.Append(Parameter(ctx, writer, x.Higher));
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileInCondition(SqlResult ctx, InCondition x, Writer writer)
@@ -234,19 +236,18 @@ namespace SqlKata.Compilers
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
             writer.Append(Parametrize(ctx, writer, x.Values.OfType<object>()));
             writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileInQueryCondition(SqlResult ctx, InQueryCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
-            var subCtx = CompileSelectQuery(x.Query, writer.Sub());
+            var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
-            writer.BindMany(subCtx.Bindings);
-            writer.Append(subCtx.RawSql);
+            writer.Pop();
             writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileNullCondition(NullCondition x, Writer writer)
@@ -274,9 +275,9 @@ namespace SqlKata.Compilers
 
             var subCtx = CompileSelectQuery(query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
-
+            writer.Pop();
             writer.Append(")");
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
     }
 }

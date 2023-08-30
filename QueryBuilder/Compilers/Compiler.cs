@@ -49,7 +49,7 @@ namespace SqlKata.Compilers
             {
                 Query = query.Clone()
             };
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
 
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, writer),
@@ -63,7 +63,6 @@ namespace SqlKata.Compilers
                 () => CompileUnion(ctx, writer));
 
             ctx.Raw.Append(writer);
-
             return ctx;
         }
 
@@ -80,7 +79,7 @@ namespace SqlKata.Compilers
 
             var ctx = new SqlResult(adHoc.Values, rows);
             writer.BindMany(adHoc.Values);
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
             return ctx;
         }
 
@@ -90,7 +89,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to delete");
@@ -137,7 +136,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to update");
@@ -201,7 +200,7 @@ namespace SqlKata.Compilers
             {
                 Query = query
             };
-            writer.SetCtx(ctx);
+            writer.Push(ctx);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
@@ -304,36 +303,38 @@ namespace SqlKata.Compilers
             {
                 writer.AppendRaw(raw.Expression);
                 ctx.BindingsAddRange(raw.Bindings);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
             if (column is QueryColumn queryColumn)
             {
+                writer.AssertMatches(ctx);
                 writer.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
                 ctx.BindingsAddRange(subCtx.Bindings);
                 writer.BindMany(subCtx.Bindings);
+                writer.Pop();
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
             if (column is AggregatedColumn aggregatedColumn)
             {
                 CompileAggregatedColumn(ctx, writer, aggregatedColumn);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
             writer.Append(XService.Wrap(((Column)column).Name));
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private void CompileAggregatedColumn(SqlResult ctx, Writer writer, AggregatedColumn c)
         {
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
             writer.Append(c.Aggregate.ToUpperInvariant());
 
             var (col, alias) = XService.SplitAlias(
@@ -347,7 +348,7 @@ namespace SqlKata.Compilers
                 writer.Append(col);
                 writer.Append(")");
                 writer.Append(alias);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
@@ -360,7 +361,7 @@ namespace SqlKata.Compilers
                 CompileConditions(ctx, filterConditions, writer);
                 writer.Append(")");
                 writer.Append(alias);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
@@ -370,7 +371,7 @@ namespace SqlKata.Compilers
             writer.Append(col);
             writer.Append(" END)");
             writer.Append(alias);
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
         }
 
         private static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
@@ -409,7 +410,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileColumns(SqlResult ctx, Writer writer)
         {
-            writer.AssertMatches();
+            writer.AssertMatches(ctx);
             var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
@@ -427,12 +428,12 @@ namespace SqlKata.Compilers
                     writer.List(", ", aggregateColumns);
                     writer.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
-                    writer.AssertMatches();
+                    writer.AssertMatches(ctx);
                     return writer;
                 }
 
                 writer.Append("SELECT 1");
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return writer;
             }
 
@@ -492,7 +493,7 @@ namespace SqlKata.Compilers
             {
                 writer.BindMany(raw.Bindings);
                 writer.AppendRaw(raw.Expression);
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 
@@ -502,7 +503,8 @@ namespace SqlKata.Compilers
                 writer.Append("(");
                 CompileSelectQuery(q, writer);
                 ctx.BindingsAddRange(writer.Bindings);
-                writer.AssertMatches();
+                writer.Pop();
+                writer.AssertMatches(ctx);
 
                 writer.Append(")");
                 if (!string.IsNullOrEmpty(q.QueryAlias))
@@ -512,7 +514,7 @@ namespace SqlKata.Compilers
                     writer.AppendValue(q.QueryAlias);
                 }
 
-                writer.AssertMatches();
+                writer.AssertMatches(ctx);
                 return;
             }
 

@@ -117,14 +117,28 @@ namespace SqlKata.Compilers
             if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
         }
 
-        public void SetCtx(SqlResult ctx)
+        private readonly Stack<SqlResult> _contexts = new();
+        private readonly List<SqlResult> _discards = new();
+        public void Push(SqlResult ctx)
         {
+            _contexts.Push(_ctx);
             _ctx = ctx;
+            AssertMatches();
+        }
+        public void Pop()
+        {
+            _discards.Add(_ctx = _contexts.Pop());
             AssertMatches();
         }
         public void AssertMatches()
         {
             Bindings.Should().EndWith(_ctx!.Bindings);
+        }
+        public void AssertMatches(SqlResult ctx)
+        {
+            if (_ctx != ctx)
+                throw new Exception("Wrong context!");
+            AssertMatches();
         }
     }
 }
