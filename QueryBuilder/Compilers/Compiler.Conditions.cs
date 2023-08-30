@@ -74,7 +74,7 @@ namespace SqlKata.Compilers
 
         private void CompileQueryCondition(SqlResult ctx, QueryCondition x, Writer writer)
         {
-            var subCtx = CompileSelectQuery(x.Query, new Writer(XService));
+            var subCtx = CompileSelectQuery(x.Query, writer.Sub());
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 

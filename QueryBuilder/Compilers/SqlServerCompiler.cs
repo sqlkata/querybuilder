@@ -29,7 +29,7 @@ namespace SqlKata.Compilers
 
             if (!query.HasComponent("select")) query.Select("*");
 
-            var order = CompileOrders(ctx, new Writer(XService)) ?? "ORDER BY (SELECT 0)";
+            var order = CompileOrders(ctx, writer.Sub()) ?? "ORDER BY (SELECT 0)";
 
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]",
                 ctx.Bindings.ToArray());

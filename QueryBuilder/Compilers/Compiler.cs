@@ -85,7 +85,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public SqlResult CompileDeleteQuery(Query query)
+        public SqlResult CompileDeleteQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
@@ -109,9 +109,9 @@ namespace SqlKata.Compilers
 
             if (table is null) throw new InvalidOperationException("Invalid table expression");
 
-            var joins = CompileJoins(ctx, new Writer(XService));
+            var joins = CompileJoins(ctx, writer.Sub());
 
-            var where = CompileWheres(ctx, new Writer(XService));
+            var where = CompileWheres(ctx, writer.Sub());
 
             if (!string.IsNullOrEmpty(where)) where = " " + where;
 
@@ -131,7 +131,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public SqlResult CompileUpdateQuery(Query query)
+        public SqlResult CompileUpdateQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
@@ -166,7 +166,7 @@ namespace SqlKata.Compilers
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                wheres = CompileWheres(ctx, new Writer(XService));
+                wheres = CompileWheres(ctx, writer.Sub());
 
                 if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -185,7 +185,7 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            wheres = CompileWheres(ctx, new Writer(XService));
+            wheres = CompileWheres(ctx, writer.Sub());
 
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -194,7 +194,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public virtual SqlResult CompileInsertQuery(Query query)
+        public virtual SqlResult CompileInsertQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
@@ -222,15 +222,15 @@ namespace SqlKata.Compilers
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
-                return CompileInsertQueryClause(insertQueryClause);
+                return CompileInsertQueryClause(insertQueryClause, writer);
             return CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
 
 
-            SqlResult CompileInsertQueryClause(InsertQueryClause clause)
+            SqlResult CompileInsertQueryClause(InsertQueryClause clause, Writer writer)
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
-                var subCtx = CompileSelectQuery(clause.Query, new Writer(XService));
+                var subCtx = CompileSelectQuery(clause.Query, writer.Sub());
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
@@ -369,7 +369,7 @@ namespace SqlKata.Compilers
             }
             else if (cte is QueryFromClause queryFromClause)
             {
-                var subCtx = CompileSelectQuery(queryFromClause.Query, new Writer(XService));
+                var subCtx = CompileSelectQuery(queryFromClause.Query, writer.Sub());
                 writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
@@ -445,7 +445,7 @@ namespace SqlKata.Compilers
                     var combineOperator = combineClause.Operation.ToUpperInvariant() + " " +
                                           (combineClause.All ? "ALL " : "");
 
-                    var subCtx = CompileSelectQuery(combineClause.Query, new Writer(XService));
+                    var subCtx = CompileSelectQuery(combineClause.Query, writer.Sub());
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -480,7 +480,7 @@ namespace SqlKata.Compilers
                     ? ""
                     : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
 
-                var subCtx = CompileSelectQuery(fromQuery, new Writer(XService));
+                var subCtx = CompileSelectQuery(fromQuery, writer.Sub());
 
                 writer.BindMany(subCtx.Bindings);
                 writer.S.Append("(" + subCtx.RawSql + ")" + alias);

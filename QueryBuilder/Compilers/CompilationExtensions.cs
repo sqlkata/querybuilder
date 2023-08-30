@@ -6,14 +6,16 @@ namespace SqlKata.Compilers
     {
         public static SqlResult Compile(this Compiler compiler, Query query)
         {
-            var ctx = compiler.CompileRaw(query);
+            var ctx = compiler.CompileRaw(query, new Writer(compiler.XService));
             ctx = compiler.PrepareResult(ctx);
             return ctx;
         }
 
         public static SqlResult Compile(this Compiler compiler, IEnumerable<Query> queries)
         {
-            var compiled = queries.Select(compiler.CompileRaw).ToArray();
+            var compiled = queries.Select(x=> compiler
+                .CompileRaw(x, new Writer(compiler.XService)))
+                .ToArray();
             var combinedBindings = compiled.SelectMany(r => r.Bindings).ToList();
             var ctx = new SqlResult
             {
@@ -28,21 +30,21 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        private static SqlResult CompileRaw(this Compiler compiler, Query query)
+        private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
             SqlResult ctx;
 
             if (query.Method == "insert")
             {
-                ctx = compiler.CompileInsertQuery(query);
+                ctx = compiler.CompileInsertQuery(query, writer);
             }
             else if (query.Method == "update")
             {
-                ctx = compiler.CompileUpdateQuery(query);
+                ctx = compiler.CompileUpdateQuery(query, writer);
             }
             else if (query.Method == "delete")
             {
-                ctx = compiler.CompileDeleteQuery(query);
+                ctx = compiler.CompileDeleteQuery(query, writer);
             }
             else
             {
@@ -55,13 +57,13 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
 
-                ctx = compiler.CompileSelectQuery(query, new Writer(compiler.XService));
+                ctx = compiler.CompileSelectQuery(query, writer.Sub());
             }
 
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
-                var writer = new Writer(compiler.XService);
+                writer = writer.Sub();
                 compiler.CompileCteQuery(query, writer);
                 writer.S.Append(ctx.RawSql);
 
