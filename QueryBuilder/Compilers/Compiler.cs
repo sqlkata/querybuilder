@@ -141,7 +141,7 @@ namespace SqlKata.Compilers
 
             var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
             Debug.Assert(toUpdate != null);
-            CompileUpdate(toUpdate, writer.Sub());
+            CompileUpdate(toUpdate);
 
             static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x, Writer w)
             {
@@ -180,24 +180,19 @@ namespace SqlKata.Compilers
                 ctx.Raw.Append(writer);
             }
 
-            void CompileUpdate(InsertClause insertClause, Writer inner)
+            void CompileUpdate(InsertClause insertClause)
             {
-                inner.Append("UPDATE ");
-                inner.Append(table);
-                inner.Append(" SET ");
-                inner.List(", ", insertClause.Columns, (column, i) =>
+                writer.Append("UPDATE ");
+                writer.Append(table);
+                writer.Append(" SET ");
+                writer.List(", ", insertClause.Columns, (column, i) =>
                 {
-                    inner.AppendName(column);
-                    inner.Append(" = ");
-                    inner.Append(Parameter(ctx, query, writer, insertClause.Values[i]));
+                    writer.AppendName(column);
+                    writer.Append(" = ");
+                    writer.Append(Parameter(ctx, query, writer, insertClause.Values[i]));
                 });
-                var wheres = CompileWheres(ctx, query, writer);
-                if (!string.IsNullOrEmpty(wheres))
-                {
-                    inner.Append(" ");
-                    inner.Append(wheres);
-                }
-                ctx.Raw.Append(inner);
+                CompileWheres(ctx, query, writer);
+                ctx.Raw.Append(writer);
             }
         }
 
