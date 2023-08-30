@@ -377,38 +377,23 @@ namespace SqlKata.Compilers
         protected virtual string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
             writer.AssertMatches(ctx);
+            writer.Append("SELECT ");
             var aggregate = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
-                var aggregateColumns = aggregate.Columns
-                    .Select(value => XService.Wrap(value))
-                    .ToList();
-
-                if (aggregateColumns.Count == 1)
-                {
-                    writer.Append("SELECT ");
-                    writer.AppendKeyword(aggregate.Type);
-                    writer.Append("(");
-                    if (query.IsDistinct)
-                        writer.Append("DISTINCT ");
-                    writer.List(", ", aggregateColumns);
-                    writer.Append(") ");
-                    writer.AppendAsAlias(aggregate.Type);
-                    writer.AssertMatches(ctx);
-                    return writer;
-                }
-
-                writer.Append("SELECT 1");
-                writer.AssertMatches(ctx);
+                CompileAggregateColumns(ctx, query, writer, aggregate);
                 return writer;
             }
+            CompileFlatColumns(ctx, query, writer);
+            return writer;
+        }
+
+        protected void CompileFlatColumns(SqlResult ctx, Query query, Writer writer)
+        {
+            if (query.IsDistinct) writer.Append("DISTINCT ");
 
             var columns = query
                 .GetComponents<AbstractColumn>("select", EngineCode);
-
-            writer.Append("SELECT ");
-            if (query.IsDistinct) writer.Append("DISTINCT ");
-
             if (columns.Any())
             {
                 writer.List(", ", columns, x => CompileColumn(ctx, query, x, writer));
@@ -417,7 +402,30 @@ namespace SqlKata.Compilers
             {
                 writer.Append("*");
             }
-            return writer;
+        }
+
+        protected void CompileAggregateColumns(SqlResult ctx, Query query, Writer writer, AggregateClause aggregate)
+        {
+            var aggregateColumns = aggregate.Columns
+                .Select(value => XService.Wrap(value))
+                .ToList();
+
+            if (aggregateColumns.Count == 1)
+            {
+                writer.AppendKeyword(aggregate.Type);
+                writer.Append("(");
+                if (query.IsDistinct)
+                    writer.Append("DISTINCT ");
+                writer.List(", ", aggregateColumns);
+                writer.Append(") ");
+                writer.AppendAsAlias(aggregate.Type);
+                writer.AssertMatches(ctx);
+            }
+            else
+            {
+                writer.Append("1");
+                writer.AssertMatches(ctx);
+            }
         }
 
         private void CompileUnion(SqlResult ctx, Query query, Writer writer)
