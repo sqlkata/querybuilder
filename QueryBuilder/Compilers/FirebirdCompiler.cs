@@ -73,7 +73,8 @@ namespace SqlKata.Compilers
             {
                 ctx.BindingsAdd(offset + 1);
                 ctx.BindingsAdd(limit + offset);
-
+                writer.BindOne(offset + 1);
+                writer.BindOne(limit + offset);
                 writer.Append("ROWS ? TO ?");
                 return writer;
             }

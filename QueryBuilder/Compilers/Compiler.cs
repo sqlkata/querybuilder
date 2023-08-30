@@ -548,11 +548,16 @@ namespace SqlKata.Compilers
         {
             writer.AssertMatches(ctx);
             var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
-            if (!baseJoins.Any()) return;
+            if (!baseJoins.Any())
+            {
+                writer.AssertMatches(ctx);
+                return;
+            }
 
             writer.Whitespace();
             writer.Append("\n");
             writer.List("\n", baseJoins, x => CompileJoin(ctx, query, x.Join, writer));
+            writer.AssertMatches(ctx);
         }
 
         private void CompileJoin(SqlResult ctx, Query query, Join join, Writer writer)
@@ -581,15 +586,21 @@ namespace SqlKata.Compilers
             writer.Whitespace();
             writer.Append("WHERE ");
             CompileConditions(ctx, query, conditions, writer);
+            writer.AssertMatches(ctx);
         }
 
         private void CompileGroups(SqlResult ctx, Query query, Writer writer)
         {
             writer.AssertMatches(ctx);
             var components = query.GetComponents<AbstractColumn>("group", EngineCode);
-            if (!components.Any()) return;
+            if (!components.Any())
+            {
+                writer.AssertMatches(ctx);
+                return;
+            }
             writer.Append("GROUP BY ");
             writer.List(", ", components, x => CompileColumn(ctx, query, x, writer));
+            writer.AssertMatches(ctx);
         }
 
         protected string? CompileOrders(SqlResult ctx, Query query, Writer writer)
@@ -614,6 +625,7 @@ namespace SqlKata.Compilers
 
             writer.Append("ORDER BY ");
             writer.List(", ", columns);
+            writer.AssertMatches(ctx);
             return writer;
         }
 
@@ -626,6 +638,7 @@ namespace SqlKata.Compilers
             CompileConditions(ctx, query,
                 havingClauses.Cast<AbstractCondition>().ToList(),
                 writer);
+            writer.AssertMatches(ctx);
         }
 
         protected virtual string? CompileLimit(SqlResult ctx, Query query, Writer writer)

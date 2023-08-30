@@ -38,21 +38,23 @@ namespace SqlKata.Compilers
             {
                 compiler.CompileCteQuery(query, writer);
                 ctx.BindingsAddRange(writer.Bindings);
+                writer.AssertMatches(ctx);
             }
             if (query.Method == "insert")
             {
-                
                 compiler.CompileInsertQuery(ctx, query, writer);
+                writer.AssertMatches(ctx);
+
             }
             else if (query.Method == "update")
             {
-              
                 compiler.CompileUpdateQuery(ctx, query, writer);
+                writer.AssertMatches(ctx);
             }
             else if (query.Method == "delete")
             {
-             
                 compiler.CompileDeleteQuery(ctx, query, writer);
+                writer.AssertMatches(ctx);
             }
             else
             {
@@ -66,12 +68,14 @@ namespace SqlKata.Compilers
                 }
               
                 compiler.CompileSelectQueryInner(ctx, query, writer);
+                writer.AssertMatches(ctx);
             }
 
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
             ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
                 "?", ctx.Bindings.ToArray()));
+            writer.AssertMatches(ctx);
 
             return ctx;
             Query TransformAggregateQuery(Query query1)
