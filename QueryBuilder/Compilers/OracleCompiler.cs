@@ -48,6 +48,7 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
+                writer.BindOne(offset);
                 writer.Append("OFFSET ? ROWS");
                 return writer;
             }

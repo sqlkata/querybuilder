@@ -462,6 +462,7 @@ namespace SqlKata.Compilers
                     {
                         writer.AppendRaw(combineRawClause.Expression);
                         ctx.BindingsAddRange(combineRawClause.Bindings);
+                        writer.BindMany(combineRawClause.Bindings);
                     }
                 });
             writer.AssertMatches(ctx);
