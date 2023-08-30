@@ -204,25 +204,29 @@ namespace SqlKata.Compilers
 
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var isMultiValueInsert = inserts.OfType<InsertClause>().Skip(1).Any();
+            
+            writer.Append(isMultiValueInsert
+                ? MultiInsertStartClause
+                : SingleInsertStartClause);
+            writer.Append(" ");
+            writer.Append(table);
+
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
+             
                 CompileInsertQueryClause(insertQueryClause, writer);
                 writer.AssertMatches(ctx);
                 return;
             }
 
-            var clauses = inserts.Cast<InsertClause>().ToArray();
-            CompileValueInsertClauses(clauses);
+            CompileValueInsertClauses();
             writer.AssertMatches(ctx);
             return;
 
 
             void CompileInsertQueryClause(InsertQueryClause clause, Writer w)
             {
-
-                w.Append(SingleInsertStartClause);
-                w.Append(" ");
-                w.Append(table);
                 w.WriteInsertColumnsList(clause.Columns);
                 w.Append(" ");
 
@@ -235,15 +239,9 @@ namespace SqlKata.Compilers
                 ctx.Raw.Append(w);
             }
 
-            void CompileValueInsertClauses(InsertClause[] insertClauses)
+            void CompileValueInsertClauses()
             {
-                var isMultiValueInsert = insertClauses.Length > 1;
-
-                writer.Append(isMultiValueInsert
-                    ? MultiInsertStartClause
-                    : SingleInsertStartClause);
-                writer.Append(" ");
-                writer.Append(table);
+                var insertClauses = inserts.Cast<InsertClause>().ToArray();
                 var firstInsert = insertClauses.First();
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" VALUES (");
@@ -255,7 +253,8 @@ namespace SqlKata.Compilers
 
                 if (isMultiValueInsert)
                 {
-                    CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
+                    CompileRemainingInsertClauses(ctx,
+                        query, table, writer, insertClauses);
                     ctx.Raw.Append(writer);
 
                     return;
