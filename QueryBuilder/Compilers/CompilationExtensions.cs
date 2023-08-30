@@ -33,7 +33,13 @@ namespace SqlKata.Compilers
 
             if (query.Method == "insert")
             {
-                ctx = compiler.CompileInsertQuery(query, writer);
+                ctx = new SqlResult
+                {
+                    Query = query
+                };
+                writer.Push(ctx);
+                writer.AssertMatches(ctx);
+                compiler.CompileInsertQueryInner(ctx, query, writer);
                 writer.AssertMatches(ctx);
             }
             else if (query.Method == "update")
@@ -48,7 +54,12 @@ namespace SqlKata.Compilers
             }
             else if (query.Method == "delete")
             {
-                ctx = compiler.CompileDeleteQuery(query, writer);
+                ctx = new SqlResult
+                {
+                    Query = query
+                };
+                writer.Push(ctx);
+                compiler.CompileDeleteQuery(ctx, query, writer);
             }
             else
             {

@@ -88,14 +88,8 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public SqlResult CompileDeleteQuery(Query query, Writer writer)
+        public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
-            writer.Push(ctx);
-
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to delete");
 
@@ -131,8 +125,6 @@ namespace SqlKata.Compilers
                 else
                     ctx.Raw.Append($"DELETE {table} FROM {table} {joins}{where}");
             }
-
-            return ctx;
         }
 
         public SqlResult CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
