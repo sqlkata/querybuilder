@@ -11,8 +11,6 @@ namespace SqlKata.Compilers
 
         public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-           // var fromClause = GetFromClause(query, EngineCode);
-           // var table = GetTable(ctx, fromClause, XService);
             writer.AssertMatches(ctx);
 
 
@@ -39,7 +37,7 @@ namespace SqlKata.Compilers
 
                 writer.Append(MultiInsertStartClause);
                 writer.Append(" ");
-                var table = WriteTable(ctx, query.GetOneComponent<AbstractFrom>("from", EngineCode), writer, "insert");
+                var table = WriteTable(ctx, query, writer, "insert");
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" SELECT ");
                 writer.List(", ", firstInsert.Values, p =>

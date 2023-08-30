@@ -87,15 +87,11 @@ namespace SqlKata.Compilers
 
         public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            
-            string table = WriteTable(ctx, fromClause, writer.Sub(), "delete");
-
-            var joins = CompileJoins(ctx, query, writer.Sub());
-
 
             if (!query.HasComponent("join", EngineCode))
             {
+                var table = WriteTable(ctx, query, writer.Sub(), "delete");
+
                 var where = CompileWheres(ctx, query, writer);
                 if (query.HasComponent("where", EngineCode))
                     where = " " + where;
@@ -104,32 +100,24 @@ namespace SqlKata.Compilers
             }
             else
             {
-                // check if we have alias 
-                if (fromClause is FromClause c)
-                {
-                    var where = CompileWheres(ctx, query, writer);
-                    if (query.HasComponent("where", EngineCode))
-                        where = " " + where;
-                    ctx.Raw.Append($"DELETE {XService.Wrap(c.Alias)} FROM {table} {joins}{where}");
-                }
-                else
-                {
-                    var where = CompileWheres(ctx, query, writer);
-                    if (query.HasComponent("where", EngineCode))
-                        where = " " + where;
+                var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            
+                string table = WriteTable(ctx, fromClause, writer.Sub(), "delete");
 
-                    ctx.Raw.Append($"DELETE {table} FROM {table} {joins}{where}");
-                }
+                if (fromClause is not FromClause c) return;
+                var joins = CompileJoins(ctx, query, writer.Sub());
+                var where = CompileWheres(ctx, query, writer);
+                if (query.HasComponent("where", EngineCode))
+                    where = " " + where;
+                ctx.Raw.Append($"DELETE {XService.Wrap(c.Alias)} FROM {table} {joins}{where}");
             }
         }
 
         public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
             writer.Append("UPDATE ");
 
-            WriteTable(ctx, fromClause, writer, "update");
+            WriteTable(ctx, query, writer, "update");
 
             var clause = query.GetOneComponent("update", EngineCode);
             if (clause is IncrementClause increment)
@@ -179,7 +167,7 @@ namespace SqlKata.Compilers
                 ? MultiInsertStartClause
                 : SingleInsertStartClause);
             writer.Append(" ");
-            var table = WriteTable(ctx, query.GetOneComponent<AbstractFrom>("from", EngineCode), writer, "insert");
+            var table = WriteTable(ctx, query, writer, "insert");
             writer.AssertMatches(ctx);
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
@@ -510,6 +498,12 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
+        protected string WriteTable(SqlResult sqlResult, Query query, Writer writer, string operationName)
+        {
+            return WriteTable(sqlResult,
+                query.GetOneComponent<AbstractFrom>("from", EngineCode),
+                writer, operationName);
+        }
         protected static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
         {
             switch (abstractFrom)
