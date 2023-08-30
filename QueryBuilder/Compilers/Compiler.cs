@@ -251,6 +251,7 @@ namespace SqlKata.Compilers
 
                 if (isMultiValueInsert)
                 {
+                    writer.Assert("");
                     CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
                     return;
                 }
@@ -289,9 +290,14 @@ namespace SqlKata.Compilers
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var values = string.Join(", ", Parametrize(ctx, writer, query, insert.Values));
-                ctx.Raw.Append($", ({values})");
+                writer.Append(", (");
+                writer.List(", ", insert.Values, value =>
+                {
+                    writer.Append(Parameter(ctx, query, writer, value));
+                });
+                writer.Append(")");
             }
+            ctx.Raw.Append(writer);
         }
 
 
