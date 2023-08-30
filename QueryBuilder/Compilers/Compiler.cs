@@ -105,12 +105,12 @@ namespace SqlKata.Compilers
             else
             {
                 // check if we have alias 
-                if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
+                if (fromClause is FromClause c)
                 {
                     var where = CompileWheres(ctx, query, writer);
                     if (query.HasComponent("where", EngineCode))
                         where = " " + where;
-                    ctx.Raw.Append($"DELETE {XService.Wrap(fromClause.Alias)} FROM {table} {joins}{where}");
+                    ctx.Raw.Append($"DELETE {XService.Wrap(c.Alias)} FROM {table} {joins}{where}");
                 }
                 else
                 {

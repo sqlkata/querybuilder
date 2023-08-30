@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace SqlKata.Compilers
 {
     public sealed class CteFinder
@@ -14,8 +12,14 @@ namespace SqlKata.Compilers
                 var result = new List<AbstractFrom>();
                 foreach (var cte in query.GetComponents<AbstractFrom>("cte", engineCode))
                 {
-                    Debug.Assert(cte.Alias != null, "All CTE components have alias!");
-                    if (!already.Add(cte.Alias))
+                    var alias = cte switch
+                    {
+                        AdHocTableFromClause x => x.Alias,
+                        QueryFromClause x => x.Alias!,
+                        RawFromClause x => x.Alias!,
+                        _ => throw new ArgumentOutOfRangeException(nameof(cte))
+                    };
+                    if (!already.Add(alias))
                         continue;
                     if (cte is QueryFromClause qfc)
                         result.InsertRange(0, FindRecursively(qfc.Query));
