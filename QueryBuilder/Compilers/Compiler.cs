@@ -135,14 +135,8 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public SqlResult CompileUpdateQuery(Query query, Writer writer)
+        public SqlResult CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
-            writer.Push(ctx);
-
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to update");
 

@@ -38,7 +38,13 @@ namespace SqlKata.Compilers
             }
             else if (query.Method == "update")
             {
-                ctx = compiler.CompileUpdateQuery(query, writer);
+                ctx = new SqlResult
+                {
+                    Query = query
+                };
+                writer.Push(ctx);
+                writer.AssertMatches(ctx);
+                compiler.CompileUpdateQuery(ctx, query, writer);
             }
             else if (query.Method == "delete")
             {
