@@ -59,12 +59,12 @@ namespace SqlKata.Compilers
             return query;
         }
 
-        protected override string CompileColumns(SqlResult ctx, Query query, Writer writer)
+        protected override void CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
             if (!UseLegacyPagination)
             {
                 base.CompileColumns(ctx, query, writer);
-                return writer;
+                return;
             }
 
             // If there is a limit on the query, but not an offset, we will add the top
@@ -86,17 +86,18 @@ namespace SqlKata.Compilers
                 {
                     writer.Append("SELECT DISTINCT TOP (?) ");
                     CompileFlatColumns(query, writer, ctx);
-                    return writer;
+                    return;
                 }
 
                 writer.Append("SELECT TOP (?) ");
                 CompileColumnsAfterSelect(ctx, query, writer);
                 // writer.Append(compiled.Substring(6));
                 writer.AssertMatches(ctx);
-                return writer;
+                return;
+
             }
 
-            return base.CompileColumns(ctx, query, writer);
+            base.CompileColumns(ctx, query, writer);
         }
 
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)

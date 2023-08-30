@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         protected string LastId { get; init; } = "";
 
 
-        protected const string SingleInsertStartClause = "INSERT INTO";
+        private const string SingleInsertStartClause = "INSERT INTO";
         protected string MultiInsertStartClause { get; init; } = "INSERT INTO";
         public string? EngineCode { get; protected init; }
         protected string? SingleRowDummyTableName { get; init; }
@@ -43,7 +43,7 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        protected SqlResult CompileSelectQuery(Query query, Writer writer)
+        private SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
             writer.Push(ctx);
@@ -377,14 +377,14 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual string CompileColumns(SqlResult ctx, Query query, Writer writer)
+        protected virtual void CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
             writer.AssertMatches(ctx);
             writer.Append("SELECT ");
-            return CompileColumnsAfterSelect(ctx, query, writer);
+            CompileColumnsAfterSelect(ctx, query, writer);
         }
 
-        protected string CompileColumnsAfterSelect(SqlResult ctx, Query query, Writer writer)
+        protected void CompileColumnsAfterSelect(SqlResult ctx, Query query, Writer writer)
         {
             var aggregate = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
@@ -396,7 +396,8 @@ namespace SqlKata.Compilers
                 if (query.IsDistinct) writer.Append("DISTINCT ");
                 CompileFlatColumns(query, writer, ctx);
             }
-            return writer;
+
+            return;
 
             void CompileAggregateColumns()
             {
@@ -514,7 +515,8 @@ namespace SqlKata.Compilers
                 query.GetOneComponent<AbstractFrom>("from", EngineCode),
                 writer, operationName);
         }
-        protected static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
+
+        private static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
         {
             switch (abstractFrom)
             {
@@ -717,7 +719,7 @@ namespace SqlKata.Compilers
             return "?";
         }
 
-        protected string Parametrize(SqlResult ctx, Writer writer, Query query, IEnumerable<object> values)
+        private string Parametrize(SqlResult ctx, Writer writer, Query query, IEnumerable<object> values)
         {
             return string.Join(", ", values.Select(x => Parameter(ctx, query, writer, x)));
         }
