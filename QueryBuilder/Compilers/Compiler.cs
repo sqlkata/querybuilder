@@ -329,7 +329,8 @@ namespace SqlKata.Compilers
 
                 writer.S.Append(agg);
 
-                var filterCondition = CompileFilterConditions(ctx, aggregatedColumn, writer.Sub());
+                var filterCondition = CompileFilterConditions(
+                    ctx, aggregatedColumn, writer.Sub());
 
                 if (string.IsNullOrEmpty(filterCondition))
                 {
@@ -358,7 +359,8 @@ namespace SqlKata.Compilers
         {
             if (aggregatedColumn.Filter == null) return null;
 
-            var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>("where");
+            var wheres = aggregatedColumn.Filter
+                .GetComponents<AbstractCondition>("where");
 
             CompileConditions(ctx, wheres, writer);
             return writer;
