@@ -27,10 +27,13 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.BindingsAdd(offset);
+                writer.BindOne(offset);
                 writer.Append("LIMIT -1 OFFSET ?");
+                writer.AssertMatches(ctx);
                 return writer;
             }
 
+            writer.AssertMatches(ctx);
             if (base.CompileLimit(ctx, query, writer) == null) return null;
             return writer;
         }
