@@ -452,6 +452,7 @@ namespace SqlKata.Compilers
                         if (combine.All)
                             writer.Append("ALL ");
 
+                        writer.AssertMatches(ctx);
                         ctx.BindingsAddRange(
                             CompileSelectQuery(combine.Query, writer).Bindings);
                         writer.Pop();
