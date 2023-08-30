@@ -29,36 +29,27 @@ namespace SqlKata.Compilers
 
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
-            SqlResult ctx;
+            var ctx = new SqlResult
+            {
+                Query = query
+            };
+            writer.Push(ctx);
+            writer.AssertMatches(ctx);
 
             if (query.Method == "insert")
             {
-                ctx = new SqlResult
-                {
-                    Query = query
-                };
-                writer.Push(ctx);
-                writer.AssertMatches(ctx);
+                
                 compiler.CompileInsertQueryInner(ctx, query, writer);
                 writer.AssertMatches(ctx);
             }
             else if (query.Method == "update")
             {
-                ctx = new SqlResult
-                {
-                    Query = query
-                };
-                writer.Push(ctx);
-                writer.AssertMatches(ctx);
+              
                 compiler.CompileUpdateQuery(ctx, query, writer);
             }
             else if (query.Method == "delete")
             {
-                ctx = new SqlResult
-                {
-                    Query = query
-                };
-                writer.Push(ctx);
+             
                 compiler.CompileDeleteQuery(ctx, query, writer);
             }
             else
@@ -70,9 +61,10 @@ namespace SqlKata.Compilers
                         .RemoveComponent("group");
 
                     query = TransformAggregateQuery(query);
+                    ctx.Query = query;
                 }
-
-                ctx = compiler.CompileSelectQuery(query, writer);
+              
+                compiler.CompileSelectQueryInner(ctx, query, writer);
             }
 
             // handle CTEs

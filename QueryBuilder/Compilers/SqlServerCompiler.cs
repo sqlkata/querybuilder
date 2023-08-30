@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        protected override void CompileSelectQueryInner(SqlResult ctx, Query original, Writer writer)
+        public override void CompileSelectQueryInner(SqlResult ctx, Query original, Writer writer)
         {
             if (!UseLegacyPagination || !original.HasOffset(EngineCode))
             {

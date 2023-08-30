@@ -56,7 +56,7 @@ namespace SqlKata.Compilers
 
         }
 
-        protected virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
+        public virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
         {
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, writer),
