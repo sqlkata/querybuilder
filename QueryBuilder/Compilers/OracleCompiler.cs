@@ -53,7 +53,9 @@ namespace SqlKata.Compilers
             }
 
             ctx.BindingsAdd(offset);
+            writer.BindOne(offset);
             ctx.BindingsAdd(limit);
+            writer.BindOne(limit);
 
             writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             return writer;
