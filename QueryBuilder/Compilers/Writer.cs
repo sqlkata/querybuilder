@@ -16,7 +16,7 @@ namespace SqlKata.Compilers
             foreach (var binding in values) BindOne(binding);
         }
 
-        private readonly X _x;
+        public X X { get; }
         private readonly List<object?> _bindings = new();
         private SqlResult? _ctx;
         private StringBuilder S { get; } = new();
@@ -24,7 +24,7 @@ namespace SqlKata.Compilers
 
         public Writer(X x)
         {
-            _x = x;
+            X = x;
         }
 
         public void List<T>(string separator, IEnumerable<T> list, Action<T>? renderItem = null)
@@ -86,7 +86,7 @@ namespace SqlKata.Compilers
         /// </summary>
         public void AppendName(string userObjectName)
         {
-            _x.Wrap(S, userObjectName);
+            X.Wrap(S, userObjectName);
         }
 
         public void AppendKeyword(string sqlKeyword)
@@ -96,22 +96,22 @@ namespace SqlKata.Compilers
 
         public void AppendAsAlias(string? input)
         {
-            _x.AsAlias(S, input);
+            X.AsAlias(S, input);
         }
 
         public void AppendRaw(string rawExpression)
         {
-            S.Append(_x.WrapIdentifiers(rawExpression));
+            S.Append(X.WrapIdentifiers(rawExpression));
         }
 
         public void AppendValue(string value)
         {
-            _x.WrapValue(S, value);
+            X.WrapValue(S, value);
         }
 
         public Writer Sub()
         {
-            return new Writer(_x)
+            return new Writer(X)
             {
                 _ctx = _ctx,
             };

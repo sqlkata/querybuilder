@@ -173,13 +173,13 @@ namespace SqlKata.Compilers
             }
         }
 
-        private static void WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer writer)
+        private static string WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer writer)
         {
             switch (abstractFrom)
             {
                 case FromClause fromClauseCast:
                     writer.AppendName(fromClauseCast.Table);
-                    break;
+                    return writer.X.Wrap(fromClauseCast.Table);
                 case RawFromClause rawFromClause:
                 {
                     writer.AppendRaw(rawFromClause.Expression);
@@ -189,7 +189,7 @@ namespace SqlKata.Compilers
                         sqlResult.BindingsAddRange(rawFromClause.Bindings);
                         writer.BindMany(rawFromClause.Bindings);
                     }
-                    break;
+                    return writer.X.WrapIdentifiers(rawFromClause.Expression);
                 }
                 default:
                     throw new InvalidOperationException("Invalid table expression");
@@ -199,8 +199,6 @@ namespace SqlKata.Compilers
         public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
             var fromClause = GetFromClause(query, EngineCode);
-            var table = GetTable(ctx, fromClause, XService);
-            writer.AssertMatches(ctx);
 
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
@@ -210,7 +208,8 @@ namespace SqlKata.Compilers
                 ? MultiInsertStartClause
                 : SingleInsertStartClause);
             writer.Append(" ");
-            writer.Append(table);
+            var table = WriteTable(ctx, fromClause, writer);
+            writer.AssertMatches(ctx);
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
@@ -266,18 +265,6 @@ namespace SqlKata.Compilers
                 }
                 ctx.Raw.Append(writer);
                 writer.AssertMatches(ctx);
-            }
-
-            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
-            {
-                if (abstractFrom is FromClause fromClauseCast)
-                    return x.Wrap(fromClauseCast.Table);
-                if (abstractFrom is RawFromClause rawFromClause)
-                {
-                    sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                    return x.WrapIdentifiers(rawFromClause.Expression);
-                }
-                throw new InvalidOperationException("Invalid table expression");
             }
 
             static AbstractFrom GetFromClause(Query q, string? engineCode)
