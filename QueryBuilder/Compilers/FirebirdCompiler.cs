@@ -93,8 +93,6 @@ namespace SqlKata.Compilers
             {
                 ctx.PrependOne(limit);
 
-                query.RemoveComponent("limit");
-
                 writer.Append("SELECT FIRST ?");
                 writer.Append(compiled.Substring(6));
                 return writer;
@@ -103,8 +101,6 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.PrependOne(offset);
-
-                query.RemoveComponent("offset");
 
                 writer.Append("SELECT SKIP ?");
                 writer.Append(compiled.Substring(6));
