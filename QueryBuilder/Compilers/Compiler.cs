@@ -111,7 +111,7 @@ namespace SqlKata.Compilers
 
             var joins = CompileJoins(ctx, writer.Sub());
 
-            var where = CompileWheres(ctx, writer.Sub());
+            var where = CompileWheres(ctx, writer);
 
             if (!string.IsNullOrEmpty(where)) where = " " + where;
 
@@ -167,7 +167,7 @@ namespace SqlKata.Compilers
                 var value = Parameter(ctx, writer, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                wheres = CompileWheres(ctx, writer.Sub());
+                wheres = CompileWheres(ctx, writer);
 
                 if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -186,7 +186,7 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            wheres = CompileWheres(ctx, writer.Sub());
+            wheres = CompileWheres(ctx, writer);
 
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
@@ -232,7 +232,7 @@ namespace SqlKata.Compilers
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
-                var subCtx = CompileSelectQuery(clause.Query, writer1.Sub());
+                var subCtx = CompileSelectQuery(clause.Query, writer1);
                 ctx.BindingsAddRange(subCtx.Bindings);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
@@ -304,6 +304,7 @@ namespace SqlKata.Compilers
             {
                 writer.AppendRaw(raw.Expression);
                 ctx.BindingsAddRange(raw.Bindings);
+                writer.AssertMatches();
                 return;
             }
 
@@ -315,16 +316,19 @@ namespace SqlKata.Compilers
                 writer.BindMany(subCtx.Bindings);
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
+                writer.AssertMatches();
                 return;
             }
 
             if (column is AggregatedColumn aggregatedColumn)
             {
                 CompileAggregatedColumn(ctx, writer, aggregatedColumn);
+                writer.AssertMatches();
                 return;
             }
 
             writer.Append(XService.Wrap(((Column)column).Name));
+            writer.AssertMatches();
         }
 
         private void CompileAggregatedColumn(SqlResult ctx, Writer writer, AggregatedColumn c)
