@@ -423,34 +423,27 @@ namespace SqlKata.Compilers
         private void CompileUnion(SqlResult ctx, Query query, Writer writer)
         {
             // Handle UNION, EXCEPT and INTERSECT
-            if (!query.GetComponents("combine", EngineCode).Any()) return;
-
-            var combinedQueries = new List<string>();
-
-            var clauses = query.GetComponents<AbstractCombine>("combine", EngineCode);
-
-            foreach (var clause in clauses)
-                if (clause is Combine combineClause)
+            writer.List(" ",
+                query.GetComponents<AbstractCombine>("combine", EngineCode),
+                clause =>
                 {
-                    var combineOperator = combineClause.Operation.ToUpperInvariant() + " " +
-                                          (combineClause.All ? "ALL " : "");
+                    if (clause is Combine combine)
+                    {
+                        writer.AppendKeyword(combine.Operation);
+                        writer.Append(" ");
+                        if (combine.All)
+                            writer.Append("ALL ");
 
-                    var subCtx = CompileSelectQuery(combineClause.Query, writer.Sub());
+                        ctx.BindingsAddRange(
+                            CompileSelectQuery(combine.Query, writer).Bindings);
 
-                    ctx.BindingsAddRange(subCtx.Bindings);
-
-                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
-                }
-                else
-                {
-                    var combineRawClause = (RawCombine)clause;
-
-                    ctx.BindingsAddRange(combineRawClause.Bindings);
-
-                    combinedQueries.Add(XService.WrapIdentifiers(combineRawClause.Expression));
-                }
-
-            writer.List(" ", combinedQueries);
+                    }
+                    else if (clause is RawCombine combineRawClause)
+                    {
+                        writer.AppendRaw(combineRawClause.Expression);
+                        ctx.BindingsAddRange(combineRawClause.Bindings);
+                    }
+                });
         }
 
         private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
