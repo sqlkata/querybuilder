@@ -67,6 +67,7 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
               
+                writer.AssertMatches(ctx);
                 compiler.CompileSelectQueryInner(ctx, query, writer);
                 writer.AssertMatches(ctx);
             }

@@ -55,6 +55,7 @@ namespace SqlKata.Compilers
 
         public virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, query, writer),
                 () => CompileFrom(ctx, query, writer),
@@ -65,6 +66,7 @@ namespace SqlKata.Compilers
                 () => CompileOrders(ctx, query, writer),
                 () => CompileLimit(ctx, query, writer),
                 () => CompileUnion(ctx, query, writer));
+            writer.AssertMatches(ctx);
             ctx.ReplaceRaw(writer);
         }
 
@@ -452,6 +454,7 @@ namespace SqlKata.Compilers
 
                         ctx.BindingsAddRange(
                             CompileSelectQuery(combine.Query, writer).Bindings);
+                        writer.Pop();
 
                     }
                     else if (clause is RawCombine combineRawClause)
@@ -460,6 +463,7 @@ namespace SqlKata.Compilers
                         ctx.BindingsAddRange(combineRawClause.Bindings);
                     }
                 });
+            writer.AssertMatches(ctx);
         }
 
         private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
