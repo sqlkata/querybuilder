@@ -143,16 +143,19 @@ namespace SqlKata.Compilers
         {
             foreach (var insert in inserts.Skip(1))
             {
-                var columns = insert.Columns.GetInsertColumnsList(XService);
-                var values = string.Join(", ", Parametrize(ctx, writer, query, insert.Values));
-
-                var intoFormat = " INTO {0}{1} VALUES ({2})";
-                var nextInsert = string.Format(intoFormat, table, columns, values);
-
-                ctx.Raw.Append(nextInsert);
+                writer.Append(" INTO ");
+                writer.Append(table);
+                writer.WriteInsertColumnsList(insert.Columns);
+                writer.Append(" VALUES (");
+                writer.List(", ", insert.Values, value =>
+                {
+                    writer.Append(Parameter(ctx, query, writer, value));
+                });
+                writer.Append(")");
             }
+            writer.Append(" SELECT 1 FROM DUAL");
 
-            ctx.Raw.Append(" SELECT 1 FROM DUAL");
+            ctx.Raw.Append(writer);
         }
     }
 }
