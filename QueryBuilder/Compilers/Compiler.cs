@@ -390,25 +390,10 @@ namespace SqlKata.Compilers
             }
             else
             {
-                CompileFlatColumns();
+                if (query.IsDistinct) writer.Append("DISTINCT ");
+                CompileFlatColumns(query, writer, ctx);
             }
             return writer;
-
-            void CompileFlatColumns()
-            {
-                if (query.IsDistinct) writer.Append("DISTINCT ");
-
-                var columns = query
-                    .GetComponents<AbstractColumn>("select", EngineCode);
-                if (columns.Any())
-                {
-                    writer.List(", ", columns, x => CompileColumn(ctx, query, x, writer));
-                }
-                else
-                {
-                    writer.Append("*");
-                }
-            }
 
             void CompileAggregateColumns()
             {
@@ -432,6 +417,20 @@ namespace SqlKata.Compilers
                     writer.Append("1");
                     writer.AssertMatches(ctx);
                 }
+            }
+        }
+
+        protected void CompileFlatColumns(Query query, Writer writer, SqlResult ctx)
+        {
+            var columns = query
+                .GetComponents<AbstractColumn>("select", EngineCode);
+            if (columns.Any())
+            {
+                writer.List(", ", columns, x => CompileColumn(ctx, query, x, writer));
+            }
+            else
+            {
+                writer.Append("*");
             }
         }
 

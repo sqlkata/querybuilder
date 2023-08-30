@@ -59,12 +59,9 @@ namespace SqlKata.Compilers
 
         protected override string CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
-            var compiled = base.CompileColumns(
-                ctx, query, /*text manipulation */ writer.Sub());
-
             if (!UseLegacyPagination)
             {
-                writer.Append(compiled);
+                base.CompileColumns(ctx, query, writer);
                 return writer;
             }
 
@@ -78,24 +75,25 @@ namespace SqlKata.Compilers
             {
                 // top bindings should be inserted first
                 ctx.PrependOne(limit);
+                writer.BindOne(limit);
 
                 query.RemoveComponent("limit");
 
                 // handle distinct
-                if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
+                if (!query.HasComponent("aggregate", EngineCode) && query.IsDistinct)
                 {
-                    writer.Append("SELECT DISTINCT TOP (?)");
-                    writer.Append(compiled.Substring(15));
+                    writer.Append("SELECT DISTINCT TOP (?) ");
+                    CompileFlatColumns(query, writer, ctx);
                     return writer;
                 }
 
-                writer.Append("SELECT TOP (?)");
-                writer.Append(compiled.Substring(6));
+                writer.Append("SELECT TOP (?) ");
+                CompileColumnsAfterSelect(ctx, query, writer);
+                // writer.Append(compiled.Substring(6));
                 return writer;
             }
 
-            writer.Append(compiled);
-            return writer;
+            return base.CompileColumns(ctx, query, writer);
         }
 
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
