@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -33,7 +32,7 @@ namespace SqlKata.Compilers
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
             var ctx = new SqlResult();
-
+            writer.Push(ctx);
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
