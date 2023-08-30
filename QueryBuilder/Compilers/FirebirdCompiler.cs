@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
@@ -13,18 +11,113 @@ namespace SqlKata.Compilers
 
         public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            base.CompileInsertQuery(ctx, query, writer);
+            var fromClause = GetFromClause(query, EngineCode);
+            var table = GetTable(ctx, fromClause, XService);
+            writer.AssertMatches(ctx);
+
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
-
-            if (inserts.Count > 1)
+            if (inserts[0] is InsertQueryClause insertQueryClause)
             {
-                ctx.ReplaceRaw(Regex.Replace(ctx.RawSql, @"\)\s+VALUES\s+\(", ") SELECT "));
-                ctx.ReplaceRaw(Regex.Replace(ctx.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT "));
-                ctx.ReplaceRaw(Regex.Replace(ctx.RawSql, @"\)$", " FROM RDB$DATABASE"));
+                CompileInsertQueryClause(insertQueryClause, writer);
+                writer.AssertMatches(ctx);
+                return;
             }
+
+            var clauses = inserts.Cast<InsertClause>().ToArray();
+            if (clauses.Length == 1)
+            {
+                base.CompileInsertQuery(ctx, query, writer);
+                return;
+            }
+            CompileValueInsertClauses(clauses);
+            writer.AssertMatches(ctx);
+            return;
+
+
+            void CompileInsertQueryClause(InsertQueryClause clause, Writer w)
+            {
+                var columns = clause.Columns.GetInsertColumnsList(XService);
+
+                var subCtx = CompileSelectQuery(clause.Query, w);
+                ctx.BindingsAddRange(subCtx.Bindings);
+                w.BindMany(subCtx.Bindings);
+                w.Pop();
+                w.AssertMatches(ctx);
+
+                ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
+            }
+
+            void CompileValueInsertClauses(InsertClause[] insertClauses)
+            {
+                var isMultiValueInsert = insertClauses.Length > 1;
+                var firstInsert = insertClauses.First();
+
+                var inner = writer.Sub();
+                inner.Append(isMultiValueInsert
+                    ? MultiInsertStartClause
+                    : SingleInsertStartClause);
+                inner.Append(" ");
+                inner.Append(table);
+                inner.WriteInsertColumnsList(firstInsert.Columns);
+                inner.Append(" SELECT ");
+                inner.List(", ", firstInsert.Values, p =>
+                {
+                    inner.Append(Parameter(ctx, query, writer, p));
+                });
+                ctx.Raw.Append(inner);
+
+                if (isMultiValueInsert)
+                {
+                    writer.Assert("");
+                    CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
+                    return;
+                }
+
+                if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
+                    ctx.Raw.Append(";" + LastId);
+            }
+
+            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
+            {
+                if (abstractFrom is FromClause fromClauseCast)
+                    return x.Wrap(fromClauseCast.Table);
+                if (abstractFrom is RawFromClause rawFromClause)
+                {
+                    sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                    return x.WrapIdentifiers(rawFromClause.Expression);
+                }
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            static AbstractFrom GetFromClause(Query q, string? engineCode)
+            {
+                if (!q.HasComponent("from", engineCode))
+                    throw new InvalidOperationException("No table set to insert");
+
+                var fromClause = q.GetOneComponent<AbstractFrom>("from", engineCode);
+                if (fromClause is null)
+                    throw new InvalidOperationException("Invalid table expression");
+                return fromClause;
+            }
+
         }
 
+        protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+            Writer writer,
+            IEnumerable<InsertClause> inserts)
+        {
+            foreach (var insert in inserts.Skip(1))
+            {
+                writer.Append(" FROM RDB$DATABASE UNION ALL SELECT ");
+                writer.List(", ", insert.Values, value =>
+                {
+                    writer.Append(Parameter(ctx, query, writer, value));
+                });
+            }
+            writer.Append(" FROM RDB$DATABASE");
+            ctx.Raw.Append(writer);
+        }
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
             var limit = query.GetLimit(EngineCode);

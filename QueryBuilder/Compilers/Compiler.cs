@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         protected string LastId { get; init; } = "";
 
 
-        private const string SingleInsertStartClause = "INSERT INTO";
+        protected const string SingleInsertStartClause = "INSERT INTO";
         protected string MultiInsertStartClause { get; init; } = "INSERT INTO";
         public string? EngineCode { get; protected init; }
         protected string? SingleRowDummyTableName { get; init; }
@@ -43,7 +43,7 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        private SqlResult CompileSelectQuery(Query query, Writer writer)
+        protected SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
             writer.Push(ctx);
