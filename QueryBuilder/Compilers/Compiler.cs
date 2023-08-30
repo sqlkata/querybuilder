@@ -329,41 +329,53 @@ namespace SqlKata.Compilers
 
         private void CompileAggregatedColumn(SqlResult ctx, Writer writer, AggregatedColumn c)
         {
+            writer.AssertMatches();
+            writer.Append(c.Aggregate.ToUpperInvariant());
+
             var (col, alias) = XService.SplitAlias(
                 XService.Wrap(c.Column.Name));
 
-            writer.Append(c.Aggregate.ToUpperInvariant());
+            var filterConditions = GetFilterConditions(c);
 
-            var filterCondition = CompileFilterConditions(
-                ctx, c, writer.Sub());
-
-            if (string.IsNullOrEmpty(filterCondition))
+            if (!filterConditions.Any())
             {
                 writer.Append("(");
                 writer.Append(col);
                 writer.Append(")");
                 writer.Append(alias);
+                writer.AssertMatches();
                 return;
             }
+
 
             if (SupportsFilterClause)
             {
-                writer.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
+                writer.Append("(");
+                writer.Append(col);
+                writer.Append(") FILTER (WHERE ");
+                CompileConditions(ctx, filterConditions, writer);
+                writer.Append(")");
+                writer.Append(alias);
+                writer.AssertMatches();
                 return;
             }
 
-            writer.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
+            writer.Append("(CASE WHEN ");
+            CompileConditions(ctx, filterConditions, writer);
+            writer.Append(" THEN ");
+            writer.Append(col);
+            writer.Append(" END)");
+            writer.Append(alias);
+            writer.AssertMatches();
         }
 
-        private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn, Writer writer)
+        private static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
         {
-            if (aggregatedColumn.Filter == null) return null;
+            if (aggregatedColumn.Filter == null)
+                return new List<AbstractCondition>();
 
-            var wheres = aggregatedColumn.Filter
+            return aggregatedColumn.Filter
                 .GetComponents<AbstractCondition>("where");
-
-            CompileConditions(ctx, wheres, writer);
-            return writer;
         }
 
         private void CompileCte(AbstractFrom? cte, Writer writer)
