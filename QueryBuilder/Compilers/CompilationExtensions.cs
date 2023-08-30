@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -6,7 +7,9 @@ namespace SqlKata.Compilers
     {
         public static SqlResult Compile(this Compiler compiler, Query query)
         {
-            var ctx = compiler.CompileRaw(query, new Writer(compiler.XService));
+            var writer = new Writer(compiler.XService);
+            var ctx = compiler.CompileRaw(query, writer);
+            writer.AssertMatches(ctx);
             ctx = compiler.PrepareResult(ctx);
             return ctx;
         }
@@ -30,23 +33,17 @@ namespace SqlKata.Compilers
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
             var ctx = new SqlResult();
-            writer.Push(ctx);
-            writer.AssertMatches(ctx);
 
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
-                writer.AssertMatches(ctx);
                 compiler.CompileCteQuery(query, writer);
                 ctx.BindingsAddRange(writer.Bindings);
-                writer.AssertMatches(ctx);
-
             }
             if (query.Method == "insert")
             {
                 
                 compiler.CompileInsertQuery(ctx, query, writer);
-                writer.AssertMatches(ctx);
             }
             else if (query.Method == "update")
             {
