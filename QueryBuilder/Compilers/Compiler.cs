@@ -486,33 +486,40 @@ namespace SqlKata.Compilers
             writer.List(" ", combinedQueries);
         }
 
-        private void CompileTableExpression(AbstractFrom from, Writer writer)
+        private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
         {
             if (from is RawFromClause raw)
             {
                 writer.BindMany(raw.Bindings);
                 writer.AppendRaw(raw.Expression);
+                writer.AssertMatches();
                 return;
             }
 
             if (from is QueryFromClause queryFromClause)
             {
-                var fromQuery = queryFromClause.Query;
+                var q = queryFromClause.Query;
+                writer.Append("(");
+                CompileSelectQuery(q, writer);
+                ctx.BindingsAddRange(writer.Bindings);
+                writer.AssertMatches();
 
-                var alias = string.IsNullOrEmpty(fromQuery.QueryAlias)
-                    ? ""
-                    : $" {TableAsKeyword}" + XService.WrapValue(fromQuery.QueryAlias);
+                writer.Append(")");
+                if (!string.IsNullOrEmpty(q.QueryAlias))
+                {
+                    writer.Append(" ");
+                    writer.Append(TableAsKeyword);
+                    writer.AppendValue(q.QueryAlias);
+                }
 
-                var subCtx = CompileSelectQuery(fromQuery, writer.Sub());
-
-                writer.BindMany(subCtx.Bindings);
-                writer.Append("(" + subCtx.RawSql + ")" + alias);
+                writer.AssertMatches();
                 return;
             }
 
             if (from is FromClause fromClause)
             {
                 writer.AppendName(fromClause.Table);
+                ctx.BindingsAddRange(writer.Bindings);
                 return;
             }
 
@@ -525,8 +532,7 @@ namespace SqlKata.Compilers
             if (from == null) return;
 
             writer.Append("FROM ");
-            CompileTableExpression(from, writer);
-            ctx.BindingsAddRange(writer.Bindings);
+            CompileTableExpression(ctx, from, writer);
         }
 
         private string? CompileJoins(SqlResult ctx, Writer writer)
@@ -548,8 +554,7 @@ namespace SqlKata.Compilers
 
             writer.Append(join.Type);
             writer.Append(" ");
-            CompileTableExpression(from, writer);
-            ctx.BindingsAddRange(writer.Bindings);
+            CompileTableExpression(ctx, from, writer);
 
             if (conditions.Any())
             {

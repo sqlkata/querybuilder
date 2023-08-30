@@ -99,6 +99,11 @@ namespace SqlKata.Compilers
             S.Append(_x.WrapIdentifiers(rawExpression));
         }
 
+        public void AppendValue(string value)
+        {
+            _x.WrapValue(S, value);
+        }
+
         public Writer Sub()
         {
             return new Writer(_x)
