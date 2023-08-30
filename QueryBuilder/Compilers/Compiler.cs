@@ -185,7 +185,7 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(clause.Query, w);
                 ctx.BindingsAddRange(subCtx.Bindings);
-                w.BindMany(subCtx.Bindings);
+              //  w.BindMany(subCtx.Bindings);
                 w.Pop();
                 w.AssertMatches(ctx);
 
@@ -361,6 +361,7 @@ namespace SqlKata.Compilers
                 writer.AppendValue(queryFromClause.Alias);
                 writer.Append(" AS (");
                 CompileSelectQuery(queryFromClause.Query, writer);
+                writer.Pop();
                 writer.Append(")");
             }
             else if (cte is AdHocTableFromClause adHoc)
@@ -436,6 +437,7 @@ namespace SqlKata.Compilers
 
         private void CompileUnion(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             // Handle UNION, EXCEPT and INTERSECT
             writer.List(" ",
                 query.GetComponents<AbstractCombine>("combine", EngineCode),
@@ -539,10 +541,12 @@ namespace SqlKata.Compilers
 
             writer.Append("FROM ");
             CompileTableExpression(ctx, from, writer);
+            writer.AssertMatches(ctx);
         }
 
         private void CompileJoins(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
             if (!baseJoins.Any()) return;
 
@@ -581,6 +585,7 @@ namespace SqlKata.Compilers
 
         private void CompileGroups(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             var components = query.GetComponents<AbstractColumn>("group", EngineCode);
             if (!components.Any()) return;
             writer.Append("GROUP BY ");
@@ -589,6 +594,7 @@ namespace SqlKata.Compilers
 
         protected string? CompileOrders(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             if (!query.HasComponent("order", EngineCode)) return null;
 
             var columns = query
@@ -624,10 +630,12 @@ namespace SqlKata.Compilers
 
         protected virtual string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
+            writer.AssertMatches(ctx);
             var limit = query.GetLimit(EngineCode);
             if (limit != 0)
             {
                 ctx.BindingsAdd(limit);
+                writer.BindOne(limit);
                 writer.Append("LIMIT ?");
             }
 
@@ -635,6 +643,7 @@ namespace SqlKata.Compilers
             if (offset != 0)
             {
                 ctx.BindingsAdd(offset);
+                writer.BindOne(offset);
                 writer.Whitespace();
                 writer.Append("OFFSET ?");
             }

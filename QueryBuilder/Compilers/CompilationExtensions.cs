@@ -33,6 +33,15 @@ namespace SqlKata.Compilers
             writer.Push(ctx);
             writer.AssertMatches(ctx);
 
+            // handle CTEs
+            if (query.HasComponent("cte", compiler.EngineCode))
+            {
+                writer.AssertMatches(ctx);
+                compiler.CompileCteQuery(query, writer);
+                ctx.BindingsAddRange(writer.Bindings);
+                writer.AssertMatches(ctx);
+
+            }
             if (query.Method == "insert")
             {
                 
@@ -63,17 +72,6 @@ namespace SqlKata.Compilers
                 compiler.CompileSelectQueryInner(ctx, query, writer);
             }
 
-            // handle CTEs
-            if (query.HasComponent("cte", compiler.EngineCode))
-            {
-                writer.AssertMatches(ctx);
-                writer = writer.Sub();
-                compiler.CompileCteQuery(query, writer);
-                writer.Append(ctx.RawSql);
-
-                ctx.Prepend(writer.Bindings);
-                ctx.ReplaceRaw(writer);
-            }
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
             ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
