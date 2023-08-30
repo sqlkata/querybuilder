@@ -280,16 +280,16 @@ namespace SqlKata.Compilers
         public void CompileCteQuery(Query query, Writer writer)
         {
             var cteSearchResult = CteFinder.Find(query, EngineCode);
-            writer.S.Append("WITH ");
+            writer.Append("WITH ");
 
             foreach (var cte in cteSearchResult)
             {
                 CompileCte(cte, writer);
-                writer.S.Append(",\n");
+                writer.Append(",\n");
             }
 
-            writer.S.Length -= 2; // remove last comma
-            writer.S.Append('\n');
+            writer.RemoveLast(2); // remove last comma
+            writer.Append('\n');
         }
 
         /// <summary>
@@ -310,11 +310,11 @@ namespace SqlKata.Compilers
 
             if (column is QueryColumn queryColumn)
             {
-                writer.S.Append("(");
+                writer.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
                 ctx.BindingsAddRange(subCtx.Bindings);
                 writer.BindMany(subCtx.Bindings);
-                writer.S.Append(") ");
+                writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                 return;
             }
@@ -327,32 +327,32 @@ namespace SqlKata.Compilers
                 CompileColumn(ctx, aggregatedColumn.Column, sub);
                 var (col, alias) = XService.SplitAlias(sub);
 
-                writer.S.Append(agg);
+                writer.Append(agg);
 
                 var filterCondition = CompileFilterConditions(
                     ctx, aggregatedColumn, writer.Sub());
 
                 if (string.IsNullOrEmpty(filterCondition))
                 {
-                    writer.S.Append("(");
-                    writer.S.Append(col);
-                    writer.S.Append(")");
-                    writer.S.Append(alias);
+                    writer.Append("(");
+                    writer.Append(col);
+                    writer.Append(")");
+                    writer.Append(alias);
                     return;
                 }
 
                 if (SupportsFilterClause)
                 {
-                    writer.S.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
+                    writer.Append($"({col}) FILTER (WHERE {filterCondition}){alias}");
                     return;
                 }
 
-                writer.S.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
+                writer.Append($"(CASE WHEN {filterCondition} THEN {col} END){alias}");
 
                 return;
             }
 
-            writer.S.Append(XService.Wrap(((Column)column).Name));
+            writer.Append(XService.Wrap(((Column)column).Name));
         }
 
         private string? CompileFilterConditions(SqlResult ctx, AggregatedColumn aggregatedColumn, Writer writer)
@@ -372,7 +372,7 @@ namespace SqlKata.Compilers
             {
                 writer.BindMany(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                writer.S.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
+                writer.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
@@ -380,14 +380,14 @@ namespace SqlKata.Compilers
                 writer.BindMany(subCtx.Bindings);
 
                 Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                writer.S.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
+                writer.Append($"{XService.WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})");
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
                 var subCtx = CompileAdHocQuery(adHoc, writer);
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
-                writer.S.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
+                writer.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
             }
         }
 
@@ -403,19 +403,19 @@ namespace SqlKata.Compilers
 
                 if (aggregateColumns.Count == 1)
                 {
-                    writer.S.Append("SELECT ");
+                    writer.Append("SELECT ");
                     writer.AppendKeyword(aggregate.Type);
-                    writer.S.Append("(");
+                    writer.Append("(");
                     if (ctx.Query.IsDistinct)
-                        writer.S.Append("DISTINCT ");
+                        writer.Append("DISTINCT ");
                     writer.List(", ", aggregateColumns);
-                    writer.S.Append(") ");
+                    writer.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
                     writer.AssertMatches();
                     return writer;
                 }
 
-                writer.S.Append("SELECT 1");
+                writer.Append("SELECT 1");
                 writer.AssertMatches();
                 return writer;
             }
@@ -423,8 +423,8 @@ namespace SqlKata.Compilers
             var columns = ctx.Query
                 .GetComponents<AbstractColumn>("select", EngineCode);
 
-            writer.S.Append("SELECT ");
-            if (ctx.Query.IsDistinct) writer.S.Append("DISTINCT ");
+            writer.Append("SELECT ");
+            if (ctx.Query.IsDistinct) writer.Append("DISTINCT ");
 
             if (columns.Any())
             {
@@ -432,7 +432,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                writer.S.Append("*");
+                writer.Append("*");
             }
             return writer;
         }
@@ -490,7 +490,7 @@ namespace SqlKata.Compilers
                 var subCtx = CompileSelectQuery(fromQuery, writer.Sub());
 
                 writer.BindMany(subCtx.Bindings);
-                writer.S.Append("(" + subCtx.RawSql + ")" + alias);
+                writer.Append("(" + subCtx.RawSql + ")" + alias);
                 return;
             }
 
@@ -508,7 +508,7 @@ namespace SqlKata.Compilers
             var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
             if (from == null) return;
 
-            writer.S.Append("FROM ");
+            writer.Append("FROM ");
             CompileTableExpression(from, writer);
             ctx.BindingsAddRange(writer.Bindings);
         }
@@ -518,7 +518,7 @@ namespace SqlKata.Compilers
             var baseJoins = ctx.Query.GetComponents<BaseJoin>("join", EngineCode);
             if (!baseJoins.Any()) return null;
 
-            writer.S.Append("\n");
+            writer.Append("\n");
             writer.List("\n", baseJoins, x => CompileJoin(ctx, x.Join, writer));
             return writer;
         }
@@ -530,14 +530,14 @@ namespace SqlKata.Compilers
 
             Debug.Assert(from != null, nameof(from) + " != null");
 
-            writer.S.Append(join.Type);
-            writer.S.Append(" ");
+            writer.Append(join.Type);
+            writer.Append(" ");
             CompileTableExpression(from, writer);
             ctx.BindingsAddRange(writer.Bindings);
 
             if (conditions.Any())
             {
-                writer.S.Append(" ON ");
+                writer.Append(" ON ");
                 CompileConditions(ctx, conditions, writer);
             }
         }
@@ -547,7 +547,7 @@ namespace SqlKata.Compilers
             var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
 
-            writer.S.Append("WHERE ");
+            writer.Append("WHERE ");
             CompileConditions(ctx, conditions, writer);
             return writer;
         }
@@ -556,7 +556,7 @@ namespace SqlKata.Compilers
         {
             var components = ctx.Query.GetComponents<AbstractColumn>("group", EngineCode);
             if (!components.Any()) return;
-            writer.S.Append("GROUP BY ");
+            writer.Append("GROUP BY ");
             writer.List(", ", components, x => CompileColumn(ctx, x, writer));
         }
 
@@ -579,7 +579,7 @@ namespace SqlKata.Compilers
                     return XService.Wrap(((OrderBy)x).Column) + direction;
                 });
 
-            writer.S.Append("ORDER BY ");
+            writer.Append("ORDER BY ");
             writer.List(", ", columns);
             return writer;
         }
@@ -589,7 +589,7 @@ namespace SqlKata.Compilers
             var havingClauses = ctx.Query.GetComponents("having", EngineCode);
             if (havingClauses.Count == 0) return;
 
-            writer.S.Append("HAVING ");
+            writer.Append("HAVING ");
             CompileConditions(ctx,
                 havingClauses.Cast<AbstractCondition>().ToList(),
                 writer);
@@ -601,7 +601,7 @@ namespace SqlKata.Compilers
             if (limit != 0)
             {
                 ctx.BindingsAdd(limit);
-                writer.S.Append("LIMIT ?");
+                writer.Append("LIMIT ?");
             }
 
             var offset = ctx.Query.GetOffset(EngineCode);
@@ -609,7 +609,7 @@ namespace SqlKata.Compilers
             {
                 ctx.BindingsAdd(offset);
                 writer.Whitespace();
-                writer.S.Append("OFFSET ?");
+                writer.Append("OFFSET ?");
             }
             return writer;
         }

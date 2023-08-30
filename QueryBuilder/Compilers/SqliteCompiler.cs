@@ -27,7 +27,7 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.S.Append("LIMIT -1 OFFSET ?");
+                writer.Append("LIMIT -1 OFFSET ?");
                 return writer;
             }
 
@@ -53,17 +53,17 @@ namespace SqlKata.Compilers
 
             if (!formatMap.ContainsKey(condition.Part))
             {
-                writer.S.Append(column);
-                writer.S.Append(" ");
-                writer.S.Append(condition.Operator);
-                writer.S.Append(" ");
-                writer.S.Append(value);
+                writer.Append(column);
+                writer.Append(" ");
+                writer.Append(condition.Operator);
+                writer.Append(" ");
+                writer.Append(value);
                 return;
             }
 
             var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
 
-            writer.S.Append(condition.IsNot ? $"NOT ({sql})" :sql);
+            writer.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace SqlKata.Compilers
                 ctx.BindingsAdd(offset + 1);
                 ctx.BindingsAdd(limit + offset);
 
-                writer.S.Append("ROWS ? TO ?");
+                writer.Append("ROWS ? TO ?");
                 return writer;
             }
 
@@ -58,8 +58,8 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("limit");
 
-                writer.S.Append("SELECT FIRST ?");
-                writer.S.Append(compiled.Substring(6));
+                writer.Append("SELECT FIRST ?");
+                writer.Append(compiled.Substring(6));
                 return writer;
             }
 
@@ -69,44 +69,44 @@ namespace SqlKata.Compilers
 
                 ctx.Query.RemoveComponent("offset");
 
-                writer.S.Append("SELECT SKIP ?");
-                writer.S.Append(compiled.Substring(6));
+                writer.Append("SELECT SKIP ?");
+                writer.Append(compiled.Substring(6));
                 return writer;
             }
 
-            writer.S.Append(compiled);
+            writer.Append(compiled);
             return writer;
         }
 
         protected override void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
-                writer.S.Append("NOT (");
+                writer.Append("NOT (");
             if (x.Part == "time")
             {
-                writer.S.Append("CAST(");
+                writer.Append("CAST(");
                 writer.AppendName(x.Column);
-                writer.S.Append(" as TIME) ");
+                writer.Append(" as TIME) ");
             }
             else if (x.Part == "date")
             {
-                writer.S.Append("CAST(");
+                writer.Append("CAST(");
                 writer.AppendName(x.Column);
-                writer.S.Append(" as DATE) ");
+                writer.Append(" as DATE) ");
             }
             else
             {
-                writer.S.Append("EXTRACT(");
+                writer.Append("EXTRACT(");
                 writer.AppendName(x.Part.ToUpperInvariant());
-                writer.S.Append(" FROM ");
+                writer.Append(" FROM ");
                 writer.AppendName(x.Column);
-                writer.S.Append(") ");
+                writer.Append(") ");
             }
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" ");
+            writer.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
-                writer.S.Append(")");
+                writer.Append(")");
         }
 
 

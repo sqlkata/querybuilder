@@ -968,7 +968,9 @@ public class SelectTests : TestSupport
 
         var pgSql = Compilers.CompileFor(EngineCodes.PostgreSql, q);
         Assert.Equal(
-            "SELECT \"Title\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Jan') AS \"Published_Jan\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Feb') AS \"Published_Feb\" FROM \"Posts\"",
+            """
+            SELECT "Title", SUM("ViewCount") FILTER (WHERE "Published_Month" = 'Jan') AS "Published_Jan", SUM("ViewCount") FILTER (WHERE "Published_Month" = 'Feb') AS "Published_Feb" FROM "Posts"
+            """,
             pgSql.ToString());
 
         var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);

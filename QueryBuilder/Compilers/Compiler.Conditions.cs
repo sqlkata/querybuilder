@@ -60,7 +60,7 @@ namespace SqlKata.Compilers
             writer.List(" ", conditions, (c, i) =>
             {
                 if (i != 0)
-                    writer.S.Append(c.IsOr ? "OR " : "AND ");
+                    writer.Append(c.IsOr ? "OR " : "AND ");
                 CompileCondition(ctx, c, writer);
             });
         }
@@ -81,39 +81,39 @@ namespace SqlKata.Compilers
             writer.BindMany(subCtx.Bindings);
 
             writer.AppendName(x.Column);
-            writer.S.Append(" ");
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" (");
-            writer.S.Append(subCtx.RawSql);
-            writer.S.Append(")");
+            writer.Append(" ");
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" (");
+            writer.Append(subCtx.RawSql);
+            writer.Append(")");
             writer.AssertMatches();
         }
 
         private void CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x, Writer writer)
         {
-            writer.S.Append("(");
+            writer.Append("(");
             var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
             writer.BindMany(subCtx.Bindings);
-            writer.S.Append(") ");
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(") ");
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" ");
+            writer.Append(Parameter(ctx, writer, x.Value));
             writer.AssertMatches();
         }
 
         private void CompileBasicCondition(SqlResult ctx, BasicCondition x, Writer writer)
         {
             if (x.IsNot)
-                writer.S.Append("NOT (");
+                writer.Append("NOT (");
             writer.AppendName(x.Column);
-            writer.S.Append(" ");
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" ");
+            writer.Append(" ");
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" ");
             // TODO: writer.AssertMatches();
-            writer.S.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
-                writer.S.Append(")");
+                writer.Append(")");
         }
 
         protected virtual void CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x, Writer writer)
@@ -151,37 +151,37 @@ namespace SqlKata.Compilers
             }
 
             if (x.IsNot)
-                writer.S.Append("NOT (");
-            writer.S.Append(column);
-            writer.S.Append(" ");
-            writer.S.Append(Operators.CheckOperator(method));
-            writer.S.Append(" ");
-            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
+                writer.Append("NOT (");
+            writer.Append(column);
+            writer.Append(" ");
+            writer.Append(Operators.CheckOperator(method));
+            writer.Append(" ");
+            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
-                writer.S.Append(" ESCAPE '");
-                writer.S.Append(esc1);
-                writer.S.Append('\'');
+                writer.Append(" ESCAPE '");
+                writer.Append(esc1);
+                writer.Append('\'');
             }
 
             if (x.IsNot)
-                writer.S.Append(")");
+                writer.Append(")");
             writer.AssertMatches();
         }
 
         protected virtual void CompileBasicDateCondition(SqlResult ctx, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
-                writer.S.Append("NOT (");
-            writer.S.Append(x.Part.ToUpperInvariant());
-            writer.S.Append("(");
+                writer.Append("NOT (");
+            writer.Append(x.Part.ToUpperInvariant());
+            writer.Append("(");
             writer.AppendName(x.Column);
-            writer.S.Append(") ");
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" ");
-            writer.S.Append(Parameter(ctx, writer, x.Value));
+            writer.Append(") ");
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" ");
+            writer.Append(Parameter(ctx, writer, x.Value));
             if (x.IsNot)
-                writer.S.Append(")");
+                writer.Append(")");
             writer.AssertMatches();
         }
 
@@ -196,21 +196,21 @@ namespace SqlKata.Compilers
             var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
 
             if (x.IsNot)
-                writer.S.Append("NOT ");
-            writer.S.Append("(");
+                writer.Append("NOT ");
+            writer.Append("(");
             CompileConditions(ctx, clauses, writer);
-            writer.S.Append(")");
+            writer.Append(")");
             writer.AssertMatches();
         }
 
         private void CompileTwoColumnsCondition(TwoColumnsCondition x, Writer writer)
         {
             if (x.IsNot)
-                writer.S.Append("NOT ");
+                writer.Append("NOT ");
             writer.AppendName(x.First);
-            writer.S.Append(" ");
-            writer.S.Append(Operators.CheckOperator(x.Operator));
-            writer.S.Append(" ");
+            writer.Append(" ");
+            writer.Append(Operators.CheckOperator(x.Operator));
+            writer.Append(" ");
             writer.AppendName(x.Second);
             writer.AssertMatches();
         }
@@ -218,10 +218,10 @@ namespace SqlKata.Compilers
         private void CompileBetweenCondition(SqlResult ctx, BetweenCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
-            writer.S.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
-            writer.S.Append(Parameter(ctx, writer, x.Lower));
-            writer.S.Append(" AND ");
-            writer.S.Append(Parameter(ctx, writer, x.Higher));
+            writer.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
+            writer.Append(Parameter(ctx, writer, x.Lower));
+            writer.Append(" AND ");
+            writer.Append(Parameter(ctx, writer, x.Higher));
             writer.AssertMatches();
         }
 
@@ -229,47 +229,47 @@ namespace SqlKata.Compilers
         {
             if (!x.Values.Any())
             {
-                writer.S.Append(x.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */");
+                writer.Append(x.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */");
                 return;
             }
 
             writer.AppendName(x.Column);
-            writer.S.Append(x.IsNot ? " NOT IN (" : " IN (");
-            writer.S.Append(Parametrize(ctx, writer, x.Values.OfType<object>()));
-            writer.S.Append(")");
+            writer.Append(x.IsNot ? " NOT IN (" : " IN (");
+            writer.Append(Parametrize(ctx, writer, x.Values.OfType<object>()));
+            writer.Append(")");
             writer.AssertMatches();
         }
 
         private void CompileInQueryCondition(SqlResult ctx, InQueryCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
-            writer.S.Append(x.IsNot ? " NOT IN (" : " IN (");
+            writer.Append(x.IsNot ? " NOT IN (" : " IN (");
             var subCtx = CompileSelectQuery(x.Query, writer.Sub());
             ctx.BindingsAddRange(subCtx.Bindings);
             writer.BindMany(subCtx.Bindings);
-            writer.S.Append(subCtx.RawSql);
-            writer.S.Append(")");
+            writer.Append(subCtx.RawSql);
+            writer.Append(")");
             writer.AssertMatches();
         }
 
         private void CompileNullCondition(NullCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
-            writer.S.Append(x.IsNot ? " IS NOT NULL" : " IS NULL");
+            writer.Append(x.IsNot ? " IS NOT NULL" : " IS NULL");
             writer.AssertMatches();
         }
 
         private void CompileBooleanCondition(BooleanCondition x, Writer writer)
         {
             writer.AppendName(x.Column);
-            writer.S.Append(x.IsNot ? " != " : " = ");
-            writer.S.Append(x.Value ? CompileTrue() : CompileFalse());
+            writer.Append(x.IsNot ? " != " : " = ");
+            writer.Append(x.Value ? CompileTrue() : CompileFalse());
             writer.AssertMatches();
         }
 
         private void CompileExistsCondition(SqlResult ctx, ExistsCondition item, Writer writer)
         {
-            writer.S.Append(item.IsNot ? "NOT EXISTS (" : "EXISTS (");
+            writer.Append(item.IsNot ? "NOT EXISTS (" : "EXISTS (");
 
             var query = OmitSelectInsideExists
                 ? item.Query.Clone().RemoveComponent("select").SelectRaw("1")
@@ -278,9 +278,9 @@ namespace SqlKata.Compilers
             var subCtx = CompileSelectQuery(query, writer.Sub());
             ctx.BindingsAddRange(subCtx.Bindings);
             writer.BindMany(subCtx.Bindings);
-            writer.S.Append(subCtx.RawSql);
+            writer.Append(subCtx.RawSql);
 
-            writer.S.Append(")");
+            writer.Append(")");
             writer.AssertMatches();
         }
     }

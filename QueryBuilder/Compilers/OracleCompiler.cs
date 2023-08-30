@@ -39,20 +39,20 @@ namespace SqlKata.Compilers
 
             if (!ctx.Query.HasComponent("order"))
             {
-                writer.S.Append("ORDER BY (SELECT 0 FROM DUAL) ");
+                writer.Append("ORDER BY (SELECT 0 FROM DUAL) ");
             }
 
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.S.Append("OFFSET ? ROWS");
+                writer.Append("OFFSET ? ROWS");
                 return writer;
             }
 
             ctx.BindingsAdd(offset);
             ctx.BindingsAdd(limit);
 
-            writer.S.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             return writer;
         }
 
@@ -130,7 +130,7 @@ namespace SqlKata.Compilers
                     break;
             }
 
-            writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
+            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
         protected override SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, Writer writer,

@@ -40,21 +40,21 @@ namespace SqlKata.Compilers
             }
 
             if (x.IsNot)
-                writer.S.Append("NOT (");
-            writer.S.Append(column);
-            writer.S.Append(" ");
-            writer.S.Append(Operators.CheckOperator(method));
-            writer.S.Append(" ");
-            writer.S.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
+                writer.Append("NOT (");
+            writer.Append(column);
+            writer.Append(" ");
+            writer.Append(Operators.CheckOperator(method));
+            writer.Append(" ");
+            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, writer, value));
             if (x.EscapeCharacter is { } esc1)
             {
-                writer.S.Append(" ESCAPE '");
-                writer.S.Append(esc1);
-                writer.S.Append('\'');
+                writer.Append(" ESCAPE '");
+                writer.Append(esc1);
+                writer.Append('\'');
             }
 
             if (x.IsNot)
-                writer.S.Append(")");
+                writer.Append(")");
         }
 
 
@@ -73,7 +73,7 @@ namespace SqlKata.Compilers
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
 
-            writer.S.Append(condition.IsNot ? $"NOT ({sql})" :sql);
+            writer.Append(condition.IsNot ? $"NOT ({sql})" :sql);
         }
     }
 }

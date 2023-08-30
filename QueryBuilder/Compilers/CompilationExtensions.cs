@@ -62,7 +62,7 @@ namespace SqlKata.Compilers
             {
                 writer = writer.Sub();
                 compiler.CompileCteQuery(query, writer);
-                writer.S.Append(ctx.RawSql);
+                writer.Append(ctx.RawSql);
 
                 ctx.Prepend(writer.Bindings);
                 ctx.ReplaceRaw(writer);

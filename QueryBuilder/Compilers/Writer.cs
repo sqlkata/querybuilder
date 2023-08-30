@@ -19,7 +19,7 @@ namespace SqlKata.Compilers
         private readonly X _x;
         private readonly List<object?> _bindings = new();
         private SqlResult? _ctx;
-        public StringBuilder S { get; } = new();
+        private StringBuilder S { get; } = new();
         public static implicit operator string(Writer w) => w.S.ToString();
 
         public Writer(X x)
@@ -74,6 +74,10 @@ namespace SqlKata.Compilers
             if (s != S.ToString())
                 throw new Exception($"\n\n------Expected------\n{s}\n--------Got---------\n{S}\n\n");
         }
+
+        public void Append(string value) => S.Append(value);
+        public void Append(char value) => S.Append(value);
+        public void RemoveLast(int howMany) => S.Length -= howMany;
 
         public void AppendName(string userObjectName)
         {

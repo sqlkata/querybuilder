@@ -61,7 +61,7 @@ namespace SqlKata.Compilers
 
             if (!UseLegacyPagination)
             {
-                writer.S.Append(compiled);
+                writer.Append(compiled);
                 return writer;
             }
 
@@ -81,17 +81,17 @@ namespace SqlKata.Compilers
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT", StringComparison.Ordinal) == 0)
                 {
-                    writer.S.Append("SELECT DISTINCT TOP (?)");
-                    writer.S.Append(compiled.Substring(15));
+                    writer.Append("SELECT DISTINCT TOP (?)");
+                    writer.Append(compiled.Substring(15));
                     return writer;
                 }
 
-                writer.S.Append("SELECT TOP (?)");
-                writer.S.Append(compiled.Substring(6));
+                writer.Append("SELECT TOP (?)");
+                writer.Append(compiled.Substring(6));
                 return writer;
             }
 
-            writer.S.Append(compiled);
+            writer.Append(compiled);
             return writer;
         }
 
@@ -107,18 +107,18 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset == 0) return null;
 
-            if (!ctx.Query.HasComponent("order")) writer.S.Append("ORDER BY (SELECT 0) ");
+            if (!ctx.Query.HasComponent("order")) writer.Append("ORDER BY (SELECT 0) ");
 
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.S.Append("OFFSET ? ROWS");
+                writer.Append("OFFSET ? ROWS");
                 return writer;
             }
 
             ctx.BindingsAdd(offset);
             ctx.BindingsAdd(limit);
-            writer.S.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
             return writer;
         }
 
@@ -146,7 +146,7 @@ namespace SqlKata.Compilers
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, writer, condition.Value)}";
 
-            writer.S.Append(condition.IsNot ? $"NOT ({sql})" : sql);
+            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
