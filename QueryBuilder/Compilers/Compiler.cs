@@ -126,104 +126,113 @@ namespace SqlKata.Compilers
 
         public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
-            if (!query.HasComponent("from", EngineCode))
+            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            if (fromClause == null)
                 throw new InvalidOperationException("No table set to update");
 
-            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
-            string? table = null;
-
-            if (fromClause is FromClause fromClauseCast) table = XService.Wrap(fromClauseCast.Table);
-
-            if (fromClause is RawFromClause rawFromClause)
-            {
-                table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.BindingsAddRange(rawFromClause.Bindings);
-            }
-
-            if (table is null) throw new InvalidOperationException("Invalid table expression");
+            var table = GetTable(ctx, fromClause, XService, writer);
 
             // check for increment statements
             var clause = query.GetOneComponent("update", EngineCode);
 
-            string? wheres;
-
             if (clause is IncrementClause increment)
             {
-                var column = XService.Wrap(increment.Column);
-                var value = Parameter(ctx, query, writer, Math.Abs(increment.Value));
-                var sign = increment.Value >= 0 ? "+" : "-";
-
-                wheres = CompileWheres(ctx, query, writer);
-
-                if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
-
-                ctx.Raw.Append($"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}");
-
+                CompileIncrement(increment);
                 return;
             }
 
-
             var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
             Debug.Assert(toUpdate != null);
-            var parts = new List<string>();
+            var sets = GetSets(ctx, query, writer, toUpdate);
+            var wheres2 = CompileWheres(ctx, query, writer);
 
-            for (var i = 0; i < toUpdate.Columns.Length; i++)
-                parts.Add(XService.Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, query, writer, toUpdate.Values[i]));
+            if (!string.IsNullOrEmpty(wheres2))
+                wheres2 = " " + wheres2;
 
-            var sets = string.Join(", ", parts);
+            ctx.Raw.Append($"UPDATE {table} SET {sets}{wheres2}");
 
-            wheres = CompileWheres(ctx, query, writer);
+            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x, Writer w)
+            {
+                string? table = null;
 
-            if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
+                if (abstractFrom is FromClause fromClauseCast) table = x.Wrap(fromClauseCast.Table);
 
-            ctx.Raw.Append($"UPDATE {table} SET {sets}{wheres}");
+                if (abstractFrom is RawFromClause rawFromClause)
+                {
+                    table = x.WrapIdentifiers(rawFromClause.Expression);
+                    if (rawFromClause.Bindings.Length > 0)
+                    {
+                        //TODO: test!
+                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                        w.BindMany(rawFromClause.Bindings);
+                    }
+                }
+
+                if (table is null) throw new InvalidOperationException("Invalid table expression");
+                return table;
+            }
+
+            void CompileIncrement(IncrementClause incrementClause)
+            {
+                var inner = writer.Sub();
+                inner.Append("UPDATE ");
+                inner.Append(table);
+                inner.Append(" SET ");
+                inner.AppendName(incrementClause.Column);
+                inner.Append(" = ");
+                inner.AppendName(incrementClause.Column);
+                inner.Append(" ");
+                inner.Append(incrementClause.Value >= 0 ? "+" : "-");
+                inner.Append(" ");
+                inner.Append(Parameter(ctx, query, writer, Math.Abs(incrementClause.Value)));
+                var wheres = CompileWheres(ctx, query, writer);
+                if (!string.IsNullOrEmpty(wheres))
+                {
+                    inner.Append(" ");
+                    inner.Append(wheres);
+                }
+                ctx.Raw.Append(inner);
+            }
+
+            string GetSets(SqlResult ctx1, Query query2, Writer writer2, InsertClause insertClause)
+            {
+
+                return insertClause.Columns.Select((t, i) =>
+                    XService.Wrap(t) + " = " +
+                    Parameter(ctx1, query2, writer2,
+                        insertClause.Values[i]))
+                    .StrJoin(", ");
+            }
         }
 
         public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            if (!query.HasComponent("from", EngineCode))
-                throw new InvalidOperationException("No table set to insert");
-
-            var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            if (fromClause is null)
-                throw new InvalidOperationException("Invalid table expression");
-
-            string? table = null;
-            if (fromClause is FromClause fromClauseCast)
-                table = XService.Wrap(fromClauseCast.Table);
-            if (fromClause is RawFromClause rawFromClause)
-            {
-                table = XService.WrapIdentifiers(rawFromClause.Expression);
-                ctx.BindingsAddRange(rawFromClause.Bindings);
-            }
-
-            if (table is null)
-                throw new InvalidOperationException("Invalid table expression");
+            var fromClause = GetFromClause(query, EngineCode);
+            var table = GetTable(ctx, fromClause, XService);
             writer.AssertMatches(ctx);
+
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
-                writer.AssertMatches(ctx);
                 CompileInsertQueryClause(insertQueryClause, writer);
+                writer.AssertMatches(ctx);
                 return;
             }
-            writer.AssertMatches(ctx);
             CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
+            writer.AssertMatches(ctx);
             return;
 
 
-            void CompileInsertQueryClause(InsertQueryClause clause, Writer writer1)
+            void CompileInsertQueryClause(InsertQueryClause clause, Writer w)
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
-                writer1.AssertMatches(ctx);
-                var subCtx = CompileSelectQuery(clause.Query, writer1);
+                var subCtx = CompileSelectQuery(clause.Query, w);
                 ctx.BindingsAddRange(subCtx.Bindings);
-                writer1.BindMany(subCtx.Bindings);
-                writer1.Pop();
-                writer1.AssertMatches(ctx);
+                w.BindMany(subCtx.Bindings);
+                w.Pop();
+                w.AssertMatches(ctx);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
             }
@@ -249,6 +258,29 @@ namespace SqlKata.Compilers
                 if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
                     ctx.Raw.Append(";" + LastId);
 
+            }
+
+            static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x)
+            {
+                if (abstractFrom is FromClause fromClauseCast)
+                    return x.Wrap(fromClauseCast.Table);
+                if (abstractFrom is RawFromClause rawFromClause)
+                {
+                    sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                    return x.WrapIdentifiers(rawFromClause.Expression);
+                }
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            static AbstractFrom GetFromClause(Query q, string? engineCode)
+            {
+                if (!q.HasComponent("from", engineCode))
+                    throw new InvalidOperationException("No table set to insert");
+
+                var fromClause = q.GetOneComponent<AbstractFrom>("from", engineCode);
+                if (fromClause is null)
+                    throw new InvalidOperationException("Invalid table expression");
+                return fromClause;
             }
         }
 
@@ -605,7 +637,7 @@ namespace SqlKata.Compilers
             if (havingClauses.Count == 0) return;
 
             writer.Append("HAVING ");
-            CompileConditions(ctx,query, 
+            CompileConditions(ctx, query,
                 havingClauses.Cast<AbstractCondition>().ToList(),
                 writer);
         }
