@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
 
-                ctx = compiler.CompileSelectQuery(query, writer.Sub());
+                ctx = compiler.CompileSelectQuery(query, writer);
             }
 
             // handle CTEs

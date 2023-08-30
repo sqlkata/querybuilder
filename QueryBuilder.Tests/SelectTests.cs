@@ -488,7 +488,11 @@ public class SelectTests : TestSupport
         var c = Compile(query);
 
         Assert.Equal(
-            "WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78)\nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [results_wrapper] WHERE [row_num] BETWEEN 21 AND 45",
+            "WITH [range] AS (" +
+            "SELECT [Number] " +
+            "FROM [Sequence] " +
+            "WHERE [Number] < 78)\n" +
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [results_wrapper] WHERE [row_num] BETWEEN 21 AND 45",
             c[EngineCodes.SqlServer]);
 
         Assert.Equal(

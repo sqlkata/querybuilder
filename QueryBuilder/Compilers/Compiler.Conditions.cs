@@ -75,16 +75,13 @@ namespace SqlKata.Compilers
 
         private void CompileQueryCondition(SqlResult ctx, QueryCondition x, Writer writer)
         {
-            var subCtx = CompileSelectQuery(x.Query, writer.Sub());
-
-            ctx.BindingsAddRange(subCtx.Bindings);
-            writer.BindMany(subCtx.Bindings);
-
             writer.AppendName(x.Column);
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" (");
-            writer.Append(subCtx.RawSql);
+            var subCtx = CompileSelectQuery(x.Query, writer);
+            ctx.BindingsAddRange(subCtx.Bindings);
+            writer.BindMany(subCtx.Bindings);
             writer.Append(")");
             writer.AssertMatches();
         }
@@ -275,10 +272,8 @@ namespace SqlKata.Compilers
                 ? item.Query.Clone().RemoveComponent("select").SelectRaw("1")
                 : item.Query;
 
-            var subCtx = CompileSelectQuery(query, writer.Sub());
+            var subCtx = CompileSelectQuery(query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
-            writer.BindMany(subCtx.Bindings);
-            writer.Append(subCtx.RawSql);
 
             writer.Append(")");
             writer.AssertMatches();
