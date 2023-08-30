@@ -11,48 +11,53 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; } = false;
 
-        public override SqlResult CompileSelectQuery(Query query, Writer writer)
+        public override SqlResult CompileSelectQuery(Query original, Writer writer)
         {
-            if (!UseLegacyPagination || !query.HasOffset(EngineCode))
-                return base.CompileSelectQuery(query, writer);
+            if (!UseLegacyPagination || !original.HasOffset(EngineCode))
+                return base.CompileSelectQuery(original, writer);
 
-            query = query.Clone();
+            var limit = original.GetLimit(EngineCode);
+            var offset = original.GetOffset(EngineCode);
 
+            var modified = ModifyQuery(original.Clone());
+
+            writer.Append("SELECT * FROM (");
+            var ctx2 = base.CompileSelectQuery(modified, writer);
+            writer.Append(") AS [results_wrapper] WHERE [row_num] ");
+            if (limit == 0)
+            {
+                writer.Append(">= ?");
+                ctx2.BindingsAdd(offset + 1);
+                writer.BindOne(offset + 1);
+            }
+            else
+            {
+                writer.Append("BETWEEN ? AND ?");
+                ctx2.BindingsAdd(offset + 1);
+                writer.BindOne(offset + 1);
+                ctx2.BindingsAdd(limit + offset);
+                writer.BindOne(limit + offset);
+            }
+            ctx2.ReplaceRaw(writer);
+            return ctx2;
+        }
+
+        private Query ModifyQuery(Query query)
+        {
             var ctx = new SqlResult
             {
                 Query = query
             };
-            writer.Push(ctx);
-
-            var limit = query.GetLimit(EngineCode);
-            var offset = query.GetOffset(EngineCode);
 
 
             if (!query.HasComponent("select")) query.Select("*");
 
-            var order = CompileOrders(ctx, writer.Sub()) ?? "ORDER BY (SELECT 0)";
+            var order = CompileOrders(ctx, new Writer(XService)) ?? "ORDER BY (SELECT 0)";
 
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]",
-                ctx.Bindings.ToArray());
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
             query.RemoveComponent("order");
-
-
-            var result = base.CompileSelectQuery(query, writer);
-
-            if (limit == 0)
-            {
-                result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= ?");
-                result.BindingsAdd(offset + 1);
-            }
-            else
-            {
-                result.ReplaceRaw($"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN ? AND ?");
-                result.BindingsAdd(offset + 1);
-                result.BindingsAdd(limit + offset);
-            }
-
-            return result;
+            return query;
         }
 
         protected override string CompileColumns(SqlResult ctx, Writer writer)
