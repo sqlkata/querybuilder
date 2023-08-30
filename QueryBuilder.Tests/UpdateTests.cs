@@ -81,7 +81,10 @@ public class UpdateTests : TestSupport
         var c = Compile(query);
 
         Assert.Equal(
-            $"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100",
+            $"WITH [OldBooks] AS " +
+            $"(SELECT * FROM [Books] WHERE [Date] < '{now}')\n" +
+            $"UPDATE [Books] SET [Price] = '150' " +
+            $"WHERE [Price] > 100",
             c[EngineCodes.SqlServer]);
     }
 

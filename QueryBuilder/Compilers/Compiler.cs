@@ -65,7 +65,7 @@ namespace SqlKata.Compilers
                 () => CompileOrders(ctx, query, writer),
                 () => CompileLimit(ctx, query, writer),
                 () => CompileUnion(ctx, query, writer));
-            ctx.Raw.Append(writer);
+            ctx.ReplaceRaw(writer);
         }
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
@@ -228,6 +228,7 @@ namespace SqlKata.Compilers
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
+                writer1.AssertMatches(ctx);
                 var subCtx = CompileSelectQuery(clause.Query, writer1);
                 ctx.BindingsAddRange(subCtx.Bindings);
                 writer1.BindMany(subCtx.Bindings);
@@ -406,6 +407,8 @@ namespace SqlKata.Compilers
 
                 Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
                 writer.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
+                writer.AssertMatches(subCtx);
+                writer.Pop();
             }
         }
 
