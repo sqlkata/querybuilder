@@ -109,7 +109,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            // TODO: writer.AssertMatches();
+            writer.AssertMatches();
             writer.Append(Parameter(ctx, query, writer, x.Value));
             if (x.IsNot)
                 writer.Append(")");
@@ -120,7 +120,7 @@ namespace SqlKata.Compilers
         {
             var column = XService.Wrap(x.Column);
 
-            if (Resolve(ctx, query,  x.Value) is not string value)
+            if (Resolve(query,  x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;

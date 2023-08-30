@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
             SingleRowDummyTableName = "DUAL";
         }
 
-        public bool UseLegacyPagination { get; set; } = false;
+        public bool UseLegacyPagination { get; set; }
 
         public override void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
         {
@@ -114,7 +114,7 @@ namespace SqlKata.Compilers
                     else
                     {
                         // assume HH:MM format
-                        valueFormat = condition.Value.ToString()!.Split(':').Count() == 2 ? $"TO_DATE({value}, 'HH24:MI')" :
+                        valueFormat = condition.Value.ToString()!.Split(':').Length == 2 ? $"TO_DATE({value}, 'HH24:MI')" :
                             // assume HH:MM:SS format
                             $"TO_DATE({value}, 'HH24:MI:SS')";
                     }
@@ -137,7 +137,7 @@ namespace SqlKata.Compilers
             writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
-        protected override SqlResult CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+        protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
             Writer writer,
             IEnumerable<InsertClause> inserts)
         {
@@ -153,7 +153,6 @@ namespace SqlKata.Compilers
             }
 
             ctx.Raw.Append(" SELECT 1 FROM DUAL");
-            return ctx;
         }
     }
 }

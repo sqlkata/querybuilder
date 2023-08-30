@@ -43,7 +43,7 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public SqlResult CompileSelectQuery(Query query, Writer writer)
+        private SqlResult CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
             writer.Push(ctx);
@@ -124,7 +124,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        public SqlResult CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
+        public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
         {
             if (!query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to update");
@@ -160,7 +160,7 @@ namespace SqlKata.Compilers
 
                 ctx.Raw.Append($"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}");
 
-                return ctx;
+                return;
             }
 
 
@@ -178,19 +178,9 @@ namespace SqlKata.Compilers
             if (!string.IsNullOrEmpty(wheres)) wheres = " " + wheres;
 
             ctx.Raw.Append($"UPDATE {table} SET {sets}{wheres}");
-
-            return ctx;
         }
 
-        public SqlResult CompileInsertQuery(Query query, Writer writer)
-        {
-            var ctx = new SqlResult();
-            writer.Push(ctx);
-            writer.AssertMatches(ctx);
-            CompileInsertQueryInner(ctx, query, writer);
-            return ctx;
-        }
-        public virtual void CompileInsertQueryInner(SqlResult ctx, Query query, Writer writer)
+        public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
             if (!query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
@@ -262,7 +252,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+        protected virtual void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
             Writer writer,
             IEnumerable<InsertClause> inserts)
         {
@@ -271,8 +261,6 @@ namespace SqlKata.Compilers
                 var values = string.Join(", ", Parametrize(ctx, writer, query, insert.Values));
                 ctx.Raw.Append($", ({values})");
             }
-
-            return ctx;
         }
 
 
@@ -658,7 +646,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected static object? Resolve(SqlResult ctx, Query query, object parameter)
+        protected static object? Resolve(Query query, object parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;

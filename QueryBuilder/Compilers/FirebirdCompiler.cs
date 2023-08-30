@@ -11,9 +11,9 @@ namespace SqlKata.Compilers
             XService = new("\"", "\"", "AS ", true);
         }
 
-        public override void CompileInsertQueryInner(SqlResult ctx, Query query, Writer writer)
+        public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            base.CompileInsertQueryInner(ctx, query, writer);
+            base.CompileInsertQuery(ctx, query, writer);
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 

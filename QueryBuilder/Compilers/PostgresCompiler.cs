@@ -17,7 +17,7 @@ namespace SqlKata.Compilers
         {
             var column = XService.Wrap(x.Column);
 
-            if (Resolve(ctx, query, x.Value) is not string value)
+            if (Resolve(query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
             var method = x.Operator;

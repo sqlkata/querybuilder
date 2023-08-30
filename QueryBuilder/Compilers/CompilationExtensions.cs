@@ -36,7 +36,7 @@ namespace SqlKata.Compilers
             if (query.Method == "insert")
             {
                 
-                compiler.CompileInsertQueryInner(ctx, query, writer);
+                compiler.CompileInsertQuery(ctx, query, writer);
                 writer.AssertMatches(ctx);
             }
             else if (query.Method == "update")
