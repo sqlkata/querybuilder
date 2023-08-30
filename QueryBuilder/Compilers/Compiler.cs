@@ -229,11 +229,11 @@ namespace SqlKata.Compilers
             return CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
 
 
-            SqlResult CompileInsertQueryClause(InsertQueryClause clause, Writer writer)
+            SqlResult CompileInsertQueryClause(InsertQueryClause clause, Writer writer1)
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
-                var subCtx = CompileSelectQuery(clause.Query, writer.Sub());
+                var subCtx = CompileSelectQuery(clause.Query, writer1.Sub());
                 ctx.BindingsAddRange(subCtx.Bindings);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
@@ -629,12 +629,6 @@ namespace SqlKata.Compilers
         }
 
 
-        /// <summary>
-        ///     Resolve a parameter
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
         protected static object? Resolve(SqlResult ctx, object parameter)
         {
             // if we face a literal value we have to return it directly
@@ -647,12 +641,6 @@ namespace SqlKata.Compilers
             return parameter;
         }
 
-        /// <summary>
-        ///     Resolve a parameter and add it to the binding list
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
         protected static string Parameter(SqlResult ctx, Writer writer, object? parameter)
         {
             // if we face a literal value we have to return it directly
@@ -672,17 +660,9 @@ namespace SqlKata.Compilers
             return "?";
         }
 
-        /// <summary>
-        ///     Create query parameter place-holders for an array.
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
         protected string Parametrize(SqlResult ctx, Writer writer, IEnumerable<object> values)
         {
             return string.Join(", ", values.Select(x => Parameter(ctx, writer, x)));
         }
-
-
     }
 }

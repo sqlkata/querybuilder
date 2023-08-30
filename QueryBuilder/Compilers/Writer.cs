@@ -115,7 +115,7 @@ namespace SqlKata.Compilers
         }
         public void AssertMatches()
         {
-            Bindings.Should().EndWith(_ctx.Bindings);
+            Bindings.Should().EndWith(_ctx!.Bindings);
         }
     }
 }

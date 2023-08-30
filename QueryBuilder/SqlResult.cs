@@ -1,5 +1,4 @@
 using System.Text;
-using MoreLinq;
 
 namespace SqlKata
 {
