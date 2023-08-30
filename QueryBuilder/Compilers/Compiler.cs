@@ -87,30 +87,25 @@ namespace SqlKata.Compilers
 
         public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
         {
-
             if (!query.HasComponent("join", EngineCode))
             {
-                var table = WriteTable(ctx, query, writer.Sub(), "delete");
-
-                var where = CompileWheres(ctx, query, writer);
-                if (query.HasComponent("where", EngineCode))
-                    where = " " + where;
-
-                ctx.Raw.Append($"DELETE FROM {table}{where}");
+                writer.Append("DELETE FROM ");
+                WriteTable(ctx, query, writer, "delete");
+                CompileWheres(ctx, query, writer);
             }
             else
             {
                 var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            
-                string table = WriteTable(ctx, fromClause, writer.Sub(), "delete");
-
                 if (fromClause is not FromClause c) return;
-                var joins = CompileJoins(ctx, query, writer.Sub());
-                var where = CompileWheres(ctx, query, writer);
-                if (query.HasComponent("where", EngineCode))
-                    where = " " + where;
-                ctx.Raw.Append($"DELETE {XService.Wrap(c.Alias)} FROM {table} {joins}{where}");
+
+                writer.Append("DELETE ");
+                writer.AppendName(c.Alias);
+                writer.Append(" FROM ");
+                WriteTable(ctx, fromClause, writer, "delete");
+                CompileJoins(ctx, query, writer);
+                CompileWheres(ctx, query, writer);
             }
+            ctx.Raw.Append(writer);
         }
 
         public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
@@ -162,7 +157,7 @@ namespace SqlKata.Compilers
         {
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             var isMultiValueInsert = inserts.OfType<InsertClause>().Skip(1).Any();
-            
+
             writer.Append(isMultiValueInsert
                 ? MultiInsertStartClause
                 : SingleInsertStartClause);
@@ -172,7 +167,7 @@ namespace SqlKata.Compilers
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
-             
+
                 CompileInsertQueryClause(insertQueryClause, writer);
                 writer.AssertMatches(ctx);
                 return;
@@ -510,21 +505,21 @@ namespace SqlKata.Compilers
             {
                 case null:
                     throw new InvalidOperationException($"No table set to {operationName}");
-             
+
                 case FromClause fromClauseCast:
                     writer.AppendName(fromClauseCast.Table);
                     return writer.X.Wrap(fromClauseCast.Table);
                 case RawFromClause rawFromClause:
-                {
-                    writer.AppendRaw(rawFromClause.Expression);
-                    if (rawFromClause.Bindings.Length > 0)
                     {
-                        //TODO: test!
-                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                        writer.BindMany(rawFromClause.Bindings);
+                        writer.AppendRaw(rawFromClause.Expression);
+                        if (rawFromClause.Bindings.Length > 0)
+                        {
+                            //TODO: test!
+                            sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                            writer.BindMany(rawFromClause.Bindings);
+                        }
+                        return writer.X.WrapIdentifiers(rawFromClause.Expression);
                     }
-                    return writer.X.WrapIdentifiers(rawFromClause.Expression);
-                }
                 default:
                     throw new InvalidOperationException("Invalid table expression");
             }
@@ -539,14 +534,14 @@ namespace SqlKata.Compilers
             CompileTableExpression(ctx, from, writer);
         }
 
-        private string? CompileJoins(SqlResult ctx, Query query, Writer writer)
+        private void CompileJoins(SqlResult ctx, Query query, Writer writer)
         {
             var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
-            if (!baseJoins.Any()) return null;
+            if (!baseJoins.Any()) return;
 
+            writer.Whitespace();
             writer.Append("\n");
             writer.List("\n", baseJoins, x => CompileJoin(ctx, query, x.Join, writer));
-            return writer;
         }
 
         private void CompileJoin(SqlResult ctx, Query query, Join join, Writer writer)
@@ -567,15 +562,14 @@ namespace SqlKata.Compilers
             }
         }
 
-        private string? CompileWheres(SqlResult ctx, Query query, Writer writer)
+        private void CompileWheres(SqlResult ctx, Query query, Writer writer)
         {
             var conditions = query.GetComponents<AbstractCondition>("where", EngineCode);
-            if (!conditions.Any()) return null;
+            if (!conditions.Any()) return;
 
             writer.Whitespace();
             writer.Append("WHERE ");
             CompileConditions(ctx, query, conditions, writer);
-            return writer;
         }
 
         private void CompileGroups(SqlResult ctx, Query query, Writer writer)
