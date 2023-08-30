@@ -132,9 +132,7 @@ namespace SqlKata.Compilers
 
             var table = GetTable(ctx, fromClause, XService, writer);
 
-            // check for increment statements
             var clause = query.GetOneComponent("update", EngineCode);
-
             if (clause is IncrementClause increment)
             {
                 CompileIncrement(increment);
@@ -143,13 +141,7 @@ namespace SqlKata.Compilers
 
             var toUpdate = query.GetOneComponent<InsertClause>("update", EngineCode);
             Debug.Assert(toUpdate != null);
-            var sets = GetSets(ctx, query, writer, toUpdate);
-            var wheres2 = CompileWheres(ctx, query, writer);
-
-            if (!string.IsNullOrEmpty(wheres2))
-                wheres2 = " " + wheres2;
-
-            ctx.Raw.Append($"UPDATE {table} SET {sets}{wheres2}");
+            CompileUpdate(toUpdate, writer.Sub());
 
             static string GetTable(SqlResult sqlResult, AbstractFrom abstractFrom, X x, Writer w)
             {
@@ -194,14 +186,24 @@ namespace SqlKata.Compilers
                 ctx.Raw.Append(inner);
             }
 
-            string GetSets(SqlResult ctx1, Query query2, Writer writer2, InsertClause insertClause)
+            void CompileUpdate(InsertClause insertClause, Writer inner)
             {
-
-                return insertClause.Columns.Select((t, i) =>
-                    XService.Wrap(t) + " = " +
-                    Parameter(ctx1, query2, writer2,
-                        insertClause.Values[i]))
-                    .StrJoin(", ");
+                inner.Append("UPDATE ");
+                inner.Append(table);
+                inner.Append(" SET ");
+                inner.List(", ", insertClause.Columns, (column, i) =>
+                {
+                    inner.AppendName(column);
+                    inner.Append(" = ");
+                    inner.Append(Parameter(ctx, query, writer, insertClause.Values[i]));
+                });
+                var wheres = CompileWheres(ctx, query, writer);
+                if (!string.IsNullOrEmpty(wheres))
+                {
+                    inner.Append(" ");
+                    inner.Append(wheres);
+                }
+                ctx.Raw.Append(inner);
             }
         }
 
