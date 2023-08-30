@@ -166,24 +166,18 @@ namespace SqlKata.Compilers
 
             void CompileIncrement(IncrementClause incrementClause)
             {
-                var inner = writer.Sub();
-                inner.Append("UPDATE ");
-                inner.Append(table);
-                inner.Append(" SET ");
-                inner.AppendName(incrementClause.Column);
-                inner.Append(" = ");
-                inner.AppendName(incrementClause.Column);
-                inner.Append(" ");
-                inner.Append(incrementClause.Value >= 0 ? "+" : "-");
-                inner.Append(" ");
-                inner.Append(Parameter(ctx, query, writer, Math.Abs(incrementClause.Value)));
-                var wheres = CompileWheres(ctx, query, writer);
-                if (!string.IsNullOrEmpty(wheres))
-                {
-                    inner.Append(" ");
-                    inner.Append(wheres);
-                }
-                ctx.Raw.Append(inner);
+                writer.Append("UPDATE ");
+                writer.Append(table);
+                writer.Append(" SET ");
+                writer.AppendName(incrementClause.Column);
+                writer.Append(" = ");
+                writer.AppendName(incrementClause.Column);
+                writer.Append(" ");
+                writer.Append(incrementClause.Value >= 0 ? "+" : "-");
+                writer.Append(" ");
+                writer.Append(Parameter(ctx, query, writer, Math.Abs(incrementClause.Value)));
+                CompileWheres(ctx, query, writer);
+                ctx.Raw.Append(writer);
             }
 
             void CompileUpdate(InsertClause insertClause, Writer inner)
@@ -596,6 +590,7 @@ namespace SqlKata.Compilers
             var conditions = query.GetComponents<AbstractCondition>("where", EngineCode);
             if (!conditions.Any()) return null;
 
+            writer.Whitespace();
             writer.Append("WHERE ");
             CompileConditions(ctx, query, conditions, writer);
             return writer;
