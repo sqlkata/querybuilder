@@ -11,9 +11,9 @@ namespace SqlKata.Compilers
             XService = new("\"", "\"", "AS ", true);
         }
 
-        public override SqlResult CompileInsertQuery(Query query, Writer writer)
+        public override void CompileInsertQueryInner(SqlResult ctx, Query query, Writer writer)
         {
-            var ctx = base.CompileInsertQuery(query, writer);
+            base.CompileInsertQueryInner(ctx, query, writer);
 
             var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
 
@@ -23,8 +23,6 @@ namespace SqlKata.Compilers
                 ctx.ReplaceRaw(Regex.Replace(ctx.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT "));
                 ctx.ReplaceRaw(Regex.Replace(ctx.RawSql, @"\)$", " FROM RDB$DATABASE"));
             }
-
-            return ctx;
         }
 
         protected override string? CompileLimit(SqlResult ctx, Writer writer)

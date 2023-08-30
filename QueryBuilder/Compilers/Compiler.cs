@@ -199,7 +199,7 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        public virtual SqlResult CompileInsertQuery(Query query, Writer writer)
+        public SqlResult CompileInsertQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult
             {
@@ -207,7 +207,11 @@ namespace SqlKata.Compilers
             };
             writer.Push(ctx);
             writer.AssertMatches(ctx);
-
+            CompileInsertQueryInner(ctx, query, writer);
+            return ctx;
+        }
+        public virtual void CompileInsertQueryInner(SqlResult ctx, Query query, Writer writer)
+        {
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
 
@@ -232,13 +236,15 @@ namespace SqlKata.Compilers
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
                 writer.AssertMatches(ctx);
-                return CompileInsertQueryClause(insertQueryClause, writer);
+                CompileInsertQueryClause(insertQueryClause, writer);
+                return;
             }
             writer.AssertMatches(ctx);
-            return CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
+            CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
+            return;
 
 
-            SqlResult CompileInsertQueryClause(InsertQueryClause clause, Writer writer1)
+            void CompileInsertQueryClause(InsertQueryClause clause, Writer writer1)
             {
                 var columns = clause.Columns.GetInsertColumnsList(XService);
 
@@ -249,11 +255,9 @@ namespace SqlKata.Compilers
                 writer1.AssertMatches(ctx);
 
                 ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
-
-                return ctx;
             }
 
-            SqlResult CompileValueInsertClauses(InsertClause[] insertClauses)
+            void CompileValueInsertClauses(InsertClause[] insertClauses)
             {
                 var isMultiValueInsert = insertClauses.Length > 1;
 
@@ -266,12 +270,14 @@ namespace SqlKata.Compilers
                 ctx.Raw.Append($"{insertInto} {table}{columns} VALUES ({values})");
 
                 if (isMultiValueInsert)
-                    return CompileRemainingInsertClauses(ctx, table, writer, insertClauses);
+                {
+                    CompileRemainingInsertClauses(ctx, table, writer, insertClauses);
+                    return;
+                }
 
                 if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
                     ctx.Raw.Append(";" + LastId);
 
-                return ctx;
             }
         }
 
