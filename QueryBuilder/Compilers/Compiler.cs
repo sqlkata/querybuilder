@@ -145,30 +145,6 @@ namespace SqlKata.Compilers
             Debug.Assert(toUpdate != null);
             CompileUpdate(toUpdate);
 
-            static void WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer w)
-            {
-
-                switch (abstractFrom)
-                {
-                    case FromClause fromClauseCast:
-                        w.AppendName(fromClauseCast.Table);
-                        break;
-                    case RawFromClause rawFromClause:
-                        {
-                            w.AppendRaw(rawFromClause.Expression);
-                            if (rawFromClause.Bindings.Length > 0)
-                            {
-                                //TODO: test!
-                                sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                                w.BindMany(rawFromClause.Bindings);
-                            }
-                            break;
-                        }
-                    default:
-                        throw new InvalidOperationException("Invalid table expression");
-                }
-            }
-
             void CompileIncrement(IncrementClause incrementClause)
             {
                 writer.Append(" SET ");
@@ -197,6 +173,29 @@ namespace SqlKata.Compilers
             }
         }
 
+        private static void WriteTable(SqlResult sqlResult, AbstractFrom abstractFrom, Writer writer)
+        {
+            switch (abstractFrom)
+            {
+                case FromClause fromClauseCast:
+                    writer.AppendName(fromClauseCast.Table);
+                    break;
+                case RawFromClause rawFromClause:
+                {
+                    writer.AppendRaw(rawFromClause.Expression);
+                    if (rawFromClause.Bindings.Length > 0)
+                    {
+                        //TODO: test!
+                        sqlResult.BindingsAddRange(rawFromClause.Bindings);
+                        writer.BindMany(rawFromClause.Bindings);
+                    }
+                    break;
+                }
+                default:
+                    throw new InvalidOperationException("Invalid table expression");
+            }
+        }
+
         public virtual void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
             var fromClause = GetFromClause(query, EngineCode);
@@ -211,14 +210,21 @@ namespace SqlKata.Compilers
                 writer.AssertMatches(ctx);
                 return;
             }
-            CompileValueInsertClauses(inserts.Cast<InsertClause>().ToArray());
+
+            var clauses = inserts.Cast<InsertClause>().ToArray();
+            CompileValueInsertClauses(clauses);
             writer.AssertMatches(ctx);
             return;
 
 
             void CompileInsertQueryClause(InsertQueryClause clause, Writer w)
             {
-                var columns = clause.Columns.GetInsertColumnsList(XService);
+
+                w.Append(SingleInsertStartClause);
+                w.Append(" ");
+                w.Append(table);
+                w.WriteInsertColumnsList(clause.Columns);
+                w.Append(" ");
 
                 var subCtx = CompileSelectQuery(clause.Query, w);
                 ctx.BindingsAddRange(subCtx.Bindings);
@@ -226,19 +232,19 @@ namespace SqlKata.Compilers
                 w.Pop();
                 w.AssertMatches(ctx);
 
-                ctx.Raw.Append($"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}");
+                ctx.Raw.Append(w);
             }
 
             void CompileValueInsertClauses(InsertClause[] insertClauses)
             {
                 var isMultiValueInsert = insertClauses.Length > 1;
-                var firstInsert = insertClauses.First();
 
                 writer.Append(isMultiValueInsert
                     ? MultiInsertStartClause
                     : SingleInsertStartClause);
                 writer.Append(" ");
                 writer.Append(table);
+                var firstInsert = insertClauses.First();
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" VALUES (");
                 writer.List(", ", firstInsert.Values, p =>

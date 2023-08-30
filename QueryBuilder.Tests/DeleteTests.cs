@@ -27,10 +27,12 @@ public class DeleteTests : TestSupport
         var c = Compile(q);
 
         Assert.Equal(
-            "DELETE [Posts] FROM [Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5",
+            "DELETE [Posts] FROM [Posts] \n" +
+            "INNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5",
             c[EngineCodes.SqlServer]);
         Assert.Equal(
-            "DELETE `Posts` FROM `Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5",
+            "DELETE `Posts` FROM `Posts` \n" +
+            "INNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5",
             c[EngineCodes.MySql]);
     }
 
