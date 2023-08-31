@@ -241,28 +241,24 @@ namespace SqlKata.Compilers
         /// <returns></returns>
         private void CompileColumn(Query query, AbstractColumn column, Writer writer)
         {
-            if (column is RawColumn raw)
+            switch (column)
             {
-                writer.AppendRaw(raw.Expression, raw.Bindings);
-                return;
+                case RawColumn raw:
+                    writer.AppendRaw(raw.Expression, raw.Bindings);
+                    return;
+                case QueryColumn queryColumn:
+                    writer.Append("(");
+                    CompileSelectQuery(queryColumn.Query, writer);
+                    writer.Append(") ");
+                    writer.AppendAsAlias(queryColumn.Query.QueryAlias);
+                    return;
+                case AggregatedColumn aggregatedColumn:
+                    CompileAggregatedColumn(query, writer, aggregatedColumn);
+                    return;
+                case Column col:
+                    writer.AppendName(col.Name);
+                    break;
             }
-
-            if (column is QueryColumn queryColumn)
-            {
-                writer.Append("(");
-                CompileSelectQuery(queryColumn.Query, writer);
-                writer.Append(") ");
-                writer.AppendAsAlias(queryColumn.Query.QueryAlias);
-                return;
-            }
-
-            if (column is AggregatedColumn aggregatedColumn)
-            {
-                CompileAggregatedColumn(query, writer, aggregatedColumn);
-                return;
-            }
-
-            writer.Append(XService.Wrap(((Column)column).Name));
         }
 
         private void CompileAggregatedColumn(Query query, Writer writer, AggregatedColumn c)
@@ -361,17 +357,13 @@ namespace SqlKata.Compilers
 
             void CompileAggregateColumns()
             {
-                var aggregateColumns = aggregate.Columns
-                    .Select(value => XService.Wrap(value))
-                    .ToList();
-
-                if (aggregateColumns.Count == 1)
+                if (aggregate.Columns.Length == 1)
                 {
                     writer.AppendKeyword(aggregate.Type);
                     writer.Append("(");
                     if (query.IsDistinct)
                         writer.Append("DISTINCT ");
-                    writer.List(", ", aggregateColumns);
+                    writer.WriteInsertColumnsList(aggregate.Columns, false);
                     writer.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
                 }

@@ -91,7 +91,6 @@ namespace SqlKata.Compilers
 
         protected override void CompileBasicDateCondition(Query query, BasicDateCondition condition, Writer writer)
         {
-            var column = XService.Wrap(condition.Column);
             var isDateTime = condition.Value is DateTime;
 
             if (condition.IsNot)
@@ -100,7 +99,7 @@ namespace SqlKata.Compilers
             {
                 case "date": // assume YY-MM-DD format
                     writer.Append("TO_CHAR(");
-                    writer.Append(column);
+                    writer.AppendName(condition.Column);
                     writer.Append(", 'YY-MM-DD') ");
                     writer.Append(condition.Operator);
                     writer.Append(" TO_CHAR(");
@@ -120,7 +119,7 @@ namespace SqlKata.Compilers
                     if (isDateTime)
                     {
                         writer.Append("TO_CHAR(");
-                        writer.Append(column);
+                        writer.AppendName(condition.Column);
                         writer.Append(", 'HH24:MI:SS') ");
                         writer.Append(condition.Operator);
                         writer.Append(" TO_CHAR(");
@@ -130,7 +129,7 @@ namespace SqlKata.Compilers
                     else
                     {
                         writer.Append("TO_CHAR(");
-                        writer.Append(column);
+                        writer.AppendName(condition.Column);
                         writer.Append(", 'HH24:MI:SS') ");
                         writer.Append(condition.Operator);
                         writer.Append(" TO_CHAR(");
@@ -151,14 +150,14 @@ namespace SqlKata.Compilers
                     writer.Append("EXTRACT(");
                     writer.AppendKeyword(condition.Part);
                     writer.Append(" FROM ");
-                    writer.Append(column);
+                    writer.AppendName(condition.Column);
                     writer.Append(") ");
                     writer.Append(condition.Operator);
                     writer.Append(" ");
                     writer.AppendParameter(query, condition.Value);
                     break;
                 default:
-                    writer.Append(column);
+                    writer.AppendName(condition.Column);
                     writer.Append(" ");
                     writer.Append(condition.Operator);
                     writer.Append(" ");

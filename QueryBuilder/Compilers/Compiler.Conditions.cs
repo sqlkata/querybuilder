@@ -103,20 +103,27 @@ namespace SqlKata.Compilers
                 writer.Append(")");
         }
 
-        protected virtual void CompileBasicStringCondition(Query query, BasicStringCondition x,
-            Writer writer)
+        protected virtual void CompileBasicStringCondition(
+            Query query, BasicStringCondition x, Writer writer)
         {
-            var column = XService.Wrap(x.Column);
-
-            if (Resolve(query,  x.Value) is not string value)
+            if (Resolve(query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
-            var method = x.Operator;
+            if (x.IsNot)
+                writer.Append("NOT (");
+            if (!x.CaseSensitive)
+                writer.Append("LOWER(");
+            writer.AppendName(x.Column);
+            if (!x.CaseSensitive)
+                writer.Append(")");
 
-            if (LikeOperators.Contains(x.Operator))
+            writer.Append(" ");
+            var isLikeOperator = LikeOperators.Contains(x.Operator);
+            var method = isLikeOperator ? "LIKE" : x.Operator;
+            writer.Append(Operators.CheckOperator(method));
+            writer.Append(" ");
+            if (isLikeOperator)
             {
-                method = "LIKE";
-
                 switch (x.Operator)
                 {
                     case "starts":
@@ -130,25 +137,12 @@ namespace SqlKata.Compilers
                         break;
                 }
             }
-
-
-            if (!x.CaseSensitive)
-            {
-                column = $"LOWER({column})";
-                value = value.ToLowerInvariant();
-            }
-
-            if (x.IsNot)
-                writer.Append("NOT (");
-            writer.Append(column);
-            writer.Append(" ");
-            writer.Append(Operators.CheckOperator(method));
-            writer.Append(" ");
-            writer.AppendParameter(query, value);
-            if (x.EscapeCharacter is { } esc1)
+            writer.AppendParameter(query,
+                x.CaseSensitive ? value : value.ToLowerInvariant());
+            if (x.EscapeCharacter is { } esc)
             {
                 writer.Append(" ESCAPE '");
-                writer.Append(esc1);
+                writer.Append(esc);
                 writer.Append('\'');
             }
 

@@ -2,18 +2,7 @@ using System.Text;
 
 namespace SqlKata.Compilers
 {
-    public enum BindingMode
-    {
-        Placeholders, Params, Values
-    }
-
-    public enum Dialect
-    {
-        None, MySql,
-        Oracle,
-        Firebird,
-        SqlServer
-    }
+    
 
     public sealed class X
     {
