@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
@@ -160,19 +162,25 @@ namespace SqlKata.Compilers
             writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
 
-        protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
+        protected override void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
             var colNames = string.Join(", ", adHoc.Columns.Select(value => XService.Wrap(value)));
 
             var valueRow = string.Join(", ", Enumerable.Repeat("?", adHoc.Columns.Length));
             var valueRows = string.Join(", ",
                 Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
-            var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
-            var ctx = new SqlResult(adHoc.Values, sql);
+            Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
+            writer.AppendValue(adHoc.Alias);
+            writer.Append(" AS (SELECT ");
+            writer.Append(colNames);
+            writer.Append(" FROM (VALUES ");
+            writer.Append(valueRows);
+            writer.Append(") AS tbl (");
+            writer.Append(colNames);
+            writer.Append(")");
             writer.BindMany(adHoc.Values);
-            writer.Push(ctx);
-            return ctx;
+            writer.Append(")");
         }
     }
 }

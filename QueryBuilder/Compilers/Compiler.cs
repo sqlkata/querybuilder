@@ -70,7 +70,7 @@ namespace SqlKata.Compilers
             ctx.ReplaceRaw(writer);
         }
 
-        protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
+        protected virtual void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
             var row = "SELECT " +
                       string.Join(", ", adHoc.Columns.Select(col => $"? AS {XService.Wrap(col)}"));
@@ -81,10 +81,12 @@ namespace SqlKata.Compilers
 
             var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Length / adHoc.Columns.Length));
 
-            var ctx = new SqlResult(adHoc.Values, rows);
+            Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
+            writer.AppendValue(adHoc.Alias);
+            writer.Append(" AS (");
+            writer.Append(rows);
             writer.BindMany(adHoc.Values);
-            writer.Push(ctx);
-            return ctx;
+            writer.Append(")");
         }
 
         public void CompileDeleteQuery(SqlResult ctx, Query query, Writer writer)
@@ -367,12 +369,9 @@ namespace SqlKata.Compilers
             }
             else if (cte is AdHocTableFromClause adHoc)
             {
-                var subCtx = CompileAdHocQuery(adHoc, writer);
+                CompileAdHocQuery(adHoc, writer);
 
-                Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
-                writer.Append($"{XService.WrapValue(adHoc.Alias)} AS ({subCtx.RawSql})");
-                writer.AssertMatches(subCtx);
-                writer.Pop();
+             
             }
         }
 
