@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 
 namespace SqlKata.Compilers
@@ -42,12 +43,77 @@ namespace SqlKata.Compilers
             return this;
         }
 
+        public void CompileRaw(Query query, Writer writer)
+        {
+            // handle CTEs
+            if (query.HasComponent("cte", EngineCode))
+            {
+                CompileCteQuery(query, writer);
+            }
+            if (query.Method == "insert")
+            {
+                CompileInsertQuery(query, writer);
+            }
+            else if (query.Method == "update")
+            {
+                CompileUpdateQuery(query, writer);
+            }
+            else if (query.Method == "delete")
+            {
+                CompileDeleteQuery(query, writer);
+            }
+            else
+            {
+                if (query.Method == "aggregate")
+                {
+                    query.RemoveComponent("limit")
+                        .RemoveComponent("order")
+                        .RemoveComponent("group");
+
+                    query = TransformAggregateQuery(query);
+                }
+
+                CompileSelectQueryInner(query, writer);
+            }
+
+            Query TransformAggregateQuery(Query input)
+            {
+                var clause = input.GetOneComponent<AggregateClause>("aggregate", EngineCode)!;
+
+                if (clause.Columns.Length == 1 && !input.IsDistinct) return input;
+
+                if (input.IsDistinct)
+                {
+                    input.RemoveComponent("aggregate", EngineCode);
+                    input.RemoveComponent("select", EngineCode);
+                    input.Select(clause.Columns.ToArray());
+                }
+                else
+                {
+                    foreach (var column in clause.Columns) input.WhereNotNull(column);
+                }
+
+                var outerClause = new AggregateClause
+                {
+                    Engine = EngineCode,
+                    Component = "aggregate",
+                    Columns = ImmutableArray.Create<string>().Add("*"),
+                    Type = clause.Type
+                };
+
+                return new Query()
+                    .AddComponent(outerClause)
+                    .From(input, $"{clause.Type}Query");
+            }
+
+        }
+
         private void CompileSelectQuery(Query query, Writer writer)
         {
             CompileSelectQueryInner(query, writer);
         }
 
-        public virtual void CompileSelectQueryInner(Query query, Writer writer)
+        protected virtual void CompileSelectQueryInner(Query query, Writer writer)
         {
             writer.WhitespaceSeparated(
                 () => CompileColumns(query, writer),
@@ -85,7 +151,7 @@ namespace SqlKata.Compilers
             writer.Append(")");
         }
 
-        public void CompileDeleteQuery(Query query, Writer writer)
+        private void CompileDeleteQuery(Query query, Writer writer)
         {
             if (!query.HasComponent("join", EngineCode))
             {
@@ -107,7 +173,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        public void CompileUpdateQuery(Query query, Writer writer)
+        private void CompileUpdateQuery(Query query, Writer writer)
         {
             writer.Append("UPDATE ");
 
@@ -151,7 +217,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        public virtual void CompileInsertQuery(Query query, Writer writer)
+        protected virtual void CompileInsertQuery(Query query, Writer writer)
         {
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             var isMultiValueInsert = inserts.OfType<InsertClause>().Skip(1).Any();
@@ -217,7 +283,7 @@ namespace SqlKata.Compilers
         }
 
 
-        public void CompileCteQuery(Query query, Writer writer)
+        private void CompileCteQuery(Query query, Writer writer)
         {
             var cteSearchResult = CteFinder.Find(query, EngineCode);
             writer.Append("WITH ");

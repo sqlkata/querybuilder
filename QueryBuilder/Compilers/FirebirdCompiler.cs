@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
             XService = new("\"", "\"", "AS ", true);
         }
 
-        public override void CompileInsertQuery(Query query, Writer writer)
+        protected override void CompileInsertQuery(Query query, Writer writer)
         {
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause)
