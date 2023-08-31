@@ -15,18 +15,24 @@ namespace SqlKata.Compilers
 
         public static SqlResult Compile(this Compiler compiler, IEnumerable<Query> queries)
         {
-            var compiled = queries.Select(x=> compiler
-                .CompileRaw(x, new Writer(compiler.XService)))
-                .ToArray();
-            var combinedBindings = compiled.SelectMany(r => r.Bindings).ToList();
-            var ctx = new SqlResult(combinedBindings);
-            
-            ctx.Raw.Append(compiled.Select(r => r.RawSql)
-                .Aggregate((a, b) => a + ";\n" + b));
+            var writer = new Writer(compiler.XService);
+            var ctx = Accumulate();
 
+            ctx.ReplaceRaw(writer);
             ctx = compiler.PrepareResult(ctx);
-
             return ctx;
+
+            SqlResult Accumulate()
+            {
+                var sqlResult = new SqlResult();
+                writer.List(";\n", queries, query =>
+                {
+                    var sub = compiler.CompileRaw(query, writer);
+                    writer.AssertMatches(sub);
+                    sqlResult.BindingsAddRange(sub.Bindings);
+                });
+                return sqlResult;
+            }
         }
 
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
