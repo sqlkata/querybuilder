@@ -5,12 +5,6 @@ namespace SqlKata
 {
     public static class InsertColumnsExt
     {
-        public static string GetInsertColumnsList(this ImmutableArray<string> columns ,X x)
-        {
-            return !columns.Any()
-                ? ""
-                : $" ({string.Join(", ", columns.Select(x.Wrap))})";
-        }
         public static void WriteInsertColumnsList(this Writer writer, ImmutableArray<string> columns, bool braces = true)
         {
             if (columns.Length == 0) return;

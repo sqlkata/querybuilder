@@ -1,6 +1,6 @@
 namespace SqlKata.Compilers
 {
-    public sealed class CteFinder
+    public static class CteFinder
     {
         public static List<AbstractFrom> Find(Query queryToSearch, string? engineCode)
         {

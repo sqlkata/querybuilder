@@ -243,7 +243,7 @@ namespace SqlKata.Compilers
         {
             if (column is RawColumn raw)
             {
-                writer.AppendRaw(raw.Expression);
+                writer.AppendRaw(raw.Expression, raw.Bindings);
                 return;
             }
 
