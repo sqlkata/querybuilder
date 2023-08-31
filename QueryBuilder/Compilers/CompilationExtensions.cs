@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -9,7 +8,7 @@ namespace SqlKata.Compilers
         {
             var writer = new Writer(compiler.XService);
             var ctx = compiler.CompileRaw(query, writer);
-            ctx.RawSql.Should().Be((string)writer);
+            ctx.ReplaceRaw(writer);
             writer.AssertMatches(ctx);
             ctx = compiler.PrepareResult(ctx, writer);
             return ctx;

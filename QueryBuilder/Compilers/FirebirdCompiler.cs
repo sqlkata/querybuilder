@@ -43,7 +43,6 @@ namespace SqlKata.Compilers
                 writer.CommaSeparatedParameters(
                     ctx, query, firstInsert.Values);
                 CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
-                ctx.Raw.Append(writer);
             }
         }
 

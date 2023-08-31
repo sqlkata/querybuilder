@@ -68,7 +68,6 @@ namespace SqlKata.Compilers
                 () => CompileLimit(ctx, query, writer),
                 () => CompileUnion(ctx, query, writer));
             writer.AssertMatches(ctx);
-            ctx.ReplaceRaw(writer);
         }
 
         protected virtual void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
@@ -115,7 +114,6 @@ namespace SqlKata.Compilers
                 CompileJoins(ctx, query, writer);
                 CompileWheres(ctx, query, writer);
             }
-            ctx.Raw.Append(writer);
         }
 
         public void CompileUpdateQuery(SqlResult ctx, Query query, Writer writer)
@@ -147,7 +145,6 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(ctx, query,
                     Math.Abs(incrementClause.Value));
                 CompileWheres(ctx, query, writer);
-                ctx.Raw.Append(writer);
             }
 
             void CompileUpdate(InsertClause insertClause)
@@ -161,7 +158,6 @@ namespace SqlKata.Compilers
                         ctx, query, insertClause.Values[i]);
                 });
                 CompileWheres(ctx, query, writer);
-                ctx.Raw.Append(writer);
             }
         }
 
@@ -199,7 +195,6 @@ namespace SqlKata.Compilers
                 ctx.BindingsAddRange(subCtx);
                 w.AssertMatches(ctx);
 
-                ctx.Raw.Append(w);
             }
 
             void CompileValueInsertClauses()
@@ -216,7 +211,6 @@ namespace SqlKata.Compilers
                 {
                     CompileRemainingInsertClauses(ctx,
                         query, table, writer, insertClauses);
-                    ctx.Raw.Append(writer);
 
                     return;
                 }
@@ -225,7 +219,6 @@ namespace SqlKata.Compilers
                     writer.Append(";");
                     writer.Append(LastId);
                 }
-                ctx.Raw.Append(writer);
                 writer.AssertMatches(ctx);
             }
         }

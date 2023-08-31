@@ -37,7 +37,6 @@ namespace SqlKata.Compilers
                 base.CompileSelectQueryInner(ctx, query, writer);
                 writer.Append(""") "results_wrapper") WHERE "row_num" > """);
                 writer.AppendParameter(offset);
-                ctx.ReplaceRaw(writer);
                 ctx.BindingsAdd(offset);
             }
             else if (offset == 0)
@@ -46,7 +45,6 @@ namespace SqlKata.Compilers
                 base.CompileSelectQueryInner(ctx, query, writer);
                 writer.Append(""") WHERE ROWNUM <= """);
                 writer.AppendParameter(limit);
-                ctx.ReplaceRaw(writer);
                 ctx.BindingsAdd(limit);
                 writer.BindOne(limit);
             }
@@ -58,7 +56,6 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(limit + offset);
                 writer.Append(""") WHERE "row_num" > """);
                 writer.AppendParameter(offset);
-                ctx.ReplaceRaw(writer);
                 ctx.BindingsAdd(limit + offset);
                 ctx.BindingsAdd(offset);
             }

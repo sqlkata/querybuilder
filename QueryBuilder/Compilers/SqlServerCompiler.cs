@@ -43,7 +43,6 @@ namespace SqlKata.Compilers
                 ctx.BindingsAdd(offset + 1);
                 ctx.BindingsAdd(limit + offset);
             }
-            ctx.ReplaceRaw(writer);
         }
 
         private Query ModifyQuery(Query query)
