@@ -120,8 +120,12 @@ namespace SqlKata.Compilers
         }
         public void AppendRaw(string rawExpression, IEnumerable<object?> bindings)
         {
-            S.Append(X.WrapIdentifiers(rawExpression));
-            _bindings.AddRange(bindings);
+            var wrapIdentifiers = X.WrapIdentifiers(rawExpression);
+            var objects = bindings.ToArray();
+            var expandParameters = BindingExtensions.
+                ExpandParameters(wrapIdentifiers, "?", objects);
+            S.Append(expandParameters);
+            _bindings.AddRange(objects);
         }
 
         public void AppendValue(string value)

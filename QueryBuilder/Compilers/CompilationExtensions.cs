@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -8,8 +9,9 @@ namespace SqlKata.Compilers
         {
             var writer = new Writer(compiler.XService);
             var ctx = compiler.CompileRaw(query, writer);
+            ctx.RawSql.Should().Be((string)writer);
             writer.AssertMatches(ctx);
-            ctx = compiler.PrepareResult(ctx);
+            ctx = compiler.PrepareResult(ctx, writer);
             return ctx;
         }
 
@@ -19,7 +21,7 @@ namespace SqlKata.Compilers
             var ctx = Accumulate();
 
             ctx.ReplaceRaw(writer);
-            ctx = compiler.PrepareResult(ctx);
+            ctx = compiler.PrepareResult(ctx, writer);
             return ctx;
 
             SqlResult Accumulate()
@@ -80,8 +82,8 @@ namespace SqlKata.Compilers
 
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
-            ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
-                "?", ctx.Bindings.ToArray()));
+           // ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
+           //     "?", ctx.Bindings.ToArray()));
             writer.AssertMatches(ctx);
 
             return ctx;
@@ -117,10 +119,10 @@ namespace SqlKata.Compilers
 
         }
 
-        private static SqlResult PrepareResult(this Compiler compiler, SqlResult ctx)
+        private static SqlResult PrepareResult(this Compiler compiler, SqlResult ctx, Writer writer)
         {
             ctx.NamedBindings = ctx.Bindings.GenerateNamedBindings(compiler.ParameterPrefix);
-            ctx.Sql = BindingExtensions.ReplaceAll(ctx.RawSql,
+            ctx.Sql = BindingExtensions.ReplaceAll(writer,
                 "?", i => compiler.ParameterPrefix + i);
             return ctx;
         }
