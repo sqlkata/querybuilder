@@ -66,25 +66,37 @@ namespace SqlKata.Compilers
             if (x.IsNot)
                 writer.Append(")");
         }
-
-
-        protected override void CompileBasicDateCondition(Query query, BasicDateCondition condition,
-            Writer writer)
+        
+        protected override void CompileBasicDateCondition(
+            Query query, BasicDateCondition condition, Writer writer)
         {
-            var column = XService.Wrap(condition.Column);
-
-            string left;
+            if (condition.IsNot)
+                writer.Append("NOT (");
 
             if (condition.Part == "time")
-                left = $"{column}::time";
+            {
+                writer.AppendName(condition.Column);
+                writer.Append("::time");
+            }
             else if (condition.Part == "date")
-                left = $"{column}::date";
+            {
+                writer.AppendName(condition.Column);
+                writer.Append("::date");
+            }
             else
-                left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
+            {
+                writer.Append("DATE_PART('");
+                writer.AppendKeyword(condition.Part);
+                writer.Append("', ");
+                writer.AppendName(condition.Column);
+            }
 
-            var sql = $"{left} {condition.Operator} {Parameter(query, writer, condition.Value)}";
-
-            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
+            writer.Append(" ");
+            writer.Append(condition.Operator);
+            writer.Append(" ");
+            writer.AppendParameter(query, condition.Value);
+            if (condition.IsNot)
+                writer.Append(")");
         }
     }
 }
