@@ -82,7 +82,6 @@ namespace SqlKata.Compilers
             var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
             writer.Pop();
-            writer.BindMany(subCtx.Bindings);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -92,7 +91,6 @@ namespace SqlKata.Compilers
             writer.Append("(");
             var subCtx = CompileSelectQuery(x.Query, writer);
             ctx.BindingsAddRange(subCtx.Bindings);
-            writer.BindMany(subCtx.Bindings);
             writer.Pop();
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));

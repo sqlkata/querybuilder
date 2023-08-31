@@ -279,7 +279,6 @@ namespace SqlKata.Compilers
                 writer.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
                 ctx.BindingsAddRange(subCtx.Bindings);
-                writer.BindMany(subCtx.Bindings);
                 writer.Pop();
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
