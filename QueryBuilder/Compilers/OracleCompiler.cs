@@ -153,10 +153,7 @@ namespace SqlKata.Compilers
                 writer.Append(table);
                 writer.WriteInsertColumnsList(insert.Columns);
                 writer.Append(" VALUES (");
-                writer.List(", ", insert.Values, value =>
-                {
-                    writer.Append(Parameter(ctx, query, writer, value));
-                });
+                writer.CommaSeparatedParameters(ctx, query, insert.Values);
                 writer.Append(")");
             }
             writer.Append(" SELECT 1 FROM DUAL");

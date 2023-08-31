@@ -40,11 +40,8 @@ namespace SqlKata.Compilers
                 var table = WriteTable(ctx, query, writer, "insert");
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" SELECT ");
-                writer.List(", ", firstInsert.Values, p =>
-                {
-                    writer.Append(Parameter(ctx, query, writer, p));
-                });
-
+                writer.CommaSeparatedParameters(
+                    ctx, query, firstInsert.Values);
                 CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
                 ctx.Raw.Append(writer);
             }
@@ -57,10 +54,7 @@ namespace SqlKata.Compilers
             foreach (var insert in inserts.Skip(1))
             {
                 writer.Append(" FROM RDB$DATABASE UNION ALL SELECT ");
-                writer.List(", ", insert.Values, value =>
-                {
-                    writer.Append(Parameter(ctx, query, writer, value));
-                });
+                writer.CommaSeparatedParameters(ctx, query, insert.Values);
             }
             writer.Append(" FROM RDB$DATABASE");
             writer.AssertMatches(ctx);
@@ -114,8 +108,8 @@ namespace SqlKata.Compilers
             base.CompileColumns(ctx, query, writer);
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition x,
-            Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx,
+            Query query, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");
@@ -141,7 +135,7 @@ namespace SqlKata.Compilers
             }
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, query, writer, x.Value));
+            writer.AppendParameter(ctx, query, x.Value);
             if (x.IsNot)
                 writer.Append(")");
         }

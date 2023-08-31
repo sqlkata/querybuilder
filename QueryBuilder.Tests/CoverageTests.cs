@@ -83,8 +83,6 @@ namespace SqlKata.Tests
                 .ToString().Should().Be(
                     "SELECT * FROM [A];\n" +
                     "SELECT * FROM [B]");
-
         }
-
     }
 }

@@ -2,6 +2,17 @@ namespace SqlKata.Compilers
 {
     public sealed class SqliteCompiler : Compiler
     {
+        private static readonly Dictionary<string, string> FormatMap = new Dictionary<string, string>
+        {
+            { "date", "%Y-%m-%d" },
+            { "time", "%H:%M:%S" },
+            { "year", "%Y" },
+            { "month", "%m" },
+            { "day", "%d" },
+            { "hour", "%H" },
+            { "minute", "%M" }
+        };
+
         public SqliteCompiler()
         {
             LastId = "select last_insert_rowid() as id";
@@ -41,33 +52,29 @@ namespace SqlKata.Compilers
         protected override void CompileBasicDateCondition(SqlResult ctx,
             Query query, BasicDateCondition condition, Writer writer)
         {
-            var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, query, writer, condition.Value);
-
-            var formatMap = new Dictionary<string, string>
+            if (!FormatMap.ContainsKey(condition.Part))
             {
-                { "date", "%Y-%m-%d" },
-                { "time", "%H:%M:%S" },
-                { "year", "%Y" },
-                { "month", "%m" },
-                { "day", "%d" },
-                { "hour", "%H" },
-                { "minute", "%M" }
-            };
-
-            if (!formatMap.ContainsKey(condition.Part))
-            {
-                writer.Append(column);
+                writer.AppendName(condition.Column);
                 writer.Append(" ");
                 writer.Append(condition.Operator);
                 writer.Append(" ");
-                writer.Append(value);
+                writer.AppendParameter(ctx, query, condition.Value);
                 return;
             }
 
-            var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
-
-            writer.Append(condition.IsNot ? $"NOT ({sql})" :sql);
+            if (condition.IsNot)
+                writer.Append("NOT (");
+            writer.Append("strftime('");
+            writer.Append(FormatMap[condition.Part]);
+            writer.Append("', ");
+            writer.AppendName(condition.Column);
+            writer.Append(") ");
+            writer.Append(condition.Operator);
+            writer.Append(" cast(");
+            writer.AppendParameter(ctx, query, condition.Value);
+            writer.Append(" as text)");
+            if (condition.IsNot)
+                writer.Append(")");
         }
     }
 }

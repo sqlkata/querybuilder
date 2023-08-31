@@ -148,22 +148,38 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
-            Writer writer)
+        protected override void CompileBasicDateCondition(
+            SqlResult ctx, Query query,
+            BasicDateCondition condition, Writer writer)
         {
-            var column = XService.Wrap(condition.Column);
             var part = condition.Part.ToUpperInvariant();
 
-            string left;
+            if (condition.IsNot)
+                writer.Append("NOT (");
 
-            if (part == "TIME" || part == "DATE")
-                left = $"CAST({column} AS {part.ToUpperInvariant()})";
+            if (part is "TIME" or "DATE")
+            {
+                writer.Append("CAST(");
+                writer.AppendName(condition.Column);
+                writer.Append(" AS ");
+                writer.AppendKeyword(part);
+                writer.Append(")");
+            }
             else
-                left = $"DATEPART({part.ToUpperInvariant()}, {column})";
+            {
+                writer.Append("DATEPART(");
+                writer.AppendKeyword(part);
+                writer.Append(", ");
+                writer.AppendName(condition.Column);
+                writer.Append(")");
+            }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, query, writer, condition.Value)}";
-
-            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
+            writer.Append(" ");
+            writer.Append(condition.Operator);
+            writer.Append(" ");
+            writer.AppendParameter(ctx, query, condition.Value);
+            if (condition.IsNot)
+                writer.Append(")");
         }
 
         protected override void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)

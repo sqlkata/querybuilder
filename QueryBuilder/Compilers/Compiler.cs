@@ -143,7 +143,8 @@ namespace SqlKata.Compilers
                 writer.Append(" ");
                 writer.Append(incrementClause.Value >= 0 ? "+" : "-");
                 writer.Append(" ");
-                writer.Append(Parameter(ctx, query, writer, Math.Abs(incrementClause.Value)));
+                writer.AppendParameter(ctx, query,
+                    Math.Abs(incrementClause.Value));
                 CompileWheres(ctx, query, writer);
                 ctx.Raw.Append(writer);
             }
@@ -155,7 +156,8 @@ namespace SqlKata.Compilers
                 {
                     writer.AppendName(column);
                     writer.Append(" = ");
-                    writer.Append(Parameter(ctx, query, writer, insertClause.Values[i]));
+                    writer.AppendParameter(
+                        ctx, query, insertClause.Values[i]);
                 });
                 CompileWheres(ctx, query, writer);
                 ctx.Raw.Append(writer);
@@ -207,10 +209,8 @@ namespace SqlKata.Compilers
                 var firstInsert = insertClauses.First();
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" VALUES (");
-                writer.List(", ", firstInsert.Values, p =>
-                {
-                    writer.Append(Parameter(ctx, query, writer, p));
-                });
+                writer.CommaSeparatedParameters(
+                    ctx, query, firstInsert.Values);
                 writer.Append(")");
 
                 if (isMultiValueInsert)
@@ -238,10 +238,8 @@ namespace SqlKata.Compilers
             foreach (var insert in inserts.Skip(1))
             {
                 writer.Append(", (");
-                writer.List(", ", insert.Values, value =>
-                {
-                    writer.Append(Parameter(ctx, query, writer, value));
-                });
+                writer.CommaSeparatedParameters(
+                    ctx, query, insert.Values);
                 writer.Append(")");
             }
         }
@@ -719,11 +717,6 @@ namespace SqlKata.Compilers
             ctx.BindingsAdd(parameter);
             writer.BindOne(parameter);
             return "?";
-        }
-
-        private string Parametrize(SqlResult ctx, Writer writer, Query query, IEnumerable<object> values)
-        {
-            return string.Join(", ", values.Select(x => Parameter(ctx, query, writer, x)));
         }
     }
 }

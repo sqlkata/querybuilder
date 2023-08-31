@@ -8,45 +8,54 @@ namespace SqlKata.Compilers
         {
             LastId = "SELECT lastval() AS id";
             EngineCode = EngineCodes.PostgreSql;
-            SupportsFilterClause  = true;
+            SupportsFilterClause = true;
         }
 
 
         protected override void CompileBasicStringCondition(SqlResult ctx, Query query, BasicStringCondition x,
             Writer writer)
         {
-            var column = XService.Wrap(x.Column);
-
             if (Resolve(query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
-            var method = x.Operator;
-
-            if (LikeOperators.Contains(x.Operator))
-            {
-                method = x.CaseSensitive ? "LIKE" : "ILIKE";
-
-                switch (x.Operator)
-                {
-                    case "starts":
-                        value = $"{value}%";
-                        break;
-                    case "ends":
-                        value = $"%{value}";
-                        break;
-                    case "contains":
-                        value = $"%{value}%";
-                        break;
-                }
-            }
+            var isLikeOperator = LikeOperators.Contains(x.Operator);
 
             if (x.IsNot)
                 writer.Append("NOT (");
-            writer.Append(column);
+            writer.AppendName(x.Column);
             writer.Append(" ");
-            writer.Append(Operators.CheckOperator(method));
+            writer.Append(Operators.CheckOperator(isLikeOperator
+                ? x.CaseSensitive ? "LIKE" : "ILIKE" : x.Operator));
             writer.Append(" ");
-            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, query, writer, value));
+            if (isLikeOperator)
+            {
+                switch (x.Operator)
+                {
+                    case "starts":
+                        writer.Append("%");
+                        writer.AppendParameter(ctx, query, value);
+                        break;
+                    case "ends":
+                        writer.Append("%");
+                        writer.AppendParameter(ctx, query, value);
+                        break;
+                    case "contains":
+                        writer.Append("%");
+                        writer.AppendParameter(ctx, query, value);
+                        writer.Append("%");
+                        break;
+                    default:
+                        writer.AppendParameter(ctx, query, value);
+                        break;
+                }
+            }
+            else
+            {
+                // This code is written as if other than "like"
+                // operators are possible, but the public API
+                // does not instantiate BasicStringCondition
+                writer.AppendParameter(ctx, query, value);
+            }
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.Append(" ESCAPE '");
@@ -75,7 +84,7 @@ namespace SqlKata.Compilers
 
             var sql = $"{left} {condition.Operator} {Parameter(ctx, query, writer, condition.Value)}";
 
-            writer.Append(condition.IsNot ? $"NOT ({sql})" :sql);
+            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }
     }
 }

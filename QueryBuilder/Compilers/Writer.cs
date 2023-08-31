@@ -8,7 +8,7 @@ namespace SqlKata.Compilers
         public IReadOnlyList<object?> Bindings => _bindings;
         public void BindOne(object? value)
         {
-            if (value?.AsArray() is {} arr)
+            if (value?.AsArray() is { } arr)
                 _bindings.AddRange(arr.Cast<object?>());
             else
                 _bindings.Add(value);
@@ -173,6 +173,11 @@ namespace SqlKata.Compilers
             if (_ctx != ctx)
                 throw new Exception("Wrong context!");
             AssertMatches();
+        }
+
+        public void CommaSeparatedParameters(SqlResult ctx, Query query, IEnumerable<object?> values)
+        {
+            List(", ", values, v => AppendParameter(ctx, query, v));
         }
     }
 }

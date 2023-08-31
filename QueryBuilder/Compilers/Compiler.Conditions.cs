@@ -94,7 +94,7 @@ namespace SqlKata.Compilers
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, query, writer, x.Value));
+            writer.AppendParameter(ctx, query, x.Value);
             writer.AssertMatches(ctx);
         }
 
@@ -107,7 +107,7 @@ namespace SqlKata.Compilers
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
             writer.AssertMatches();
-            writer.Append(Parameter(ctx, query, writer, x.Value));
+            writer.AppendParameter(ctx, query, x.Value);
             if (x.IsNot)
                 writer.Append(")");
         }
@@ -153,7 +153,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(method));
             writer.Append(" ");
-            writer.Append(x.Value is UnsafeLiteral ? value : Parameter(ctx, query, writer, value));
+            writer.AppendParameter(ctx, query, value);
             if (x.EscapeCharacter is { } esc1)
             {
                 writer.Append(" ESCAPE '");
@@ -177,7 +177,7 @@ namespace SqlKata.Compilers
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.Append(Parameter(ctx, query, writer, x.Value));
+            writer.AppendParameter(ctx, query, x.Value);
             if (x.IsNot)
                 writer.Append(")");
             writer.AssertMatches(ctx);
@@ -217,9 +217,9 @@ namespace SqlKata.Compilers
         {
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT BETWEEN " : " BETWEEN ");
-            writer.Append(Parameter(ctx, query, writer, x.Lower));
+            writer.AppendParameter(ctx, query, x.Lower);
             writer.Append(" AND ");
-            writer.Append(Parameter(ctx, query, writer, x.Higher));
+            writer.AppendParameter(ctx, query, x.Higher);
             writer.AssertMatches(ctx);
         }
 
@@ -227,13 +227,16 @@ namespace SqlKata.Compilers
         {
             if (!x.Values.Any())
             {
-                writer.Append(x.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */");
+                writer.Append(x.IsNot
+                    ? "1 = 1 /* NOT IN [empty list] */"
+                    : "1 = 0 /* IN [empty list] */");
                 return;
             }
 
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
-            writer.Append(Parametrize(ctx, writer, query, x.Values.OfType<object>()));
+            writer.CommaSeparatedParameters(
+                ctx, query, x.Values.OfType<object>());
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
