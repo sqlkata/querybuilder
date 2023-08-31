@@ -37,7 +37,6 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset > 0)
             {
-                ctx.BindingsAdd(offset);
                 writer.Append("LIMIT -1 OFFSET ");
                 writer.AppendParameter(offset);
                 writer.AssertMatches(ctx);

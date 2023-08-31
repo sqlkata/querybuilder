@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
             var writer = new Writer(compiler.XService);
             var ctx = compiler.CompileRaw(query, writer);
             ctx.ReplaceRaw(writer);
-            writer.AssertMatches(ctx);
+            ctx.ReplaceBindings(writer.Bindings);
             ctx = compiler.PrepareResult(ctx, writer);
             return ctx;
         }
@@ -30,7 +30,6 @@ namespace SqlKata.Compilers
                 {
                     var sub = compiler.CompileRaw(query, writer);
                     writer.AssertMatches(sub);
-                    sqlResult.BindingsAddRange(sub.Bindings);
                 });
                 return sqlResult;
             }
@@ -44,7 +43,6 @@ namespace SqlKata.Compilers
             if (query.HasComponent("cte", compiler.EngineCode))
             {
                 compiler.CompileCteQuery(query, writer);
-                ctx.BindingsAddRange(writer.Bindings);
                 writer.AssertMatches(ctx);
             }
             if (query.Method == "insert")

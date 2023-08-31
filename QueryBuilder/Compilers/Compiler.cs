@@ -43,15 +43,12 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        private IReadOnlyList<object?> CompileSelectQuery(Query query, Writer writer)
+        private void CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
             writer.Push(ctx);
             CompileSelectQueryInner(ctx, query, writer);
             writer.Pop();
-
-            return ctx.Bindings;
-
         }
 
         public virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
@@ -99,7 +96,7 @@ namespace SqlKata.Compilers
             if (!query.HasComponent("join", EngineCode))
             {
                 writer.Append("DELETE FROM ");
-                WriteTable(ctx, query, writer, "delete");
+                WriteTable(query, writer, "delete");
                 CompileWheres(ctx, query, writer);
             }
             else
@@ -110,7 +107,7 @@ namespace SqlKata.Compilers
                 writer.Append("DELETE ");
                 writer.AppendName(c.Alias);
                 writer.Append(" FROM ");
-                WriteTable(ctx, fromClause, writer, "delete");
+                WriteTable(fromClause, writer, "delete");
                 CompileJoins(ctx, query, writer);
                 CompileWheres(ctx, query, writer);
             }
@@ -120,7 +117,7 @@ namespace SqlKata.Compilers
         {
             writer.Append("UPDATE ");
 
-            WriteTable(ctx, query, writer, "update");
+            WriteTable(query, writer, "update");
 
             var clause = query.GetOneComponent("update", EngineCode);
             if (clause is IncrementClause increment)
@@ -170,7 +167,7 @@ namespace SqlKata.Compilers
                 ? MultiInsertStartClause
                 : SingleInsertStartClause);
             writer.Append(" ");
-            var table = WriteTable(ctx, query, writer, "insert");
+            var table = WriteTable(query, writer, "insert");
             writer.AssertMatches(ctx);
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
@@ -191,8 +188,7 @@ namespace SqlKata.Compilers
                 w.WriteInsertColumnsList(clause.Columns);
                 w.Append(" ");
 
-                var subCtx = CompileSelectQuery(clause.Query, w);
-                ctx.BindingsAddRange(subCtx);
+                CompileSelectQuery(clause.Query, w);
                 w.AssertMatches(ctx);
 
             }
@@ -265,7 +261,6 @@ namespace SqlKata.Compilers
             if (column is RawColumn raw)
             {
                 writer.AppendRaw(raw.Expression);
-                ctx.BindingsAddRange(raw.Bindings);
                 writer.AssertMatches(ctx);
                 return;
             }
@@ -274,8 +269,7 @@ namespace SqlKata.Compilers
             {
                 writer.AssertMatches(ctx);
                 writer.Append("(");
-                var subCtx = CompileSelectQuery(queryColumn.Query, writer);
-                ctx.BindingsAddRange(subCtx);
+                CompileSelectQuery(queryColumn.Query, writer);
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                 writer.AssertMatches(ctx);
@@ -447,14 +441,11 @@ namespace SqlKata.Compilers
                             writer.Append("ALL ");
 
                         writer.AssertMatches(ctx);
-                        ctx.BindingsAddRange(
-                            CompileSelectQuery(combine.Query, writer));
-
+                        CompileSelectQuery(combine.Query, writer);
                     }
                     else if (clause is RawCombine c)
                     {
                         writer.AppendRaw(c.Expression, c.Bindings);
-                        ctx.BindingsAddRange(c.Bindings);
                     }
                 });
             writer.AssertMatches(ctx);
@@ -474,7 +465,6 @@ namespace SqlKata.Compilers
                 var q = queryFromClause.Query;
                 writer.Append("(");
                 CompileSelectQuery(q, writer);
-                ctx.BindingsAddRange(writer.Bindings);
                 writer.AssertMatches(ctx);
 
                 writer.Append(")");
@@ -498,14 +488,13 @@ namespace SqlKata.Compilers
             throw InvalidClauseException("TableExpression", from);
         }
 
-        protected string WriteTable(SqlResult sqlResult, Query query, Writer writer, string operationName)
+        protected string WriteTable(Query query, Writer writer, string operationName)
         {
-            return WriteTable(sqlResult,
-                query.GetOneComponent<AbstractFrom>("from", EngineCode),
+            return WriteTable(query.GetOneComponent<AbstractFrom>("from", EngineCode),
                 writer, operationName);
         }
 
-        private static string WriteTable(SqlResult sqlResult, AbstractFrom? abstractFrom, Writer writer, string operationName)
+        private static string WriteTable(AbstractFrom? abstractFrom, Writer writer, string operationName)
         {
             switch (abstractFrom)
             {
@@ -520,7 +509,6 @@ namespace SqlKata.Compilers
                         if (raw.Bindings.Length > 0)
                         {
                             //TODO: test!
-                            sqlResult.BindingsAddRange(raw.Bindings);
                         }
                         writer.AppendRaw(raw.Expression, raw.Bindings);
                         return writer;
@@ -610,7 +598,6 @@ namespace SqlKata.Compilers
                 {
                     if (x is RawOrderBy raw)
                     {
-                        ctx.BindingsAddRange(raw.Bindings);
                         return XService.WrapIdentifiers(raw.Expression);
                     }
 
@@ -643,7 +630,6 @@ namespace SqlKata.Compilers
             var limit = query.GetLimit(EngineCode);
             if (limit != 0)
             {
-                ctx.BindingsAdd(limit);
                 writer.Append("LIMIT ");
                 writer.AppendParameter(limit);
             }
@@ -651,7 +637,6 @@ namespace SqlKata.Compilers
             var offset = query.GetOffset(EngineCode);
             if (offset != 0)
             {
-                ctx.BindingsAdd(offset);
                 writer.Whitespace();
                 writer.Append("OFFSET ");
                 writer.AppendParameter(offset);
@@ -697,12 +682,10 @@ namespace SqlKata.Compilers
             if (parameter is Variable variable)
             {
                 var value = query.FindVariable(variable.Name);
-                ctx.BindingsAdd(value);
                 writer.BindOne(value);
                 return "?";
             }
 
-            ctx.BindingsAdd(parameter);
             writer.BindOne(parameter);
             return "?";
         }

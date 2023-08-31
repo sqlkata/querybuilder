@@ -67,7 +67,6 @@ namespace SqlKata.Compilers
 
         private void CompileRawCondition(SqlResult ctx, RawCondition x, Writer writer)
         {
-            ctx.BindingsAddRange(x.Bindings);
             writer.AppendRaw(x.Expression, x.Bindings);
             writer.AssertMatches(ctx);
         }
@@ -78,8 +77,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" (");
-            var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx);
+            CompileSelectQuery(x.Query, writer);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -87,8 +85,7 @@ namespace SqlKata.Compilers
         private void CompileSubQueryCondition(SqlResult ctx, Query query, SubQueryCondition x, Writer writer)
         {
             writer.Append("(");
-            var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx);
+            CompileSelectQuery(x.Query, writer);
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
@@ -243,8 +240,7 @@ namespace SqlKata.Compilers
         {
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
-            var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx);
+            CompileSelectQuery(x.Query, writer);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -272,8 +268,7 @@ namespace SqlKata.Compilers
                 ? item.Query.Clone().RemoveComponent("select").SelectRaw("1")
                 : item.Query;
 
-            var subCtx = CompileSelectQuery(query, writer);
-            ctx.BindingsAddRange(subCtx);
+            CompileSelectQuery(query, writer);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }

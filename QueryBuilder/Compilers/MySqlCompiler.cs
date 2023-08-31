@@ -18,7 +18,6 @@ namespace SqlKata.Compilers
 
             if (offset == 0)
             {
-                ctx.BindingsAdd(limit);
                 writer.Append("LIMIT ");
                 writer.AppendParameter(limit);
                 return writer;
@@ -29,7 +28,6 @@ namespace SqlKata.Compilers
                 // MySql will not accept offset without limit, so we will put a large number
                 // to avoid this error.
 
-                ctx.BindingsAdd(offset);
                 writer.Append("LIMIT 18446744073709551615 OFFSET ");
                 writer.AppendParameter(offset);
                 return writer;
@@ -37,8 +35,6 @@ namespace SqlKata.Compilers
 
             // We have both values
 
-            ctx.BindingsAdd(limit);
-            ctx.BindingsAdd(offset);
             writer.Append("LIMIT ");
             writer.AppendParameter(limit);
 

@@ -37,7 +37,7 @@ namespace SqlKata.Compilers
 
                 writer.Append(MultiInsertStartClause);
                 writer.Append(" ");
-                var table = WriteTable(ctx, query, writer, "insert");
+                var table = WriteTable(query, writer, "insert");
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" SELECT ");
                 writer.CommaSeparatedParameters(
@@ -65,8 +65,6 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset > 0)
             {
-                ctx.BindingsAdd(offset + 1);
-                ctx.BindingsAdd(limit + offset);
                 writer.Append("ROWS ");
                 writer.AppendParameter(offset + 1);
                 writer.Append(" TO ");
@@ -85,7 +83,6 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                ctx.BindingsAdd(limit);
                 writer.Append("SELECT FIRST ");
                 writer.AppendParameter(limit);
                 writer.Append(" ");
@@ -95,8 +92,6 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset > 0)
             {
-                ctx.BindingsAdd(offset);
-
                 writer.Append("SELECT SKIP ");
                 writer.AppendParameter(offset);
                 writer.Append(" ");

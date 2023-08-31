@@ -32,7 +32,6 @@ namespace SqlKata.Compilers
             {
                 writer.Append(">= ");
                 writer.AppendParameter(offset + 1);
-                ctx.BindingsAdd(offset + 1);
             }
             else
             {
@@ -40,8 +39,6 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(offset + 1);
                 writer.Append(" AND ");
                 writer.AppendParameter(limit + offset);
-                ctx.BindingsAdd(offset + 1);
-                ctx.BindingsAdd(limit + offset);
             }
         }
 
@@ -77,8 +74,6 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                ctx.BindingsAdd(limit);
-
                 query.RemoveComponent("limit");
 
                 // handle distinct
@@ -118,7 +113,6 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.BindingsAdd(offset);
                 writer.Append("OFFSET ");
                 writer.AppendParameter(offset);
                 writer.Append(" ROWS");
@@ -126,8 +120,6 @@ namespace SqlKata.Compilers
                 return writer;
             }
 
-            ctx.BindingsAdd(offset);
-            ctx.BindingsAdd(limit);
             writer.Append("OFFSET ");
             writer.AppendParameter(offset);
             writer.Append(" ROWS FETCH NEXT ");
