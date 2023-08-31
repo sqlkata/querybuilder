@@ -44,7 +44,6 @@ namespace SqlKata.Compilers
                 base.CompileSelectQueryInner(query, writer);
                 writer.Append(""") WHERE ROWNUM <= """);
                 writer.AppendParameter(limit);
-                writer.BindOne(limit);
             }
             else
             {

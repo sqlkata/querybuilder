@@ -1,4 +1,5 @@
 using System.Text;
+using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -11,6 +12,8 @@ namespace SqlKata.Compilers
                 _bindings.AddRange(arr.Cast<object?>());
             else
                 _bindings.Add(value);
+            S.ToString().CountMatches("?").Should()
+                .Be(_bindings.FlattenOneLevel().Count());
         }
 
         public void BindMany(IEnumerable<object?> values)
