@@ -30,7 +30,7 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
+        protected override string? CompileLimit(Query query, Writer writer)
         {
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -39,17 +39,14 @@ namespace SqlKata.Compilers
             {
                 writer.Append("LIMIT -1 OFFSET ");
                 writer.AppendParameter(offset);
-                writer.X.AssertMatches(ctx);
                 return writer;
             }
 
-            writer.X.AssertMatches(ctx);
-            if (base.CompileLimit(ctx, query, writer) == null) return null;
+            if (base.CompileLimit(query, writer) == null) return null;
             return writer;
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx,
-            Query query, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(Query query, BasicDateCondition condition, Writer writer)
         {
             if (!FormatMap.ContainsKey(condition.Part))
             {
@@ -57,7 +54,7 @@ namespace SqlKata.Compilers
                 writer.Append(" ");
                 writer.Append(condition.Operator);
                 writer.Append(" ");
-                writer.AppendParameter(ctx, query, condition.Value);
+                writer.AppendParameter(query, condition.Value);
                 return;
             }
 
@@ -70,7 +67,7 @@ namespace SqlKata.Compilers
             writer.Append(") ");
             writer.Append(condition.Operator);
             writer.Append(" cast(");
-            writer.AppendParameter(ctx, query, condition.Value);
+            writer.AppendParameter(query, condition.Value);
             writer.Append(" as text)");
             if (condition.IsNot)
                 writer.Append(")");

@@ -148,26 +148,12 @@ namespace SqlKata.Compilers
                 .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "[", _openingIdentifier)
                 .ReplaceIdentifierUnlessEscaped(EscapeCharacter, "]", _closingIdentifier);
         }
-        public string AsAlias(string? input)
-        {
-            return string.IsNullOrWhiteSpace(input)
-                ? ""
-                : $" {_columnAsKeyword}{WrapValue(input)}";
-        }
+
         public void AsAlias(StringBuilder sb, string? input)
         {
             if (string.IsNullOrWhiteSpace(input)) return;
             sb.Append(_columnAsKeyword);
             WrapValue(sb, input);
-        }
-
-        public void AssertMatches(SqlResult ctx)
-        {
-          
-        }
-
-        public void AssertMatches()
-        {
         }
     }
 }

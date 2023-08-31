@@ -9,26 +9,22 @@ namespace SqlKata.Compilers
             XService = new("\"", "\"", "AS ", true);
         }
 
-        public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
+        public override void CompileInsertQuery(Query query, Writer writer)
         {
-            writer.X.AssertMatches(ctx);
-
-
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
             if (inserts[0] is InsertQueryClause)
             {
-                base.CompileInsertQuery(ctx, query, writer);
+                base.CompileInsertQuery(query, writer);
                 return;
             }
 
             var clauses = inserts.Cast<InsertClause>().ToArray();
             if (clauses.Length == 1)
             {
-                base.CompileInsertQuery(ctx, query, writer);
+                base.CompileInsertQuery(query, writer);
                 return;
             }
             CompileValueInsertClauses(clauses);
-            writer.X.AssertMatches(ctx);
             return;
 
             void CompileValueInsertClauses(InsertClause[] insertClauses)
@@ -40,25 +36,23 @@ namespace SqlKata.Compilers
                 var table = WriteTable(query, writer, "insert");
                 writer.WriteInsertColumnsList(firstInsert.Columns);
                 writer.Append(" SELECT ");
-                writer.CommaSeparatedParameters(
-                    ctx, query, firstInsert.Values);
-                CompileRemainingInsertClauses(ctx, query, table, writer, insertClauses);
+                writer.CommaSeparatedParameters(query, firstInsert.Values);
+                CompileRemainingInsertClauses(query, table, writer, insertClauses);
             }
         }
 
-        protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+        protected override void CompileRemainingInsertClauses(Query query, string table,
             Writer writer,
             IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
                 writer.Append(" FROM RDB$DATABASE UNION ALL SELECT ");
-                writer.CommaSeparatedParameters(ctx, query, insert.Values);
+                writer.CommaSeparatedParameters(query, insert.Values);
             }
             writer.Append(" FROM RDB$DATABASE");
-            writer.X.AssertMatches(ctx);
         }
-        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
+        protected override string? CompileLimit(Query query, Writer writer)
         {
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -71,12 +65,12 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(limit + offset);
                 return writer;
             }
-            writer.X.AssertMatches(ctx);
+
             return null;
         }
 
 
-        protected override void CompileColumns(SqlResult ctx, Query query, Writer writer)
+        protected override void CompileColumns(Query query, Writer writer)
         {
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
@@ -86,7 +80,7 @@ namespace SqlKata.Compilers
                 writer.Append("SELECT FIRST ");
                 writer.AppendParameter(limit);
                 writer.Append(" ");
-                CompileColumnsAfterSelect(ctx, query, writer);
+                CompileColumnsAfterSelect(query, writer);
                 return;
             }
 
@@ -95,15 +89,14 @@ namespace SqlKata.Compilers
                 writer.Append("SELECT SKIP ");
                 writer.AppendParameter(offset);
                 writer.Append(" ");
-                CompileColumnsAfterSelect(ctx, query, writer);
+                CompileColumnsAfterSelect(query, writer);
                 return;
             }
-            writer.X.AssertMatches(ctx);
-            base.CompileColumns(ctx, query, writer);
+
+            base.CompileColumns(query, writer);
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx,
-            Query query, BasicDateCondition x, Writer writer)
+        protected override void CompileBasicDateCondition(Query query, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");
@@ -129,7 +122,7 @@ namespace SqlKata.Compilers
             }
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
-            writer.AppendParameter(ctx, query, x.Value);
+            writer.AppendParameter(query, x.Value);
             if (x.IsNot)
                 writer.Append(")");
         }

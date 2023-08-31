@@ -80,9 +80,9 @@ namespace SqlKata.Compilers
             if (S.Length > 0 && S[^1] == ' ') S.Length -= 1;
         }
 
-        public void AppendParameter(SqlResult ctx, Query query, object? value)
+        public void AppendParameter(Query query, object? value)
         {
-            Append(Compiler.Parameter(ctx, query, this, value));
+            Append(Compiler.Parameter(query, this, value));
         }
         public void Append(string? value) => S.Append(value);
         public void Append(char value) => S.Append(value);
@@ -135,9 +135,9 @@ namespace SqlKata.Compilers
             if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
         }
 
-        public void CommaSeparatedParameters(SqlResult ctx, Query query, IEnumerable<object?> values)
+        public void CommaSeparatedParameters(Query query, IEnumerable<object?> values)
         {
-            List(", ", values, v => AppendParameter(ctx, query, v));
+            List(", ", values, v => AppendParameter(query, v));
         }
     }
 }

@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override void CompileBasicStringCondition(SqlResult ctx, Query query, BasicStringCondition x,
+        protected override void CompileBasicStringCondition(Query query, BasicStringCondition x,
             Writer writer)
         {
             if (Resolve(query, x.Value) is not string value)
@@ -33,19 +33,19 @@ namespace SqlKata.Compilers
                 {
                     case "starts":
                         writer.Append("%");
-                        writer.AppendParameter(ctx, query, value);
+                        writer.AppendParameter(query, value);
                         break;
                     case "ends":
                         writer.Append("%");
-                        writer.AppendParameter(ctx, query, value);
+                        writer.AppendParameter(query, value);
                         break;
                     case "contains":
                         writer.Append("%");
-                        writer.AppendParameter(ctx, query, value);
+                        writer.AppendParameter(query, value);
                         writer.Append("%");
                         break;
                     default:
-                        writer.AppendParameter(ctx, query, value);
+                        writer.AppendParameter(query, value);
                         break;
                 }
             }
@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
                 // This code is written as if other than "like"
                 // operators are possible, but the public API
                 // does not instantiate BasicStringCondition
-                writer.AppendParameter(ctx, query, value);
+                writer.AppendParameter(query, value);
             }
             if (x.EscapeCharacter is { } esc1)
             {
@@ -68,7 +68,7 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
+        protected override void CompileBasicDateCondition(Query query, BasicDateCondition condition,
             Writer writer)
         {
             var column = XService.Wrap(condition.Column);
@@ -82,7 +82,7 @@ namespace SqlKata.Compilers
             else
                 left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, query, writer, condition.Value)}";
+            var sql = $"{left} {condition.Operator} {Parameter(query, writer, condition.Value)}";
 
             writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
         }

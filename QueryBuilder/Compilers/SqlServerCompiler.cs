@@ -13,11 +13,11 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; }
 
-        public override void CompileSelectQueryInner(SqlResult ctx, Query original, Writer writer)
+        public override void CompileSelectQueryInner(Query original, Writer writer)
         {
             if (!UseLegacyPagination || !original.HasOffset(EngineCode))
             {
-                base.CompileSelectQueryInner(ctx, original, writer);
+                base.CompileSelectQueryInner(original, writer);
                 return;
             }
 
@@ -26,7 +26,7 @@ namespace SqlKata.Compilers
 
             var modified = ModifyQuery(original.Clone());
             writer.Append("SELECT * FROM (");
-            base.CompileSelectQueryInner(ctx, modified, writer);
+            base.CompileSelectQueryInner(modified, writer);
             writer.Append(") AS [results_wrapper] WHERE [row_num] ");
             if (limit == 0)
             {
@@ -49,19 +49,18 @@ namespace SqlKata.Compilers
             if (!query.HasComponent("select")) query.Select("*");
 
             var writer = new Writer(XService);
-            var order = CompileOrders(ctx, query, writer) ?? "ORDER BY (SELECT 0)";
-            writer.X.AssertMatches(ctx);
+            var order = CompileOrders(query, writer) ?? "ORDER BY (SELECT 0)";
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
             query.RemoveComponent("order");
             return query;
         }
 
-        protected override void CompileColumns(SqlResult ctx, Query query, Writer writer)
+        protected override void CompileColumns(Query query, Writer writer)
         {
             if (!UseLegacyPagination)
             {
-                base.CompileColumns(ctx, query, writer);
+                base.CompileColumns(query, writer);
                 return;
             }
 
@@ -81,22 +80,21 @@ namespace SqlKata.Compilers
                     writer.Append("SELECT DISTINCT TOP (");
                     writer.AppendParameter(limit);
                     writer.Append(") ");
-                    CompileFlatColumns(query, writer, ctx);
+                    CompileFlatColumns(query, writer);
                     return;
                 }
 
                 writer.Append("SELECT TOP (");
                 writer.AppendParameter(limit);
                 writer.Append(") ");
-                CompileColumnsAfterSelect(ctx, query, writer);
-                writer.X.AssertMatches(ctx);
+                CompileColumnsAfterSelect(query, writer);
                 return;
             }
 
-            base.CompileColumns(ctx, query, writer);
+            base.CompileColumns(query, writer);
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
+        protected override string? CompileLimit(Query query, Writer writer)
         {
             if (UseLegacyPagination)
                 // in legacy versions of Sql Server, limit is handled by TOP
@@ -115,7 +113,6 @@ namespace SqlKata.Compilers
                 writer.Append("OFFSET ");
                 writer.AppendParameter(offset);
                 writer.Append(" ROWS");
-                writer.X.AssertMatches(ctx);
                 return writer;
             }
 
@@ -124,7 +121,6 @@ namespace SqlKata.Compilers
             writer.Append(" ROWS FETCH NEXT ");
             writer.AppendParameter(limit);
             writer.Append(" ROWS ONLY");
-            writer.X.AssertMatches(ctx);
             return writer;
         }
 
@@ -138,8 +134,7 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override void CompileBasicDateCondition(
-            SqlResult ctx, Query query,
+        protected override void CompileBasicDateCondition(Query query,
             BasicDateCondition condition, Writer writer)
         {
             var part = condition.Part.ToUpperInvariant();
@@ -167,7 +162,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             writer.Append(condition.Operator);
             writer.Append(" ");
-            writer.AppendParameter(ctx, query, condition.Value);
+            writer.AppendParameter(query, condition.Value);
             if (condition.IsNot)
                 writer.Append(")");
         }

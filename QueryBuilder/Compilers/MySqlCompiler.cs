@@ -9,7 +9,7 @@ namespace SqlKata.Compilers
             EngineCode = EngineCodes.MySql;
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
+        protected override string? CompileLimit(Query query, Writer writer)
         {
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);

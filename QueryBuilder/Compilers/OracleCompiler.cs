@@ -14,11 +14,11 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; set; }
 
-        public override void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
+        public override void CompileSelectQueryInner(Query query, Writer writer)
         {
             if (!UseLegacyPagination)
             {
-                base.CompileSelectQueryInner(ctx, query, writer);
+                base.CompileSelectQueryInner(query, writer);
                 return;
             }
 
@@ -27,21 +27,21 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset == 0)
             {
-                base.CompileSelectQueryInner(ctx, query, writer);
+                base.CompileSelectQueryInner(query, writer);
                 return;
             }
 
             if (limit == 0)
             {
                 writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
-                base.CompileSelectQueryInner(ctx, query, writer);
+                base.CompileSelectQueryInner(query, writer);
                 writer.Append(""") "results_wrapper") WHERE "row_num" > """);
                 writer.AppendParameter(offset);
             }
             else if (offset == 0)
             {
                 writer.Append("""SELECT * FROM (""");
-                base.CompileSelectQueryInner(ctx, query, writer);
+                base.CompileSelectQueryInner(query, writer);
                 writer.Append(""") WHERE ROWNUM <= """);
                 writer.AppendParameter(limit);
                 writer.BindOne(limit);
@@ -49,7 +49,7 @@ namespace SqlKata.Compilers
             else
             {
                 writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
-                base.CompileSelectQueryInner(ctx, query, writer);
+                base.CompileSelectQueryInner(query, writer);
                 writer.Append(""") "results_wrapper" WHERE ROWNUM <= """);
                 writer.AppendParameter(limit + offset);
                 writer.Append(""") WHERE "row_num" > """);
@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
+        protected override string? CompileLimit(Query query, Writer writer)
         {
             if (UseLegacyPagination)
                 // in pre-12c versions of Oracle,
@@ -90,8 +90,7 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx,
-            Query query, BasicDateCondition condition, Writer writer)
+        protected override void CompileBasicDateCondition(Query query, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var isDateTime = condition.Value is DateTime;
@@ -108,12 +107,12 @@ namespace SqlKata.Compilers
                     writer.Append(" TO_CHAR(");
                     if (isDateTime)
                     {
-                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.AppendParameter(query, condition.Value);
                     }
                     else
                     {
                         writer.Append("TO_DATE(");
-                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.AppendParameter(query, condition.Value);
                         writer.Append(", 'YY-MM-DD')");
                     }
                     writer.Append(", 'YY-MM-DD')");
@@ -126,7 +125,7 @@ namespace SqlKata.Compilers
                         writer.Append(", 'HH24:MI:SS') ");
                         writer.Append(condition.Operator);
                         writer.Append(" TO_CHAR(");
-                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.AppendParameter(query, condition.Value);
                         writer.Append(", 'HH24:MI:SS')");
                     }
                     else
@@ -137,7 +136,7 @@ namespace SqlKata.Compilers
                         writer.Append(condition.Operator);
                         writer.Append(" TO_CHAR(");
                         writer.Append("TO_DATE(");
-                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.AppendParameter(query, condition.Value);
                         var isHhSs = condition.Value.ToString()!
                             .Split(':').Length == 2;
                         writer.Append(isHhSs ? ", 'HH24:MI')" : ", 'HH24:MI:SS')");
@@ -157,21 +156,21 @@ namespace SqlKata.Compilers
                     writer.Append(") ");
                     writer.Append(condition.Operator);
                     writer.Append(" ");
-                    writer.AppendParameter(ctx, query, condition.Value);
+                    writer.AppendParameter(query, condition.Value);
                     break;
                 default:
                     writer.Append(column);
                     writer.Append(" ");
                     writer.Append(condition.Operator);
                     writer.Append(" ");
-                    writer.AppendParameter(ctx, query, condition.Value);
+                    writer.AppendParameter(query, condition.Value);
                     break;
             }
             if (condition.IsNot)
                 writer.Append(")");
         }
 
-        protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
+        protected override void CompileRemainingInsertClauses(Query query, string table,
             Writer writer,
             IEnumerable<InsertClause> inserts)
         {
@@ -181,7 +180,7 @@ namespace SqlKata.Compilers
                 writer.Append(table);
                 writer.WriteInsertColumnsList(insert.Columns);
                 writer.Append(" VALUES (");
-                writer.CommaSeparatedParameters(ctx, query, insert.Values);
+                writer.CommaSeparatedParameters(query, insert.Values);
                 writer.Append(")");
             }
             writer.Append(" SELECT 1 FROM DUAL");

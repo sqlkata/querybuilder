@@ -7,7 +7,8 @@ namespace SqlKata.Compilers
         public static SqlResult Compile(this Compiler compiler, Query query)
         {
             var writer = new Writer(compiler.XService);
-            var ctx = compiler.CompileRaw(query, writer);
+            compiler.CompileRaw(query, writer);
+            var ctx = new SqlResult();
             ctx.ReplaceRaw(writer);
             ctx.ReplaceBindings(writer.Bindings);
             ctx = compiler.PrepareResult(ctx, writer);
@@ -28,37 +29,30 @@ namespace SqlKata.Compilers
                 var sqlResult = new SqlResult();
                 writer.List(";\n", queries, query =>
                 {
-                    var sub = compiler.CompileRaw(query, writer);
-                    writer.X.AssertMatches(sub);
+                    compiler.CompileRaw(query, writer);
                 });
                 return sqlResult;
             }
         }
 
-        private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
+        private static void CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
-            var ctx = new SqlResult();
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
                 compiler.CompileCteQuery(query, writer);
-                writer.X.AssertMatches(ctx);
             }
             if (query.Method == "insert")
             {
-                compiler.CompileInsertQuery(ctx, query, writer);
-                writer.X.AssertMatches(ctx);
-
+                compiler.CompileInsertQuery(query, writer);
             }
             else if (query.Method == "update")
             {
-                compiler.CompileUpdateQuery(ctx, query, writer);
-                writer.X.AssertMatches(ctx);
+                compiler.CompileUpdateQuery(query, writer);
             }
             else if (query.Method == "delete")
             {
-                compiler.CompileDeleteQuery(ctx, query, writer);
-                writer.X.AssertMatches(ctx);
+                compiler.CompileDeleteQuery(query, writer);
             }
             else
             {
@@ -70,19 +64,16 @@ namespace SqlKata.Compilers
 
                     query = TransformAggregateQuery(query);
                 }
-              
-                writer.X.AssertMatches(ctx);
-                compiler.CompileSelectQueryInner(ctx, query, writer);
-                writer.X.AssertMatches(ctx);
+
+                compiler.CompileSelectQueryInner(query, writer);
             }
 
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
            // ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
            //     "?", ctx.Bindings.ToArray()));
-            writer.X.AssertMatches(ctx);
 
-            return ctx;
+           
             Query TransformAggregateQuery(Query query1)
             {
                 var clause = query1.GetOneComponent<AggregateClause>("aggregate", compiler.EngineCode)!;
