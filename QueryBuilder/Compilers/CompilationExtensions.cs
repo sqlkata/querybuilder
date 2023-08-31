@@ -105,6 +105,7 @@ namespace SqlKata.Compilers
             ctx.NamedBindings = ctx.Bindings.GenerateNamedBindings(compiler.ParameterPrefix);
             ctx.Sql = BindingExtensions.ReplaceAll(writer,
                 "?", i => compiler.ParameterPrefix + i);
+            writer.EnsureBindingMatch();
             return ctx;
         }
 

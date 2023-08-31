@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using FluentAssertions;
 
@@ -6,20 +7,32 @@ namespace SqlKata.Compilers
     public sealed class Writer
     {
         public IReadOnlyList<object?> Bindings => _bindings;
-        public void BindOne(object? value)
+
+        private void BindOne(object? value)
+        {
+            BindOneInner(value);
+            EnsureBindingMatch();
+        }
+
+        private void BindOneInner(object? value)
         {
             if (value?.AsArray() is { } arr)
                 _bindings.AddRange(arr.Cast<object?>());
             else
                 _bindings.Add(value);
-            S.ToString().CountMatches("?").Should()
-                .Be(_bindings.FlattenOneLevel().Count());
         }
 
         public void BindMany(IEnumerable<object?> values)
         {
             foreach (var binding in values)
-                BindOne(binding);
+                BindOneInner(binding);
+            EnsureBindingMatch();
+        }
+        [Conditional("DEBUG")]
+        public void EnsureBindingMatch()
+        {
+            S.ToString().CountMatches("?").Should()
+                .Be(_bindings.FlattenOneLevel().Count());
         }
 
         public X X { get; }
