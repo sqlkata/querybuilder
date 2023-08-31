@@ -14,11 +14,11 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; init; }
 
-        protected override void CompileSelectQueryInner(Query query, Writer writer)
+        protected override void CompileSelectQuery(Query query, Writer writer)
         {
             if (!UseLegacyPagination)
             {
-                base.CompileSelectQueryInner(query, writer);
+                base.CompileSelectQuery(query, writer);
                 return;
             }
 
@@ -27,28 +27,28 @@ namespace SqlKata.Compilers
 
             if (limit == 0 && offset == 0)
             {
-                base.CompileSelectQueryInner(query, writer);
+                base.CompileSelectQuery(query, writer);
                 return;
             }
 
             if (limit == 0)
             {
                 writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
-                base.CompileSelectQueryInner(query, writer);
+                base.CompileSelectQuery(query, writer);
                 writer.Append(""") "results_wrapper") WHERE "row_num" > """);
                 writer.AppendParameter(offset);
             }
             else if (offset == 0)
             {
                 writer.Append("""SELECT * FROM (""");
-                base.CompileSelectQueryInner(query, writer);
+                base.CompileSelectQuery(query, writer);
                 writer.Append(""") WHERE ROWNUM <= """);
                 writer.AppendParameter(limit);
             }
             else
             {
                 writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
-                base.CompileSelectQueryInner(query, writer);
+                base.CompileSelectQuery(query, writer);
                 writer.Append(""") "results_wrapper" WHERE ROWNUM <= """);
                 writer.AppendParameter(limit + offset);
                 writer.Append(""") WHERE "row_num" > """);

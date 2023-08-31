@@ -73,7 +73,7 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
 
-                CompileSelectQueryInner(query, writer);
+                CompileSelectQuery(query, writer);
             }
 
             Query TransformAggregateQuery(Query input)
@@ -108,12 +108,8 @@ namespace SqlKata.Compilers
 
         }
 
-        private void CompileSelectQuery(Query query, Writer writer)
-        {
-            CompileSelectQueryInner(query, writer);
-        }
 
-        protected virtual void CompileSelectQueryInner(Query query, Writer writer)
+        protected virtual void CompileSelectQuery(Query query, Writer writer)
         {
             writer.WhitespaceSeparated(
                 () => CompileColumns(query, writer),

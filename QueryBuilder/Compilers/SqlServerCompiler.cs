@@ -13,11 +13,11 @@ namespace SqlKata.Compilers
 
         public bool UseLegacyPagination { get; init; }
 
-        protected override void CompileSelectQueryInner(Query original, Writer writer)
+        protected override void CompileSelectQuery(Query original, Writer writer)
         {
             if (!UseLegacyPagination || !original.HasOffset(EngineCode))
             {
-                base.CompileSelectQueryInner(original, writer);
+                base.CompileSelectQuery(original, writer);
                 return;
             }
 
@@ -26,7 +26,7 @@ namespace SqlKata.Compilers
 
             var modified = ModifyQuery(original.Clone());
             writer.Append("SELECT * FROM (");
-            base.CompileSelectQueryInner(modified, writer);
+            base.CompileSelectQuery(modified, writer);
             writer.Append(") AS [results_wrapper] WHERE [row_num] ");
             if (limit == 0)
             {
