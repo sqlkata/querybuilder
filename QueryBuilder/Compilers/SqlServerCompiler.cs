@@ -44,13 +44,11 @@ namespace SqlKata.Compilers
 
         private Query ModifyQuery(Query query)
         {
-            var ctx = new SqlResult();
-
             if (!query.HasComponent("select")) query.Select("*");
 
             var writer = new Writer(XService);
             var order = CompileOrders(query, writer) ?? "ORDER BY (SELECT 0)";
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]");
 
             query.RemoveComponent("order");
             return query;
