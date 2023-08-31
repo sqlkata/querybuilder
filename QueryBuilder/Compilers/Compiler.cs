@@ -281,16 +281,12 @@ namespace SqlKata.Compilers
 
         private void CompileCteQuery(Query query, Writer writer)
         {
-            var cteSearchResult = CteFinder.Find(query, EngineCode);
             writer.Append("WITH ");
 
-            foreach (var cte in cteSearchResult)
-            {
-                CompileCte(cte, writer);
-                writer.Append(",\n");
-            }
-
-            writer.RemoveLast(2); // remove last comma
+            writer.List(",\n",
+                CteFinder.Find(query, EngineCode),
+                cte => CompileCte(cte, writer));
+          
             writer.Append('\n');
         }
 
