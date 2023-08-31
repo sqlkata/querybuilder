@@ -14,32 +14,7 @@ namespace SqlKata.Compilers
         Firebird,
         SqlServer
     }
-    public sealed class Renderer
-    {
-        public readonly WhiteList Operators = new();
 
-        public X X { get; }
-        public const string SingleInsertStartClause = "INSERT INTO";
-        public string MultiInsertStartClause { get; set; } = "INSERT INTO";
-        public const string LastId = "SELECT scope_identity() as Id";
-        public const string ParameterPlaceholder = "?";
-        public string ParameterPrefix { get; set; } = "@p";
-        public string True { get; set; } = "true";
-        public string False { get; set; } = "false";
-        public string? SingleRowDummyTableName { get; set; } = null;
-
-        public Dialect Dialect { get; set; }
-
-        public BindingMode BindingMode { get; set; } = BindingMode.Values;
-        public Renderer(X x)
-        {
-            X = x;
-        }
-
-        private int _parameter = -1;
-        public int NextParameter() => ++_parameter;
-
-    }
     public sealed class X
     {
         private readonly bool _capitalize;

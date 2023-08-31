@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
             EngineCode = EngineCodes.SqlServer;
         }
 
-        public bool UseLegacyPagination { get; set; }
+        public bool UseLegacyPagination { get; init; }
 
         public override void CompileSelectQueryInner(Query original, Writer writer)
         {

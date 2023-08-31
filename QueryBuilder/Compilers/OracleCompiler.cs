@@ -12,7 +12,7 @@ namespace SqlKata.Compilers
             SingleRowDummyTableName = "DUAL";
         }
 
-        public bool UseLegacyPagination { get; set; }
+        public bool UseLegacyPagination { get; init; }
 
         public override void CompileSelectQueryInner(Query query, Writer writer)
         {

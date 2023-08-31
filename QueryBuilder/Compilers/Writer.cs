@@ -106,10 +106,6 @@ namespace SqlKata.Compilers
             X.AsAlias(S, input);
         }
 
-        public void AppendRaw(string rawExpression)
-        {
-            S.Append(X.WrapIdentifiers(rawExpression));
-        }
         public void AppendRaw(string rawExpression, IEnumerable<object?> bindings)
         {
             var wrapIdentifiers = X.WrapIdentifiers(rawExpression);

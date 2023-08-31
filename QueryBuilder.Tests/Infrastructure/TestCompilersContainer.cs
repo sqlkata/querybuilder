@@ -4,7 +4,7 @@ namespace SqlKata.Tests.Infrastructure;
 
 public class TestCompilersContainer
 {
-    protected readonly IDictionary<string, Compiler> Compilers = new Dictionary<string, Compiler>
+    private readonly IDictionary<string, Compiler> _compilers = new Dictionary<string, Compiler>
     {
         [EngineCodes.MySql] = new MySqlCompiler(),
         [EngineCodes.Oracle] = new OracleCompiler(),
@@ -19,7 +19,7 @@ public class TestCompilersContainer
 
     public ICollection<string> KnownEngineCodes
     {
-        get { return Compilers.Keys; }
+        get { return _compilers.Keys; }
     }
 
     /// <summary>
@@ -29,10 +29,10 @@ public class TestCompilersContainer
     /// <returns></returns>
     public Compiler Get(string engineCode)
     {
-        if (!Compilers.ContainsKey(engineCode))
-            throw new InvalidOperationException(string.Format(Messages.ErrInvalidEnginecode, engineCode));
+        if (!_compilers.ContainsKey(engineCode))
+            throw new InvalidOperationException(string.Format(Messages.ErrInvalidEngineCode, engineCode));
 
-        return Compilers[engineCode];
+        return _compilers[engineCode];
     }
 
     /// <summary>
@@ -69,15 +69,15 @@ public class TestCompilersContainer
     {
         var codes = engineCodes.ToList();
 
-        var results = Compilers
+        var results = _compilers
             .Where(w => codes.Contains(w.Key))
             .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
 
         if (results.Count != codes.Count)
         {
-            var missingCodes = codes.Where(w => Compilers.All(a => a.Key != w));
+            var missingCodes = codes.Where(w => _compilers.All(a => a.Key != w));
             var templateArg = string.Join(", ", missingCodes);
-            throw new InvalidOperationException(string.Format(Messages.ErrInvalidEnginecodes, templateArg));
+            throw new InvalidOperationException(string.Format(Messages.ErrInvalidEngineCodes, templateArg));
         }
 
         return new TestSqlResultContainer(results);
@@ -90,14 +90,14 @@ public class TestCompilersContainer
     /// <returns></returns>
     public TestSqlResultContainer Compile(Query query)
     {
-        var resultKeyValues = Compilers
+        var resultKeyValues = _compilers
             .ToDictionary(k => k.Key, v => v.Value.Compile(query.Clone()));
         return new TestSqlResultContainer(resultKeyValues);
     }
 
     private static class Messages
     {
-        public const string ErrInvalidEnginecode = "Engine code '{0}' is not valid";
-        public const string ErrInvalidEnginecodes = "Invalid engine codes supplied '{0}'";
+        public const string ErrInvalidEngineCode = "Engine code '{0}' is not valid";
+        public const string ErrInvalidEngineCodes = "Invalid engine codes supplied '{0}'";
     }
 }

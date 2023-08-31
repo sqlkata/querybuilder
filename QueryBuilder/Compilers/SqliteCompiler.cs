@@ -2,7 +2,7 @@ namespace SqlKata.Compilers
 {
     public sealed class SqliteCompiler : Compiler
     {
-        private static readonly Dictionary<string, string> FormatMap = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> FormatMap = new()
         {
             { "date", "%Y-%m-%d" },
             { "time", "%H:%M:%S" },

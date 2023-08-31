@@ -68,12 +68,6 @@ namespace SqlKata.Compilers
                 compiler.CompileSelectQueryInner(query, writer);
             }
 
-
-            // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
-           // ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
-           //     "?", ctx.Bindings.ToArray()));
-
-           
             Query TransformAggregateQuery(Query query1)
             {
                 var clause = query1.GetOneComponent<AggregateClause>("aggregate", compiler.EngineCode)!;
