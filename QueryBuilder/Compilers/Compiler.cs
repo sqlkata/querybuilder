@@ -546,24 +546,24 @@ namespace SqlKata.Compilers
 
         protected string? CompileOrders(Query query, Writer writer)
         {
-            if (!query.HasComponent("order", EngineCode)) return null;
-
-            var columns = query
-                .GetComponents<AbstractOrderBy>("order", EngineCode)
-                .Select(x =>
-                {
-                    if (x is RawOrderBy raw)
-                    {
-                        return XService.WrapIdentifiers(raw.Expression);
-                    }
-
-                    var direction = ((OrderBy)x).Ascending ? "" : " DESC";
-
-                    return XService.Wrap(((OrderBy)x).Column) + direction;
-                });
+            var clauses = query
+                .GetComponents<AbstractOrderBy>("order", EngineCode);
+            if (clauses.Count == 0) return null;
 
             writer.Append("ORDER BY ");
-            writer.List(", ", columns);
+            writer.List(", ", clauses, x =>
+               {
+                   if (x is RawOrderBy raw)
+                   {
+                       writer.AppendRaw(raw.Expression, raw.Bindings);
+                   }
+                   else if (x is OrderBy orderBy)
+                   {
+                       writer.AppendName(orderBy.Column);
+                       if (!orderBy.Ascending)
+                           writer.Append(" DESC");
+                   }
+               });
             return writer;
         }
 
