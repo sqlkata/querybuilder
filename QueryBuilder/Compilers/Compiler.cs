@@ -625,22 +625,5 @@ namespace SqlKata.Compilers
 
             return parameter;
         }
-
-        public static string Parameter(Query query, Writer writer, object? parameter)
-        {
-            // if we face a literal value we have to return it directly
-            if (parameter is UnsafeLiteral literal) return literal.Value;
-
-            // if we face a variable we have to lookup the variable from the predefined variables
-            if (parameter is Variable variable)
-            {
-                var value = query.FindVariable(variable.Name);
-                writer.BindOne(value);
-                return "?";
-            }
-
-            writer.BindOne(parameter);
-            return "?";
-        }
     }
 }

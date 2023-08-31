@@ -82,7 +82,24 @@ namespace SqlKata.Compilers
 
         public void AppendParameter(Query query, object? value)
         {
-            Append(Compiler.Parameter(query, this, value));
+            switch (value)
+            {
+                case UnsafeLiteral literal:
+                    // if we face a literal value we have to return it directly
+                    Append(literal.Value);
+                    break;
+                case Variable variable:
+                {
+                    // if we face a variable we have to lookup the variable from the predefined variables
+                    BindOne(query.FindVariable(variable.Name));
+                    Append("?");
+                    break;
+                }
+                default:
+                    BindOne(value);
+                    Append("?");
+                    break;
+            }
         }
         public void Append(string? value) => S.Append(value);
         public void Append(char value) => S.Append(value);
