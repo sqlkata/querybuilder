@@ -278,16 +278,39 @@ namespace SqlKata.Compilers
             }
         }
 
-
         private void CompileCteQuery(Query query, Writer writer)
         {
             writer.Append("WITH ");
 
-            writer.List(",\n",
-                CteFinder.Find(query, EngineCode),
-                cte => CompileCte(cte, writer));
+            writer.List(",\n", CteFinder.Find(query, EngineCode), CompileCte);
           
             writer.Append('\n');
+            return;
+
+
+            void CompileCte(AbstractFrom? cte)
+            {
+                switch (cte)
+                {
+                    case RawFromClause raw:
+                        Debug.Assert(raw.Alias != null, "raw.Alias != null");
+                        writer.AppendValue(raw.Alias);
+                        writer.Append(" AS (");
+                        writer.AppendRaw(raw.Expression, raw.Bindings);
+                        writer.Append(")");
+                        break;
+                    case QueryFromClause queryFromClause:
+                        Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
+                        writer.AppendValue(queryFromClause.Alias);
+                        writer.Append(" AS (");
+                        CompileSelectQuery(queryFromClause.Query, writer);
+                        writer.Append(")");
+                        break;
+                    case AdHocTableFromClause adHoc:
+                        CompileAdHocQuery(adHoc, writer);
+                        break;
+                }
+            }
         }
 
         private void CompileColumn(Query query, AbstractColumn column, Writer writer)
@@ -330,7 +353,6 @@ namespace SqlKata.Compilers
                 return;
             }
 
-
             if (SupportsFilterClause)
             {
                 writer.Append("(");
@@ -348,42 +370,17 @@ namespace SqlKata.Compilers
             writer.Append(col);
             writer.Append(" END)");
             writer.Append(alias);
-        }
 
-        private static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
-        {
-            if (aggregatedColumn.Filter == null)
-                return new List<AbstractCondition>();
-
-            return aggregatedColumn.Filter
-                .GetComponents<AbstractCondition>("where");
-        }
-
-        private void CompileCte(AbstractFrom? cte, Writer writer)
-        {
-            if (cte is RawFromClause raw)
+            static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
             {
-                Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                writer.AppendValue(raw.Alias);
-                writer.Append(" AS (");
-                writer.AppendRaw(raw.Expression, raw.Bindings);
-                writer.Append(")");
-            }
-            else if (cte is QueryFromClause queryFromClause)
-            {
-                Debug.Assert(queryFromClause.Alias != null, "queryFromClause.Alias != null");
-                writer.AppendValue(queryFromClause.Alias);
-                writer.Append(" AS (");
-                CompileSelectQuery(queryFromClause.Query, writer);
-                writer.Append(")");
-            }
-            else if (cte is AdHocTableFromClause adHoc)
-            {
-                CompileAdHocQuery(adHoc, writer);
+                if (aggregatedColumn.Filter == null)
+                    return new List<AbstractCondition>();
 
-
+                return aggregatedColumn.Filter
+                    .GetComponents<AbstractCondition>("where");
             }
         }
+
 
         protected virtual void CompileColumns(Query query, Writer writer)
         {
