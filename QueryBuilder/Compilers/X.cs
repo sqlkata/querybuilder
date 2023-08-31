@@ -19,10 +19,10 @@ namespace SqlKata.Compilers
         public readonly WhiteList Operators = new();
 
         public X X { get; }
-        public string SingleInsertStartClause { get; } = "INSERT INTO";
+        public const string SingleInsertStartClause = "INSERT INTO";
         public string MultiInsertStartClause { get; set; } = "INSERT INTO";
-        public string LastId { get; } = "SELECT scope_identity() as Id";
-        public string ParameterPlaceholder { get; } = "?";
+        public const string LastId = "SELECT scope_identity() as Id";
+        public const string ParameterPlaceholder = "?";
         public string ParameterPrefix { get; set; } = "@p";
         public string True { get; set; } = "true";
         public string False { get; set; } = "false";

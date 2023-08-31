@@ -1,14 +1,9 @@
 using System.Text;
-using SqlKata.Compilers;
 
 namespace SqlKata
 {
     public static class StringBuilderExtensions{
-        public static void RenderList(this StringBuilder sb,
-            string separator, IEnumerable<Q> list, Renderer r)
-        {
-            sb.RenderList(separator, list, n => n.Render(sb, r));
-        }
+        
         public static void RenderList<T>(this StringBuilder sb,
             string separator, IEnumerable<T> list, Action<T>? renderItem = null)
         {

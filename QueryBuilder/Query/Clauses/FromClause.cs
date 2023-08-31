@@ -1,6 +1,4 @@
 using System.Collections.Immutable;
-using System.Text;
-using SqlKata.Compilers;
 
 namespace SqlKata
 {
@@ -15,11 +13,6 @@ namespace SqlKata
     {
         public required string Table { get; init; }
         public required string Alias { get; init; }
-
-        public override void Render(StringBuilder sb, Renderer r)
-        {
-            r.X.Wrap(sb, Table);
-        }
     }
 
     /// <summary>
@@ -36,11 +29,6 @@ namespace SqlKata
         public required string? Alias { get; init; }
         public required string Expression { get; init; }
         public required ImmutableArray<object> Bindings { get; init; }
-        
-        public override void Render(StringBuilder sb, Renderer r)
-        {
-            sb.Append(r.X.WrapIdentifiers(Expression));
-        }
     }
 
     /// <summary>
