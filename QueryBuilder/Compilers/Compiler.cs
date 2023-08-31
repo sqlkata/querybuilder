@@ -72,19 +72,24 @@ namespace SqlKata.Compilers
 
         protected virtual void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
-            var row = "SELECT " +
-                      string.Join(", ", adHoc.Columns.Select(col => $"? AS {XService.Wrap(col)}"));
-
-            var fromTable = SingleRowDummyTableName;
-
-            if (fromTable != null) row += $" FROM {fromTable}";
-
-            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Length / adHoc.Columns.Length));
-
             Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
             writer.AppendValue(adHoc.Alias);
             writer.Append(" AS (");
-            writer.Append(rows);
+            writer.List(" UNION ALL ",
+                adHoc.Values.Length / adHoc.Columns.Length, _ =>
+                {
+                    writer.Append("SELECT ");
+                    writer.List(", ", adHoc.Columns, column =>
+                    {
+                        writer.Append("? AS ");
+                        writer.AppendName(column);
+                    });
+                    if (SingleRowDummyTableName != null)
+                    {
+                        writer.Append(" FROM ");
+                        writer.Append(SingleRowDummyTableName);
+                    }
+                });
             writer.BindMany(adHoc.Values);
             writer.Append(")");
         }
@@ -189,7 +194,7 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(clause.Query, w);
                 ctx.BindingsAddRange(subCtx.Bindings);
-              //  w.BindMany(subCtx.Bindings);
+                //  w.BindMany(subCtx.Bindings);
                 w.Pop();
                 w.AssertMatches(ctx);
 
@@ -371,7 +376,7 @@ namespace SqlKata.Compilers
             {
                 CompileAdHocQuery(adHoc, writer);
 
-             
+
             }
         }
 
