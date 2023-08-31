@@ -11,7 +11,7 @@ namespace SqlKata.Compilers
 
         public override void CompileInsertQuery(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
 
 
             var inserts = query.GetComponents<AbstractInsertClause>("insert", EngineCode);
@@ -28,7 +28,7 @@ namespace SqlKata.Compilers
                 return;
             }
             CompileValueInsertClauses(clauses);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             return;
 
             void CompileValueInsertClauses(InsertClause[] insertClauses)
@@ -56,7 +56,7 @@ namespace SqlKata.Compilers
                 writer.CommaSeparatedParameters(ctx, query, insert.Values);
             }
             writer.Append(" FROM RDB$DATABASE");
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
@@ -71,7 +71,7 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(limit + offset);
                 return writer;
             }
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             return null;
         }
 
@@ -98,7 +98,7 @@ namespace SqlKata.Compilers
                 CompileColumnsAfterSelect(ctx, query, writer);
                 return;
             }
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             base.CompileColumns(ctx, query, writer);
         }
 

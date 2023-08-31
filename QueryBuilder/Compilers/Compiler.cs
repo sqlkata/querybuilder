@@ -46,14 +46,12 @@ namespace SqlKata.Compilers
         private void CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
-            writer.Push(ctx);
             CompileSelectQueryInner(ctx, query, writer);
-            writer.Pop();
         }
 
         public virtual void CompileSelectQueryInner(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             writer.WhitespaceSeparated(
                 () => CompileColumns(ctx, query, writer),
                 () => CompileFrom(ctx, query, writer),
@@ -64,7 +62,7 @@ namespace SqlKata.Compilers
                 () => CompileOrders(ctx, query, writer),
                 () => CompileLimit(ctx, query, writer),
                 () => CompileUnion(ctx, query, writer));
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         protected virtual void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
@@ -168,18 +166,18 @@ namespace SqlKata.Compilers
                 : SingleInsertStartClause);
             writer.Append(" ");
             var table = WriteTable(query, writer, "insert");
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
 
             if (inserts[0] is InsertQueryClause insertQueryClause)
             {
 
                 CompileInsertQueryClause(insertQueryClause, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
             CompileValueInsertClauses();
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             return;
 
 
@@ -189,7 +187,7 @@ namespace SqlKata.Compilers
                 w.Append(" ");
 
                 CompileSelectQuery(clause.Query, w);
-                w.AssertMatches(ctx);
+                w.X.AssertMatches(ctx);
 
             }
 
@@ -215,7 +213,7 @@ namespace SqlKata.Compilers
                     writer.Append(";");
                     writer.Append(LastId);
                 }
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
             }
         }
 
@@ -261,35 +259,35 @@ namespace SqlKata.Compilers
             if (column is RawColumn raw)
             {
                 writer.AppendRaw(raw.Expression);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
             if (column is QueryColumn queryColumn)
             {
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 writer.Append("(");
                 CompileSelectQuery(queryColumn.Query, writer);
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
             if (column is AggregatedColumn aggregatedColumn)
             {
                 CompileAggregatedColumn(ctx, query, writer, aggregatedColumn);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
             writer.Append(XService.Wrap(((Column)column).Name));
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private void CompileAggregatedColumn(SqlResult ctx, Query query, Writer writer, AggregatedColumn c)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             writer.Append(c.Aggregate.ToUpperInvariant());
 
             var (col, alias) = XService.SplitAlias(
@@ -303,7 +301,7 @@ namespace SqlKata.Compilers
                 writer.Append(col);
                 writer.Append(")");
                 writer.Append(alias);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
@@ -316,7 +314,7 @@ namespace SqlKata.Compilers
                 CompileConditions(ctx, query, filterConditions, writer);
                 writer.Append(")");
                 writer.Append(alias);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
@@ -326,7 +324,7 @@ namespace SqlKata.Compilers
             writer.Append(col);
             writer.Append(" END)");
             writer.Append(alias);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
@@ -366,7 +364,7 @@ namespace SqlKata.Compilers
 
         protected virtual void CompileColumns(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             writer.Append("SELECT ");
             CompileColumnsAfterSelect(ctx, query, writer);
         }
@@ -401,12 +399,12 @@ namespace SqlKata.Compilers
                     writer.List(", ", aggregateColumns);
                     writer.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
-                    writer.AssertMatches(ctx);
+                    writer.X.AssertMatches(ctx);
                 }
                 else
                 {
                     writer.Append("1");
-                    writer.AssertMatches(ctx);
+                    writer.X.AssertMatches(ctx);
                 }
             }
         }
@@ -427,7 +425,7 @@ namespace SqlKata.Compilers
 
         private void CompileUnion(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             // Handle UNION, EXCEPT and INTERSECT
             writer.List(" ",
                 query.GetComponents<AbstractCombine>("combine", EngineCode),
@@ -440,7 +438,7 @@ namespace SqlKata.Compilers
                         if (combine.All)
                             writer.Append("ALL ");
 
-                        writer.AssertMatches(ctx);
+                        writer.X.AssertMatches(ctx);
                         CompileSelectQuery(combine.Query, writer);
                     }
                     else if (clause is RawCombine c)
@@ -448,7 +446,7 @@ namespace SqlKata.Compilers
                         writer.AppendRaw(c.Expression, c.Bindings);
                     }
                 });
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private void CompileTableExpression(SqlResult ctx, AbstractFrom from, Writer writer)
@@ -456,7 +454,7 @@ namespace SqlKata.Compilers
             if (from is RawFromClause raw)
             {
                 writer.AppendRaw(raw.Expression, raw.Bindings);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
@@ -465,7 +463,7 @@ namespace SqlKata.Compilers
                 var q = queryFromClause.Query;
                 writer.Append("(");
                 CompileSelectQuery(q, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
 
                 writer.Append(")");
                 if (!string.IsNullOrEmpty(q.QueryAlias))
@@ -475,7 +473,7 @@ namespace SqlKata.Compilers
                     writer.AppendValue(q.QueryAlias);
                 }
 
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
@@ -525,23 +523,23 @@ namespace SqlKata.Compilers
 
             writer.Append("FROM ");
             CompileTableExpression(ctx, from, writer);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private void CompileJoins(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
             if (!baseJoins.Any())
             {
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
             writer.Whitespace();
             writer.Append("\n");
             writer.List("\n", baseJoins, x => CompileJoin(ctx, query, x.Join, writer));
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private void CompileJoin(SqlResult ctx, Query query, Join join, Writer writer)
@@ -570,26 +568,26 @@ namespace SqlKata.Compilers
             writer.Whitespace();
             writer.Append("WHERE ");
             CompileConditions(ctx, query, conditions, writer);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         private void CompileGroups(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             var components = query.GetComponents<AbstractColumn>("group", EngineCode);
             if (!components.Any())
             {
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
             writer.Append("GROUP BY ");
             writer.List(", ", components, x => CompileColumn(ctx, query, x, writer));
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         protected string? CompileOrders(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             if (!query.HasComponent("order", EngineCode)) return null;
 
             var columns = query
@@ -608,7 +606,7 @@ namespace SqlKata.Compilers
 
             writer.Append("ORDER BY ");
             writer.List(", ", columns);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             return writer;
         }
 
@@ -621,12 +619,12 @@ namespace SqlKata.Compilers
             CompileConditions(ctx, query,
                 havingClauses.Cast<AbstractCondition>().ToList(),
                 writer);
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
         }
 
         protected virtual string? CompileLimit(SqlResult ctx, Query query, Writer writer)
         {
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             var limit = query.GetLimit(EngineCode);
             if (limit != 0)
             {

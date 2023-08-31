@@ -49,9 +49,8 @@ namespace SqlKata.Compilers
             if (!query.HasComponent("select")) query.Select("*");
 
             var writer = new Writer(XService);
-            writer.Push(ctx);
             var order = CompileOrders(ctx, query, writer) ?? "ORDER BY (SELECT 0)";
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
 
             query.RemoveComponent("order");
@@ -90,7 +89,7 @@ namespace SqlKata.Compilers
                 writer.AppendParameter(limit);
                 writer.Append(") ");
                 CompileColumnsAfterSelect(ctx, query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return;
             }
 
@@ -116,7 +115,7 @@ namespace SqlKata.Compilers
                 writer.Append("OFFSET ");
                 writer.AppendParameter(offset);
                 writer.Append(" ROWS");
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return writer;
             }
 
@@ -125,7 +124,7 @@ namespace SqlKata.Compilers
             writer.Append(" ROWS FETCH NEXT ");
             writer.AppendParameter(limit);
             writer.Append(" ROWS ONLY");
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             return writer;
         }
 

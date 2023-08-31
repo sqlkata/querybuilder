@@ -1,5 +1,4 @@
 using System.Text;
-using FluentAssertions;
 
 namespace SqlKata.Compilers
 {
@@ -22,7 +21,6 @@ namespace SqlKata.Compilers
 
         public X X { get; }
         private readonly List<object?> _bindings = new();
-        private SqlResult? _ctx;
         private StringBuilder S { get; } = new();
         public static implicit operator string(Writer w) => w.S.ToString();
 
@@ -82,12 +80,6 @@ namespace SqlKata.Compilers
             if (S.Length > 0 && S[^1] == ' ') S.Length -= 1;
         }
 
-        public void Assert(string s)
-        {
-            if (s != S.ToString())
-                throw new Exception($"\n\n------Expected------\n{s}\n--------Got---------\n{S}\n\n");
-        }
-
         public void AppendParameter(SqlResult ctx, Query query, object? value)
         {
             Append(Compiler.Parameter(ctx, query, this, value));
@@ -138,45 +130,9 @@ namespace SqlKata.Compilers
             BindOne(value);
         }
 
-        public Writer Sub()
-        {
-            return new Writer(X)
-            {
-                _ctx = _ctx,
-            };
-        }
-
         public void Whitespace()
         {
             if (S.Length > 0 && S[^1] != ' ') S.Append(' ');
-        }
-
-        private readonly Stack<SqlResult> _contexts = new();
-        // ReSharper disable once CollectionNeverQueried.Local
-        private readonly List<SqlResult> _discards = new();
-        public void Push(SqlResult ctx)
-        {
-            if (_ctx != null)
-            {
-                _contexts.Push(_ctx);
-            }
-
-            _ctx = ctx;
-            AssertMatches();
-        }
-        public void Pop()
-        {
-            _discards.Add(_ctx = _contexts.Pop());
-        }
-        public void AssertMatches()
-        {
-            Bindings.Should().EndWith(_ctx!.Bindings);
-        }
-        public void AssertMatches(SqlResult ctx)
-        {
-            if (_ctx != ctx)
-                throw new Exception("Wrong context!");
-            AssertMatches();
         }
 
         public void CommaSeparatedParameters(SqlResult ctx, Query query, IEnumerable<object?> values)

@@ -160,5 +160,14 @@ namespace SqlKata.Compilers
             sb.Append(_columnAsKeyword);
             WrapValue(sb, input);
         }
+
+        public void AssertMatches(SqlResult ctx)
+        {
+          
+        }
+
+        public void AssertMatches()
+        {
+        }
     }
 }

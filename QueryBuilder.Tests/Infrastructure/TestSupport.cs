@@ -14,7 +14,10 @@ public abstract class TestSupport
     /// <returns></returns>
     protected IReadOnlyDictionary<string, string> Compile(Query query)
     {
-        return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
+        return Compilers.Compile(query)
+            .ToDictionary(
+                s => s.Key,
+                v => v.Value.ToString()!);
     }
 
     private static (T?, Exception?) Run<T>(Func<T> action)

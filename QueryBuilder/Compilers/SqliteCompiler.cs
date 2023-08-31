@@ -39,11 +39,11 @@ namespace SqlKata.Compilers
             {
                 writer.Append("LIMIT -1 OFFSET ");
                 writer.AppendParameter(offset);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 return writer;
             }
 
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
             if (base.CompileLimit(ctx, query, writer) == null) return null;
             return writer;
         }

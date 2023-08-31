@@ -29,7 +29,7 @@ namespace SqlKata.Compilers
                 writer.List(";\n", queries, query =>
                 {
                     var sub = compiler.CompileRaw(query, writer);
-                    writer.AssertMatches(sub);
+                    writer.X.AssertMatches(sub);
                 });
                 return sqlResult;
             }
@@ -38,28 +38,27 @@ namespace SqlKata.Compilers
         private static SqlResult CompileRaw(this Compiler compiler, Query query, Writer writer)
         {
             var ctx = new SqlResult();
-            writer.Push(ctx);
             // handle CTEs
             if (query.HasComponent("cte", compiler.EngineCode))
             {
                 compiler.CompileCteQuery(query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
             }
             if (query.Method == "insert")
             {
                 compiler.CompileInsertQuery(ctx, query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
 
             }
             else if (query.Method == "update")
             {
                 compiler.CompileUpdateQuery(ctx, query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
             }
             else if (query.Method == "delete")
             {
                 compiler.CompileDeleteQuery(ctx, query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
             }
             else
             {
@@ -72,16 +71,16 @@ namespace SqlKata.Compilers
                     query = TransformAggregateQuery(query);
                 }
               
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
                 compiler.CompileSelectQueryInner(ctx, query, writer);
-                writer.AssertMatches(ctx);
+                writer.X.AssertMatches(ctx);
             }
 
 
             // "... WHERE `Id` in (?)" -> "... WHERE `Id` in (?,?,?)"
            // ctx.ReplaceRaw(BindingExtensions.ExpandParameters(ctx.RawSql,
            //     "?", ctx.Bindings.ToArray()));
-            writer.AssertMatches(ctx);
+            writer.X.AssertMatches(ctx);
 
             return ctx;
             Query TransformAggregateQuery(Query query1)
