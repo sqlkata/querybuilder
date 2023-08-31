@@ -338,7 +338,7 @@ namespace SqlKata.Compilers
 
             void CompileAggregatedColumn(AggregatedColumn c)
             {
-                writer.Append(c.Aggregate.ToUpperInvariant());
+                writer.AppendKeyword(c.Aggregate);
 
                 var (col, alias) = XService.SplitAlias(
                     XService.WrapName(c.Column.Name));

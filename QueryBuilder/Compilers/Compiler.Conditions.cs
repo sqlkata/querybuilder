@@ -155,7 +155,7 @@ namespace SqlKata.Compilers
         {
             if (x.IsNot)
                 writer.Append("NOT (");
-            writer.Append(x.Part.ToUpperInvariant());
+            writer.AppendKeyword(x.Part);
             writer.Append("(");
             writer.AppendName(x.Column);
             writer.Append(") ");

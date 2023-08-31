@@ -145,13 +145,13 @@ namespace SqlKata.Compilers
                 writer.Append("CAST(");
                 writer.AppendName(condition.Column);
                 writer.Append(" AS ");
-                writer.AppendKeyword(part);
+                writer.Append(part);
                 writer.Append(")");
             }
             else
             {
                 writer.Append("DATEPART(");
-                writer.AppendKeyword(part);
+                writer.Append(part);
                 writer.Append(", ");
                 writer.AppendName(condition.Column);
                 writer.Append(")");
