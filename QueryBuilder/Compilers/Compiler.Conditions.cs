@@ -68,8 +68,7 @@ namespace SqlKata.Compilers
         private void CompileRawCondition(SqlResult ctx, RawCondition x, Writer writer)
         {
             ctx.BindingsAddRange(x.Bindings);
-            writer.BindMany(x.Bindings);
-            writer.AppendRaw(x.Expression);
+            writer.AppendRaw(x.Expression, x.Bindings);
             writer.AssertMatches(ctx);
         }
 

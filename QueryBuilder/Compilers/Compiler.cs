@@ -359,9 +359,11 @@ namespace SqlKata.Compilers
         {
             if (cte is RawFromClause raw)
             {
-                writer.BindMany(raw.Bindings);
                 Debug.Assert(raw.Alias != null, "raw.Alias != null");
-                writer.Append($"{XService.WrapValue(raw.Alias)} AS ({XService.WrapIdentifiers(raw.Expression)})");
+                writer.AppendValue(raw.Alias);
+                writer.Append(" AS (");
+                writer.AppendRaw(raw.Expression, raw.Bindings);
+                writer.Append(")");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
@@ -462,11 +464,10 @@ namespace SqlKata.Compilers
                         writer.Pop();
 
                     }
-                    else if (clause is RawCombine combineRawClause)
+                    else if (clause is RawCombine c)
                     {
-                        writer.AppendRaw(combineRawClause.Expression);
-                        ctx.BindingsAddRange(combineRawClause.Bindings);
-                        writer.BindMany(combineRawClause.Bindings);
+                        writer.AppendRaw(c.Expression, c.Bindings);
+                        ctx.BindingsAddRange(c.Bindings);
                     }
                 });
             writer.AssertMatches(ctx);
@@ -476,8 +477,7 @@ namespace SqlKata.Compilers
         {
             if (from is RawFromClause raw)
             {
-                writer.BindMany(raw.Bindings);
-                writer.AppendRaw(raw.Expression);
+                writer.AppendRaw(raw.Expression, raw.Bindings);
                 writer.AssertMatches(ctx);
                 return;
             }
@@ -529,16 +529,15 @@ namespace SqlKata.Compilers
                 case FromClause fromClauseCast:
                     writer.AppendName(fromClauseCast.Table);
                     return writer.X.Wrap(fromClauseCast.Table);
-                case RawFromClause rawFromClause:
+                case RawFromClause raw:
                     {
-                        writer.AppendRaw(rawFromClause.Expression);
-                        if (rawFromClause.Bindings.Length > 0)
+                        if (raw.Bindings.Length > 0)
                         {
                             //TODO: test!
-                            sqlResult.BindingsAddRange(rawFromClause.Bindings);
-                            writer.BindMany(rawFromClause.Bindings);
+                            sqlResult.BindingsAddRange(raw.Bindings);
                         }
-                        return writer.X.WrapIdentifiers(rawFromClause.Expression);
+                        writer.AppendRaw(raw.Expression, raw.Bindings);
+                        return writer;
                     }
                 default:
                     throw new InvalidOperationException("Invalid table expression");
