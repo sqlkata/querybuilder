@@ -175,7 +175,7 @@ namespace SqlKata.Compilers
             foreach (var insert in inserts.Skip(1))
             {
                 writer.Append(" INTO ");
-                writer.Append(table);
+                writer.AppendName(table);
                 writer.WriteInsertColumnsList(insert.Columns);
                 writer.Append(" VALUES (");
                 writer.CommaSeparatedParameters(query, insert.Values);

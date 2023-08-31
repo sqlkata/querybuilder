@@ -129,7 +129,7 @@ public class GeneralTests : TestSupport
         var compiler = new SqlServerCompiler();
 
 
-        Assert.Equal("[My Table] AS [Table]", compiler.XService.Wrap("My Table as Table"));
+        Assert.Equal("[My Table] AS [Table]", compiler.XService.WrapName("My Table as Table"));
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public class GeneralTests : TestSupport
         var compiler = new SqlServerCompiler();
 
 
-        Assert.Equal("[My Schema].[My Table] AS [Table]", compiler.XService.Wrap("My Schema.My Table as Table"));
+        Assert.Equal("[My Schema].[My Table] AS [Table]", compiler.XService.WrapName("My Schema.My Table as Table"));
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class GeneralTests : TestSupport
         var compiler = new SqlServerCompiler();
 
 
-        Assert.Equal("[My Table One] AS [Table One]", compiler.XService.Wrap("My Table One as Table One"));
+        Assert.Equal("[My Table One] AS [Table One]", compiler.XService.WrapName("My Table One as Table One"));
     }
 
     [Fact]

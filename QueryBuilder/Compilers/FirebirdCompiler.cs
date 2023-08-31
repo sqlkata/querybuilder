@@ -41,9 +41,8 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected override void CompileRemainingInsertClauses(Query query, string table,
-            Writer writer,
-            IEnumerable<InsertClause> inserts)
+        protected override void CompileRemainingInsertClauses(Query query,
+            string table, Writer writer, IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {

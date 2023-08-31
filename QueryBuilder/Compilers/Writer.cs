@@ -125,7 +125,7 @@ namespace SqlKata.Compilers
         /// </summary>
         public void AppendName(string userObjectName)
         {
-            X.Wrap(S, userObjectName);
+            X.WrapName(S, userObjectName);
         }
 
         public void AppendKeyword(string sqlKeyword)

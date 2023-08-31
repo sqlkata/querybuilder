@@ -21,30 +21,19 @@ namespace SqlKata.Compilers
             _columnAsKeyword = columnAsKeyword;
         }
 
-        /// <summary>
-        ///     Wrap a single string in a column identifier.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public string Wrap(string value)
+        /// <summary> Wrap a single string in a column identifier. </summary>
+        public string WrapName(string value)
         {
-            var segments = value.Split(" as ");
-            if (segments.Length > 1)
-                return $"{Wrap(segments[0])} {_columnAsKeyword}{WrapValue(segments[1])}";
-
-            if (value.Contains("."))
-                return string.Join(".", value.Split('.').Select((x, _) => WrapValue(x)));
-
-            // If we reach here then the value does not contain an "AS" alias
-            // nor dot "." expression, so wrap it as regular value.
-            return WrapValue(value);
+            var sb = new StringBuilder();
+            WrapName(sb, value);
+            return sb.ToString();
         }
-        public void Wrap(StringBuilder sb, string value)
+        public void WrapName(StringBuilder sb, string value)
         {
             var segments = value.Split(" as ");
             if (segments.Length > 1)
             {
-                Wrap(sb, segments[0]);
+                WrapName(sb, segments[0]);
                 sb.Append(" ");
                 sb.Append(_columnAsKeyword);
                 WrapValue(sb, segments[1]);
@@ -68,8 +57,8 @@ namespace SqlKata.Compilers
 
             if (index > 0)
             {
-                var before = value.Substring(0, index);
-                var after = value.Substring(index + 4);
+                var before = value[..index];
+                var after = value[(index + 4)..];
                 return (before, $" {_columnAsKeyword}{after}");
             }
 

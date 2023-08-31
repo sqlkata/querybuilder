@@ -341,7 +341,7 @@ namespace SqlKata.Compilers
                 writer.Append(c.Aggregate.ToUpperInvariant());
 
                 var (col, alias) = XService.SplitAlias(
-                    XService.Wrap(c.Column.Name));
+                    XService.WrapName(c.Column.Name));
 
                 var filterConditions = GetFilterConditions(c);
 
@@ -508,7 +508,7 @@ namespace SqlKata.Compilers
 
                 case FromClause fromClauseCast:
                     writer.AppendName(fromClauseCast.Table);
-                    return writer.X.Wrap(fromClauseCast.Table);
+                    return fromClauseCast.Table;
                 case RawFromClause raw:
                     {
                         if (raw.Bindings.Length > 0)
