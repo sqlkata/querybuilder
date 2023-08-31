@@ -2,8 +2,6 @@ using System.Text;
 
 namespace SqlKata.Compilers
 {
-    
-
     public sealed class X
     {
         private readonly bool _capitalize;
@@ -94,14 +92,11 @@ namespace SqlKata.Compilers
                 return;
             }
             var val = _capitalize ? value.ToUpperInvariant() : value;
-            Brace(sb, val, _openingIdentifier, _closingIdentifier);
+            sb.Append(_openingIdentifier);
+            sb.Append(val.Replace(_closingIdentifier, _closingIdentifier + _closingIdentifier));
+            sb.Append(_closingIdentifier);
         }
-        public void Brace(StringBuilder sb, string value, string opening, string closing)
-        {
-            sb.Append(opening);
-            sb.Append(value.Replace(closing, closing + closing));
-            sb.Append(closing);
-        }
+     
         public string WrapIdentifiers(string input)
         {
             return input
