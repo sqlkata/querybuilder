@@ -327,50 +327,51 @@ namespace SqlKata.Compilers
                     writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                     return;
                 case AggregatedColumn aggregatedColumn:
-                    CompileAggregatedColumn(query, writer, aggregatedColumn);
+                    CompileAggregatedColumn(aggregatedColumn);
                     return;
                 case Column col:
                     writer.AppendName(col.Name);
                     break;
             }
-        }
 
-        private void CompileAggregatedColumn(Query query, Writer writer, AggregatedColumn c)
-        {
-            writer.Append(c.Aggregate.ToUpperInvariant());
+            return;
 
-            var (col, alias) = XService.SplitAlias(
-                XService.Wrap(c.Column.Name));
-
-            var filterConditions = GetFilterConditions(c);
-
-            if (!filterConditions.Any())
+            void CompileAggregatedColumn(AggregatedColumn c)
             {
-                writer.Append("(");
-                writer.Append(col);
-                writer.Append(")");
-                writer.Append(alias);
-                return;
-            }
+                writer.Append(c.Aggregate.ToUpperInvariant());
 
-            if (SupportsFilterClause)
-            {
-                writer.Append("(");
-                writer.Append(col);
-                writer.Append(") FILTER (WHERE ");
+                var (col, alias) = XService.SplitAlias(
+                    XService.Wrap(c.Column.Name));
+
+                var filterConditions = GetFilterConditions(c);
+
+                if (!filterConditions.Any())
+                {
+                    writer.Append("(");
+                    writer.Append(col);
+                    writer.Append(")");
+                    writer.Append(alias);
+                    return;
+                }
+
+                if (SupportsFilterClause)
+                {
+                    writer.Append("(");
+                    writer.Append(col);
+                    writer.Append(") FILTER (WHERE ");
+                    CompileConditions(query, filterConditions, writer);
+                    writer.Append(")");
+                    writer.Append(alias);
+                    return;
+                }
+
+                writer.Append("(CASE WHEN ");
                 CompileConditions(query, filterConditions, writer);
-                writer.Append(")");
+                writer.Append(" THEN ");
+                writer.Append(col);
+                writer.Append(" END)");
                 writer.Append(alias);
-                return;
             }
-
-            writer.Append("(CASE WHEN ");
-            CompileConditions(query, filterConditions, writer);
-            writer.Append(" THEN ");
-            writer.Append(col);
-            writer.Append(" END)");
-            writer.Append(alias);
-
             static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
             {
                 if (aggregatedColumn.Filter == null)
@@ -380,7 +381,6 @@ namespace SqlKata.Compilers
                     .GetComponents<AbstractCondition>("where");
             }
         }
-
 
         protected virtual void CompileColumns(Query query, Writer writer)
         {
