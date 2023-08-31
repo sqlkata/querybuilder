@@ -1,7 +1,6 @@
 using Microsoft.Data.Sqlite;
 using SqlKata.Compilers;
 using SqlKata.Execution;
-using Xunit;
 using static SqlKata.Expressions;
 
 namespace SqlKata.Tests;

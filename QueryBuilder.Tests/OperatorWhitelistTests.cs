@@ -1,5 +1,4 @@
 using SqlKata.Compilers;
-using Xunit;
 
 namespace SqlKata.Tests;
 
