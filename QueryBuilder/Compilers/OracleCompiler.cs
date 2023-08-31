@@ -60,7 +60,7 @@ namespace SqlKata.Compilers
             writer.Append("OFFSET ");
             writer.AppendParameter(offset);
             writer.Append(" ROWS FETCH NEXT ");
-                writer.AppendParameter(limit);
+            writer.AppendParameter(limit);
             writer.Append(" ROWS ONLY");
             return writer;
         }
@@ -95,37 +95,59 @@ namespace SqlKata.Compilers
             ctx.ReplaceRaw(newSql);
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
-            Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx,
+            Query query, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
-            var value = Parameter(ctx, query, writer, condition.Value);
-
-            string sql;
-            string valueFormat;
-
             var isDateTime = condition.Value is DateTime;
 
+            if (condition.IsNot)
+                writer.Append("NOT (");
             switch (condition.Part)
             {
                 case "date": // assume YY-MM-DD format
-                    valueFormat = isDateTime ? $"{value}" : $"TO_DATE({value}, 'YY-MM-DD')";
-                    sql = $"TO_CHAR({column}, 'YY-MM-DD') {condition.Operator} TO_CHAR({valueFormat}, 'YY-MM-DD')";
+                    writer.Append("TO_CHAR(");
+                    writer.Append(column);
+                    writer.Append(", 'YY-MM-DD') ");
+                    writer.Append(condition.Operator);
+                    writer.Append(" TO_CHAR(");
+                    if (isDateTime)
+                    {
+                        writer.AppendParameter(ctx, query, condition.Value);
+                    }
+                    else
+                    {
+                        writer.Append("TO_DATE(");
+                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.Append(", 'YY-MM-DD')");
+                    }
+                    writer.Append(", 'YY-MM-DD')");
                     break;
                 case "time":
                     if (isDateTime)
                     {
-                        valueFormat = $"{value}";
+                        writer.Append("TO_CHAR(");
+                        writer.Append(column);
+                        writer.Append(", 'HH24:MI:SS') ");
+                        writer.Append(condition.Operator);
+                        writer.Append(" TO_CHAR(");
+                        writer.AppendParameter(ctx, query, condition.Value);
+                        writer.Append(", 'HH24:MI:SS')");
                     }
                     else
                     {
-                        // assume HH:MM format
-                        valueFormat = condition.Value.ToString()!.Split(':').Length == 2 ? $"TO_DATE({value}, 'HH24:MI')" :
-                            // assume HH:MM:SS format
-                            $"TO_DATE({value}, 'HH24:MI:SS')";
+                        writer.Append("TO_CHAR(");
+                        writer.Append(column);
+                        writer.Append(", 'HH24:MI:SS') ");
+                        writer.Append(condition.Operator);
+                        writer.Append(" TO_CHAR(");
+                        writer.Append("TO_DATE(");
+                        writer.AppendParameter(ctx, query, condition.Value);
+                        var isHhSs = condition.Value.ToString()!
+                            .Split(':').Length == 2;
+                        writer.Append(isHhSs ? ", 'HH24:MI')" : ", 'HH24:MI:SS')");
+                        writer.Append(", 'HH24:MI:SS')");
                     }
-
-                    sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";
                     break;
                 case "year":
                 case "month":
@@ -133,14 +155,25 @@ namespace SqlKata.Compilers
                 case "hour":
                 case "minute":
                 case "second":
-                    sql = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column}) {condition.Operator} {value}";
+                    writer.Append("EXTRACT(");
+                    writer.AppendKeyword(condition.Part);
+                    writer.Append(" FROM ");
+                    writer.Append(column);
+                    writer.Append(") ");
+                    writer.Append(condition.Operator);
+                    writer.Append(" ");
+                    writer.AppendParameter(ctx, query, condition.Value);
                     break;
                 default:
-                    sql = $"{column} {condition.Operator} {value}";
+                    writer.Append(column);
+                    writer.Append(" ");
+                    writer.Append(condition.Operator);
+                    writer.Append(" ");
+                    writer.AppendParameter(ctx, query, condition.Value);
                     break;
             }
-
-            writer.Append(condition.IsNot ? $"NOT ({sql})" : sql);
+            if (condition.IsNot)
+                writer.Append(")");
         }
 
         protected override void CompileRemainingInsertClauses(SqlResult ctx, Query query, string table,
