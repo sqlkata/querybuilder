@@ -196,7 +196,6 @@ namespace SqlKata.Compilers
 
                 var subCtx = CompileSelectQuery(clause.Query, w);
                 ctx.BindingsAddRange(subCtx.Bindings);
-                //  w.BindMany(subCtx.Bindings);
                 w.Pop();
                 w.AssertMatches(ctx);
 

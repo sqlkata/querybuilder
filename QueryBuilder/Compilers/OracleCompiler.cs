@@ -22,10 +22,46 @@ namespace SqlKata.Compilers
                 return;
             }
 
-            base.CompileSelectQueryInner(ctx, query, writer);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
-            ApplyLegacyLimit(ctx, query, writer);
+            if (limit == 0 && offset == 0)
+            {
+                base.CompileSelectQueryInner(ctx, query, writer);
+                return;
+            }
 
+            if (limit == 0)
+            {
+                writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
+                base.CompileSelectQueryInner(ctx, query, writer);
+                writer.Append(""") "results_wrapper") WHERE "row_num" > """);
+                writer.AppendParameter(offset);
+                ctx.ReplaceRaw(writer);
+                ctx.BindingsAdd(offset);
+            }
+            else if (offset == 0)
+            {
+                writer.Append("""SELECT * FROM (""");
+                base.CompileSelectQueryInner(ctx, query, writer);
+                writer.Append(""") WHERE ROWNUM <= """);
+                writer.AppendParameter(limit);
+                ctx.ReplaceRaw(writer);
+                ctx.BindingsAdd(limit);
+                writer.BindOne(limit);
+            }
+            else
+            {
+                writer.Append("""SELECT * FROM (SELECT "results_wrapper".*, ROWNUM "row_num" FROM (""");
+                base.CompileSelectQueryInner(ctx, query, writer);
+                writer.Append(""") "results_wrapper" WHERE ROWNUM <= """);
+                writer.AppendParameter(limit + offset);
+                writer.Append(""") WHERE "row_num" > """);
+                writer.AppendParameter(offset);
+                ctx.ReplaceRaw(writer);
+                ctx.BindingsAdd(limit + offset);
+                ctx.BindingsAdd(offset);
+            }
         }
 
         protected override string? CompileLimit(SqlResult ctx, Query query, Writer writer)
@@ -63,40 +99,6 @@ namespace SqlKata.Compilers
             writer.AppendParameter(limit);
             writer.Append(" ROWS ONLY");
             return writer;
-        }
-
-        private void ApplyLegacyLimit(SqlResult ctx, Query query, Writer writer)
-        {
-            var limit = query.GetLimit(EngineCode);
-            var offset = query.GetOffset(EngineCode);
-
-            if (limit == 0 && offset == 0) return;
-
-            string newSql;
-            if (limit == 0)
-            {
-                newSql =
-                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > ?";
-                ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
-            }
-            else if (offset == 0)
-            {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= ?";
-                ctx.BindingsAdd(limit);
-                writer.BindOne(limit);
-            }
-            else
-            {
-                newSql =
-                    $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= ?) WHERE \"row_num\" > ?";
-                ctx.BindingsAdd(limit + offset);
-                ctx.BindingsAdd(offset);
-                writer.BindOne(limit + offset);
-                writer.BindOne(offset);
-            }
-
-            ctx.ReplaceRaw(newSql);
         }
 
         protected override void CompileBasicDateCondition(SqlResult ctx,
