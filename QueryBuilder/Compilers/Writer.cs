@@ -94,13 +94,13 @@ namespace SqlKata.Compilers
                 case Variable variable:
                 {
                     // if we face a variable we have to lookup the variable from the predefined variables
-                    BindOne(query.FindVariable(variable.Name));
                     Append("?");
+                    BindOne(query.FindVariable(variable.Name));
                     break;
                 }
                 default:
-                    BindOne(value);
                     Append("?");
+                    BindOne(value);
                     break;
             }
         }
