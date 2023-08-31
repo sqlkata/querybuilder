@@ -48,17 +48,20 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
-                writer.Append("OFFSET ? ROWS");
+                writer.Append("OFFSET ");
+                writer.AppendParameter(offset);
+                writer.Append(" ROWS");
                 return writer;
             }
 
             ctx.BindingsAdd(offset);
-            writer.BindOne(offset);
             ctx.BindingsAdd(limit);
-            writer.BindOne(limit);
 
-            writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            writer.Append("OFFSET ");
+            writer.AppendParameter(offset);
+            writer.Append(" ROWS FETCH NEXT ");
+                writer.AppendParameter(limit);
+            writer.Append(" ROWS ONLY");
             return writer;
         }
 

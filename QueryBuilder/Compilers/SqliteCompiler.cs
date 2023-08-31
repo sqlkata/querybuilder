@@ -27,8 +27,8 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
-                writer.Append("LIMIT -1 OFFSET ?");
+                writer.Append("LIMIT -1 OFFSET ");
+                writer.AppendParameter(offset);
                 writer.AssertMatches(ctx);
                 return writer;
             }
@@ -38,8 +38,8 @@ namespace SqlKata.Compilers
             return writer;
         }
 
-        protected override void CompileBasicDateCondition(SqlResult ctx, Query query, BasicDateCondition condition,
-            Writer writer)
+        protected override void CompileBasicDateCondition(SqlResult ctx,
+            Query query, BasicDateCondition condition, Writer writer)
         {
             var column = XService.Wrap(condition.Column);
             var value = Parameter(ctx, query, writer, condition.Value);

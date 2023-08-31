@@ -74,9 +74,10 @@ namespace SqlKata.Compilers
             {
                 ctx.BindingsAdd(offset + 1);
                 ctx.BindingsAdd(limit + offset);
-                writer.BindOne(offset + 1);
-                writer.BindOne(limit + offset);
-                writer.Append("ROWS ? TO ?");
+                writer.Append("ROWS ");
+                writer.AppendParameter(offset + 1);
+                writer.Append(" TO ");
+                writer.AppendParameter(limit + offset);
                 return writer;
             }
             writer.AssertMatches(ctx);
@@ -92,8 +93,9 @@ namespace SqlKata.Compilers
             if (limit > 0 && offset == 0)
             {
                 ctx.BindingsAdd(limit);
-                writer.BindOne(limit);
-                writer.Append("SELECT FIRST ? ");
+                writer.Append("SELECT FIRST ");
+                writer.AppendParameter(limit);
+                writer.Append(" ");
                 CompileColumnsAfterSelect(ctx, query, writer);
                 return;
             }
@@ -101,9 +103,10 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
 
-                writer.Append("SELECT SKIP ? ");
+                writer.Append("SELECT SKIP ");
+                writer.AppendParameter(offset);
+                writer.Append(" ");
                 CompileColumnsAfterSelect(ctx, query, writer);
                 return;
             }

@@ -16,7 +16,8 @@ namespace SqlKata.Compilers
 
         public void BindMany(IEnumerable<object?> values)
         {
-            foreach (var binding in values) BindOne(binding);
+            foreach (var binding in values)
+                BindOne(binding);
         }
 
         public X X { get; }
@@ -126,6 +127,11 @@ namespace SqlKata.Compilers
         public void AppendValue(string value)
         {
             X.WrapValue(S, value);
+        }
+        public void AppendParameter(object? value)
+        {
+            S.Append("?");
+            BindOne(value);
         }
 
         public Writer Sub()

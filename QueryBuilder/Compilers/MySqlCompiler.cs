@@ -19,8 +19,8 @@ namespace SqlKata.Compilers
             if (offset == 0)
             {
                 ctx.BindingsAdd(limit);
-                writer.BindOne(limit);
-                writer.Append("LIMIT ?");
+                writer.Append("LIMIT ");
+                writer.AppendParameter(limit);
                 return writer;
             }
 
@@ -30,18 +30,20 @@ namespace SqlKata.Compilers
                 // to avoid this error.
 
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
-                writer.Append("LIMIT 18446744073709551615 OFFSET ?");
+                writer.Append("LIMIT 18446744073709551615 OFFSET ");
+                writer.AppendParameter(offset);
                 return writer;
             }
 
             // We have both values
 
             ctx.BindingsAdd(limit);
-            writer.BindOne(limit);
             ctx.BindingsAdd(offset);
-            writer.BindOne(offset);
-            writer.Append("LIMIT ? OFFSET ?");
+            writer.Append("LIMIT ");
+            writer.AppendParameter(limit);
+
+            writer.Append(" OFFSET ");
+            writer.AppendParameter(offset);
             return writer;
         }
     }

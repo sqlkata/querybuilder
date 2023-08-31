@@ -658,17 +658,17 @@ namespace SqlKata.Compilers
             if (limit != 0)
             {
                 ctx.BindingsAdd(limit);
-                writer.BindOne(limit);
-                writer.Append("LIMIT ?");
+                writer.Append("LIMIT ");
+                writer.AppendParameter(limit);
             }
 
             var offset = query.GetOffset(EngineCode);
             if (offset != 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
                 writer.Whitespace();
-                writer.Append("OFFSET ?");
+                writer.Append("OFFSET ");
+                writer.AppendParameter(offset);
             }
             return writer;
         }

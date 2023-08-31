@@ -30,17 +30,18 @@ namespace SqlKata.Compilers
             writer.Append(") AS [results_wrapper] WHERE [row_num] ");
             if (limit == 0)
             {
-                writer.Append(">= ?");
+                writer.Append(">= ");
+                writer.AppendParameter(offset + 1);
                 ctx.BindingsAdd(offset + 1);
-                writer.BindOne(offset + 1);
             }
             else
             {
-                writer.Append("BETWEEN ? AND ?");
+                writer.Append("BETWEEN ");
+                writer.AppendParameter(offset + 1);
+                writer.Append(" AND ");
+                writer.AppendParameter(limit + offset);
                 ctx.BindingsAdd(offset + 1);
-                writer.BindOne(offset + 1);
                 ctx.BindingsAdd(limit + offset);
-                writer.BindOne(limit + offset);
             }
             ctx.ReplaceRaw(writer);
         }
@@ -77,26 +78,26 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                // top bindings should be inserted first
-                ctx.PrependOne(limit);
-                writer.BindOne(limit);
+                ctx.BindingsAdd(limit);
 
                 query.RemoveComponent("limit");
 
                 // handle distinct
                 if (!query.HasComponent("aggregate", EngineCode) && query.IsDistinct)
                 {
-                    writer.Append("SELECT DISTINCT TOP (?) ");
+                    writer.Append("SELECT DISTINCT TOP (");
+                    writer.AppendParameter(limit);
+                    writer.Append(") ");
                     CompileFlatColumns(query, writer, ctx);
                     return;
                 }
 
-                writer.Append("SELECT TOP (?) ");
+                writer.Append("SELECT TOP (");
+                writer.AppendParameter(limit);
+                writer.Append(") ");
                 CompileColumnsAfterSelect(ctx, query, writer);
-                // writer.Append(compiled.Substring(6));
                 writer.AssertMatches(ctx);
                 return;
-
             }
 
             base.CompileColumns(ctx, query, writer);
@@ -119,17 +120,20 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.BindingsAdd(offset);
-                writer.BindOne(offset);
-                writer.Append("OFFSET ? ROWS");
+                writer.Append("OFFSET ");
+                writer.AppendParameter(offset);
+                writer.Append(" ROWS");
                 writer.AssertMatches(ctx);
                 return writer;
             }
 
             ctx.BindingsAdd(offset);
-            writer.BindOne(offset);
             ctx.BindingsAdd(limit);
-            writer.BindOne(limit);
-            writer.Append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            writer.Append("OFFSET ");
+            writer.AppendParameter(offset);
+            writer.Append(" ROWS FETCH NEXT ");
+            writer.AppendParameter(limit);
+            writer.Append(" ROWS ONLY");
             writer.AssertMatches(ctx);
             return writer;
         }
