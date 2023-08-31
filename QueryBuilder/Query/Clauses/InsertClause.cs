@@ -11,12 +11,12 @@ namespace SqlKata
                 ? ""
                 : $" ({string.Join(", ", columns.Select(x.Wrap))})";
         }
-        public static void WriteInsertColumnsList(this Writer writer, ImmutableArray<string> columns)
+        public static void WriteInsertColumnsList(this Writer writer, ImmutableArray<string> columns, bool braces = true)
         {
             if (columns.Length == 0) return;
-            writer.Append(" (");
+            if (braces) writer.Append(" (");
             writer.List(", ", columns, writer.AppendName);
-            writer.Append(")");
+            if (braces) writer.Append(")");
         }
     }
     public abstract class AbstractInsertClause : AbstractClause

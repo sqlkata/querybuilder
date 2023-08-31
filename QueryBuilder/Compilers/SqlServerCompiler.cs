@@ -164,22 +164,23 @@ namespace SqlKata.Compilers
 
         protected override void CompileAdHocQuery(AdHocTableFromClause adHoc, Writer writer)
         {
-            var colNames = string.Join(", ", adHoc.Columns.Select(value => XService.Wrap(value)));
-
-            var valueRow = string.Join(", ", Enumerable.Repeat("?", adHoc.Columns.Length));
-            var valueRows = string.Join(", ",
-                Enumerable.Repeat($"({valueRow})", adHoc.Values.Length / adHoc.Columns.Length));
-
             Debug.Assert(adHoc.Alias != null, "adHoc.Alias != null");
             writer.AppendValue(adHoc.Alias);
             writer.Append(" AS (SELECT ");
-            writer.Append(colNames);
+            writer.WriteInsertColumnsList(adHoc.Columns, false);
             writer.Append(" FROM (VALUES ");
-            writer.Append(valueRows);
-            writer.Append(") AS tbl (");
-            writer.Append(colNames);
-            writer.Append(")");
+            writer.List(", ", adHoc.Values.Length / adHoc.Columns.Length, _ =>
+            {
+                writer.Append("(");
+                writer.List(", ", adHoc.Columns.Length, _ =>
+                {
+                    writer.Append("?");
+                });
+                writer.Append(")");
+            });
             writer.BindMany(adHoc.Values);
+            writer.Append(") AS tbl");
+            writer.WriteInsertColumnsList(adHoc.Columns);
             writer.Append(")");
         }
     }

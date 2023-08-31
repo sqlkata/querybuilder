@@ -27,6 +27,17 @@ namespace SqlKata.Compilers
             X = x;
         }
 
+        public void List(string separator, int repeatCount, Action<int>? renderItem = null)
+        {
+            renderItem ??= i => S.Append(i);
+            for (var i = 0; i < repeatCount; i++)
+            {
+                renderItem(i);
+                if (i != repeatCount - 1)
+                    S.Append(separator);
+            }
+        }
+
         public void List<T>(string separator, IEnumerable<T> list, Action<T>? renderItem = null)
         {
             renderItem ??= i => S.Append(i);
