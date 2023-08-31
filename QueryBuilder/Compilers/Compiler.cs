@@ -43,13 +43,14 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        private SqlResult CompileSelectQuery(Query query, Writer writer)
+        private IReadOnlyList<object?> CompileSelectQuery(Query query, Writer writer)
         {
             var ctx = new SqlResult();
             writer.Push(ctx);
             CompileSelectQueryInner(ctx, query, writer);
+            writer.Pop();
 
-            return ctx;
+            return ctx.Bindings;
 
         }
 
@@ -195,8 +196,7 @@ namespace SqlKata.Compilers
                 w.Append(" ");
 
                 var subCtx = CompileSelectQuery(clause.Query, w);
-                ctx.BindingsAddRange(subCtx.Bindings);
-                w.Pop();
+                ctx.BindingsAddRange(subCtx);
                 w.AssertMatches(ctx);
 
                 ctx.Raw.Append(w);
@@ -282,8 +282,7 @@ namespace SqlKata.Compilers
                 writer.AssertMatches(ctx);
                 writer.Append("(");
                 var subCtx = CompileSelectQuery(queryColumn.Query, writer);
-                ctx.BindingsAddRange(subCtx.Bindings);
-                writer.Pop();
+                ctx.BindingsAddRange(subCtx);
                 writer.Append(") ");
                 writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                 writer.AssertMatches(ctx);
@@ -368,7 +367,6 @@ namespace SqlKata.Compilers
                 writer.AppendValue(queryFromClause.Alias);
                 writer.Append(" AS (");
                 CompileSelectQuery(queryFromClause.Query, writer);
-                writer.Pop();
                 writer.Append(")");
             }
             else if (cte is AdHocTableFromClause adHoc)
@@ -457,8 +455,7 @@ namespace SqlKata.Compilers
 
                         writer.AssertMatches(ctx);
                         ctx.BindingsAddRange(
-                            CompileSelectQuery(combine.Query, writer).Bindings);
-                        writer.Pop();
+                            CompileSelectQuery(combine.Query, writer));
 
                     }
                     else if (clause is RawCombine c)
@@ -485,7 +482,6 @@ namespace SqlKata.Compilers
                 writer.Append("(");
                 CompileSelectQuery(q, writer);
                 ctx.BindingsAddRange(writer.Bindings);
-                writer.Pop();
                 writer.AssertMatches(ctx);
 
                 writer.Append(")");

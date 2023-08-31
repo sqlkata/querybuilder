@@ -79,8 +79,7 @@ namespace SqlKata.Compilers
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" (");
             var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx.Bindings);
-            writer.Pop();
+            ctx.BindingsAddRange(subCtx);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -89,8 +88,7 @@ namespace SqlKata.Compilers
         {
             writer.Append("(");
             var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx.Bindings);
-            writer.Pop();
+            ctx.BindingsAddRange(subCtx);
             writer.Append(") ");
             writer.Append(Operators.CheckOperator(x.Operator));
             writer.Append(" ");
@@ -246,8 +244,7 @@ namespace SqlKata.Compilers
             writer.AppendName(x.Column);
             writer.Append(x.IsNot ? " NOT IN (" : " IN (");
             var subCtx = CompileSelectQuery(x.Query, writer);
-            ctx.BindingsAddRange(subCtx.Bindings);
-            writer.Pop();
+            ctx.BindingsAddRange(subCtx);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
@@ -276,8 +273,7 @@ namespace SqlKata.Compilers
                 : item.Query;
 
             var subCtx = CompileSelectQuery(query, writer);
-            ctx.BindingsAddRange(subCtx.Bindings);
-            writer.Pop();
+            ctx.BindingsAddRange(subCtx);
             writer.Append(")");
             writer.AssertMatches(ctx);
         }
