@@ -8,7 +8,10 @@ namespace SqlKata.Compilers
         public IReadOnlyList<object?> Bindings => _bindings;
         public void BindOne(object? value)
         {
-            _bindings.Add(value);
+            if (value?.AsArray() is {} arr)
+                _bindings.AddRange(arr.Cast<object?>());
+            else
+                _bindings.Add(value);
         }
 
         public void BindMany(IEnumerable<object?> values)
