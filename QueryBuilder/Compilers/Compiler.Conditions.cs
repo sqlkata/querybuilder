@@ -106,7 +106,7 @@ namespace SqlKata.Compilers
         protected virtual void CompileBasicStringCondition(
             Query query, BasicStringCondition x, Writer writer)
         {
-            if (Resolve(query, x.Value) is not string value)
+            if (CompilerQueryExtensions.Resolve(query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
 
             if (x.IsNot)

@@ -14,7 +14,7 @@ namespace SqlKata.Compilers
 
         private const string SingleInsertStartClause = "INSERT INTO";
         protected string MultiInsertStartClause { get; init; } = "INSERT INTO";
-        public string? EngineCode { get; protected init; }
+        protected string? EngineCode { get; init; }
         protected string? SingleRowDummyTableName { get; init; }
 
         /// <summary>
@@ -298,13 +298,6 @@ namespace SqlKata.Compilers
             writer.Append('\n');
         }
 
-        /// <summary>
-        ///     Compile a single column clause
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="column"></param>
-        /// <param name="writer"></param>
-        /// <returns></returns>
         private void CompileColumn(Query query, AbstractColumn column, Writer writer)
         {
             switch (column)
@@ -670,9 +663,11 @@ namespace SqlKata.Compilers
             return new InvalidCastException(
                 $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
         }
+    }
 
-
-        protected static object? Resolve(Query query, object parameter)
+    public static class CompilerQueryExtensions
+    {
+        public static object? Resolve(Query query, object parameter)
         {
             // if we face a literal value we have to return it directly
             if (parameter is UnsafeLiteral literal) return literal.Value;
