@@ -1,2 +1,0 @@
-﻿WITH [prodCTE] AS (SELECT * FROM B)
-SELECT * FROM [prodCTE]

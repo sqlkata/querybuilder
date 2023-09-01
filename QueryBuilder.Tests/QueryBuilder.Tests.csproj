@@ -10,7 +10,7 @@
 		<Language>11</Language>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="FluentAssertions" Version="6.12.0" />
+		<PackageReference Include="FluentAssertions" Version="*" />
 		<PackageReference Include="JetBrains.Annotations" Version="2023.2.0" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.10" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
@@ -21,9 +21,90 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Verify.DiffPlex" Version="*" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
 		<ProjectReference Include="..\SqlKata.Execution\SqlKata.Execution.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_SqlServerCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_SqliteCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_PostgresCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_OracleCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_MySqlCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_FirebirdCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.SqlServerCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.SqliteCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.PostgresCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.OracleCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.MySqlCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.FirebirdCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_compiler=SqlKata.Compilers.Compiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_Compiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.SqlServerCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.SqliteCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.PostgresCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.OracleCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.MySqlCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.FirebirdCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqlKata.Compilers.Compiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=SqliteCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=PostgresCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=OracleCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=MySqlCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
+	  <None Update="ApprovalTests\CompileFlatColumns.CompileCte_With_RawFromClause_c=FirebirdCompiler.received.sql">
+	    <DependentUpon>CompileFlatColumns.cs</DependentUpon>
+	  </None>
 	</ItemGroup>
 </Project>
