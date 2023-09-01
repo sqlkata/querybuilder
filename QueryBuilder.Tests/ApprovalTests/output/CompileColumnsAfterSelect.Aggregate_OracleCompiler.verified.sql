@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT COUNT(*) FROM "X"
+SELECT MIN("a") "min" FROM "X"
 
 ----------- RAW -------------
 
-SELECT COUNT(*) FROM "X"
+SELECT MIN("a") "min" FROM "X"
 
 --------PARAMETRIZED --------
 
-SELECT COUNT(*) FROM "X"
+SELECT MIN("a") "min" FROM "X"

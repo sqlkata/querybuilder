@@ -391,26 +391,12 @@ namespace SqlKata.Compilers
             var aggregate = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
-                CompileAggregateColumns();
-            }
-            else
-            {
-                if (query.IsDistinct)
-                    writer.Append("DISTINCT ");
-                CompileFlatColumns(query, writer);
-            }
-
-            return;
-
-            void CompileAggregateColumns()
-            {
+                if (query.IsDistinct) throw new InvalidOperationException("TransformAggregateQuery should have taken care of it");
                 if (aggregate.Columns.Length == 1)
                 {
                     writer.AppendKeyword(aggregate.Type);
                     writer.Append("(");
-                    if (query.IsDistinct)
-                        writer.Append("DISTINCT ");
-                    writer.WriteInsertColumnsList(aggregate.Columns, false);
+                    writer.AppendName(aggregate.Columns[0]);
                     writer.Append(") ");
                     writer.AppendAsAlias(aggregate.Type);
                 }
@@ -418,6 +404,12 @@ namespace SqlKata.Compilers
                 {
                     writer.Append("1");
                 }
+            }
+            else
+            {
+                if (query.IsDistinct)
+                    writer.Append("DISTINCT ");
+                CompileFlatColumns(query, writer);
             }
         }
 
@@ -525,7 +517,8 @@ namespace SqlKata.Compilers
         private void CompileFrom(Query query, Writer writer)
         {
             var from = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-            if (from == null) return;
+            if (from == null)
+                return;
 
             writer.Append("FROM ");
             CompileTableExpression(from, writer);

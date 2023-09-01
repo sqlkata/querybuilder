@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM (INNER "a" 5)
 
 ----------- RAW -------------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM (INNER "a" ?)
 
 --------PARAMETRIZED --------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM (INNER "a" :p0)

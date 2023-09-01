@@ -4,9 +4,6 @@
       <NamedTestSelector>
         <TestName>SqlKata.Tests.IntermediateStageInsertTests.InsertFromSubQueryWithCte</TestName>
       </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.MySqlExecutionTest</FixtureName>
-      </FixtureTestSelector>
       <NamedTestSelector>
         <TestName>SqlKata.Tests.IntermediateStageSelectTests.MultipleUnionWithBindingsAndPagination</TestName>
       </NamedTestSelector>
@@ -15,51 +12,6 @@
       </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>SqlKata.Tests.IntermediateStageInsertTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.WhereTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.UpdateTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.SqliteExecutionTest</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.SelectTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.ParameterTypeTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.OperatorWhitelistTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.InsertTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.InfrastructureTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.HelperTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.GeneralTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.ExecutionTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.DeleteTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.DefineTest</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.CoverageTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>SqlKata.Tests.AggregateTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>SqlKata.Tests.Firebird.FirebirdLimitTests</FixtureName>
@@ -96,6 +48,54 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>SqlKata.Tests.SqlServer.NestedSelectTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.MySqlExecutionTest</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.AggregateTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.CoverageTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.DefineTest</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.DeleteTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.ExecutionTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.GeneralTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.HelperTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.InfrastructureTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.InsertTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.OperatorWhitelistTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.ParameterTypeTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.SelectTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.SqliteExecutionTest</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.UpdateTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>SqlKata.Tests.WhereTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
   </Settings>

@@ -4,6 +4,47 @@ using SqlKata.Tests.ApprovalTests.Utils;
 namespace SqlKata.Tests.ApprovalTests
 {
     [UsesVerify]
+    public sealed class CompileFrom
+    {
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task NoFrom(Compiler compiler)
+        {
+            return new Query().Select("a").Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class CompileTableExpression
+    {
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task RawFromClause(Compiler compiler)
+        {
+            return new Query()
+                .FromRaw("(INNER {a} ?)", 5)
+                .Verify(compiler);
+        }
+    }
+
+    [UsesVerify]
+    public sealed class CompileColumns
+    {
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Limit(Compiler compiler)
+        {
+            return new Query("X").Limit(3).Verify(compiler);
+        }
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Offset(Compiler compiler)
+        {
+            return new Query("X").Offset(4).Verify(compiler);
+        }
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Limit_Distinct(Compiler compiler)
+        {
+            return new Query("X").Distinct().Limit(3).Verify(compiler);
+        }
+
+    }
+    [UsesVerify]
     public sealed class CompileFlatColumns
     {
         [Theory, ClassData(typeof(AllCompilers))]
@@ -47,6 +88,29 @@ namespace SqlKata.Tests.ApprovalTests
             return new Query("X")
                 .SelectAggregate("t", "a", q => q.Where("b", 3))
                 .Verify(compiler);
+        }
+    }
+
+    [UsesVerify]
+    public sealed class CompileColumnsAfterSelect
+    {
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Distinct(Compiler compiler)
+        {
+            return new Query("X").Distinct().Verify(compiler);
+        }
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Aggregate(Compiler compiler)
+        {
+            return new Query("X").AsMin("a").Verify(compiler);
+        }
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task Aggregate_Multiple_Columns(Compiler compiler)
+        {
+            return new Query("X")
+                .AsCount(new[] { "a", "b" })
+                .Verify(compiler);
+                
         }
     }
 }

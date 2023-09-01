@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM `X` LIMIT 3
 
 ----------- RAW -------------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM `X` LIMIT ?
 
 --------PARAMETRIZED --------
 
-SELECT COUNT(*) FROM "X"
+SELECT * FROM `X` LIMIT @p0

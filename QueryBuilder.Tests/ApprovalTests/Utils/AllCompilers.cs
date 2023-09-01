@@ -24,8 +24,11 @@ namespace SqlKata.Tests.ApprovalTests.Utils
             sb.AppendLine();
             sb.Append(sqlResult.Sql);
 
+            var compilerName = compiler.GetType().Name;
+            if (compiler is SqlServerCompiler { UseLegacyPagination: true })
+                compilerName += " with LegacyPagination";
             return Verifier.Verify(sb.ToString(), "sql")
-                .UseTextForParameters(compiler.GetType().Name)
+                .UseTextForParameters(compilerName)
                 .UseDirectory("../Output");
         }
     }
@@ -40,6 +43,7 @@ namespace SqlKata.Tests.ApprovalTests.Utils
             Add(new object[] { new PostgresCompiler() });
             Add(new object[] { new SqliteCompiler() });
             Add(new object[] { new SqlServerCompiler() });
+            Add(new object[] { new SqlServerCompiler() {UseLegacyPagination = true} });
         }
     }
 }
