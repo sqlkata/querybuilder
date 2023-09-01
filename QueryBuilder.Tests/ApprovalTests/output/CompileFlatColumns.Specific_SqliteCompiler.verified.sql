@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT * FROM "X"
+SELECT "a", "b", "c" FROM "X"
 
 ----------- RAW -------------
 
-SELECT * FROM "X"
+SELECT "a", "b", "c" FROM "X"
 
 --------PARAMETRIZED --------
 
-SELECT * FROM "X"
+SELECT "a", "b", "c" FROM "X"

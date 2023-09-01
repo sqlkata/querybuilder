@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT * FROM "X"
+SELECT `1`, 'p' FROM `X`
 
 ----------- RAW -------------
 
-SELECT * FROM "X"
+SELECT `1`, ? FROM `X`
 
 --------PARAMETRIZED --------
 
-SELECT * FROM "X"
+SELECT `1`, @p0 FROM `X`

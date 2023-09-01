@@ -283,7 +283,7 @@ namespace SqlKata.Compilers
             writer.Append("WITH ");
 
             writer.List(",\n", CteFinder.Find(query, EngineCode), CompileCte);
-          
+
             writer.Append('\n');
             return;
 
@@ -323,8 +323,11 @@ namespace SqlKata.Compilers
             {
                 switch (column)
                 {
-                    case RawColumn raw:
-                        writer.AppendRaw(raw.Expression, raw.Bindings);
+                    case Column col:
+                        writer.AppendName(col.Name);
+                        break;
+                    case AggregatedColumn aggregatedColumn:
+                        CompileAggregatedColumn(aggregatedColumn);
                         return;
                     case QueryColumn queryColumn:
                         writer.Append("(");
@@ -332,12 +335,9 @@ namespace SqlKata.Compilers
                         writer.Append(") ");
                         writer.AppendAsAlias(queryColumn.Query.QueryAlias);
                         return;
-                    case AggregatedColumn aggregatedColumn:
-                        CompileAggregatedColumn(aggregatedColumn);
+                    case RawColumn raw:
+                        writer.AppendRaw(raw.Expression, raw.Bindings);
                         return;
-                    case Column col:
-                        writer.AppendName(col.Name);
-                        break;
                 }
 
             }
@@ -349,9 +349,9 @@ namespace SqlKata.Compilers
                 var (col, alias) = XService.SplitAlias(
                     XService.WrapName(c.Column.Name));
 
-                var filterConditions = GetFilterConditions(c);
+                var filterConditions = c.GetFilterConditions();
 
-                if (!filterConditions.Any())
+                if (filterConditions.Count == 0)
                 {
                     writer.Append("(");
                     writer.Append(col);
@@ -377,14 +377,6 @@ namespace SqlKata.Compilers
                 writer.Append(col);
                 writer.Append(" END)");
                 writer.Append(alias);
-            }
-            static List<AbstractCondition> GetFilterConditions(AggregatedColumn aggregatedColumn)
-            {
-                if (aggregatedColumn.Filter == null)
-                    return new List<AbstractCondition>();
-
-                return aggregatedColumn.Filter
-                    .GetComponents<AbstractCondition>("where");
             }
         }
 

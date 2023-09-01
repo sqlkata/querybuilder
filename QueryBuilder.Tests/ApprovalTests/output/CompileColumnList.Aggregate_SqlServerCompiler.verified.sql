@@ -1,11 +1,11 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT * FROM "X"
+SELECT COUNT(*) FROM [X]
 
 ----------- RAW -------------
 
-SELECT * FROM "X"
+SELECT COUNT(*) FROM [X]
 
 --------PARAMETRIZED --------
 
-SELECT * FROM "X"
+SELECT COUNT(*) FROM [X]

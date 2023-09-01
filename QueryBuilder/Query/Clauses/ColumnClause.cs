@@ -66,5 +66,21 @@ namespace SqlKata
 
         public required string Aggregate { get; init; }
         public required Column Column { get; init; }
+
+
+    }
+
+    public static class ClauseExtensions
+    {
+        public static List<AbstractCondition> GetFilterConditions(this AggregatedColumn column)
+        {
+            return column.Filter == null
+                ? Empty<AbstractCondition>.List
+                : column.Filter.GetComponents<AbstractCondition>("where");
+        }
+    }
+    public static class Empty<T>
+    {
+        public static readonly List<T> List = new();
     }
 }
