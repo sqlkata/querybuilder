@@ -11,17 +11,14 @@ namespace SqlKata.Tests.ApprovalTests.Utils
             var sqlResult = compiler.Compile(query);
             var sb = new StringBuilder();
             sb.AppendLine("-------- ORIGINAL -----------");
-            sb.AppendLine();
             sb.Append(sqlResult);
             sb.AppendLine();
             sb.AppendLine();
             sb.AppendLine("----------- RAW -------------");
-            sb.AppendLine();
             sb.Append(sqlResult.RawSql);
             sb.AppendLine();
             sb.AppendLine();
             sb.AppendLine("--------PARAMETRIZED --------");
-            sb.AppendLine();
             sb.Append(sqlResult.Sql);
 
             var compilerName = compiler.GetType().Name;

@@ -1,11 +1,14 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT * FROM [X]
+SELECT * 
+FROM [X]
 
 ----------- RAW -------------
 
-SELECT * FROM [X]
+SELECT * 
+FROM [X]
 
 --------PARAMETRIZED --------
 
-SELECT * FROM [X]
+SELECT * 
+FROM [X]

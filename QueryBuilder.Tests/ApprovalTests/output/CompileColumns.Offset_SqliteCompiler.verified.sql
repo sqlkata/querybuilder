@@ -1,11 +1,14 @@
 ﻿-------- ORIGINAL -----------
 
-SELECT * FROM "X" LIMIT -1 OFFSET 4
+SELECT * 
+FROM "X" LIMIT -1 OFFSET 4
 
 ----------- RAW -------------
 
-SELECT * FROM "X" LIMIT -1 OFFSET ?
+SELECT * 
+FROM "X" LIMIT -1 OFFSET ?
 
 --------PARAMETRIZED --------
 
-SELECT * FROM "X" LIMIT -1 OFFSET @p0
+SELECT * 
+FROM "X" LIMIT -1 OFFSET @p0

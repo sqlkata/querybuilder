@@ -18,7 +18,11 @@ namespace SqlKata.Tests.ApprovalTests.Utils
             VerifierSettings.InitializePlugins();
             VerifierSettings.ScrubLinesContaining("DiffEngineTray");
             VerifierSettings.IgnoreStackTrace();
-            //            VerifierSettings.AddScrubber(_ => _.Replace("String to verify", "new value"));
+            VerifierSettings.AddScrubber(x => x
+                .Replace("SELECT", "\nSELECT")
+                .Replace("INNER", "\nINNER")
+                .Replace("FROM", "\nFROM")
+            );
         }
     }
 }
