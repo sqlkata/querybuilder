@@ -313,28 +313,34 @@ namespace SqlKata.Compilers
             }
         }
 
-        private void CompileColumn(Query query, AbstractColumn column, Writer writer)
-        {
-            switch (column)
-            {
-                case RawColumn raw:
-                    writer.AppendRaw(raw.Expression, raw.Bindings);
-                    return;
-                case QueryColumn queryColumn:
-                    writer.Append("(");
-                    CompileSelectQuery(queryColumn.Query, writer);
-                    writer.Append(") ");
-                    writer.AppendAsAlias(queryColumn.Query.QueryAlias);
-                    return;
-                case AggregatedColumn aggregatedColumn:
-                    CompileAggregatedColumn(aggregatedColumn);
-                    return;
-                case Column col:
-                    writer.AppendName(col.Name);
-                    break;
-            }
 
+        private void CompileColumnList(Query query, IEnumerable<AbstractColumn> columns, Writer writer)
+        {
+            writer.List(", ", columns, CompileColumn);
             return;
+
+            void CompileColumn(AbstractColumn column)
+            {
+                switch (column)
+                {
+                    case RawColumn raw:
+                        writer.AppendRaw(raw.Expression, raw.Bindings);
+                        return;
+                    case QueryColumn queryColumn:
+                        writer.Append("(");
+                        CompileSelectQuery(queryColumn.Query, writer);
+                        writer.Append(") ");
+                        writer.AppendAsAlias(queryColumn.Query.QueryAlias);
+                        return;
+                    case AggregatedColumn aggregatedColumn:
+                        CompileAggregatedColumn(aggregatedColumn);
+                        return;
+                    case Column col:
+                        writer.AppendName(col.Name);
+                        break;
+                }
+
+            }
 
             void CompileAggregatedColumn(AggregatedColumn c)
             {
@@ -433,8 +439,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                writer.List(", ", columns,
-                    x => CompileColumn(query, x, writer));
+                CompileColumnList(query, columns, writer);
             }
         }
 
@@ -583,7 +588,8 @@ namespace SqlKata.Compilers
                 return;
             }
             writer.Append("GROUP BY ");
-            writer.List(", ", components, x => CompileColumn(query, x, writer));
+            CompileColumnList(query, components, writer);
+
         }
 
         protected string? CompileOrders(Query query, Writer writer)
