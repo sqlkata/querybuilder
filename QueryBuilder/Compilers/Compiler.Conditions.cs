@@ -168,18 +168,15 @@ namespace SqlKata.Compilers
 
         private void CompileNestedCondition(Query query, NestedCondition x, Writer writer)
         {
-            if (!x.Query.HasComponent("where", EngineCode) &&
-                !x.Query.HasComponent("having", EngineCode))
-                return;
+            var conditions = x.Query.GetComponents<AbstractCondition>("where", EngineCode).NullIfEmpty() ??
+                             x.Query.GetComponents<AbstractCondition>("having", EngineCode);
 
-            var clause = x.Query.HasComponent("where", EngineCode) ? "where" : "having";
-
-            var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
+            if (conditions.Count == 0) return;
 
             if (x.IsNot)
                 writer.Append("NOT ");
             writer.Append("(");
-            CompileConditions(query, clauses, writer);
+            CompileConditions(query, conditions, writer);
             writer.Append(")");
         }
 

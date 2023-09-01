@@ -41,7 +41,7 @@ namespace SqlKata
 
             AddComponent(clause);
         }
-        
+
         public List<TC> GetComponents<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
             return Clauses
@@ -55,7 +55,7 @@ namespace SqlKata
         {
             return GetComponents<AbstractClause>(component, engineCode);
         }
-        
+
         public TC? GetOneComponent<TC>(string component, string? engineCode = null) where TC : AbstractClause
         {
             var all = GetComponents<TC>(component, engineCode);
@@ -72,7 +72,7 @@ namespace SqlKata
         {
             return GetComponents(component, engineCode).Any();
         }
-   
+
         public void RemoveComponent(string component, string? engineCode)
         {
             Clauses = Clauses
@@ -89,6 +89,14 @@ namespace SqlKata
         public bool Any(string type)
         {
             return Clauses.Any(x => x.Component == type);
+        }
+    }
+
+    public static class EnumerableExt
+    {
+        public static List<T>? NullIfEmpty<T>(this List<T> src)
+        {
+            return src.Count > 0 ? src : default;
         }
     }
 }
