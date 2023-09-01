@@ -452,36 +452,33 @@ namespace SqlKata.Compilers
 
         private void CompileTableExpression(AbstractFrom from, Writer writer)
         {
-            if (from is RawFromClause raw)
+            switch (from)
             {
-                writer.AppendRaw(raw.Expression, raw.Bindings);
-                return;
-            }
-
-            if (from is QueryFromClause queryFromClause)
-            {
-                var q = queryFromClause.Query;
-                writer.Append("(");
-                CompileSelectQuery(q, writer);
-
-                writer.Append(")");
-                if (!string.IsNullOrEmpty(q.QueryAlias))
+                case RawFromClause raw:
+                    writer.AppendRaw(raw.Expression, raw.Bindings);
+                    return;
+                case QueryFromClause queryFromClause:
                 {
+                    var q = queryFromClause.Query;
+                    writer.Append("(");
+                    CompileSelectQuery(q, writer);
+
+                    writer.Append(")");
+                    if (string.IsNullOrEmpty(q.QueryAlias))
+                        return;
+
                     writer.Append(" ");
                     writer.Append(TableAsKeyword);
                     writer.AppendValue(q.QueryAlias);
+
+                    return;
                 }
-
-                return;
+                case FromClause fromClause:
+                    writer.AppendName(fromClause.Table);
+                    return;
+                default:
+                    throw InvalidClauseException("TableExpression", from);
             }
-
-            if (from is FromClause fromClause)
-            {
-                writer.AppendName(fromClause.Table);
-                return;
-            }
-
-            throw InvalidClauseException("TableExpression", from);
         }
 
         protected string WriteTable(Query query, Writer writer, string operationName)

@@ -22,6 +22,12 @@ namespace SqlKata.Tests.ApprovalTests
                 .FromRaw("(INNER {a} ?)", 5)
                 .Verify(compiler);
         }
+        [Theory, ClassData(typeof(AllCompilers))]
+        public Task SubQuery_No_Alias(Compiler compiler)
+        {
+            return new Query("X").From(new Query("Y")).Verify(compiler);
+        }
+
     }
 
     [UsesVerify]
@@ -110,7 +116,6 @@ namespace SqlKata.Tests.ApprovalTests
             return new Query("X")
                 .AsCount(new[] { "a", "b" })
                 .Verify(compiler);
-                
         }
     }
 }
