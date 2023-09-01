@@ -2,7 +2,7 @@ namespace SqlKata.Compilers
 {
     public static class CteFinder
     {
-        public static List<AbstractFrom> Find(Query queryToSearch, string? engineCode)
+        public static List<AbstractFrom> FindCte(this Query queryToSearch, string? engineCode)
         {
             var already = new HashSet<string>();
             return FindRecursively(queryToSearch);
@@ -12,14 +12,7 @@ namespace SqlKata.Compilers
                 var result = new List<AbstractFrom>();
                 foreach (var cte in query.GetComponents<AbstractFrom>("cte", engineCode))
                 {
-                    var alias = cte switch
-                    {
-                        AdHocTableFromClause x => x.Alias,
-                        QueryFromClause x => x.Alias!,
-                        RawFromClause x => x.Alias!,
-                        _ => throw new ArgumentOutOfRangeException(nameof(cte))
-                    };
-                    if (!already.Add(alias))
+                    if (!already.Add(cte.GetAlias()))
                         continue;
                     if (cte is QueryFromClause qfc)
                         result.InsertRange(0, FindRecursively(qfc.Query));
@@ -29,5 +22,14 @@ namespace SqlKata.Compilers
                 return result;
             }
         }
+
+        private static string GetAlias(this AbstractFrom cte) =>
+            cte switch
+            {
+                AdHocTableFromClause x => x.Alias,
+                QueryFromClause x => x.Alias!,
+                RawFromClause x => x.Alias!,
+                _ => throw new ArgumentOutOfRangeException(nameof(cte))
+            };
     }
 }

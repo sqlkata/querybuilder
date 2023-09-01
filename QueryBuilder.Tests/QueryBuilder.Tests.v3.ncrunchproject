@@ -98,5 +98,6 @@
         <FixtureName>SqlKata.Tests.WhereTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
+    <InstrumentOutputAssembly>True</InstrumentOutputAssembly>
   </Settings>
 </ProjectConfiguration>

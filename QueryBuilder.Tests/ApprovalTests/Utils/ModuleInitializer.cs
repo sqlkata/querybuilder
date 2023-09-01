@@ -5,11 +5,9 @@ namespace SqlKata.Tests.ApprovalTests.Utils
 {
     public static class ModuleInitializer
     {
-
         [ModuleInitializer]
         public static void Initialize() =>
             VerifyDiffPlex.Initialize();
-
 
         [ModuleInitializer]
         public static void OtherInitialize()
@@ -28,6 +26,10 @@ namespace SqlKata.Tests.ApprovalTests.Utils
                 .Replace("AND", "\nAND")
                 .Replace("OR ", "\nOR ")
                 .Replace("ROWS ", "\nROWS ")
+                .Replace("UNION ", "\nUNION ")
+                .Replace("VALUES ", "\nVALUES ")
+                .Replace("), (", "), \n(")
+                .Replace("AS tbl", "\nAS tbl")
             );
         }
     }

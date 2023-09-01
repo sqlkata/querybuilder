@@ -158,7 +158,8 @@ namespace SqlKata.Compilers
             else
             {
                 var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
-                if (fromClause is not FromClause c) return;
+                if (fromClause is not FromClause c)
+                    return;
 
                 writer.Append("DELETE ");
                 writer.AppendName(c.Alias);
@@ -266,9 +267,8 @@ namespace SqlKata.Compilers
             }
         }
 
-        protected virtual void CompileRemainingInsertClauses(Query query, string table,
-            Writer writer,
-            IEnumerable<InsertClause> inserts)
+        protected virtual void CompileRemainingInsertClauses(Query query,
+            string table, Writer writer, IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
@@ -282,7 +282,7 @@ namespace SqlKata.Compilers
         {
             writer.Append("WITH ");
 
-            writer.List(",\n", CteFinder.Find(query, EngineCode), CompileCte);
+            writer.List(",\n", query.FindCte(EngineCode), CompileCte);
 
             writer.Append('\n');
             return;

@@ -1,0 +1,32 @@
+﻿-------- ORIGINAL -----------
+WITH "Q" AS (
+SELECT 1 AS "A", 'k' AS "B", NULL AS "C" 
+FROM RDB$DATABASE 
+UNION ALL 
+SELECT 2 AS "A", NULL AS "B", 'j' AS "C" 
+FROM RDB$DATABASE)
+
+SELECT * 
+FROM "X"
+
+----------- RAW -------------
+WITH "Q" AS (
+SELECT ? AS "A", ? AS "B", ? AS "C" 
+FROM RDB$DATABASE 
+UNION ALL 
+SELECT ? AS "A", ? AS "B", ? AS "C" 
+FROM RDB$DATABASE)
+
+SELECT * 
+FROM "X"
+
+--------PARAMETRIZED --------
+WITH "Q" AS (
+SELECT @p0 AS "A", @p1 AS "B", @p2 AS "C" 
+FROM RDB$DATABASE 
+UNION ALL 
+SELECT @p3 AS "A", @p4 AS "B", @p5 AS "C" 
+FROM RDB$DATABASE)
+
+SELECT * 
+FROM "X"

@@ -8,8 +8,8 @@ namespace SqlKata
 
             return AddComponent(new BaseJoin
             {
-                    Engine = EngineScope,
-                Component = "join", 
+                Engine = EngineScope,
+                Component = "join",
                 Join = join
             });
         }

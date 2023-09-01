@@ -21,7 +21,7 @@ namespace SqlKata
                 throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
 
             if (columnsList.Length != valuesList.Length)
-                throw new InvalidOperationException($"{nameof(columns)} and {nameof(values)} cannot be null or empty");
+                throw new InvalidOperationException($"The number of {nameof(columns)} and {nameof(values)} must match");
 
             Method = "insert";
 
@@ -72,9 +72,6 @@ namespace SqlKata
             var valuesCollectionList = rowsValues is IReadOnlyList<ImmutableArray<object?>> r
                 ? r
                 : rowsValues.Select(v => v.ToImmutableArray()).ToImmutableArray();
-
-           //var columnsList = columns.ToList();
-           //var valuesCollectionList = rowsValues.ToList();
 
             if (columnsList.Length  == 0 || valuesCollectionList.Count == 0)
                 throw new InvalidOperationException(
