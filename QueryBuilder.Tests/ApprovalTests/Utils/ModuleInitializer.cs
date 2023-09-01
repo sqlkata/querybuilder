@@ -5,11 +5,9 @@ namespace SqlKata.Tests.ApprovalTests.Utils
 {
     public static class ModuleInitializer
     {
-
         [ModuleInitializer]
         public static void Initialize() =>
             VerifyDiffPlex.Initialize();
-
 
         [ModuleInitializer]
         public static void OtherInitialize()

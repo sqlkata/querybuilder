@@ -399,6 +399,10 @@ namespace SqlKata
 
         public Query WhereIn<T>(string column, params T[] values) =>
             WhereIn(column, (IEnumerable<T>)values);
+        public Query WhereNotIn<T>(string column, params T[] values) =>
+            WhereNotIn(column, (IEnumerable<T>)values);
+        public Query OrWhereNotIn<T>(string column, params T[] values) =>
+            OrWhereNotIn(column, (IEnumerable<T>)values);
         public Query WhereIn<T>(string column, IEnumerable<T> values)
         {
             // If the developer has passed a string they most likely want a List<string>
