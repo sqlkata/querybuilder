@@ -150,8 +150,8 @@ namespace SqlKata.Compilers
                 writer.Append(")");
         }
 
-        protected virtual void CompileBasicDateCondition(Query query, BasicDateCondition x,
-            Writer writer)
+        protected virtual void CompileBasicDateCondition(
+            Query query, BasicDateCondition x, Writer writer)
         {
             if (x.IsNot)
                 writer.Append("NOT (");

@@ -15,6 +15,7 @@ namespace SqlKata.Tests.ApprovalTests.Utils
         public static void OtherInitialize()
         {
             DiffTools.AddToolBasedOn(DiffTool.AraxisMerge, "araxis");
+            
             VerifierSettings.InitializePlugins();
             VerifierSettings.ScrubLinesContaining("DiffEngineTray");
             VerifierSettings.IgnoreStackTrace();
@@ -22,6 +23,11 @@ namespace SqlKata.Tests.ApprovalTests.Utils
                 .Replace("SELECT", "\nSELECT")
                 .Replace("INNER", "\nINNER")
                 .Replace("FROM", "\nFROM")
+                .Replace("WHERE", "\nWHERE")
+                .Replace("ORDER BY ", "\nORDER BY ")
+                .Replace("AND", "\nAND")
+                .Replace("OR ", "\nOR ")
+                .Replace("ROWS ", "\nROWS ")
             );
         }
     }

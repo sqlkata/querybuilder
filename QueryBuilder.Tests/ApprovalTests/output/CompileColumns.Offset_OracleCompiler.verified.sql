@@ -1,20 +1,23 @@
 ﻿-------- ORIGINAL -----------
 
 SELECT * 
-FROM "X" ORDER BY (
+FROM "X" 
+ORDER BY (
 SELECT 0 
 FROM DUAL) OFFSET 4 ROWS
 
 ----------- RAW -------------
 
 SELECT * 
-FROM "X" ORDER BY (
+FROM "X" 
+ORDER BY (
 SELECT 0 
 FROM DUAL) OFFSET ? ROWS
 
 --------PARAMETRIZED --------
 
 SELECT * 
-FROM "X" ORDER BY (
+FROM "X" 
+ORDER BY (
 SELECT 0 
 FROM DUAL) OFFSET :p0 ROWS

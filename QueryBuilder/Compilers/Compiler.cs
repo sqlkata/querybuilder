@@ -524,7 +524,7 @@ namespace SqlKata.Compilers
         private void CompileJoins(Query query, Writer writer)
         {
             var baseJoins = query.GetComponents<BaseJoin>("join", EngineCode);
-            if (!baseJoins.Any())
+            if (baseJoins.Count == 0)
             {
                 return;
             }
@@ -545,7 +545,7 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             CompileTableExpression(from, writer);
 
-            if (conditions.Any())
+            if (conditions.Count > 0)
             {
                 writer.Append(" ON ");
                 CompileConditions(query, conditions, writer);
