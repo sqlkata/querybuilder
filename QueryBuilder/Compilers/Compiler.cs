@@ -391,6 +391,7 @@ namespace SqlKata.Compilers
             var aggregate = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
             if (aggregate != null)
             {
+                D.IsFalse(query.IsDistinct, "TransformAggregateQuery should have taken care of it");
                 if (query.IsDistinct) throw new InvalidOperationException("TransformAggregateQuery should have taken care of it");
                 if (aggregate.Columns.Length == 1)
                 {

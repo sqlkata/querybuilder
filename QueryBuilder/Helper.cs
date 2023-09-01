@@ -1,7 +1,34 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace SqlKata
 {
+    public static class D
+    {
+        private sealed class AssertionException : Exception
+        {
+            internal AssertionException(string msg) : base(msg) { }
+        }
+
+        private static void DoAssert(bool b, string str)
+        {
+            if (!b) throw new AssertionException(str);
+        }
+
+        [Conditional("DEBUG")]
+        public static void IsTrue(bool b)
+        {
+            DoAssert(b, "Expression must be true but it is not.");
+        }
+
+        [Conditional("DEBUG")]
+        public static void IsFalse(bool b, string? message = null)
+        {
+            DoAssert(!b, message ?? "Expression must be false but it is true.");
+        }
+
+      
+    }
     public static class Helper
     {
         /// <summary>
