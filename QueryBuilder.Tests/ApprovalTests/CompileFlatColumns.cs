@@ -339,6 +339,13 @@ namespace SqlKata.Tests.ApprovalTests
             return new Query("X").Not().WhereDatePart("date", "a",
                 new DateTime(2000, 1, 2, 3, 4, 5)).Verify(compiler);
         }
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Date_Not_DateTime(Compiler compiler)
+        {
+            return new Query("X").Not().WhereDatePart("date", "a",
+                "blah").Verify(compiler);
+        }
     }
 
     [UsesVerify]
