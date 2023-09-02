@@ -31,8 +31,8 @@ namespace SqlKata.Compilers
                 switch (x.Operator)
                 {
                     case "starts":
-                        writer.Append("%");
                         writer.AppendParameter(query, value);
+                        writer.Append("%");
                         break;
                     case "ends":
                         writer.Append("%");
@@ -88,6 +88,7 @@ namespace SqlKata.Compilers
                 writer.AppendKeyword(condition.Part);
                 writer.Append("', ");
                 writer.AppendName(condition.Column);
+                writer.Append(")");
             }
 
             writer.Append(" ");

@@ -2,16 +2,16 @@
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE_PART('YEAR', "a" = '2000-01-02 03:04:05')
+WHERE NOT (DATE_PART('YEAR', "a") = '2000-01-02 03:04:05')
 
 ----------- RAW -------------
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE_PART('YEAR', "a" = ?)
+WHERE NOT (DATE_PART('YEAR', "a") = ?)
 
 --------PARAMETRIZED --------
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE_PART('YEAR', "a" = @p0)
+WHERE NOT (DATE_PART('YEAR', "a") = @p0)

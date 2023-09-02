@@ -2,16 +2,16 @@
 
 SELECT * 
 FROM "X" 
-WHERE DATE_PART('BLAH', "a" = 1
+WHERE DATE_PART('BLAH', "a") = 1
 
 ----------- RAW -------------
 
 SELECT * 
 FROM "X" 
-WHERE DATE_PART('BLAH', "a" = ?
+WHERE DATE_PART('BLAH', "a") = ?
 
 --------PARAMETRIZED --------
 
 SELECT * 
 FROM "X" 
-WHERE DATE_PART('BLAH', "a" = @p0
+WHERE DATE_PART('BLAH', "a") = @p0

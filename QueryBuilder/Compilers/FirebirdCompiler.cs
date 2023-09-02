@@ -114,7 +114,7 @@ namespace SqlKata.Compilers
             else
             {
                 writer.Append("EXTRACT(");
-                writer.AppendName(x.Part.ToUpperInvariant());
+                writer.Append(x.Part.ToUpperInvariant());
                 writer.Append(" FROM ");
                 writer.AppendName(x.Column);
                 writer.Append(") ");

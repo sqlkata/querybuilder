@@ -2,16 +2,16 @@
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike %'K*' ESCAPE '*'
+WHERE "a" ilike 'K*'% ESCAPE '*'
 
 ----------- RAW -------------
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike %? ESCAPE '*'
+WHERE "a" ilike ?% ESCAPE '*'
 
 --------PARAMETRIZED --------
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike %@p0 ESCAPE '*'
+WHERE "a" ilike @p0% ESCAPE '*'
