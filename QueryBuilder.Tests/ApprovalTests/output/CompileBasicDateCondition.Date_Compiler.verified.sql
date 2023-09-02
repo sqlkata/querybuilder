@@ -2,16 +2,16 @@
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE("a") = '2000-01-02 03:04:05')
+WHERE DATE("a") = '2000-01-02 03:04:05'
 
 ----------- RAW -------------
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE("a") = ?)
+WHERE DATE("a") = ?
 
 --------PARAMETRIZED --------
 
 SELECT * 
 FROM "X" 
-WHERE NOT (DATE("a") = @p0)
+WHERE DATE("a") = @p0

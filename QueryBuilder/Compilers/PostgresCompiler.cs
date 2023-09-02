@@ -11,9 +11,8 @@ namespace SqlKata.Compilers
             SupportsFilterClause = true;
         }
 
-
-        protected override void CompileBasicStringCondition(Query query, BasicStringCondition x,
-            Writer writer)
+        protected override void CompileBasicStringCondition(
+            Query query, BasicStringCondition x, Writer writer)
         {
             if (CompilerQueryExtensions.Resolve(query, x.Value) is not string value)
                 throw new ArgumentException("Expecting a non nullable string");
