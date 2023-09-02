@@ -392,7 +392,6 @@ namespace SqlKata.Compilers
             if (aggregate != null)
             {
                 D.IsFalse(query.IsDistinct, "TransformAggregateQuery should have taken care of it");
-                if (query.IsDistinct) throw new InvalidOperationException("TransformAggregateQuery should have taken care of it");
                 if (aggregate.Columns.Length == 1)
                 {
                     writer.AppendKeyword(aggregate.Type);
