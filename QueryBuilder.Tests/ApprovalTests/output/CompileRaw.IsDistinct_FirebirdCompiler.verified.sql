@@ -1,0 +1,17 @@
+﻿-------- ORIGINAL -----------
+
+SELECT MAX(*) AS "MAX" 
+FROM (
+SELECT DISTINCT "A") AS "MAXQUERY"
+
+----------- RAW -------------
+
+SELECT MAX(*) AS "MAX" 
+FROM (
+SELECT DISTINCT "A") AS "MAXQUERY"
+
+--------PARAMETRIZED --------
+
+SELECT MAX(*) AS "MAX" 
+FROM (
+SELECT DISTINCT "A") AS "MAXQUERY"

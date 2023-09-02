@@ -498,14 +498,8 @@ namespace SqlKata.Compilers
                     writer.AppendName(fromClauseCast.Table);
                     return fromClauseCast.Table;
                 case RawFromClause raw:
-                    {
-                        if (raw.Bindings.Length > 0)
-                        {
-                            //TODO: test!
-                        }
-                        writer.AppendRaw(raw.Expression, raw.Bindings);
-                        return writer;
-                    }
+                    writer.AppendRaw(raw.Expression, raw.Bindings);
+                    return writer;
                 default:
                     throw new InvalidOperationException("Invalid table expression");
             }
@@ -565,13 +559,9 @@ namespace SqlKata.Compilers
         private void CompileGroups(Query query, Writer writer)
         {
             var components = query.GetComponents<AbstractColumn>("group", EngineCode);
-            if (!components.Any())
-            {
-                return;
-            }
+            if (components.Count == 0) return;
             writer.Append("GROUP BY ");
             CompileColumnList(query, components, writer);
-
         }
 
         protected string? CompileOrders(Query query, Writer writer)

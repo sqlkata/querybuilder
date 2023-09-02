@@ -235,13 +235,6 @@ namespace SqlKata.Tests.ApprovalTests
         {
             return new Query("X").WhereNot("a", "k").Verify(compiler);
         }
-        // TODO: [Theory, ClassData(typeof(AllCompilers))]
-        // public Task Trivial(Compiler compiler)
-        // {
-        //     return new Query("X")
-        //         .Where("a", new[] { "m", "n", "o"})
-        //         .Verify(compiler);
-        // }
     }
 
     [UsesVerify]
@@ -650,4 +643,99 @@ namespace SqlKata.Tests.ApprovalTests
         }
     }
 
+    [UsesVerify]
+    public sealed class CompileUpdateQuery
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task CompileUpdate(Compiler compiler)
+        {
+            return new Query("X")
+                .AsUpdate(new {a = 1})
+                .Verify(compiler);
+        }
+
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task CompileIncrement(Compiler compiler)
+        {
+            return new Query("X")
+                .AsIncrement("a")
+                .Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class WriteTable
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public void No_FromClause(Compiler compiler)
+        {
+            Assert.Throws<InvalidOperationException>(
+                () => compiler.Compile(new Query().AsDelete()))
+                .Message.Should().Be("No table set to delete");
+        }
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task RawFromClause(Compiler compiler)
+        {
+            return new Query()
+                .AsDelete()
+                .FromRaw("{X} ?", 1)
+                .Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class CompileGroups
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Trivial(Compiler compiler)
+        {
+            return new Query().GroupBy("a").Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class CompileOrders
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task OrderBy(Compiler compiler)
+        {
+            return new Query().OrderBy("a").Verify(compiler);
+        }
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task OrderByDesc(Compiler compiler)
+        {
+            return new Query().OrderByDesc("a").Verify(compiler);
+        }
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task OrderByRaw(Compiler compiler)
+        {
+            return new Query().OrderByRaw("{X} ?", 1).Verify(compiler);
+        }
+    }
+
+    [UsesVerify]
+    public sealed class CompileHaving
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Trivial(Compiler compiler)
+        {
+            return new Query().Having("a", 1).Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class CompileRaw
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task IsDistinct(Compiler compiler)
+        {
+            return new Query().AsMax("a").Distinct().Verify(compiler);
+        }
+    }
 }
