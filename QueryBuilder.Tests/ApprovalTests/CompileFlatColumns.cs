@@ -324,6 +324,21 @@ namespace SqlKata.Tests.ApprovalTests
             return new Query("X").Not().WhereDatePart("year", "a",
                 new DateTime(2000, 1, 2, 3, 4, 5)).Verify(compiler);
         }
+
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Time(Compiler compiler)
+        {
+            return new Query("X").Not().WhereDatePart("time", "a",
+                new DateTime(2000, 1, 2, 3, 4, 5)).Verify(compiler);
+        }
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Date(Compiler compiler)
+        {
+            return new Query("X").Not().WhereDatePart("date", "a",
+                new DateTime(2000, 1, 2, 3, 4, 5)).Verify(compiler);
+        }
     }
 
     [UsesVerify]
@@ -736,6 +751,16 @@ namespace SqlKata.Tests.ApprovalTests
         public Task IsDistinct(Compiler compiler)
         {
             return new Query().AsMax("a").Distinct().Verify(compiler);
+        }
+    }
+    [UsesVerify]
+    public sealed class CompileLimit
+    {
+        [Theory]
+        [ClassData(typeof(AllCompilers))]
+        public Task Limit_Offset(Compiler compiler)
+        {
+            return new Query().Limit(1).Offset(7).Verify(compiler);
         }
     }
 }

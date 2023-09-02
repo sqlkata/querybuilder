@@ -1,0 +1,23 @@
+﻿-------- ORIGINAL -----------
+
+SELECT * 
+ORDER BY (
+SELECT 0) OFFSET 7 
+ROWS FETCH NEXT 1 
+ROWS ONLY
+
+----------- RAW -------------
+
+SELECT * 
+ORDER BY (
+SELECT 0) OFFSET ? 
+ROWS FETCH NEXT ? 
+ROWS ONLY
+
+--------PARAMETRIZED --------
+
+SELECT * 
+ORDER BY (
+SELECT 0) OFFSET @p0 
+ROWS FETCH NEXT @p1 
+ROWS ONLY
