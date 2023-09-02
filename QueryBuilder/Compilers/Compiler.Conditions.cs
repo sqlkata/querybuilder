@@ -124,18 +124,13 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             if (isLikeOperator)
             {
-                switch (x.Operator)
+                value = x.Operator switch
                 {
-                    case "starts":
-                        value = $"{value}%";
-                        break;
-                    case "ends":
-                        value = $"%{value}";
-                        break;
-                    case "contains":
-                        value = $"%{value}%";
-                        break;
-                }
+                    "starts" => $"{value}%",
+                    "ends" => $"%{value}",
+                    "contains" => $"%{value}%",
+                    _ => value
+                };
             }
             writer.AppendParameter(query,
                 x.CaseSensitive ? value : value.ToLowerInvariant());

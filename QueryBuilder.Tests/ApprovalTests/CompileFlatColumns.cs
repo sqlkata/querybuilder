@@ -654,7 +654,7 @@ namespace SqlKata.Tests.ApprovalTests
         public Task InsertQueryClause(Compiler compiler)
         {
             return new Query("X")
-                .AsInsert(new[]{"a"}, new Query("Y"))
+                .AsInsert(new[] { "a" }, new Query("Y"))
                 .Verify(compiler);
         }
     }
@@ -676,9 +676,11 @@ namespace SqlKata.Tests.ApprovalTests
         }
         [Theory]
         [ClassData(typeof(AllCompilers))]
-        public Task Join_NoFrom(Compiler compiler)
+        public void Join_NoFrom(Compiler compiler)
         {
-            return new Query().CrossJoin("Y").AsDelete().Verify(compiler);
+            Assert.Throws<InvalidOperationException>(
+                () => compiler.Compile(new Query().CrossJoin("Y").AsDelete()))
+                .Message.Should().Be("No table set to delete");
         }
     }
 
@@ -690,7 +692,7 @@ namespace SqlKata.Tests.ApprovalTests
         public Task CompileUpdate(Compiler compiler)
         {
             return new Query("X")
-                .AsUpdate(new {a = 1})
+                .AsUpdate(new { a = 1 })
                 .Verify(compiler);
         }
 

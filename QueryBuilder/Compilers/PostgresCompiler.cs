@@ -28,25 +28,14 @@ namespace SqlKata.Compilers
             writer.Append(" ");
             if (isLikeOperator)
             {
-                switch (x.Operator)
+                value = x.Operator switch
                 {
-                    case "starts":
-                        writer.AppendParameter(query, value);
-                        writer.Append("%");
-                        break;
-                    case "ends":
-                        writer.Append("%");
-                        writer.AppendParameter(query, value);
-                        break;
-                    case "contains":
-                        writer.Append("%");
-                        writer.AppendParameter(query, value);
-                        writer.Append("%");
-                        break;
-                    default:
-                        writer.AppendParameter(query, value);
-                        break;
-                }
+                    "starts" => $"{value}%",
+                    "ends" => $"%{value}",
+                    "contains" => $"%{value}%",
+                    _ => value
+                };
+                writer.AppendParameter(query, value);
             }
             else
             {

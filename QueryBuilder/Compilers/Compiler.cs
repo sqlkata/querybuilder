@@ -43,7 +43,7 @@ namespace SqlKata.Compilers
             return this;
         }
 
-        public void CompileRaw(Query query, Writer writer)
+        internal void CompileRaw(Query query, Writer writer)
         {
             // handle CTEs
             if (query.HasComponent("cte", EngineCode))
@@ -162,7 +162,7 @@ namespace SqlKata.Compilers
             {
                 var fromClause = query.GetOneComponent<AbstractFrom>("from", EngineCode);
                 if (fromClause is not FromClause c)
-                    return;
+                    throw new InvalidOperationException("No table set to delete");
 
                 writer.Append("DELETE ");
                 writer.AppendName(c.Alias);

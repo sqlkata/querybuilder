@@ -2,16 +2,16 @@
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike 'k'%
+WHERE "a" ilike 'k%'
 
 ----------- RAW -------------
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike ?%
+WHERE "a" ilike ?
 
 --------PARAMETRIZED --------
 
 SELECT * 
 FROM "X" 
-WHERE "a" ilike @p0%
+WHERE "a" ilike @p0
