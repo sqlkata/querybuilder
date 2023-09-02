@@ -76,6 +76,8 @@ namespace SqlKata.Compilers
                 CompileSelectQuery(query, writer);
             }
 
+            return;
+
             Query TransformAggregateQuery(Query input)
             {
                 var clause = input.GetOneComponent<AggregateClause>("aggregate", EngineCode)!;
@@ -90,14 +92,15 @@ namespace SqlKata.Compilers
                 }
                 else
                 {
-                    foreach (var column in clause.Columns) input.WhereNotNull(column);
+                    foreach (var column in clause.Columns)
+                        input.WhereNotNull(column);
                 }
 
                 var outerClause = new AggregateClause
                 {
                     Engine = EngineCode,
                     Component = "aggregate",
-                    Columns = ImmutableArray.Create<string>().Add("*"),
+                    Columns = ImmutableArray.Create("*"),
                     Type = clause.Type
                 };
 
@@ -631,21 +634,6 @@ namespace SqlKata.Compilers
         {
             return new InvalidCastException(
                 $"Invalid type \"{clause.GetType().Name}\" provided for the \"{section}\" clause.");
-        }
-    }
-
-    public static class CompilerQueryExtensions
-    {
-        public static object? Resolve(Query query, object parameter)
-        {
-            // if we face a literal value we have to return it directly
-            if (parameter is UnsafeLiteral literal) return literal.Value;
-
-            // if we face a variable we have to lookup the variable from the predefined variables
-            if (parameter is Variable variable)
-                return query.FindVariable(variable.Name);
-
-            return parameter;
         }
     }
 }
