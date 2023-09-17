@@ -136,8 +136,8 @@ namespace SqlKata
 
         public static List<string> ExpandExpression(string expression)
         {
-            var regex = @"^(?:\w+\.){1,2}{(.*)}";
-            var match = Regex.Match(expression, regex);
+            var regex = @"^(?:\w+\.){1,2}{([^}]*)}";
+            var match = Regex.Match(expression, regex, RegexOptions.Multiline);
 
             if (!match.Success)
             {
@@ -149,7 +149,7 @@ namespace SqlKata
 
             var captures = match.Groups[1].Value;
 
-            var cols = Regex.Split(captures, @"\s*,\s*")
+            var cols = Regex.Split(captures, @"\s*,\s*", RegexOptions.Multiline)
                 .Select(x => $"{table}.{x.Trim()}")
                 .ToList();
 
