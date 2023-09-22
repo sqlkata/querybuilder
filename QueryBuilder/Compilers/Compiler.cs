@@ -8,13 +8,21 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
+        /// <summary>  </summary>
         protected virtual string parameterPlaceholder { get; set; } = "?";
+        /// <summary>  </summary>
         protected virtual string parameterPrefix { get; set; } = "@p";
+        /// <summary> Character used to identify the start of a keyword ( such as a column or table name ) </summary>
         protected virtual string OpeningIdentifier { get; set; } = "\"";
+        /// <summary> Character used to identify the end of a keyword ( such as a column or table name ) </summary>
         protected virtual string ClosingIdentifier { get; set; } = "\"";
+        /// <summary> Keyword used to indicate a column alias </summary>
         protected virtual string ColumnAsKeyword { get; set; } = "AS ";
+        /// <summary> Keyword used to indicate a table alias </summary>
         protected virtual string TableAsKeyword { get; set; } = "AS ";
+        /// <summary>  </summary>
         protected virtual string LastId { get; set; } = "";
+        /// <summary> Character used to escape special characters to allow interpreting them as their literal value </summary>
         protected virtual string EscapeCharacter { get; set; } = "\\";
 
 
@@ -58,6 +66,10 @@ namespace SqlKata.Compilers
             "similar to", "not similar to"
         };
 
+        /// <summary>
+        /// A list of white-listed operators specific to this compiler
+        /// </summary>
+        /// <value></value>
         protected HashSet<string> userOperators = new HashSet<string>
         {
 
@@ -187,11 +199,9 @@ namespace SqlKata.Compilers
                 combinedBindings.AddRange(cb);
             }
 
-            var ctx = new SqlResult
-            {
-                RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
-                Bindings = combinedBindings,
-            };
+            var ctx = GetNewSqlResult();
+            ctx.RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b);
+            ctx.Bindings = combinedBindings;
 
             ctx = PrepareResult(ctx);
 
@@ -200,10 +210,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query.Clone(),
-            };
+            var ctx = GetNewSqlResult(query.Clone());
 
             var results = new[] {
                     this.CompileColumns(ctx),
@@ -229,7 +236,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = GetNewSqlResult();
 
             var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} AS {Wrap(col)}"));
 
@@ -250,10 +257,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
@@ -312,10 +316,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileUpdateQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
             {
@@ -390,10 +391,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
-            {
-                Query = query
-            };
+            var ctx = GetNewSqlResult(query);
 
             if (!ctx.Query.HasComponent("from", EngineCode))
                 throw new InvalidOperationException("No table set to insert");
@@ -573,7 +571,7 @@ namespace SqlKata.Compilers
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
-            var ctx = new SqlResult();
+            var ctx = GetNewSqlResult();
 
             if (null == cte)
             {
@@ -1027,6 +1025,27 @@ namespace SqlKata.Compilers
         }
 
         /// <summary>
+        /// Create a new <see cref="SqlResult"/> object
+        /// </summary>
+        /// <returns></returns>
+        public virtual SqlResult GetNewSqlResult()
+        {
+            return new SqlResult();
+        }
+
+        /// <summary>
+        /// Create a new <see cref="SqlResult"/> object via <see cref="GetNewSqlResult()"/>, then assign the <paramref name="query"/> to it
+        /// </summary>
+        /// <param name="query">The query to assign to the object</param>
+        /// <returns></returns>
+        public SqlResult GetNewSqlResult(Query query)
+        {
+            SqlResult ctx = GetNewSqlResult();
+            ctx.Query = query;
+            return ctx;
+        }
+
+        /// <summary>
         /// Create query parameter place-holders for an array.
         /// </summary>
         /// <param name="ctx"></param>
@@ -1047,6 +1066,16 @@ namespace SqlKata.Compilers
             return values.Select(x => Wrap(x)).ToList();
         }
 
+        /// <summary>
+        /// Replaces opening/closing braces and brackets if the character is not preceeded by the <see cref="EscapeCharacter"/>
+        /// <br/> { [   --> Replaced by <see cref="OpeningIdentifier"/>
+        /// <br/> } ]   --> Replaced by <see cref="ClosingIdentifier"/>
+        /// </summary>
+        /// <param name="input">string to wrap with <see cref="OpeningIdentifier"/> and <see cref="ClosingIdentifier"/></param>
+        /// <returns>
+        /// {text}  --> <see cref="OpeningIdentifier"/> + "text" + <see cref="ClosingIdentifier"/>
+        /// <br/> [text]  --> <see cref="OpeningIdentifier"/> + "text" + <see cref="ClosingIdentifier"/>
+        /// </returns>
         public virtual string WrapIdentifiers(string input)
         {
             return input

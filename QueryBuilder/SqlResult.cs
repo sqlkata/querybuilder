@@ -8,6 +8,8 @@ namespace SqlKata
 {
     public class SqlResult
     {
+        public SqlResult() { }
+
         public Query Query { get; set; }
         public string RawSql { get; set; } = "";
         public List<object> Bindings { get; set; } = new List<object>();
@@ -26,6 +28,7 @@ namespace SqlKata
             typeof(ulong),
         };
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
@@ -43,7 +46,12 @@ namespace SqlKata
             });
         }
 
-        private string ChangeToSqlValue(object value)
+        /// <summary>
+        /// Convert each value to its string representation
+        /// </summary>
+        /// <param name="value">value to convert</param>
+        /// <returns>string representation of the <paramref name="value"/></returns>
+        protected virtual string ChangeToSqlValue(object value)
         {
             if (value == null)
             {
@@ -81,7 +89,23 @@ namespace SqlKata
             }
 
             // fallback to string
-            return "'" + value.ToString().Replace("'","''") + "'";
+            return WrapStringValue(value.ToString());
         }
+
+        /// <summary>
+        /// Wrap a string value with identifiers
+        /// </summary>
+        /// <param name="value">string parameter</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Default Functionality wraps in single quotes
+        /// <br/>   value --> 'value'
+        /// <br/> 'value' --> ''value'''
+        /// </remarks>
+        protected virtual string WrapStringValue(string value)
+        {
+            return "'" + value.ToString().Replace("'", "''") + "'";
+        }
+
     }
 }

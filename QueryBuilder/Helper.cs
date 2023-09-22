@@ -161,6 +161,23 @@ namespace SqlKata
             return Enumerable.Repeat(str, count);
         }
 
+        /// <summary>
+        /// Replace instances of the <paramref name="identifier"/> within the string with the <paramref name="newIdentifier"/>, unless the <paramref name="identifier"/> was escaped via the <paramref name="escapeCharacter"/>
+        /// </summary>
+        /// <param name="input">input string to modify</param>
+        /// <param name="escapeCharacter">escape character to search for within the string</param>
+        /// <param name="identifier">string to search for and replace with <paramref name="newIdentifier"/></param>
+        /// <param name="newIdentifier">string that will replace instances of <paramref name="identifier"/> that have not been escaped</param>
+        /// <returns>
+        ///Example ( Not Escaped ) :
+        ///<br/> Input = [ Test ] , <paramref name="escapeCharacter"/> = '\', <paramref name="identifier"/> = '[', <paramref name="newIdentifier"/> = '{'
+        ///<br/> Result: { Test ]
+        ///<para/>
+        ///Example ( Escaped ) :
+        ///<br/> Input = \[ Test ] , <paramref name="escapeCharacter"/> = '\', <paramref name="identifier"/> = '[', <paramref name="newIdentifier"/> = '{'
+        ///<br/> Result: [ Test ]
+        ///<br/>
+        /// </returns>
         public static string ReplaceIdentifierUnlessEscaped(this string input, string escapeCharacter, string identifier, string newIdentifier)
         {
             //Replace standard, non-escaped identifiers first
