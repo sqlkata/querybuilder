@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
@@ -39,7 +37,7 @@ namespace SqlKata.Compilers
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return $"ROWS {parameterPlaceholder} TO {parameterPlaceholder}";
+                return $"ROWS {ParameterPlaceholder} TO {ParameterPlaceholder}";
             }
 
             return null;
@@ -59,7 +57,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("limit");
 
-                return $"SELECT FIRST {parameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT FIRST {ParameterPlaceholder}" + compiled.Substring(6);
             }
             else if (limit == 0 && offset > 0)
             {
@@ -67,7 +65,7 @@ namespace SqlKata.Compilers
 
                 ctx.Query.ClearComponent("offset");
 
-                return $"SELECT SKIP {parameterPlaceholder}" + compiled.Substring(6);
+                return $"SELECT SKIP {ParameterPlaceholder}" + compiled.Substring(6);
             }
 
             return compiled;

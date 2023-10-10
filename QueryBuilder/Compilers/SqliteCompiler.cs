@@ -28,7 +28,7 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"LIMIT -1 OFFSET {parameterPlaceholder}";
+                return $"LIMIT -1 OFFSET {ParameterPlaceholder}";
             }
 
             return base.CompileLimit(ctx);

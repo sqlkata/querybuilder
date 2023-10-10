@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
             query = query.Clone();
 
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query,
             };
@@ -48,12 +48,12 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= {parameterPlaceholder}";
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= {ParameterPlaceholder}";
                 result.Bindings.Add(offset + 1);
             }
             else
             {
-                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {parameterPlaceholder} AND {parameterPlaceholder}";
+                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {ParameterPlaceholder} AND {ParameterPlaceholder}";
                 result.Bindings.Add(offset + 1);
                 result.Bindings.Add(limit + offset);
             }
@@ -86,10 +86,10 @@ namespace SqlKata.Compilers
                 // handle distinct
                 if (compiled.IndexOf("SELECT DISTINCT") == 0)
                 {
-                    return $"SELECT DISTINCT TOP ({parameterPlaceholder}){compiled.Substring(15)}";
+                    return $"SELECT DISTINCT TOP ({ParameterPlaceholder}){compiled.Substring(15)}";
                 }
 
-                return $"SELECT TOP ({parameterPlaceholder}){compiled.Substring(6)}";
+                return $"SELECT TOP ({ParameterPlaceholder}){compiled.Substring(6)}";
             }
 
             return compiled;
@@ -121,13 +121,13 @@ namespace SqlKata.Compilers
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
+                return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS";
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
+            return $"{safeOrder}OFFSET {ParameterPlaceholder} ROWS FETCH NEXT {ParameterPlaceholder} ROWS ONLY";
         }
 
         public override string CompileRandom(string seed)
@@ -173,11 +173,11 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(this);
 
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
 
-            var valueRow = string.Join(", ", Enumerable.Repeat(parameterPlaceholder, adHoc.Columns.Count));
+            var valueRow = string.Join(", ", Enumerable.Repeat(ParameterPlaceholder, adHoc.Columns.Count));
             var valueRows = string.Join(", ", Enumerable.Repeat($"({valueRow})", adHoc.Values.Count / adHoc.Columns.Count));
             var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 

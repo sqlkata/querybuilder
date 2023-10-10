@@ -8,7 +8,7 @@ namespace SqlKata.Compilers
     public partial class Compiler
     {
         private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
-        protected virtual string parameterPlaceholder { get; set; } = "?";
+        public virtual string ParameterPlaceholder { get; protected set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
         protected virtual string OpeningIdentifier { get; set; } = "\"";
         protected virtual string ClosingIdentifier { get; set; } = "\"";
@@ -72,7 +72,7 @@ namespace SqlKata.Compilers
         protected SqlResult PrepareResult(SqlResult ctx)
         {
             ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, i => parameterPrefix + i);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, ParameterPlaceholder, i => parameterPrefix + i);
             return ctx;
         }
 
@@ -144,7 +144,7 @@ namespace SqlKata.Compilers
                 ctx = CompileCteQuery(ctx, query);
             }
 
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, ctx.Bindings.ToArray());
+            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, ParameterPlaceholder, ctx.Bindings.ToArray());
 
             return ctx;
         }
@@ -187,7 +187,7 @@ namespace SqlKata.Compilers
                 combinedBindings.AddRange(cb);
             }
 
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 RawSql = compiled.Select(r => r.RawSql).Aggregate((a, b) => a + ";\n" + b),
                 Bindings = combinedBindings,
@@ -200,7 +200,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query.Clone(),
             };
@@ -229,9 +229,9 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(this);
 
-            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} AS {Wrap(col)}"));
+            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{ParameterPlaceholder} AS {Wrap(col)}"));
 
             var fromTable = SingleRowDummyTableName;
 
@@ -250,7 +250,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileDeleteQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -312,7 +312,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileUpdateQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -390,7 +390,7 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileInsertQuery(Query query)
         {
-            var ctx = new SqlResult
+            var ctx = new SqlResult(this)
             {
                 Query = query
             };
@@ -573,7 +573,7 @@ namespace SqlKata.Compilers
 
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(this);
 
             if (null == cte)
             {
@@ -852,19 +852,19 @@ namespace SqlKata.Compilers
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"LIMIT {parameterPlaceholder}";
+                return $"LIMIT {ParameterPlaceholder}";
             }
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"OFFSET {parameterPlaceholder}";
+                return $"OFFSET {ParameterPlaceholder}";
             }
 
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
 
-            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
+            return $"LIMIT {ParameterPlaceholder} OFFSET {ParameterPlaceholder}";
         }
 
         /// <summary>
@@ -1019,11 +1019,11 @@ namespace SqlKata.Compilers
             {
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
-                return parameterPlaceholder;
+                return ParameterPlaceholder;
             }
 
             ctx.Bindings.Add(parameter);
-            return parameterPlaceholder;
+            return ParameterPlaceholder;
         }
 
         /// <summary>
