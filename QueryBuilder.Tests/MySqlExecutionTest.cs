@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using static SqlKata.Expressions;
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace SqlKata.Tests
 {
@@ -14,12 +16,12 @@ namespace SqlKata.Tests
         [Fact]
         public void EmptySelect()
         {
-
-            var db = DB().Create("Cars", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Brand TEXT NOT NULL",
-                    "Year INT NOT NULL",
-                    "Color TEXT NULL",
+            var db = DB().Create("Cars", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
             });
 
             var rows = db.Query("Cars").Get();
@@ -32,11 +34,12 @@ namespace SqlKata.Tests
         [Fact]
         public void SelectWithLimit()
         {
-            var db = DB().Create("Cars", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Brand TEXT NOT NULL",
-                    "Year INT NOT NULL",
-                    "Color TEXT NULL",
+            var db = DB().Create("Cars", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
             });
 
             db.Statement("INSERT INTO `Cars`(Brand, Year) VALUES ('Honda', 2020)");
@@ -51,11 +54,12 @@ namespace SqlKata.Tests
         [Fact]
         public void Count()
         {
-            var db = DB().Create("Cars", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Brand TEXT NOT NULL",
-                    "Year INT NOT NULL",
-                    "Color TEXT NULL",
+            var db = DB().Create("Cars", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
             });
 
             db.Statement("INSERT INTO `Cars`(Brand, Year) VALUES ('Honda', 2020)");
@@ -78,11 +82,12 @@ namespace SqlKata.Tests
         [Fact]
         public void CloneThenCount()
         {
-            var db = DB().Create("Cars", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Brand TEXT NOT NULL",
-                    "Year INT NOT NULL",
-                    "Color TEXT NULL",
+            var db = DB().Create("Cars", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
             });
 
             for (int i = 0; i < 10; i++)
@@ -107,11 +112,12 @@ namespace SqlKata.Tests
         [Fact]
         public void QueryWithVariable()
         {
-            var db = DB().Create("Cars", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Brand TEXT NOT NULL",
-                    "Year INT NOT NULL",
-                    "Color TEXT NULL",
+            var db = DB().Create("Cars", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
             });
 
             for (int i = 0; i < 10; i++)
@@ -137,10 +143,11 @@ namespace SqlKata.Tests
         [Fact]
         public void InlineTable()
         {
-            var db = DB().Create("Transaction", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Amount int NOT NULL",
-                    "Date DATE NOT NULL",
+            var db = DB().Create("Transaction", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Amount int NOT NULL",
+                "Date DATE NOT NULL",
             });
 
             db.Query("Transaction").Insert(new
@@ -151,8 +158,9 @@ namespace SqlKata.Tests
 
 
             var rows = db.Query("Transaction")
-                .With("Rates", new[] { "Date", "Rate" }, new object[][] {
-                    new object[] {"2022-01-01", 0.5},
+                .With("Rates", new[] { "Date", "Rate" }, new object[][]
+                {
+                    new object[] { "2022-01-01", 0.5 },
                 })
                 .Join("Rates", "Rates.Date", "Transaction.Date")
                 .SelectRaw("Transaction.Amount * Rates.Rate as AmountConverted")
@@ -167,10 +175,11 @@ namespace SqlKata.Tests
         [Fact]
         public void ExistsShouldReturnFalseForEmptyTable()
         {
-            var db = DB().Create("Transaction", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Amount int NOT NULL",
-                    "Date DATE NOT NULL",
+            var db = DB().Create("Transaction", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Amount int NOT NULL",
+                "Date DATE NOT NULL",
             });
 
             var exists = db.Query("Transaction").Exists();
@@ -182,10 +191,11 @@ namespace SqlKata.Tests
         [Fact]
         public void ExistsShouldReturnTrueForNonEmptyTable()
         {
-            var db = DB().Create("Transaction", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Amount int NOT NULL",
-                    "Date DATE NOT NULL",
+            var db = DB().Create("Transaction", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Amount int NOT NULL",
+                "Date DATE NOT NULL",
             });
 
             db.Query("Transaction").Insert(new
@@ -203,26 +213,28 @@ namespace SqlKata.Tests
         [Fact]
         public void BasicSelectFilter()
         {
-            var db = DB().Create("Transaction", new[] {
-                    "Id INT PRIMARY KEY AUTO_INCREMENT",
-                    "Date DATE NOT NULL",
-                    "Amount int NOT NULL",
+            var db = DB().Create("Transaction", new[]
+            {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Date DATE NOT NULL",
+                "Amount int NOT NULL",
             });
 
-            var data = new Dictionary<string, int> {
+            var data = new Dictionary<string, int>
+            {
                 // 2020
-                {"2020-01-01", 10},
-                {"2020-05-01", 20},
+                { "2020-01-01", 10 },
+                { "2020-05-01", 20 },
 
                 // 2021
-                {"2021-01-01", 40},
-                {"2021-02-01", 10},
-                {"2021-04-01", -10},
+                { "2021-01-01", 40 },
+                { "2021-02-01", 10 },
+                { "2021-04-01", -10 },
 
                 // 2022
-                {"2022-01-01", 80},
-                {"2022-02-01", -30},
-                {"2022-05-01", 50},
+                { "2022-01-01", 80 },
+                { "2022-02-01", -30 },
+                { "2022-05-01", 50 },
             };
 
             foreach (var row in data)
@@ -235,9 +247,9 @@ namespace SqlKata.Tests
             }
 
             var query = db.Query("Transaction")
-                .SelectSum("Amount as Total_2020", q => q.WhereDatePart("year", "date", 2020))
-                .SelectSum("Amount as Total_2021", q => q.WhereDatePart("year", "date", 2021))
-                .SelectSum("Amount as Total_2022", q => q.WhereDatePart("year", "date", 2022))
+                    .SelectSum("Amount as Total_2020", q => q.WhereDatePart("year", "date", 2020))
+                    .SelectSum("Amount as Total_2021", q => q.WhereDatePart("year", "date", 2021))
+                    .SelectSum("Amount as Total_2022", q => q.WhereDatePart("year", "date", 2022))
                 ;
 
             var results = query.Get().ToList();
@@ -251,19 +263,31 @@ namespace SqlKata.Tests
 
         QueryFactory DB()
         {
-            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
-
-            var connection = new MySqlConnection(cs);
-
+            var connection = GetConnectionFromEnv() ?? GetConnectionFromConfig();
             var db = new QueryFactory(connection, new MySqlCompiler());
-
             return db;
         }
 
+        MySqlConnection GetConnectionFromEnv()
+        {
+            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
+            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
+            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
 
+            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(dbName))
+                return null;
 
+            var cs = $"server={host};user={user};database={dbName}";
+
+            return new MySqlConnection(cs);
+        }
+
+        MySqlConnection GetConnectionFromConfig()
+        {
+            var settings = File.ReadAllText("config.json");
+            var deserializedSettings = JsonConvert.DeserializeObject<dynamic>(settings);
+
+            return new MySqlConnection(deserializedSettings.ConnectionStrings.MySql.ToString());
+        }
     }
 }

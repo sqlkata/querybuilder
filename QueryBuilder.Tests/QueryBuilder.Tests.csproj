@@ -30,4 +30,9 @@
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
     <ProjectReference Include="..\SqlKata.Execution\SqlKata.Execution.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

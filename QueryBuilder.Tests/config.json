@@ -1,0 +1,5 @@
+﻿{
+  "ConnectionStrings": {
+    "MySql": "User ID=root;Password=1;Host=localhost;Port=3306;Database=sqlkata;SSL Mode=None;AllowPublicKeyRetrieval=true"
+  }
+}
