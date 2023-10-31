@@ -202,6 +202,15 @@ namespace SqlKata.Execution
 
             return row.Id;
         }
+		
+		public static T InsertGetId<T>(this Query query, IReadOnlyDictionary<string, object> values)
+        {
+            var db = QueryHelper.CreateQueryFactory(query);
+
+            var row = db.First<InsertGetIdRow<T>>(query.AsInsert(values, true));
+
+            return row.Id;
+        }
 
         public static async Task<T> InsertGetIdAsync<T>(this Query query, object data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
