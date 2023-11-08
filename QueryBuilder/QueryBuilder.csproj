@@ -2,9 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Version -->
   <PropertyGroup>
-    <Version>0.0.1</Version>
-    <AssemblyVersion>0.0.1</AssemblyVersion>
-    <FileVersion>0.0.1</FileVersion>
+    <Version>0.0.2</Version>
+    <AssemblyVersion>0.0.2</AssemblyVersion>
+    <FileVersion>0.0.2</FileVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Title>SqlKata The C# Sql Query Builder</Title>
