@@ -25,6 +25,7 @@ namespace SqlKata
     public class DeepJoin : AbstractJoin
     {
         public string Type { get; set; }
+        public string IndexHint { get; set; }
         public string Expression { get; set; }
         public string SourceKeySuffix { get; set; }
         public string TargetKey { get; set; }
@@ -39,6 +40,7 @@ namespace SqlKata
                 Engine = Engine,
                 Component = Component,
                 Type = Type,
+                IndexHint = IndexHint,
                 Expression = Expression,
                 SourceKeySuffix = SourceKeySuffix,
                 TargetKey = TargetKey,

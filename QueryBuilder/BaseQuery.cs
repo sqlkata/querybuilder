@@ -272,7 +272,16 @@ namespace SqlKata
             });
         }
 
-        public Q From(Query query, string alias = null)
+        public Q From(string table, string indexHint)
+        {
+            return AddOrReplaceComponent("from", new FromClause
+            {
+                Table = table,
+                IndexHint = indexHint
+            });
+        }
+
+        public Q From(Query query, string alias = null, string indexHint = null)
         {
             query = query.Clone();
             query.SetParent((Q)this);
@@ -280,6 +289,11 @@ namespace SqlKata
             if (alias != null)
             {
                 query.As(alias);
+            };
+
+            if (indexHint != null)
+            {
+                query.UseIndexHint(alias);
             };
 
             return AddOrReplaceComponent("from", new QueryFromClause

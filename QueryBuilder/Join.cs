@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 namespace SqlKata
 {
@@ -17,6 +18,8 @@ namespace SqlKata
                 _type = value.ToUpperInvariant();
             }
         }
+
+        public string IndexHint = null;
 
         public Join() : base()
         {
@@ -72,6 +75,12 @@ namespace SqlKata
         public override Join NewQuery()
         {
             return new Join();
+        }
+
+        public Join UsingIndexHint(string indexHint = null)
+        {
+            IndexHint = indexHint;
+            return this;
         }
     }
 }
