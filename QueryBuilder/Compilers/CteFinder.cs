@@ -22,7 +22,7 @@ namespace SqlKata.Compilers
 
             namesOfPreviousCtes = new HashSet<string>();
 
-            orderedCteList = findInternal(query);
+            orderedCteList = FindInternal(query);
 
             namesOfPreviousCtes.Clear();
             namesOfPreviousCtes = null;
@@ -30,9 +30,9 @@ namespace SqlKata.Compilers
             return orderedCteList;
         }
 
-        private List<AbstractFrom> findInternal(Query queryToSearch)
+        private List<AbstractFrom> FindInternal(Query queryToSearch)
         {
-            var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
+            var cteList = queryToSearch.GetComponents<AbstractFrom>(ClauseName.Cte, engineCode);
 
             var resultList = new List<AbstractFrom>();
 
@@ -46,7 +46,7 @@ namespace SqlKata.Compilers
 
                 if (cte is QueryFromClause queryFromClause)
                 {
-                    resultList.InsertRange(0, findInternal(queryFromClause.Query));
+                    resultList.InsertRange(0, FindInternal(queryFromClause.Query));
                 }
             }
 

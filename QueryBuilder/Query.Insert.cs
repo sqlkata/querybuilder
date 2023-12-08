@@ -31,7 +31,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
+            ClearComponent(ClauseName.Insert).AddComponent(ClauseName.Insert, new InsertClause
             {
                 Columns = columnsList,
                 Values = valuesList
@@ -49,7 +49,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
+            ClearComponent(ClauseName.Insert).AddComponent(ClauseName.Insert, new InsertClause
             {
                 Columns = values.Select(x => x.Key).ToList(),
                 Values = values.Select(x => x.Value).ToList(),
@@ -77,7 +77,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert");
+            ClearComponent(ClauseName.Insert);
 
             foreach (var values in valuesCollectionList)
             {
@@ -87,7 +87,7 @@ namespace SqlKata
                     throw new InvalidOperationException($"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
                 }
 
-                AddComponent("insert", new InsertClause
+                AddComponent(ClauseName.Insert, new InsertClause
                 {
                     Columns = columnsList,
                     Values = valuesList
@@ -107,7 +107,7 @@ namespace SqlKata
         {
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertQueryClause
+            ClearComponent(ClauseName.Insert).AddComponent(ClauseName.Insert, new InsertQueryClause
             {
                 Columns = columns.ToList(),
                 Query = query.Clone(),

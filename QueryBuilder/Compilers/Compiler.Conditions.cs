@@ -170,12 +170,12 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
         {
-            if (!(x.Query.HasComponent("where", EngineCode) || x.Query.HasComponent("having", EngineCode)))
+            if (!(x.Query.HasComponent(ClauseName.Where, EngineCode) || x.Query.HasComponent(ClauseName.Having, EngineCode)))
             {
                 return null;
             }
 
-            var clause = x.Query.HasComponent("where", EngineCode) ? "where" : "having";
+            var clause = x.Query.HasComponent(ClauseName.Where, EngineCode) ? ClauseName.Where : ClauseName.Having;
 
             var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
 
@@ -253,7 +253,7 @@ namespace SqlKata.Compilers
 
             if (OmitSelectInsideExists)
             {
-                query.ClearComponent("select").SelectRaw("1");
+                query.ClearComponent(ClauseName.Select).SelectRaw("1");
             }
 
             var subCtx = CompileSelectQuery(query);

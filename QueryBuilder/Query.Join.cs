@@ -9,7 +9,7 @@ namespace SqlKata
         {
             var join = callback.Invoke(new Join().AsInner());
 
-            return AddComponent("join", new BaseJoin
+            return AddComponent(ClauseName.Join, new BaseJoin
             {
                 Join = join
             });
