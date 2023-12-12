@@ -35,7 +35,7 @@ namespace SqlKata
         internal long GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>(ClauseName.Offset, engineCode);
+            var offset = this.GetOneComponent<OffsetClause>(ComponentName.Offset, engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -43,7 +43,7 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>(ClauseName.Limit, engineCode);
+            var limit = this.GetOneComponent<LimitClause>(ComponentName.Limit, engineCode);
 
             return limit?.Limit ?? 0;
         }
@@ -104,7 +104,7 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent(ClauseName.Cte, new QueryFromClause
+            return AddComponent(ComponentName.Cte, new QueryFromClause
             {
                 Query = query,
                 Alias = alias,
@@ -157,12 +157,12 @@ namespace SqlKata
                 clause.Values.AddRange(valuesList);
             }
 
-            return AddComponent(ClauseName.Cte, clause);
+            return AddComponent(ComponentName.Cte, clause);
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent(ClauseName.Cte, new RawFromClause
+            return AddComponent(ComponentName.Cte, new RawFromClause
             {
                 Alias = alias,
                 Expression = sql,
@@ -177,7 +177,7 @@ namespace SqlKata
                 Limit = value
             };
 
-            return AddOrReplaceComponent(ClauseName.Limit, newClause);
+            return AddOrReplaceComponent(ComponentName.Limit, newClause);
         }
 
         public Query Offset(long value)
@@ -187,7 +187,7 @@ namespace SqlKata
                 Offset = value
             };
 
-            return AddOrReplaceComponent(ClauseName.Offset, newClause);
+            return AddOrReplaceComponent(ComponentName.Offset, newClause);
         }
 
         public Query Offset(int value)
@@ -274,7 +274,7 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent(ClauseName.Order, new OrderBy
+                AddComponent(ComponentName.Order, new OrderBy
                 {
                     Column = column,
                     Ascending = true
@@ -288,7 +288,7 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent(ClauseName.Order, new OrderBy
+                AddComponent(ComponentName.Order, new OrderBy
                 {
                     Column = column,
                     Ascending = false
@@ -300,7 +300,7 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent(ClauseName.Order, new RawOrderBy
+            return AddComponent(ComponentName.Order, new RawOrderBy
             {
                 Expression = expression,
                 Bindings = Helper.Flatten(bindings).ToArray()
@@ -309,14 +309,14 @@ namespace SqlKata
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent(ClauseName.Order, new OrderByRandom { });
+            return AddComponent(ComponentName.Order, new OrderByRandom { });
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
-                AddComponent(ClauseName.Group, new Column
+                AddComponent(ComponentName.Group, new Column
                 {
                     Name = column
                 });
@@ -327,7 +327,7 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent(ClauseName.Group, new RawColumn
+            AddComponent(ComponentName.Group, new RawColumn
             {
                 Expression = expression,
                 Bindings = bindings,

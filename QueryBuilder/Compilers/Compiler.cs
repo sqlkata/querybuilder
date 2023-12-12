@@ -79,14 +79,14 @@ namespace SqlKata.Compilers
 
         private Query TransformAggregateQuery(Query query)
         {
-            var clause = query.GetOneComponent<AggregateClause>(ClauseName.Aggregate, EngineCode);
+            var clause = query.GetOneComponent<AggregateClause>(ComponentName.Aggregate, EngineCode);
 
             if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
 
             if (query.IsDistinct)
             {
-                query.ClearComponent(ClauseName.Aggregate, EngineCode);
-                query.ClearComponent(ClauseName.Select, EngineCode);
+                query.ClearComponent(ComponentName.Aggregate, EngineCode);
+                query.ClearComponent(ComponentName.Select, EngineCode);
                 query.Select(clause.Columns.ToArray());
             }
             else
@@ -104,7 +104,7 @@ namespace SqlKata.Compilers
             };
 
             return new Query()
-                .AddComponent(ClauseName.Aggregate, outerClause)
+                .AddComponent(ComponentName.Aggregate, outerClause)
                 .From(query, $"{clause.Type}Query");
         }
 
@@ -128,9 +128,9 @@ namespace SqlKata.Compilers
             {
                 if (query.Method == "aggregate")
                 {
-                    query.ClearComponent(ClauseName.Limit)
-                        .ClearComponent(ClauseName.Order)
-                        .ClearComponent(ClauseName.Group);
+                    query.ClearComponent(ComponentName.Limit)
+                        .ClearComponent(ComponentName.Order)
+                        .ClearComponent(ComponentName.Group);
 
                     query = TransformAggregateQuery(query);
                 }
@@ -139,7 +139,7 @@ namespace SqlKata.Compilers
             }
 
             // handle CTEs
-            if (query.HasComponent(ClauseName.Cte, EngineCode))
+            if (query.HasComponent(ComponentName.Cte, EngineCode))
             {
                 ctx = CompileCteQuery(ctx, query);
             }
@@ -255,12 +255,12 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent(ClauseName.From, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.From, EngineCode))
             {
                 throw new InvalidOperationException("No table set to delete");
             }
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ClauseName.From, EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ComponentName.From, EngineCode);
 
             string table = null;
 
@@ -317,12 +317,12 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent(ClauseName.From, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.From, EngineCode))
             {
                 throw new InvalidOperationException("No table set to update");
             }
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ClauseName.From, EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ComponentName.From, EngineCode);
 
             string table = null;
 
@@ -343,7 +343,7 @@ namespace SqlKata.Compilers
             }
 
             // check for increment statements
-            var clause = ctx.Query.GetOneComponent(ClauseName.Update, EngineCode);
+            var clause = ctx.Query.GetOneComponent(ComponentName.Update, EngineCode);
 
             string wheres;
 
@@ -366,7 +366,7 @@ namespace SqlKata.Compilers
             }
 
 
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>(ClauseName.Update, EngineCode);
+            var toUpdate = ctx.Query.GetOneComponent<InsertClause>(ComponentName.Update, EngineCode);
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
@@ -395,10 +395,10 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent(ClauseName.From, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.From, EngineCode))
                 throw new InvalidOperationException("No table set to insert");
 
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ClauseName.From, EngineCode);
+            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>(ComponentName.From, EngineCode);
             if (fromClause is null)
                 throw new InvalidOperationException("Invalid table expression");
 
@@ -414,7 +414,7 @@ namespace SqlKata.Compilers
             if (table is null)
                 throw new InvalidOperationException("Invalid table expression");
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>(ClauseName.Insert, EngineCode);
+            var inserts = ctx.Query.GetComponents<AbstractInsertClause>(ComponentName.Insert, EngineCode);
             if (inserts[0] is InsertQueryClause insertQueryClause)
                 return CompileInsertQueryClause(ctx, table, insertQueryClause);
             else
@@ -566,7 +566,7 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>(ClauseName.Where);
+            var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>(ComponentName.Where);
 
             return CompileConditions(ctx, wheres);
         }
@@ -610,9 +610,9 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileColumns(SqlResult ctx)
         {
-            if (ctx.Query.HasComponent(ClauseName.Aggregate, EngineCode))
+            if (ctx.Query.HasComponent(ComponentName.Aggregate, EngineCode))
             {
-                var aggregate = ctx.Query.GetOneComponent<AggregateClause>(ClauseName.Aggregate, EngineCode);
+                var aggregate = ctx.Query.GetOneComponent<AggregateClause>(ComponentName.Aggregate, EngineCode);
 
                 var aggregateColumns = aggregate.Columns
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
@@ -636,7 +636,7 @@ namespace SqlKata.Compilers
             }
 
             var columns = ctx.Query
-                .GetComponents<AbstractColumn>(ClauseName.Select, EngineCode)
+                .GetComponents<AbstractColumn>(ComponentName.Select, EngineCode)
                 .Select(x => CompileColumn(ctx, x))
                 .ToList();
 
@@ -652,14 +652,14 @@ namespace SqlKata.Compilers
         {
 
             // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents(ClauseName.Combine, EngineCode).Any())
+            if (!ctx.Query.GetComponents(ComponentName.Combine, EngineCode).Any())
             {
                 return null;
             }
 
             var combinedQueries = new List<string>();
 
-            var clauses = ctx.Query.GetComponents<AbstractCombine>(ClauseName.Combine, EngineCode);
+            var clauses = ctx.Query.GetComponents<AbstractCombine>(ComponentName.Combine, EngineCode);
 
             foreach (var clause in clauses)
             {
@@ -719,9 +719,9 @@ namespace SqlKata.Compilers
 
         public virtual string CompileFrom(SqlResult ctx)
         {
-            if (ctx.Query.HasComponent(ClauseName.From, EngineCode))
+            if (ctx.Query.HasComponent(ComponentName.From, EngineCode))
             {
-                var from = ctx.Query.GetOneComponent<AbstractFrom>(ClauseName.From, EngineCode);
+                var from = ctx.Query.GetOneComponent<AbstractFrom>(ComponentName.From, EngineCode);
 
                 return "FROM " + CompileTableExpression(ctx, from);
             }
@@ -731,13 +731,13 @@ namespace SqlKata.Compilers
 
         public virtual string CompileJoins(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent(ClauseName.Join, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.Join, EngineCode))
             {
                 return null;
             }
 
             var joins = ctx.Query
-                .GetComponents<BaseJoin>(ClauseName.Join, EngineCode)
+                .GetComponents<BaseJoin>(ComponentName.Join, EngineCode)
                 .Select(x => CompileJoin(ctx, x.Join));
 
             return "\n" + string.Join("\n", joins);
@@ -746,8 +746,8 @@ namespace SqlKata.Compilers
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
         {
 
-            var from = join.GetOneComponent<AbstractFrom>(ClauseName.From, EngineCode);
-            var conditions = join.GetComponents<AbstractCondition>(ClauseName.Where, EngineCode);
+            var from = join.GetOneComponent<AbstractFrom>(ComponentName.From, EngineCode);
+            var conditions = join.GetComponents<AbstractCondition>(ComponentName.Where, EngineCode);
 
             var joinTable = CompileTableExpression(ctx, from);
             var constraints = CompileConditions(ctx, conditions);
@@ -759,12 +759,12 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent(ClauseName.Where, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.Where, EngineCode))
             {
                 return null;
             }
 
-            var conditions = ctx.Query.GetComponents<AbstractCondition>(ClauseName.Where, EngineCode);
+            var conditions = ctx.Query.GetComponents<AbstractCondition>(ComponentName.Where, EngineCode);
             var sql = CompileConditions(ctx, conditions).Trim();
 
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
@@ -772,13 +772,13 @@ namespace SqlKata.Compilers
 
         public virtual string CompileGroups(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent(ClauseName.Group, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.Group, EngineCode))
             {
                 return null;
             }
 
             var columns = ctx.Query
-                .GetComponents<AbstractColumn>(ClauseName.Group, EngineCode)
+                .GetComponents<AbstractColumn>(ComponentName.Group, EngineCode)
                 .Select(x => CompileColumn(ctx, x));
 
             return "GROUP BY " + string.Join(", ", columns);
@@ -786,13 +786,13 @@ namespace SqlKata.Compilers
 
         public virtual string CompileOrders(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent(ClauseName.Order, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.Order, EngineCode))
             {
                 return null;
             }
 
             var columns = ctx.Query
-                .GetComponents<AbstractOrderBy>(ClauseName.Order, EngineCode)
+                .GetComponents<AbstractOrderBy>(ComponentName.Order, EngineCode)
                 .Select(x =>
             {
 
@@ -812,7 +812,7 @@ namespace SqlKata.Compilers
 
         public virtual string CompileHaving(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent(ClauseName.Having, EngineCode))
+            if (!ctx.Query.HasComponent(ComponentName.Having, EngineCode))
             {
                 return null;
             }
@@ -820,7 +820,7 @@ namespace SqlKata.Compilers
             var sql = new List<string>();
             string boolOperator;
 
-            var having = ctx.Query.GetComponents(ClauseName.Having, EngineCode)
+            var having = ctx.Query.GetComponents(ComponentName.Having, EngineCode)
                 .Cast<AbstractCondition>()
                 .ToList();
 

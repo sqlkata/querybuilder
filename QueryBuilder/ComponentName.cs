@@ -1,6 +1,6 @@
 namespace SqlKata
 {
-    public static class ClauseName
+    public static class ComponentName
     {
         public static string Select { get; set; } = "select";
         public static string From { get; set; } = "from";

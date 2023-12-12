@@ -53,7 +53,7 @@ namespace SqlKata
 
         public Join On(string first, string second, string op = "=")
         {
-            return AddComponent(ClauseName.Where, new TwoColumnsCondition
+            return AddComponent(ComponentName.Where, new TwoColumnsCondition
             {
                 First = first,
                 Second = second,
