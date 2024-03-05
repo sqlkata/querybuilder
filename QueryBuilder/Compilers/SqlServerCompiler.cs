@@ -23,7 +23,7 @@ namespace SqlKata.Compilers
 
             query = query.Clone();
 
-            var ctx = new SqlResult
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = query,
             };
