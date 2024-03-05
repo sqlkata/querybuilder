@@ -75,12 +75,39 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void ExpandedSelectMultiline()
+        {
+            var q = new Query().From("users").Select(@"users.{
+                                                                id,
+                                                                name as Name,
+                                                                age
+                                                              }");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [users].[id], [users].[name] AS [Name], [users].[age] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `users`.`id`, `users`.`name` AS `Name`, `users`.`age` FROM `users`", c[EngineCodes.MySql]);
+        }
+
+        [Fact]
         public void ExpandedSelectWithSchema()
         {
             var q = new Query().From("users").Select("dbo.users.{id,name, age}");
             var c = Compile(q);
 
             Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name], [dbo].[users].[age] FROM [users]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void ExpandedSelectMultilineWithSchema()
+        {
+            var q = new Query().From("users").Select(@"dbo.users.{
+                                                                id,
+                                                                name as Name,
+                                                                age
+                                                              }");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name] AS [Name], [dbo].[users].[age] FROM [users]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]

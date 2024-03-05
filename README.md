@@ -23,13 +23,13 @@
 
 SqlKata Query Builder is a powerful Sql Query Builder written in C#.
 
-It's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder, and Knex.
+It's secure and framework agnostic. Inspired by the top Query Builders available, like Laravel Query Builder and Knex.
 
 SqlKata has an expressive API. it follows a clean naming convention, which is very similar to the SQL syntax.
 
 By providing a level of abstraction over the supported database engines, that allows you to work with multiple databases with the same unified API.
 
-SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently it has built-in compilers for SqlServer, MySql, PostgreSql and Firebird.
+SqlKata supports complex queries, such as nested conditions, selection from SubQuery, filtering over SubQueries, Conditional Statements and others. Currently, it has built-in compilers for SqlServer, MySql, PostgreSQL, and Firebird.
 
 The SqlKata.Execution package provides the ability to submit the queries to the database, using [Dapper](https://github.com/StackExchange/Dapper) under the covers.
 
@@ -160,15 +160,15 @@ int affected = db.Query("Users").Where("Id", 1).Delete();
 
 ## FAQ
 ### How to know when a new release or a feature is available?
-I announce updates on My [Twitter Account](https://twitter.com/ahmadmuzavi), and you can subscribe to our news letters from the website https://sqlkata.com
+I announce updates on My [Twitter Account](https://twitter.com/ahmadmuzavi), and you can subscribe to our newsletters from the website https://sqlkata.com
 
-### The database that I want is not supported why?
-Usually it's impossible to support all available database vendors, this why we focus on the major ones, and we are encourage you to create your own compiler for your database
+### The database that I want is not supported. Why?
+It's impossible to support all available database vendors, this is why we focus on the major ones, and we encourage you to create your own compiler for your database.
 
 ### Do you accept new compilers?
-Unfortunetly no, the reason is this will add overhead for the project contributors, we prefer to improve the quality of the existing compilers instead
+Unfortunately, no, the reason is this will add overhead for the project contributors. We prefer to improve the quality of the existing compilers instead.
 
 ### How can I support the project?
 - Star the project here in Github, and share it with your friends
 - Follow and upvote it on Product Hunt <a href="https://www.producthunt.com/products/sqlkata?utm_source=badge-follow&utm_medium=badge&utm_souce=badge-sqlkata" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?post_id=398417&theme=light&size=small" alt="SqlKata - Dynamic&#0032;Sql&#0032;query&#0032;builder&#0032;for&#0032;dotnet | Product Hunt" style="width: 86px; height: 32px;" width="250" height="54" /></a>
-- You can also donate to support the project financily on open collection.
+- You can also donate to support the project financially on open collection.
