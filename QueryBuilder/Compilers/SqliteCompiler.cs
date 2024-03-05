@@ -1,9 +1,21 @@
 using System.Collections.Generic;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
 {
     public class SqliteCompiler : Compiler
     {
+
+        public SqliteCompiler(IDDLCompiler ddlCompiler)
+        {
+            DdlCompiler = ddlCompiler;
+        }
+
+        public SqliteCompiler()
+        {
+
+        }
+
         public override string EngineCode { get; } = EngineCodes.Sqlite;
         protected override string OpeningIdentifier { get; set; } = "\"";
         protected override string ClosingIdentifier { get; set; } = "\"";
@@ -62,6 +74,16 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

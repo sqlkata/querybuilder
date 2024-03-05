@@ -1,13 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text;
+using SqlKata.Clauses;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 
 namespace SqlKata.Compilers
 {
     public class OracleCompiler : Compiler
     {
+        public OracleCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            DdlCompiler = ddlCompiler;
+        }
+
         public OracleCompiler()
         {
             ColumnAsKeyword = "";
@@ -19,6 +26,12 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.Oracle;
         public bool UseLegacyPagination { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.Oracle,compiledSelectQuery);
+        }
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
@@ -172,5 +185,19 @@ namespace SqlKata.Compilers
             ctx.RawSql += " SELECT 1 FROM DUAL";
             return ctx;
         }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return DdlCompiler.CompileCreateTable(query,DataSource.Oracle);
+        }
+
+        protected override SqlResult CompileDropTable(Query query)
+        {
+            var result = base.CompileDropTable(query);
+            result.RawSql = new StringBuilder(result.RawSql).Append(" PURGE").ToString();
+            return result;
+        }
+
+
     }
 }

@@ -1,9 +1,17 @@
 using System.Linq;
+using SqlKata.Clauses;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 
 namespace SqlKata.Compilers
 {
     public class SqlServerCompiler : Compiler
     {
+        public SqlServerCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            DdlCompiler = ddlCompiler;
+        }
+
         public SqlServerCompiler()
         {
             OpeningIdentifier = "[";
@@ -13,6 +21,12 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = false;
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.SqlServer,compiledSelectQuery);
+        }
 
         protected override SqlResult CompileSelectQuery(Query query)
         {
@@ -185,6 +199,11 @@ namespace SqlKata.Compilers
             ctx.Bindings = adHoc.Values;
 
             return ctx;
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return DdlCompiler.CompileCreateTable(query,DataSource.SqlServer);
         }
     }
 }

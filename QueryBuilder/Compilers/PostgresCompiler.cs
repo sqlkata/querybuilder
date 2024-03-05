@@ -1,10 +1,18 @@
 using System;
 using System.Linq;
+using SqlKata.Clauses;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
+using SqlKata.Compilers.Enums;
 
 namespace SqlKata.Compilers
 {
     public class PostgresCompiler : Compiler
     {
+        public PostgresCompiler(IDDLCompiler ddlCompiler) : this()
+        {
+            DdlCompiler = ddlCompiler;
+        }
+
         public PostgresCompiler()
         {
             LastId = "SELECT lastval() AS id";
@@ -94,6 +102,18 @@ namespace SqlKata.Compilers
             }
 
             return sql;
+        }
+
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            var compiledSelectQuery = CompileSelectQuery(query.GetOneComponent<CreateTableAsClause>("CreateTableAsQuery").SelectQuery).RawSql;
+            return DdlCompiler.CompileCreateTableAs(query,DataSource.Postgresql,compiledSelectQuery);
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            return DdlCompiler.CompileCreateTable(query,DataSource.Postgresql);
         }
     }
 }
