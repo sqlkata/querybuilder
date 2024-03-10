@@ -112,6 +112,30 @@ namespace SqlKata.Execution
             return await PaginateAsync<dynamic>(query, page, perPage, transaction, timeout, cancellationToken);
         }
 
+        public static ScrollToResult<T> ScrollTo<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
+            var db = CreateQueryFactory(query);
+
+            return db.ScrollTo<T>(query, page, perPage, transaction, timeout);
+        }
+
+        public static async Task<ScrollToResult<T>> ScrollToAsync<T>(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            var db = CreateQueryFactory(query);
+
+            return await db.ScrollToAsync<T>(query, page, perPage, transaction, timeout, cancellationToken);
+        }
+
+        public static ScrollToResult<dynamic> ScrollTo(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
+            return query.ScrollTo<dynamic>(page, perPage, transaction, timeout);
+        }
+
+        public static async Task<ScrollToResult<dynamic>> ScrollToAsync(this Query query, int page, int perPage = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            return await ScrollToAsync<dynamic>(query, page, perPage, transaction, timeout, cancellationToken);
+        }
+
         public static void Chunk<T>(this Query query, int chunkSize, Func<IEnumerable<T>, int, bool> func, IDbTransaction transaction = null, int? timeout = null)
         {
             var db = CreateQueryFactory(query);
