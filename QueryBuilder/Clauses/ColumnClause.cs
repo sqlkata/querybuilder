@@ -29,6 +29,27 @@ namespace SqlKata
             };
         }
     }
+    /// <summary>
+    /// Represents date column clause calculated using query.
+    /// </summary>
+    public class DateQueryColumn : Column
+    {
+        public string Column { get; set; }
+
+        public string Part { get; set; }
+
+        public override AbstractClause Clone()
+        {
+            return new DateQueryColumn
+            {
+                Engine = Engine,
+                Name=Name,
+                Column = Column,
+                Component = Component,
+                Part = Part,
+            };
+        }
+    }
 
     /// <summary>
     /// Represents column clause calculated using query.

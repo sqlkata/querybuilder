@@ -4,7 +4,23 @@ namespace SqlKata
     {
 
     }
+    public class DateOrderBy : OrderBy
+    {
+        public string Part { get; set; }
 
+        /// <inheritdoc />
+        public override AbstractClause Clone()
+        {
+            return new DateOrderBy
+            {
+                Engine = Engine,
+                Component = Component,
+                Column = Column,
+                Part= Part,
+                Ascending = Ascending
+            };
+        }
+    }
     public class OrderBy : AbstractOrderBy
     {
         public string Column { get; set; }

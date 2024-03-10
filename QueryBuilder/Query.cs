@@ -335,7 +335,64 @@ namespace SqlKata
 
             return this;
         }
+        #region date
+        public Query OrderByDatePart(string part, string column)
+        {
+            return AddComponent("order", new DateOrderBy
+            {
+                Part = part?.ToLowerInvariant(),
+                Column = column,
+                Ascending = true
+            });
+        }
 
+        public Query OrderByDate(string column)
+        {
+            return OrderByDatePart("date", column);
+        }
+        public Query OrderByTime(string column)
+        {
+            return OrderByDatePart("time", column);
+        }
+
+        public Query OrderByDatePartDesc(string part, string column)
+        {
+            return AddComponent("order", new DateOrderBy
+            {
+                Part = part?.ToLowerInvariant(),
+                Column = column,
+                Ascending = true
+            });
+        }
+
+        public Query OrderByDateDesc(string column)
+        {
+            return OrderByDatePartDesc("date", column);
+        }
+        public Query OrderByTimeDesc(string column)
+        {
+            return OrderByDatePartDesc("time", column);
+        }
+
+        public Query GroupByDatePart(string part, string column)
+        {
+            return AddComponent("group", new DateQueryColumn
+            {
+                Part = part?.ToLowerInvariant(),
+                Column = column
+            });
+        }
+
+        public Query GroupByDate(string column)
+        {
+            return OrderByDatePart("date", column);
+        }
+        public Query GroupByTime(string column)
+        {
+            return OrderByDatePart("time", column);
+        }
+
+        #endregion
         public override Query NewQuery()
         {
             return new Query();

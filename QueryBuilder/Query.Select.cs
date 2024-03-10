@@ -117,5 +117,27 @@ namespace SqlKata
         {
             return SelectAggregate("max", column, filter);
         }
+
+        #region date
+        public Query SelectDatePart(string part, string column,string alias)
+        {
+            return AddComponent("select", new DateQueryColumn
+            {
+                Name = alias, 
+                Part = part?.ToLowerInvariant(),
+                Column=column
+            });
+        }
+
+        public Query SelectDate(string column, string alias)
+        {
+            return SelectDatePart("date", column, alias);
+        }
+        public Query SelectTime(string column, string alias)
+        {
+            return SelectDatePart("time", column, alias);
+        }
+        #endregion
+
     }
 }

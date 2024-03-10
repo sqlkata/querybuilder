@@ -74,5 +74,20 @@ namespace SqlKata.Tests.SqlServer
                 "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= " +
                 (offset + 1), c.ToString());
         }
+
+        [Fact]
+        public void SqlServerOrderByTimePart()
+        {
+            var query = new Query("table").OrderByDatePart("year","field");
+            var result = compiler.Compile(query);
+            Assert.Equal("SELECT * FROM [table] ORDER BY DATEPART(YEAR, [field])", result.Sql);
+        }
+        [Fact]
+        public void SqlServerGroupByTimePart()
+        {
+            var query = new Query("table").GroupByDatePart("year", "field").SelectDatePart("year","field","meow");
+            var result = compiler.Compile(query);
+            Assert.Equal("SELECT DATEPART(YEAR, [field]) AS [meow] FROM [table] GROUP BY DATEPART(YEAR, [field])", result.Sql);
+        }
     }
 }
