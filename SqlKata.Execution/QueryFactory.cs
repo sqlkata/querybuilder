@@ -607,13 +607,14 @@ namespace SqlKata.Execution
             }
         }
 
-        public IEnumerable<T> Select<T>(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
+        public IEnumerable<T> Select<T>(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CommandType? commandType = null)
         {
             return this.Connection.Query<T>(
                 sql,
                 param,
                 transaction: transaction,
-                commandTimeout: timeout ?? this.QueryTimeout
+                commandTimeout: timeout ?? this.QueryTimeout,
+                commandType: commandType
             );
         }
 
@@ -629,9 +630,9 @@ namespace SqlKata.Execution
             return await this.Connection.QueryAsync<T>(commandDefinition);
         }
 
-        public IEnumerable<dynamic> Select(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
+        public IEnumerable<dynamic> Select(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CommandType? commandType = null)
         {
-            return this.Select<dynamic>(sql, param, transaction, timeout);
+            return this.Select<dynamic>(sql, param, transaction, timeout, commandType);
         }
 
         public async Task<IEnumerable<dynamic>> SelectAsync(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
@@ -639,19 +640,20 @@ namespace SqlKata.Execution
             return await this.SelectAsync<dynamic>(sql, param, transaction, timeout, cancellationToken);
         }
 
-        public int Statement(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null)
+        public int Statement(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CommandType? commandType = null)
         {
-            return this.Connection.Execute(sql, param, transaction: transaction, commandTimeout: timeout ?? this.QueryTimeout);
+            return this.Connection.Execute(sql, param, transaction: transaction, commandTimeout: timeout ?? this.QueryTimeout, commandType);
         }
 
-        public async Task<int> StatementAsync(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        public async Task<int> StatementAsync(string sql, object param = null, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default, CommandType? commandType = null)
         {
             var commandDefinition = new CommandDefinition(
                 commandText: sql,
                 parameters: param,
                 transaction: transaction,
                 commandTimeout: timeout ?? this.QueryTimeout,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken,
+                commandType: commandType);
             return await this.Connection.ExecuteAsync(commandDefinition);
         }
 
