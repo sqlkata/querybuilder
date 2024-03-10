@@ -6,12 +6,15 @@ namespace SqlKata
     public abstract class AbstractFrom : AbstractClause
     {
         protected string _alias;
+        protected string _indexHint { get; set; }
 
         /// <summary>
         /// Try to extract the Alias for the current clause.
         /// </summary>
         /// <returns></returns>
         public virtual string Alias { get => _alias; set => _alias = value; }
+
+        public string IndexHint { get => _indexHint; set => _indexHint = value; }
     }
 
     /// <summary>
@@ -71,6 +74,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Alias = Alias,
+                IndexHint = IndexHint,
                 Query = Query.Clone(),
                 Component = Component,
             };
