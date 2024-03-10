@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SqlKata.Extensions;
 
 namespace SqlKata
 {
@@ -33,8 +34,7 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = columnsList,
-                Values = valuesList
+                Data = columnsList.MergeKeysAndValues(valuesList)
             });
 
             return this;
@@ -51,8 +51,7 @@ namespace SqlKata
 
             ClearComponent("insert").AddComponent("insert", new InsertClause
             {
-                Columns = values.Select(x => x.Key).ToList(),
-                Values = values.Select(x => x.Value).ToList(),
+                Data = values.CreateDictionary(),
                 ReturnId = returnId,
             });
 
@@ -89,8 +88,41 @@ namespace SqlKata
 
                 AddComponent("insert", new InsertClause
                 {
-                    Columns = columnsList,
-                    Values = valuesList
+                    Data = columnsList.MergeKeysAndValues(valuesList)
+                });
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Produces insert multi records
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Query AsInsert(IEnumerable<IEnumerable<KeyValuePair<string, object>>> data)
+        {
+            if (data == null || !data.Any())
+            {
+                throw new InvalidOperationException($"{nameof(data)} cannot be null or empty");
+            }
+
+            Method = "insert";
+
+            ClearComponent("insert");
+
+            foreach (var item in data)
+            {
+                var row = item.CreateDictionary();
+
+                if (row.Keys.Count != row.Values.Count)
+                {
+                    throw new InvalidOperationException($"{nameof(row.Keys)} count should be equal to each {nameof(row.Values)} entry count");
+                }
+
+                AddComponent("insert", new InsertClause
+                {
+                    Data = row
                 });
             }
 

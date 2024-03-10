@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
@@ -156,20 +157,24 @@ namespace SqlKata.Compilers
         }
 
         protected override SqlResult CompileRemainingInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+            SqlResult ctx, string table, IReadOnlyCollection<InsertClause> inserts)
         {
+            var sql = new StringBuilder(ctx.RawSql, inserts.Count - 1);
+
             foreach (var insert in inserts.Skip(1))
             {
-                string columns = GetInsertColumnsList(insert.Columns);
-                string values = string.Join(", ", Parameterize(ctx, insert.Values));
+                string columns = GetInsertColumnsList(insert.Data.Keys);
+                string values = string.Join(", ", Parameterize(ctx, insert.Data.Values));
 
-                string intoFormat = " INTO {0}{1} VALUES ({2})";
-                var nextInsert = string.Format(intoFormat, table, columns, values);
+                const string intoFormat = " INTO {0}{1} VALUES ({2})";
 
-                ctx.RawSql += nextInsert;
+                sql.Append(string.Format(intoFormat, table, columns, values));
             }
 
-            ctx.RawSql += " SELECT 1 FROM DUAL";
+            sql.Append(" SELECT 1 FROM DUAL");
+
+            ctx.RawSql = sql.ToString();
+
             return ctx;
         }
     }

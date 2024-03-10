@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SqlKata.Compilers
 {
@@ -43,7 +44,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
         {
-            var result = new List<string>();
+            var result = new StringBuilder();
 
             for (var i = 0; i < conditions.Count; i++)
             {
@@ -56,10 +57,10 @@ namespace SqlKata.Compilers
 
                 var boolOperator = i == 0 ? "" : (conditions[i].IsOr ? "OR " : "AND ");
 
-                result.Add(boolOperator + compiled);
+                result.Append(boolOperator + compiled + " ");
             }
 
-            return string.Join(" ", result);
+            return result.ToString().Trim();
         }
 
         protected virtual string CompileRawCondition(SqlResult ctx, RawCondition x)
