@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +7,14 @@ namespace SqlKata
 {
     public partial class Query
     {
+        public Query Select<T>()
+        {
+            var props = typeof(T)
+                .GetProperties()
+                .Select(prop => prop.Name);
+
+            return Select(props);
+        }
 
         public Query Select(params string[] columns)
         {

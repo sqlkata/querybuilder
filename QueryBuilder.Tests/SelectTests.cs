@@ -23,6 +23,19 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void TypedSelect()
+        {
+            var q = new Query().From("users").Select<User>();
+            var c = Compile(q);
+
+            Assert.Equal("SELECT [Id], [Name] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT `Id`, `Name` FROM `users`", c[EngineCodes.MySql]);
+            Assert.Equal("SELECT \"Id\", \"Name\" FROM \"users\"", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\"", c[EngineCodes.Firebird]);
+            Assert.Equal("SELECT \"Id\", \"Name\" FROM \"users\"", c[EngineCodes.Oracle]);
+        }
+
+        [Fact]
         public void BasicSelectEnumerable()
         {
             var q = new Query().From("users").Select(new List<string>() { "id", "name" });
@@ -959,4 +972,11 @@ namespace SqlKata.Tests
         }
 
     }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
 }
