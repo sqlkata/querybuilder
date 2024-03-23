@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using System.Data;
 using System.Threading;
+using System.Linq;
 
 namespace SqlKata.Execution
 {
@@ -169,9 +170,23 @@ namespace SqlKata.Execution
             return CreateQueryFactory(query).Execute(query.AsInsert(columns, valuesCollection), transaction, timeout);
         }
 
+        public static int Insert<T>(this Query query, IEnumerable<T> data, IDbTransaction transaction = null, int? timeout = null)
+        {
+            var (cols, values) = GetColumsAndValues(data);
+
+            return query.Insert(cols, values, transaction, timeout);
+        }
+
         public static async Task<int> InsertAsync(this Query query, IEnumerable<string> columns, IEnumerable<IEnumerable<object>> valuesCollection, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             return await CreateQueryFactory(query).ExecuteAsync(query.AsInsert(columns, valuesCollection), transaction, timeout, cancellationToken);
+        }
+
+        public static Task<int> InsertAsync<T>(this Query query, IEnumerable<T> data, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            var (cols, values) = GetColumsAndValues(data);
+
+            return query.InsertAsync(cols, values, transaction, timeout, cancellationToken);
         }
 
         public static int Insert(this Query query, IEnumerable<string> columns, Query fromQuery, IDbTransaction transaction = null, int? timeout = null)
@@ -385,6 +400,27 @@ namespace SqlKata.Execution
         internal static QueryFactory CreateQueryFactory(Query query)
         {
             return CreateQueryFactory(CastToXQuery(query));
+        }
+
+        internal static (IEnumerable<string>, IEnumerable<IEnumerable<object>>) GetColumsAndValues<T>(IEnumerable<T> data)
+        {
+            var props = typeof(T).GetProperties();
+
+            var cols = props.Select(prop => prop.Name);
+
+            var values = new List<List<object>>(props.Length);
+
+            foreach (var value in data)
+            {
+                var list = new List<object>(props.Length);
+                foreach (var prop in props)
+                {
+                    list.Add(prop.GetValue(value));
+                }
+                values.Add(list);
+            }
+
+            return (cols, values);
         }
     }
 }

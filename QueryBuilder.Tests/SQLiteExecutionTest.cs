@@ -1,10 +1,7 @@
 using SqlKata.Compilers;
 using Xunit;
 using SqlKata.Execution;
-using MySql.Data.MySqlClient;
-using System;
 using System.Linq;
-using static SqlKata.Expressions;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 
@@ -85,6 +82,36 @@ namespace SqlKata.Tests
 
             Assert.Equal(3, id);
 
+
+            db.Drop("Cars");
+        }
+
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        [InlineData(15)]
+        public void InsertMany(int rows)
+        {
+            var db = DB().Create("Cars", new[] {
+                    "Id INTEGER PRIMARY KEY AUTOINCREMENT",
+                    "Brand TEXT NOT NULL",
+                    "Year INT NOT NULL",
+            });
+
+            var arr = new Car[rows];
+
+            for (int i = 0; i < rows; i++)
+            {
+                arr[i] = new Car
+                {
+                    Brand = "Brand " + i,
+                    Year = "2020",
+                };
+            }
+
+            var insertedRows = db.Query("Cars").Insert(arr);
+
+            Assert.Equal(rows, insertedRows);
 
             db.Drop("Cars");
         }
@@ -271,5 +298,11 @@ namespace SqlKata.Tests
 
 
 
+    }
+
+    public class Car
+    {
+        public string Brand { get; set; }
+        public string Year { get; set; }
     }
 }
