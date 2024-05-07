@@ -22,6 +22,15 @@ namespace SqlKata.Tests.SqlServer
             Assert.Equal("SELECT TOP (@p0) * FROM [table]", result.Sql);
         }
 
+
+        [Fact]
+        public void SqlServerSelectWithParameterPlaceHolder()
+        {
+            var query = new Query("table").Select("Column\\?");
+            var result = compiler.Compile(query);
+            Assert.Equal("SELECT [Column\\?] FROM [table]", result.Sql);
+        }
+
         [Fact]
         public void SqlServerTopWithDistinct()
         {
@@ -42,6 +51,13 @@ namespace SqlKata.Tests.SqlServer
             Assert.Equal("SELECT * FROM [users]", c.ToString());
         }
 
+        [Fact]
+        public void SqlServerSelectWithParameterPlaceHolderEscaped()
+        {
+            var query = new Query("table").Select("Column\\?");
+            var result = compiler.Compile(query);
+            Assert.Equal("SELECT [Column?] FROM [table]", result.ToString());
+        }
 
         [Theory()]
         [InlineData(1)]
