@@ -28,7 +28,7 @@ namespace SqlKata
 
             Method = "update";
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            ClearComponent(ComponentName.Update).AddComponent(ComponentName.Update, new InsertClause
             {
                 Columns = columns.ToList(),
                 Values = values.ToList()
@@ -46,7 +46,7 @@ namespace SqlKata
 
             Method = "update";
 
-            ClearComponent("update").AddComponent("update", new InsertClause
+            ClearComponent(ComponentName.Update).AddComponent(ComponentName.Update, new InsertClause
             {
                 Columns = values.Select(x => x.Key).ToList(),
                 Values = values.Select(x => x.Value).ToList(),
@@ -58,7 +58,7 @@ namespace SqlKata
         public Query AsIncrement(string column, int value = 1)
         {
             Method = "update";
-            AddOrReplaceComponent("update", new IncrementClause
+            AddOrReplaceComponent(ComponentName.Update, new IncrementClause
             {
                 Column = column,
                 Value = value

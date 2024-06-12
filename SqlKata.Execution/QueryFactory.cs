@@ -351,7 +351,7 @@ namespace SqlKata.Execution
         public bool Exists(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             var clone = query.Clone()
-                .ClearComponent("select")
+                .ClearComponent(ComponentName.Select)
                 .SelectRaw("1 as [Exists]")
                 .Limit(1);
 
@@ -363,7 +363,7 @@ namespace SqlKata.Execution
         public async Task<bool> ExistsAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
             var clone = query.Clone()
-                .ClearComponent("select")
+                .ClearComponent(ComponentName.Select)
                 .SelectRaw("1 as [Exists]")
                 .Limit(1);
 
@@ -685,7 +685,7 @@ namespace SqlKata.Execution
                         // I will try to fetch the table name if provided and appending the Id as a convention
                         // Here am using Humanizer package to help getting the singular form of the table
 
-                        var fromTable = query.GetOneComponent("from") as FromClause;
+                        var fromTable = query.GetOneComponent(ComponentName.From) as FromClause;
 
                         if (fromTable == null)
                         {
@@ -786,7 +786,7 @@ namespace SqlKata.Execution
                         // I will try to fetch the table name if provided and appending the Id as a convention
                         // Here am using Humanizer package to help getting the singular form of the table
 
-                        var fromTable = query.GetOneComponent("from") as FromClause;
+                        var fromTable = query.GetOneComponent(ComponentName.From) as FromClause;
 
                         if (fromTable == null)
                         {
