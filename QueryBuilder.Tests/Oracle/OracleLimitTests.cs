@@ -9,7 +9,7 @@ namespace SqlKata.Tests.Oracle
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private OracleCompiler compiler;
+        private readonly OracleCompiler compiler;
 
         public OracleLimitTests()
         {
