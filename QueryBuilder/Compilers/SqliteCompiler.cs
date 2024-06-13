@@ -19,7 +19,29 @@ namespace SqlKata.Compilers
         {
             return "0";
         }
+        protected override string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
 
+            var formatMap = new Dictionary<string, string> {
+                { "date", "%Y-%m-%d" },
+                { "time", "%H:%M:%S" },
+                { "year", "%Y" },
+                { "month", "%m" },
+                { "day", "%d" },
+                { "hour", "%H" },
+                { "minute", "%M" },
+            };
+
+            if (!formatMap.ContainsKey(x.Part))
+            {
+                return column;
+            }
+
+            var sql = $"strftime('{formatMap[x.Part]}', {column})";
+
+            return sql;
+        }
         public override string CompileLimit(SqlResult ctx)
         {
             var limit = ctx.Query.GetLimit(EngineCode);

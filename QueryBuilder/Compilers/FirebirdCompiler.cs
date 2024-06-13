@@ -73,6 +73,28 @@ namespace SqlKata.Compilers
             return compiled;
         }
 
+        protected override string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
+
+            string left;
+
+            if (x.Part == "time")
+            {
+                left = $"CAST({column} as TIME)";
+            }
+            else if (x.Part == "date")
+            {
+                left = $"CAST({column} as DATE)";
+            }
+            else
+            {
+                left = $"EXTRACT({x.Part.ToUpperInvariant()} FROM {column})";
+            }
+
+            return left;
+        }
+
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
