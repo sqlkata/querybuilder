@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlKata.Compilers
 {
@@ -15,7 +16,7 @@ namespace SqlKata.Compilers
             this.engineCode = engineCode;
         }
 
-        public List<AbstractFrom> Find()
+        public List<AbstractFrom> Find(bool recursive = false)
         {
             if (null != orderedCteList)
                 return orderedCteList;
@@ -33,6 +34,8 @@ namespace SqlKata.Compilers
         private List<AbstractFrom> findInternal(Query queryToSearch)
         {
             var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
+
+            cteList.AddRange(queryToSearch.GetComponents<AbstractFrom>("cte-rec", engineCode));
 
             var resultList = new List<AbstractFrom>();
 
