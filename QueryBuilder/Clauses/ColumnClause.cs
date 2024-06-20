@@ -1,3 +1,5 @@
+using SqlKata.DbTypes.DbColumn;
+
 namespace SqlKata
 {
     public abstract class AbstractColumn : AbstractClause
@@ -29,6 +31,35 @@ namespace SqlKata
             };
         }
     }
+
+    public class CreateTableColumn : AbstractClause
+    {
+        public string ColumnName { get; set; }
+        public BaseDBColumn ColumnDbType { get; set; }
+        public bool IsNullable { get; set; }
+        public bool IsPrimaryKey { get; set; }
+        public bool IsUnique { get; set; }
+        public bool IsIdentity { get; set; }
+        public bool IsAutoIncrement { get; set; }
+        public string Collate { get; set; }
+        public override AbstractClause Clone()
+        {
+            return new CreateTableColumn
+            {
+                Component= Component,
+                ColumnDbType= ColumnDbType,
+                ColumnName= ColumnName,
+                IsAutoIncrement= IsAutoIncrement,
+                IsPrimaryKey= IsPrimaryKey,
+                IsUnique= IsUnique,
+                IsIdentity= IsIdentity,
+                IsNullable= IsNullable,
+                Collate = Collate
+            };
+        }
+    }
+
+
 
     /// <summary>
     /// Represents column clause calculated using query.
@@ -85,7 +116,7 @@ namespace SqlKata
     public class AggregatedColumn : AbstractColumn
     {
         /// <summary>
-        /// Gets or sets the a query that used to filter the data, 
+        /// Gets or sets the a query that used to filter the data,
         /// the compiler will consider only the `Where` clause.
         /// </summary>
         /// <value>

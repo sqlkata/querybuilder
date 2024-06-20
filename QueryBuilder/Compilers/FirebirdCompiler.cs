@@ -1,13 +1,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SqlKata.Compilers.DDLCompiler.Abstractions;
 
 namespace SqlKata.Compilers
 {
     public class FirebirdCompiler : Compiler
     {
+        private readonly IDDLCompiler _ddlCompiler;
+        public FirebirdCompiler(IDDLCompiler ddlCompiler)
+        {
+            _ddlCompiler = ddlCompiler;
+        }
+
         public FirebirdCompiler()
         {
+
         }
 
         public override string EngineCode { get; } = EngineCodes.Firebird;
@@ -115,6 +123,16 @@ namespace SqlKata.Compilers
         public override string CompileFalse()
         {
             return "0";
+        }
+
+        protected override SqlResult CompileCreateTableAs(Query query)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override SqlResult CompileCreateTable(Query query)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
