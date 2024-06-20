@@ -12,6 +12,7 @@ namespace SqlKata
 
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
+        public string IndexHint { get; set; }
         public string Method { get; set; } = "select";
         public List<Include> Includes = new List<Include>();
         public Dictionary<string, object> Variables = new Dictionary<string, object>();
@@ -20,9 +21,9 @@ namespace SqlKata
         {
         }
 
-        public Query(string table, string comment = null) : base()
+        public Query(string table, string comment = null, string indexHint = null) : base()
         {
-            From(table);
+            From(table, indexHint);
             Comment(comment);
         }
 
@@ -53,6 +54,7 @@ namespace SqlKata
             var clone = base.Clone();
             clone.Parent = Parent;
             clone.QueryAlias = QueryAlias;
+            clone.IndexHint = IndexHint;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
             clone.Includes = Includes;
@@ -63,6 +65,12 @@ namespace SqlKata
         public Query As(string alias)
         {
             QueryAlias = alias;
+            return this;
+        }
+
+        public Query UseIndexHint(string indexHint)
+        {
+            IndexHint = indexHint;
             return this;
         }
 
