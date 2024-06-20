@@ -652,5 +652,259 @@ namespace SqlKata
         }
 
         #endregion
+
+        #region aggregate
+        private Query HavingAggregate(string aggregate, string column = null, string op = null, object value = null, string keyword = null, Query filter = null)
+        {
+            return AddComponent("having", new AggregatedCondition
+            {
+                Aggregate = aggregate,
+                Keyword = keyword,
+                Column = column,
+                Operator = op,
+                Value = value,
+                Filter = filter,
+                IsOr = GetOr(),
+                IsNot = GetNot(),
+            });
+        }
+
+        private Query HavingAggregate(string aggregate, Func<Query, Query> filter, string keyword = null)
+        {
+            if (filter is null)
+                return NewQuery();
+
+            Query queryFilter = queryFilter = filter.Invoke(NewQuery());
+
+            // omit empty queries
+            if (!queryFilter.Clauses.Where(x => x.Component == "where").Any())
+            {
+                return (Query)this;
+            }
+
+            return HavingAggregate(aggregate: aggregate, keyword: keyword, filter: queryFilter);
+        }
+
+        public Query HavingMin(string column, string op, object value)
+        {
+            return HavingAggregate("MIN", column, op, value);
+        }
+
+        public Query HavingMin(Func<Query, Query> filter)
+        {
+            return HavingAggregate("MIN", filter);
+        }
+
+        public Query HavingMax(string column, string op, object value)
+        {
+            return HavingAggregate("MAX", column, op, value);
+        }
+
+        public Query HavingMax(Func<Query, Query> filter)
+        {
+            return HavingAggregate("MAX", filter);
+        }
+
+        public Query HavingCount(string column, string op, object value)
+        {
+            return HavingAggregate("COUNT", column, op, value);
+        }
+
+        public Query HavingCount(Func<Query, Query> filter)
+        {
+            return HavingAggregate("COUNT", filter);
+        }
+
+        public Query HavingDistinctCount(string column, string op, object value)
+        {
+            return HavingAggregate("COUNT", column, op, value, "DISTINCT");
+        }
+
+        public Query HavingDistinctCount(Func<Query, Query> filter)
+        {
+            return HavingAggregate("COUNT", filter, "DISTINCT");
+        }
+
+        public Query HavingAllCount(string column, string op, object value)
+        {
+            return HavingAggregate("COUNT", column, op, value, "ALL");
+        }
+
+        public Query HavingAllCount(Func<Query, Query> filter)
+        {
+            return HavingAggregate("COUNT", filter, "ALL");
+        }
+
+        public Query HavingSum(string column, string op, object value)
+        {
+            return HavingAggregate("SUM", column, op, value);
+        }
+
+        public Query HavingSum(Func<Query, Query> filter)
+        {
+            return HavingAggregate("SUM", filter);
+        }
+
+        public Query HavingDistinctSum(string column, string op, object value)
+        {
+            return HavingAggregate("SUM", column, op, value, "DISTINCT");
+        }
+
+        public Query HavingDistinctSum(Func<Query, Query> filter)
+        {
+            return HavingAggregate("SUM", filter, "DISTINCT");
+        }
+
+        public Query HavingAllSum(string column, string op, object value)
+        {
+            return HavingAggregate("SUM", column, op, value, "ALL");
+        }
+
+        public Query HavingAllSum(Func<Query, Query> filter)
+        {
+            return HavingAggregate("SUM", filter, "ALL");
+        }
+
+        public Query HavingAvg(string column, string op, object value)
+        {
+            return HavingAggregate("AVG", column, op, value);
+        }
+
+        public Query HavingAvg(Func<Query, Query> filter)
+        {
+            return HavingAggregate("AVG", filter);
+        }
+
+        public Query HavingDistinctAvg(string column, string op, object value)
+        {
+            return HavingAggregate("AVG", column, op, value, "DISTINCT");
+        }
+
+        public Query HavingDistinctAvg(Func<Query, Query> filter)
+        {
+            return HavingAggregate("AVG", filter, "DISTINCT");
+        }
+
+        public Query HavingAllAvg(string column, string op, object value)
+        {
+            return HavingAggregate("AVG", column, op, value, "ALL");
+        }
+
+        public Query HavingAllAvg(Func<Query, Query> filter)
+        {
+            return HavingAggregate("AVG", filter, "ALL");
+        }
+
+
+        public Query OrHavingMin(string column, string op, object value)
+        {
+            return Or().HavingAggregate("MIN", column, op, value);
+        }
+
+        public Query OrHavingMin(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("MIN", filter);
+        }
+
+        public Query OrHavingMax(string column, string op, object value)
+        {
+            return Or().HavingAggregate("MAX", column, op, value);
+        }
+
+        public Query OrHavingMax(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("MAX", filter);
+        }
+
+        public Query OrHavingCount(string column, string op, object value)
+        {
+            return Or().HavingAggregate("COUNT", column, op, value);
+        }
+
+        public Query OrHavingCount(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("COUNT", filter);
+        }
+
+        public Query OrHavingDistinctCount(string column, string op, object value)
+        {
+            return Or().HavingAggregate("COUNT", column, op, value, "DISTINCT");
+        }
+
+        public Query OrHavingDistinctCount(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("COUNT", filter, "DISTINCT");
+        }
+
+        public Query OrHavingAllCount(string column, string op, object value)
+        {
+            return Or().HavingAggregate("COUNT", column, op, value, "ALL");
+        }
+
+        public Query OrHavingAllCount(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("COUNT", filter, "ALL");
+        }
+
+        public Query OrHavingSum(string column, string op, object value)
+        {
+            return Or().HavingAggregate("SUM", column, op, value);
+        }
+
+        public Query OrHavingSum(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("SUM", filter);
+        }
+
+        public Query OrHavingDistinctSum(string column, string op, object value)
+        {
+            return Or().HavingAggregate("SUM", column, op, value, "DISTINCT");
+        }
+
+        public Query OrHavingDistinctSum(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("SUM", filter, "DISTINCT");
+        }
+
+        public Query OrHavingAllSum(string column, string op, object value)
+        {
+            return Or().HavingAggregate("SUM", column, op, value, "ALL");
+        }
+
+        public Query OrHavingAllSum(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("SUM", filter, "ALL");
+        }
+
+        public Query OrHavingAvg(string column, string op, object value)
+        {
+            return Or().HavingAggregate("AVG", column, op, value);
+        }
+
+        public Query OrHavingAvg(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("AVG", filter);
+        }
+
+        public Query OrHavingDistinctAvg(string column, string op, object value)
+        {
+            return Or().HavingAggregate("AVG", column, op, value, "DISTINCT");
+        }
+
+        public Query OrHavingDistinctAvg(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("AVG", filter, "DISTINCT");
+        }
+
+        public Query OrHavingAllAvg(string column, string op, object value)
+        {
+            return Or().HavingAggregate("AVG", column, op, value, "ALL");
+        }
+
+        public Query OrHavingAllAvg(Func<Query, Query> filter)
+        {
+            return Or().HavingAggregate("AVG", filter, "ALL");
+        }
+        #endregion
     }
 }

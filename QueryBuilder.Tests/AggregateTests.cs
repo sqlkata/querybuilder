@@ -1,5 +1,6 @@
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -87,6 +88,62 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT MIN([LatencyMs]) AS [min] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void HavingAggregate()
+        {
+            var query = new Query().From("TABLENAME").GroupBy("Title").HavingSum("Title", ">", 21).OrHavingAvg("Title", ">", 21).HavingCount("Title", ">", 21).Select("Title");
+
+            var compiler = Compile(query);
+
+            Assert.Equal("SELECT [Title] FROM [TABLENAME] GROUP BY [Title] HAVING SUM([Title]) > 21 OR AVG([Title]) > 21 AND COUNT([Title]) > 21", compiler[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") > 21 OR AVG(\"Title\") > 21 AND COUNT(\"Title\") > 21", compiler[EngineCodes.PostgreSql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") > 21 OR AVG(\"Title\") > 21 AND COUNT(\"Title\") > 21", compiler[EngineCodes.Oracle]);
+
+            Assert.Equal("SELECT `Title` FROM `TABLENAME` GROUP BY `Title` HAVING SUM(`Title`) > 21 OR AVG(`Title`) > 21 AND COUNT(`Title`) > 21", compiler[EngineCodes.MySql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") > 21 OR AVG(\"Title\") > 21 AND COUNT(\"Title\") > 21", compiler[EngineCodes.Sqlite]);
+        }
+
+        [Fact]
+        public void HavingAggregateWithKeyword()
+        {
+            var query = new Query().From("TABLENAME").GroupBy("Title").HavingDistinctSum("Title", ">", 21).OrHavingAllCount("Title", ">", 21).Select("Title");
+
+            var compiler = Compile(query);
+
+            Assert.Equal("SELECT [Title] FROM [TABLENAME] GROUP BY [Title] HAVING SUM(DISTINCT [Title]) > 21 OR COUNT(ALL [Title]) > 21", compiler[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(DISTINCT \"Title\") > 21 OR COUNT(ALL \"Title\") > 21", compiler[EngineCodes.PostgreSql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(DISTINCT \"Title\") > 21 OR COUNT(ALL \"Title\") > 21", compiler[EngineCodes.Oracle]);
+
+            Assert.Equal("SELECT `Title` FROM `TABLENAME` GROUP BY `Title` HAVING SUM(DISTINCT `Title`) > 21 OR COUNT(ALL `Title`) > 21", compiler[EngineCodes.MySql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(DISTINCT \"Title\") > 21 OR COUNT(ALL \"Title\") > 21", compiler[EngineCodes.Sqlite]);
+
+        }
+
+        [Fact]
+        public void HavingAggregateWithFilter()
+        {
+            var query = new Query().From("TABLENAME").GroupBy("Title").HavingSum(d => d.WhereIn("Title", new List<int>() { 11, 12, 13 })).OrHavingAvg(d => d.WhereBetween("Title", 11, 12)).HavingCount(d => d.WhereLike("Title", "having")).HavingCount(d => d).Select("Title");
+
+            var compiler = Compile(query);
+
+            Assert.Equal("SELECT [Title] FROM [TABLENAME] GROUP BY [Title] HAVING SUM([Title]) IN (11, 12, 13) OR AVG([Title]) BETWEEN 11 AND 12 AND COUNT(LOWER([Title])) like 'having'", compiler[EngineCodes.SqlServer]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") IN (11, 12, 13) OR AVG(\"Title\") BETWEEN 11 AND 12 AND COUNT(\"Title\") ilike 'having'", compiler[EngineCodes.PostgreSql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") IN (11, 12, 13) OR AVG(\"Title\") BETWEEN 11 AND 12 AND COUNT(LOWER(\"Title\")) like 'having'", compiler[EngineCodes.Oracle]);
+
+            Assert.Equal("SELECT `Title` FROM `TABLENAME` GROUP BY `Title` HAVING SUM(`Title`) IN (11, 12, 13) OR AVG(`Title`) BETWEEN 11 AND 12 AND COUNT(LOWER(`Title`)) like 'having'", compiler[EngineCodes.MySql]);
+
+            Assert.Equal("SELECT \"Title\" FROM \"TABLENAME\" GROUP BY \"Title\" HAVING SUM(\"Title\") IN (11, 12, 13) OR AVG(\"Title\") BETWEEN 11 AND 12 AND COUNT(LOWER(\"Title\")) like 'having'", compiler[EngineCodes.Sqlite]);
+
         }
     }
 }
