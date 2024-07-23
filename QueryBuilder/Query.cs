@@ -409,7 +409,8 @@ namespace SqlKata
 
             foreach (var property in props)
             {
-                if ((property.GetCustomAttribute(typeof(IgnoreUpdateAttribute)) != null && !insert) ||
+                if ((property.GetCustomAttribute(typeof(IgnoreAttribute)) != null) ||
+                    (property.GetCustomAttribute(typeof(IgnoreUpdateAttribute)) != null && !insert) ||
                     (property.GetCustomAttribute(typeof(IgnoreInsertAttribute)) != null && insert))
                 {
                     continue;
