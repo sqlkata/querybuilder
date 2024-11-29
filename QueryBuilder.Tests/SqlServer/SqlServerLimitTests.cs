@@ -51,10 +51,10 @@ namespace SqlKata.Tests.SqlServer
         public void LimitAndOffset()
         {
             var query = new Query("Table").Limit(5).Offset(20);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+            var ctx = compiler.Compile(query);
 
+            Assert.Equal("SELECT * FROM [Table] ORDER BY (SELECT 0) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", ctx.RawSql);
             Assert.Equal(2, ctx.Bindings.Count);
             Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Equal(5, ctx.Bindings[1]);
@@ -65,7 +65,9 @@ namespace SqlKata.Tests.SqlServer
         {
             var query = new Query("Table").Limit(5).Offset(20);
 
-            Assert.Contains("ORDER BY (SELECT 0)", compiler.Compile(query).ToString());
+            var sqlResult = compiler.Compile(query);
+
+            Assert.Contains("ORDER BY (SELECT 0)", sqlResult.ToString());
         }
 
         [Fact]
@@ -73,7 +75,9 @@ namespace SqlKata.Tests.SqlServer
         {
             var query = new Query("Table").OrderBy("Id");
 
-            Assert.Contains("ORDER BY [Id]", compiler.Compile(query).ToString());
+            var sqlResult = compiler.Compile(query);
+
+            Assert.Contains("ORDER BY [Id]", sqlResult.ToString());
         }
 
         [Fact]
@@ -81,8 +85,10 @@ namespace SqlKata.Tests.SqlServer
         {
             var query = new Query("Table").Offset(10).Limit(20).OrderBy("Id");
 
-            Assert.Contains("ORDER BY [Id]", compiler.Compile(query).ToString());
-            Assert.DoesNotContain("(SELECT 0)", compiler.Compile(query).ToString());
+            var sqlResult = compiler.Compile(query);
+
+            Assert.Contains("ORDER BY [Id]", sqlResult.ToString());
+            Assert.DoesNotContain("(SELECT 0)", sqlResult.ToString());
         }
     }
 }
