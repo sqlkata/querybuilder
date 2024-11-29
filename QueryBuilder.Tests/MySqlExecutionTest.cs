@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using static SqlKata.Expressions;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace SqlKata.Tests
 {
@@ -213,12 +214,12 @@ namespace SqlKata.Tests
                 // 2020
                 {"2020-01-01", 10},
                 {"2020-05-01", 20},
-                
+
                 // 2021
                 {"2021-01-01", 40},
                 {"2021-02-01", 10},
                 {"2021-04-01", -10},
-                
+
                 // 2022
                 {"2022-01-01", 80},
                 {"2022-02-01", -30},
@@ -249,14 +250,19 @@ namespace SqlKata.Tests
             db.Drop("Transaction");
         }
 
+        private static string GetConnectionString()
+        {
+            var config = new ConfigurationBuilder()
+                .AddUserSecrets(typeof(MySqlExecutionTest).Assembly)
+                .Build();
+            return config.GetConnectionString("MySqlExecutionTest");
+        }
+
+        private static Lazy<string> ConnectionString { get; } = new(GetConnectionString);
+
         QueryFactory DB()
         {
-            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
-
-            var connection = new MySqlConnection(cs);
+            var connection = new MySqlConnection(ConnectionString.Value);
 
             var db = new QueryFactory(connection, new MySqlCompiler());
 
