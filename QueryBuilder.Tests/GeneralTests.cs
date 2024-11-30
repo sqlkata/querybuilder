@@ -9,20 +9,29 @@ namespace SqlKata.Tests
 {
     public class GeneralTests : TestSupport
     {
-        [Fact]
-        public void ColumnsEscaping()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [mycol[isthis]]] FROM [users]")]
+        public void ColumnsEscaping(string engine, string sqlText)
         {
-            var q = new Query().From("users")
+            var query = new Query().From("users")
                 .Select("mycol[isthis]");
 
-            var c = Compile(q);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("SELECT [mycol[isthis]]] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-
-        [Fact]
-        public void InnerScopeEngineWithinCTE()
+        [Theory]
+        [InlineData(
+            EngineCodes.SqlServer,
+            "WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1)\nSELECT * FROM [series]")]
+        [InlineData(
+            EngineCodes.PostgreSql,
+            "WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true)\nSELECT * FROM \"series\"")]
+        [InlineData(
+            EngineCodes.Firebird,
+            "WITH \"SERIES\" AS (SELECT * FROM \"TABLE\" WHERE firebird = 1)\nSELECT * FROM \"SERIES\"")]
+        public void InnerScopeEngineWithinCTE(string engine, string sqlText)
         {
             var series = new Query("table")
                 .ForPostgreSql(q => q.WhereRaw("postgres = true"))
@@ -30,18 +39,22 @@ namespace SqlKata.Tests
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
             var query = new Query("series").With("series", series);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("WITH [series] AS (SELECT * FROM [table] WHERE sqlsrv = 1)\nSELECT * FROM [series]", c[EngineCodes.SqlServer]);
-
-            Assert.Equal("WITH \"series\" AS (SELECT * FROM \"table\" WHERE postgres = true)\nSELECT * FROM \"series\"",
-                c[EngineCodes.PostgreSql]);
-            Assert.Equal("WITH \"SERIES\" AS (SELECT * FROM \"TABLE\" WHERE firebird = 1)\nSELECT * FROM \"SERIES\"",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void InnerScopeEngineWithinSubQuery()
+        [Theory]
+        [InlineData(
+            EngineCodes.SqlServer,
+            "SELECT * FROM (SELECT * FROM [table] WHERE sqlsrv = 1) AS [series]")]
+        [InlineData(
+            EngineCodes.PostgreSql,
+            "SELECT * FROM (SELECT * FROM \"table\" WHERE postgres = true) AS \"series\"")]
+        [InlineData(
+            EngineCodes.Firebird,
+            "SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"")]
+        public void InnerScopeEngineWithinSubQuery(string engine, string sqlText)
         {
             var series = new Query("table")
                 .ForPostgreSql(q => q.WhereRaw("postgres = true"))
@@ -49,12 +62,9 @@ namespace SqlKata.Tests
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
             var query = new Query("series").From(series.As("series"));
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("SELECT * FROM (SELECT * FROM [table] WHERE sqlsrv = 1) AS [series]", c[EngineCodes.SqlServer]);
-
-            Assert.Equal("SELECT * FROM (SELECT * FROM \"table\" WHERE postgres = true) AS \"series\"", c[EngineCodes.PostgreSql]);
-            Assert.Equal("SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"", c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Fact]
@@ -99,8 +109,20 @@ namespace SqlKata.Tests
             Assert.Equal("Table", wrappedValue);
         }
 
-        [Fact]
-        public void Should_Equal_AfterMultipleCompile()
+        [Theory]
+        [InlineData(
+            EngineCodes.SqlServer,
+            "SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [results_wrapper] WHERE [row_num] BETWEEN 2 AND 21")]
+        [InlineData(
+            EngineCodes.MySql,
+            "SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1")]
+        [InlineData(
+            EngineCodes.PostgreSql,
+            "SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1")]
+        [InlineData(
+            EngineCodes.Firebird,
+            "SELECT \"ID\", \"NAME\" FROM \"TABLE\" ORDER BY \"NAME\" ROWS 2 TO 21")]
+        public void Should_Equal_AfterMultipleCompile(string engine, string sqlText)
         {
             var query = new Query()
                 .Select("Id", "Name")
@@ -109,33 +131,35 @@ namespace SqlKata.Tests
                 .Limit(20)
                 .Offset(1);
 
-            var first = Compile(query);
-            Assert.Equal(
-                "SELECT * FROM (SELECT [Id], [Name], ROW_NUMBER() OVER (ORDER BY [Name]) AS [row_num] FROM [Table]) AS [results_wrapper] WHERE [row_num] BETWEEN 2 AND 21",
-                first[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT `Id`, `Name` FROM `Table` ORDER BY `Name` LIMIT 20 OFFSET 1", first[EngineCodes.MySql]);
-            Assert.Equal("SELECT \"Id\", \"Name\" FROM \"Table\" ORDER BY \"Name\" LIMIT 20 OFFSET 1", first[EngineCodes.PostgreSql]);
-            Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"TABLE\" ORDER BY \"NAME\" ROWS 2 TO 21", first[EngineCodes.Firebird]);
+            var first = CompileFor(engine, query);
 
-            var second = Compile(query);
+            Assert.Equal(sqlText, first.ToString());
 
-            Assert.Equal(first[EngineCodes.SqlServer], second[EngineCodes.SqlServer]);
-            Assert.Equal(first[EngineCodes.MySql], second[EngineCodes.MySql]);
-            Assert.Equal(first[EngineCodes.PostgreSql], second[EngineCodes.PostgreSql]);
-            Assert.Equal(first[EngineCodes.Firebird], second[EngineCodes.Firebird]);
+            var second = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, second.ToString());
         }
 
-        [Fact]
-        public void Raw_WrapIdentifiers()
+        [Theory]
+        [InlineData(
+            EngineCodes.SqlServer,
+            "SELECT [Id], [Name], [Age] FROM [Users]")]
+        [InlineData(
+            EngineCodes.MySql,
+            "SELECT `Id`, `Name`, `Age` FROM `Users`")]
+        [InlineData(
+            EngineCodes.PostgreSql,
+            "SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"")]
+        [InlineData(
+            EngineCodes.Firebird,
+            "SELECT \"Id\", \"Name\", \"Age\" FROM \"USERS\"")]
+        public void Raw_WrapIdentifiers(string engine, string sqlText)
         {
             var query = new Query("Users").SelectRaw("[Id], [Name], {Age}");
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("SELECT [Id], [Name], [Age] FROM [Users]", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT `Id`, `Name`, `Age` FROM `Users`", c[EngineCodes.MySql]);
-            Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"Users\"", c[EngineCodes.PostgreSql]);
-            Assert.Equal("SELECT \"Id\", \"Name\", \"Age\" FROM \"USERS\"", c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Fact]
