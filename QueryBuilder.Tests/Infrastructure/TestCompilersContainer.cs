@@ -38,12 +38,12 @@ namespace SqlKata.Tests.Infrastructure
         /// <returns></returns>
         public Compiler Get(string engineCode)
         {
-            if (!Compilers.ContainsKey(engineCode))
+            if (!Compilers.TryGetValue(engineCode, out var compiler))
             {
                 throw new InvalidOperationException(string.Format(Messages.ERR_INVALID_ENGINECODE, engineCode));
             }
 
-            return Compilers[engineCode];
+            return compiler;
         }
 
         /// <summary>

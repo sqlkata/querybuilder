@@ -1,49 +1,87 @@
 using SqlKata.Compilers;
-using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
-using System;
-using System.Linq;
 using Xunit;
 
 namespace SqlKata.Tests
 {
     public class DeleteTests : TestSupport
     {
-        [Fact]
-        public void BasicDelete()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "DELETE FROM [Posts]")]
+        [InlineData(EngineCodes.Oracle, "DELETE FROM \"Posts\"")]
+        [InlineData(EngineCodes.PostgreSql, "DELETE FROM \"Posts\"")]
+        [InlineData(EngineCodes.MySql, "DELETE FROM `Posts`")]
+        [InlineData(EngineCodes.Firebird, "DELETE FROM \"POSTS\"")]
+        [InlineData(EngineCodes.Sqlite, "DELETE FROM \"Posts\"")]
+        public void BasicDelete(string engine, string query)
         {
             var q = new Query("Posts").AsDelete();
 
-            var c = Compile(q);
+            var c = CompileFor(engine, q);
 
-            Assert.Equal("DELETE FROM [Posts]", c[EngineCodes.SqlServer]);
+            Assert.Equal(query, c.ToString());
         }
 
-        [Fact]
-        public void DeleteWithJoin()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer,
+            "DELETE [Posts] FROM [Posts] \n" +
+            "INNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5")]
+        [InlineData(EngineCodes.Oracle,
+            "DELETE \"Posts\" FROM \"Posts\" \n" +
+            "INNER JOIN \"Authors\" ON \"Authors\".\"Id\" = \"Posts\".\"AuthorId\" WHERE \"Authors\".\"Id\" = 5")]
+        [InlineData(EngineCodes.PostgreSql,
+            "DELETE \"Posts\" FROM \"Posts\" \n" +
+            "INNER JOIN \"Authors\" ON \"Authors\".\"Id\" = \"Posts\".\"AuthorId\" WHERE \"Authors\".\"Id\" = 5")]
+        [InlineData(EngineCodes.MySql,
+            "DELETE `Posts` FROM `Posts` \n" +
+            "INNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5")]
+        [InlineData(EngineCodes.Firebird,
+            "DELETE \"POSTS\" FROM \"POSTS\" \n" +
+            "INNER JOIN \"AUTHORS\" ON \"AUTHORS\".\"ID\" = \"POSTS\".\"AUTHORID\" WHERE \"AUTHORS\".\"ID\" = 5")]
+        [InlineData(EngineCodes.Sqlite,
+            "DELETE \"Posts\" FROM \"Posts\" \n" +
+            "INNER JOIN \"Authors\" ON \"Authors\".\"Id\" = \"Posts\".\"AuthorId\" WHERE \"Authors\".\"Id\" = 5")]
+        public void DeleteWithJoin(string engine, string query)
         {
             var q = new Query("Posts")
                 .Join("Authors", "Authors.Id", "Posts.AuthorId")
                 .Where("Authors.Id", 5)
                 .AsDelete();
 
-            var c = Compile(q);
+            var c = CompileFor(engine, q);
 
-            Assert.Equal("DELETE [Posts] FROM [Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5", c[EngineCodes.SqlServer]);
-            Assert.Equal("DELETE `Posts` FROM `Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5", c[EngineCodes.MySql]);
+            Assert.Equal(query, c.ToString());
         }
 
-        [Fact]
-        public void DeleteWithJoinAndAlias()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer,
+            "DELETE [P] FROM [Posts] AS [P] \n" +
+            "INNER JOIN [Authors] AS [A] ON [A].[Id] = [P].[AuthorId] WHERE [A].[Id] = 5")]
+        [InlineData(EngineCodes.Oracle,
+            "DELETE \"P\" FROM \"Posts\" \"P\" \n" +
+            "INNER JOIN \"Authors\" \"A\" ON \"A\".\"Id\" = \"P\".\"AuthorId\" WHERE \"A\".\"Id\" = 5")]
+        [InlineData(EngineCodes.PostgreSql,
+            "DELETE \"P\" FROM \"Posts\" AS \"P\" \n" +
+            "INNER JOIN \"Authors\" AS \"A\" ON \"A\".\"Id\" = \"P\".\"AuthorId\" WHERE \"A\".\"Id\" = 5")]
+        [InlineData(EngineCodes.MySql,
+            "DELETE `P` FROM `Posts` AS `P` \n" +
+            "INNER JOIN `Authors` AS `A` ON `A`.`Id` = `P`.`AuthorId` WHERE `A`.`Id` = 5")]
+        [InlineData(EngineCodes.Firebird,
+            "DELETE \"P\" FROM \"POSTS\" AS \"P\" \n" +
+            "INNER JOIN \"AUTHORS\" AS \"A\" ON \"A\".\"ID\" = \"P\".\"AUTHORID\" WHERE \"A\".\"ID\" = 5")]
+        [InlineData(EngineCodes.Sqlite,
+            "DELETE \"P\" FROM \"Posts\" AS \"P\" \n" +
+            "INNER JOIN \"Authors\" AS \"A\" ON \"A\".\"Id\" = \"P\".\"AuthorId\" WHERE \"A\".\"Id\" = 5")]
+        public void DeleteWithJoinAndAlias(string engine, string query)
         {
             var q = new Query("Posts as P")
-                .Join("Authors", "Authors.Id", "P.AuthorId")
-                .Where("Authors.Id", 5)
+                .Join("Authors as A", "A.Id", "P.AuthorId")
+                .Where("A.Id", 5)
                 .AsDelete();
 
-            var c = Compile(q);
+            var c = CompileFor(engine, q);
 
-            Assert.Equal("DELETE [P] FROM [Posts] AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId] WHERE [Authors].[Id] = 5", c[EngineCodes.SqlServer]);
+            Assert.Equal(query, c.ToString());
         }
     }
 }

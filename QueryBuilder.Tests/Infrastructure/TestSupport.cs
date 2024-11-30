@@ -16,5 +16,11 @@ namespace SqlKata.Tests.Infrastructure
         {
             return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
         }
+
+        protected SqlResult CompileFor(string engine, Query query)
+        {
+            return Compilers.CompileFor(engine, query);
+        }
+
     }
 }
