@@ -136,25 +136,22 @@ namespace SqlKata.Tests
             Assert.Equal(fauxImagebytes, c.NamedBindings["@p1"]);
         }
 
-        [Fact]
-        public void InsertWithIgnoreAndColumnProperties()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO [Account] ([name], [currency_id]) VALUES ('popular', 'US')")]
+        [InlineData(EngineCodes.Firebird, "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\") VALUES ('popular', 'US')")]
+        public void InsertWithIgnoreAndColumnProperties(string engine, string sqlText)
         {
             var account = new Account(name: $"popular", color: $"blue", currency: "US");
             var query = new Query("Account").AsInsert(account);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO [Account] ([name], [currency_id]) VALUES ('popular', 'US')",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\") VALUES ('popular', 'US')",
-                 c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void InsertFromRaw()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO Table.With.Dots ([Name], [Age]) VALUES ('The User', '2018-01-01')")]
+        public void InsertFromRaw(string engine, string sqlText)
         {
             var query = new Query()
                 .FromRaw("Table.With.Dots")
@@ -165,11 +162,9 @@ namespace SqlKata.Tests
                         Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     });
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO Table.With.Dots ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Fact]
@@ -190,8 +185,10 @@ namespace SqlKata.Tests
             });
         }
 
-        [Fact]
-        public void InsertKeyValuePairs()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')")]
+        [InlineData(EngineCodes.Firebird, "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')")]
+        public void InsertKeyValuePairs(string engine, string sqlText)
         {
             var dictionaryUser = new Dictionary<string, object>
                 {
@@ -203,19 +200,15 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void InsertDictionary()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')")]
+        [InlineData(EngineCodes.Firebird, "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')")]
+        public void InsertDictionary(string engine, string sqlText)
         {
             var dictionaryUser = new Dictionary<string, object> {
                 { "Name", "The User" },
@@ -225,19 +218,15 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void InsertReadOnlyDictionary()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')")]
+        [InlineData(EngineCodes.Firebird, "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')")]
+        public void InsertReadOnlyDictionary(string engine, string sqlText)
         {
             var dictionaryUser = new ReadOnlyDictionary<string, object>(
                 new Dictionary<string, object>
@@ -249,19 +238,15 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void InsertExpandoObject()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')")]
+        [InlineData(EngineCodes.Firebird, "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')")]
+        public void InsertExpandoObject(string engine, string sqlText)
         {
             dynamic expandoUser = new ExpandoObject();
             expandoUser.Name = "The User";
@@ -270,15 +255,9 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(expandoUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "INSERT INTO [Table] ([Name], [Age]) VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "INSERT INTO \"TABLE\" (\"NAME\", \"AGE\") VALUES ('The User', '2018-01-01')",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
     }
 }
