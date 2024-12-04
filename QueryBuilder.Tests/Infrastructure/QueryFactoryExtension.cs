@@ -1,6 +1,7 @@
-
 using System.Collections.Generic;
 using SqlKata.Execution;
+
+namespace SqlKata.Tests.Infrastructure;
 
 static class QueryFactoryExtensions
 {

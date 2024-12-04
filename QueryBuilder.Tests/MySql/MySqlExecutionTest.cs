@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using SqlKata.Compilers;
 using SqlKata.Execution;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests.MySql

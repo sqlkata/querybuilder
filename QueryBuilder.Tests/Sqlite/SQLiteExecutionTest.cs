@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.Data.Sqlite;
 using SqlKata.Compilers;
 using SqlKata.Execution;
+using SqlKata.Tests.Infrastructure;
 using Xunit;
 
 namespace SqlKata.Tests.Sqlite
