@@ -631,17 +631,16 @@ namespace SqlKata.Tests
             Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void BasicJoin()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]")]
+        [InlineData(EngineCodes.MySql, "SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`")]
+        public void BasicJoin(string engine, string sqlText)
         {
-            var q = new Query().From("users").Join("countries", "countries.id", "users.country_id");
+            var query = new Query().From("users").Join("countries", "countries.id", "users.country_id");
 
-            var c = Compile(q);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]",
-                c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`",
-                c[EngineCodes.MySql]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Theory]
@@ -671,7 +670,6 @@ namespace SqlKata.Tests
                 c[EngineCodes.Firebird]);
         }
 
-        [Fact]
         public void OrWhereRawEscaped()
         {
             var query = new Query("Table").WhereRaw("[MyCol] = ANY(?::int\\[\\])", "{1,2,3}");
@@ -681,127 +679,151 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM \"Table\" WHERE \"MyCol\" = ANY('{1,2,3}'::int[])", c[EngineCodes.PostgreSql]);
         }
 
-        [Fact]
-        public void Having()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING [Column1] > 1")]
+        public void Having(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .Having("Column1", ">", 1);
-            var c = Compile(q);
 
-            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void MultipleHaving()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1")]
+        public void MultipleHaving(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .Having("Column1", ">", 1)
                 .Having("Column2", "=", 1);
-            var c = Compile(q);
 
-            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 AND [Column2] = 1", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void MultipleOrHaving()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1")]
+        public void MultipleOrHaving(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .Having("Column1", ">", 1)
                 .OrHaving("Column2", "=", 1);
-            var c = Compile(q);
 
-            Assert.Equal("SELECT * FROM [Table1] HAVING [Column1] > 1 OR [Column2] = 1", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void ShouldUseILikeOnPostgresWhenNonCaseSensitive()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%upper word%'")]
+        [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Table1\" WHERE \"Column1\" ilike '%Upper Word%'")]
+        public void ShouldUseILikeOnPostgresWhenNonCaseSensitive(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .WhereLike("Column1", "%Upper Word%", false);
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%upper word%'", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT * FROM \"Table1\" WHERE \"Column1\" ilike '%Upper Word%'", c[EngineCodes.PostgreSql]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedWhereLike()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
+        public void EscapedWhereLike(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .WhereLike("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedWhereStarts()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
+        public void EscapedWhereStarts(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .WhereStarts("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedWhereEnds()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
+        public void EscapedWhereEnds(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .WhereEnds("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedWhereContains()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
+        public void EscapedWhereContains(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .WhereContains("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedHavingLike()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
+        public void EscapedHavingLike(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .HavingLike("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedHavingStarts()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
+        public void EscapedHavingStarts(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .HavingStarts("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedHavingEnds()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
+        public void EscapedHavingEnds(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .HavingEnds("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void EscapedHavingContains()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
+        public void EscapedHavingContains(string engine, string sqlText)
         {
-            var q = new Query("Table1")
+            var query = new Query("Table1")
                 .HavingContains("Column1", @"TestString\%", false, @"\");
-            var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Fact]
@@ -888,29 +910,31 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT [Title], SUM([ViewCount]) AS [TotalViews] FROM [Posts]", sqlServer.ToString());
         }
 
-        [Fact]
-        public void SelectWithFilter()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM(CASE WHEN [Published_Month] = 'Jan' THEN [ViewCount] END) AS [Published_Jan], SUM(CASE WHEN [Published_Month] = 'Feb' THEN [ViewCount] END) AS [Published_Feb] FROM [Posts]")]
+        [InlineData(EngineCodes.PostgreSql, "SELECT \"Title\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Jan') AS \"Published_Jan\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Feb') AS \"Published_Feb\" FROM \"Posts\"")]
+        public void SelectWithFilter(string engine, string sqlText)
         {
-            var q = new Query("Posts").Select("Title")
+            var query = new Query("Posts").Select("Title")
                 .SelectAggregate("sum", "ViewCount as Published_Jan", q => q.Where("Published_Month", "Jan"))
                 .SelectAggregate("sum", "ViewCount as Published_Feb", q => q.Where("Published_Month", "Feb"));
 
-            var pgSql = Compilers.CompileFor(EngineCodes.PostgreSql, q);
-            Assert.Equal("SELECT \"Title\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Jan') AS \"Published_Jan\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Feb') AS \"Published_Feb\" FROM \"Posts\"", pgSql.ToString());
+            var c = CompileFor(engine, query);
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [Title], SUM(CASE WHEN [Published_Month] = 'Jan' THEN [ViewCount] END) AS [Published_Jan], SUM(CASE WHEN [Published_Month] = 'Feb' THEN [ViewCount] END) AS [Published_Feb] FROM [Posts]", sqlServer.ToString());
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void SelectWithExists()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Posts] WHERE EXISTS (SELECT 1 FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])")]
+        public void SelectWithExists(string engine, string sqlText)
         {
-            var q = new Query("Posts").WhereExists(
+            var query = new Query("Posts").WhereExists(
                 new Query("Comments").WhereColumns("Comments.PostId", "=", "Posts.Id")
             );
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT 1 FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Fact]
@@ -929,6 +953,5 @@ namespace SqlKata.Tests
             var sqlServer = compiler.Compile(q).ToString();
             Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
         }
-
     }
 }
