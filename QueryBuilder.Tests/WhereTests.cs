@@ -6,28 +6,32 @@ namespace SqlKata.Tests
 {
     public class WhereTests : TestSupport
     {
-        [Fact]
-        public void GroupedWhereFilters()
+        [Theory]
+        [InlineData(EngineCodes.PostgreSql,
+            """SELECT * FROM "Table1" WHERE ("Column1" = 10 OR "Column2" = 20) AND "Column3" = 30""")]
+        public void GroupedWhereFilters(string engine, string sqlText)
         {
             var q = new Query("Table1")
                 .Where(q => q.Or().Where("Column1", 10).Or().Where("Column2", 20))
                 .Where("Column3", 30);
 
-            var c = Compile(q);
+            var c = CompileFor(engine, q);
 
-            Assert.Equal(@"SELECT * FROM ""Table1"" WHERE (""Column1"" = 10 OR ""Column2"" = 20) AND ""Column3"" = 30", c[EngineCodes.PostgreSql]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void GroupedHavingFilters()
+        [Theory]
+        [InlineData(EngineCodes.PostgreSql,
+            """SELECT * FROM "Table1" HAVING (SUM("Column1") = 10 OR SUM("Column2") = 20) AND SUM("Column3") = 30""")]
+        public void GroupedHavingFilters(string engine, string sqlText)
         {
             var q = new Query("Table1")
                 .Having(q => q.Or().HavingRaw("SUM([Column1]) = ?", 10).Or().HavingRaw("SUM([Column2]) = ?", 20))
                 .HavingRaw("SUM([Column3]) = ?", 30);
 
-            var c = Compile(q);
+            var c = CompileFor(engine, q);
 
-            Assert.Equal(@"SELECT * FROM ""Table1"" HAVING (SUM(""Column1"") = 10 OR SUM(""Column2"") = 20) AND SUM(""Column3"") = 30", c[EngineCodes.PostgreSql]);
+            Assert.Equal(sqlText, c.ToString());
         }
     }
 }

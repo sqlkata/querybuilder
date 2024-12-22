@@ -21,7 +21,9 @@ namespace SqlKata.Tests.Infrastructure
 
         protected SqlResult CompileFor(string engine, Query query)
         {
-            return Compilers.CompileFor(engine, query);
+            var compiler = CreateCompiler(engine);
+
+            return compiler.Compile(query);
         }
 
         protected SqlResult CompileFor(string engine, Query query, Action<Compiler> action)
@@ -41,7 +43,10 @@ namespace SqlKata.Tests.Infrastructure
                 EngineCodes.Oracle => new OracleCompiler(),
                 EngineCodes.PostgreSql => new PostgresCompiler(),
                 EngineCodes.Sqlite => new SqliteCompiler(),
-                EngineCodes.SqlServer => new SqlServerCompiler(),
+                EngineCodes.SqlServer => new SqlServerCompiler()
+                {
+                    UseLegacyPagination = true
+                },
                 _ => throw new ArgumentException($"Unsupported engine type: {engine}", nameof(engine)),
             };
         }
