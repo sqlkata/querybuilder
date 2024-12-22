@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using SqlKata.Compilers;
 
 namespace SqlKata.Tests.Infrastructure
 {
@@ -22,5 +24,26 @@ namespace SqlKata.Tests.Infrastructure
             return Compilers.CompileFor(engine, query);
         }
 
+        protected SqlResult CompileFor(string engine, Query query, Action<Compiler> action)
+        {
+            var compiler = CreateCompiler(engine);
+            action(compiler);
+
+            return compiler.Compile(query);
+        }
+
+        private static Compiler CreateCompiler(string engine)
+        {
+            return engine switch
+            {
+                EngineCodes.Firebird => new FirebirdCompiler(),
+                EngineCodes.MySql => new MySqlCompiler(),
+                EngineCodes.Oracle => new OracleCompiler(),
+                EngineCodes.PostgreSql => new PostgresCompiler(),
+                EngineCodes.Sqlite => new SqliteCompiler(),
+                EngineCodes.SqlServer => new SqlServerCompiler(),
+                _ => throw new ArgumentException($"Unsupported engine type: {engine}", nameof(engine)),
+            };
+        }
     }
 }

@@ -42,9 +42,12 @@ namespace SqlKata.Tests
         [Theory]
         [InlineData(EngineCodes.SqlServer, "SELECT [id], [name] FROM [users] WHERE [author] = '' OR [author] IS NULL")]
         [InlineData(EngineCodes.MySql, "SELECT `id`, `name` FROM `users` WHERE `author` = '' OR `author` IS NULL")]
-        [InlineData(EngineCodes.PostgreSql, "SELECT \"id\", \"name\" FROM \"users\" WHERE \"author\" = '' OR \"author\" IS NULL")]
-        [InlineData(EngineCodes.Firebird, "SELECT \"ID\", \"NAME\" FROM \"USERS\" WHERE \"AUTHOR\" = '' OR \"AUTHOR\" IS NULL")]
-        [InlineData(EngineCodes.Oracle, "SELECT \"id\", \"name\" FROM \"users\" WHERE \"author\" = '' OR \"author\" IS NULL")]
+        [InlineData(EngineCodes.PostgreSql,
+            "SELECT \"id\", \"name\" FROM \"users\" WHERE \"author\" = '' OR \"author\" IS NULL")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT \"ID\", \"NAME\" FROM \"USERS\" WHERE \"AUTHOR\" = '' OR \"AUTHOR\" IS NULL")]
+        [InlineData(EngineCodes.Oracle,
+            "SELECT \"id\", \"name\" FROM \"users\" WHERE \"author\" = '' OR \"author\" IS NULL")]
         public void BasicSelectWhereBindingIsEmptyOrNull(string engine, string sqlText)
         {
             var query = new Query()
@@ -107,7 +110,8 @@ namespace SqlKata.Tests
             var query = new Query().From("users").Select("dbo.users.{id,name, age}");
             var c = Compile(query);
 
-            Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name], [dbo].[users].[age] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name], [dbo].[users].[age] FROM [users]",
+                c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -120,7 +124,8 @@ namespace SqlKata.Tests
                                                               }");
             var c = Compile(query);
 
-            Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name] AS [Name], [dbo].[users].[age] FROM [users]", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [dbo].[users].[id], [dbo].[users].[name] AS [Name], [dbo].[users].[age] FROM [users]",
+                c[EngineCodes.SqlServer]);
         }
 
         [Theory]
@@ -129,7 +134,7 @@ namespace SqlKata.Tests
         public void NestedEmptyWhereAtFirstCondition(string engine, string sqlText)
         {
             var query = new Query("table")
-                .Where(q => new Query())
+                .Where(_ => new Query())
                 .Where("id", 1);
 
             var c = CompileFor(engine, query);
@@ -166,7 +171,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(0 as bit)")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(0 as bit)")]
         [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = false")]
         public void OrWhereFalse(string engine, string sqlText)
         {
@@ -178,7 +184,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(1 as bit)")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table] WHERE [MyCol] = 'abc' OR [IsActive] = cast(1 as bit)")]
         [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Table\" WHERE \"MyCol\" = 'abc' OR \"IsActive\" = true")]
         public void OrWhereTrue(string engine, string sqlText)
         {
@@ -187,7 +194,6 @@ namespace SqlKata.Tests
             var c = CompileFor(engine, query);
 
             Assert.Equal(sqlText, c.ToString());
-
         }
 
         [Theory]
@@ -203,8 +209,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1")]
-        [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table] WHERE (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) = 1")]
+        [InlineData(EngineCodes.PostgreSql,
+            "SELECT * FROM \"Table\" WHERE (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") = 1")]
         public void WhereSub(string engine, string sqlText)
         {
             var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
@@ -217,8 +225,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1")]
-        [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Table\" WHERE \"MyCol\" IS NULL OR (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") < 1")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table] WHERE [MyCol] IS NULL OR (SELECT COUNT(*) AS [count] FROM [Table2] WHERE [Table2].[Column] = [Table].[MyCol]) < 1")]
+        [InlineData(EngineCodes.PostgreSql,
+            "SELECT * FROM \"Table\" WHERE \"MyCol\" IS NULL OR (SELECT COUNT(*) AS \"count\" FROM \"Table2\" WHERE \"Table2\".\"Column\" = \"Table\".\"MyCol\") < 1")]
         public void OrWhereSub(string engine, string sqlText)
         {
             var subQuery = new Query("Table2").WhereColumns("Table2.Column", "=", "Table.MyCol").AsCount();
@@ -247,7 +257,8 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT * FROM \"Table\" WHERE \"Json\"->'address'->>'country' in (1,2,3,4)", c[EngineCodes.PostgreSql]);
+            Assert.Equal("SELECT * FROM \"Table\" WHERE \"Json\"->'address'->>'country' in (1,2,3,4)",
+                c[EngineCodes.PostgreSql]);
         }
 
         [Theory]
@@ -266,9 +277,11 @@ namespace SqlKata.Tests
 
         [Theory]
         [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'")]
-        [InlineData(EngineCodes.Sqlite, "SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")]
+        [InlineData(EngineCodes.Sqlite,
+            "SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")]
         [InlineData(EngineCodes.MySql, "SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" WHERE \"TYPE\" = 'A'")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" WHERE \"TYPE\" = 'A'")]
         public void UnionWithBindings(string engine, string sqlText)
         {
             var laptops = new Query("Laptops").Where("Type", "A");
@@ -281,9 +294,11 @@ namespace SqlKata.Tests
 
         [Theory]
         [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] WHERE [Type] = 'A'")]
-        [InlineData(EngineCodes.Sqlite, "SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")]
+        [InlineData(EngineCodes.Sqlite,
+            "SELECT * FROM \"Phones\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")]
         [InlineData(EngineCodes.MySql, "SELECT * FROM `Phones` UNION SELECT * FROM `Laptops` WHERE `Type` = 'A'")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")] // Is this good?
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"Laptops\" WHERE \"Type\" = 'A'")] // Is this good?
         public void RawUnionWithBindings(string engine, string sqlText)
         {
             var mobiles = new Query("Phones").UnionRaw("UNION SELECT * FROM [Laptops] WHERE [Type] = ?", "A");
@@ -294,8 +309,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] UNION SELECT * FROM [Tablets]")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" UNION SELECT * FROM \"TABLETS\"")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Phones] UNION SELECT * FROM [Laptops] UNION SELECT * FROM [Tablets]")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" UNION SELECT * FROM \"LAPTOPS\" UNION SELECT * FROM \"TABLETS\"")]
         public void MultipleUnion(string engine, string sqlText)
         {
             var laptops = new Query("Laptops");
@@ -306,12 +323,13 @@ namespace SqlKata.Tests
             var c = CompileFor(engine, mobiles);
 
             Assert.Equal(sqlText, c.ToString());
-
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION SELECT * FROM [Tablets] WHERE [Price] > 2000")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION SELECT * FROM [Tablets] WHERE [Price] > 2000")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000")]
         public void MultipleUnionWithBindings(string engine, string sqlText)
         {
             var laptops = new Query("Laptops").Where("Price", ">", 1000);
@@ -325,8 +343,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION ALL SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000 ROWS 16 TO 30")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] WHERE [Price] > 1000 UNION ALL SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Tablets] WHERE [Price] > 2000) AS [results_wrapper] WHERE [row_num] BETWEEN 16 AND 30")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" > 1000 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" > 2000 ROWS 16 TO 30")]
         public void MultipleUnionWithBindingsAndPagination(string engine, string sqlText)
         {
             var laptops = new Query("Laptops").Where("Price", ">", 1000);
@@ -340,8 +360,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] UNION ALL SELECT * FROM [Tablets]")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" UNION ALL SELECT * FROM \"TABLETS\"")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Phones] WHERE [Price] < 3000 UNION SELECT * FROM [Laptops] UNION ALL SELECT * FROM [Tablets]")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 3000 UNION SELECT * FROM \"LAPTOPS\" UNION ALL SELECT * FROM \"TABLETS\"")]
         public void UnionWithCallbacks(string engine, string sqlText)
         {
             var mobiles = new Query("Phones")
@@ -355,10 +377,14 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS') UNION ALL SELECT * FROM [Tablets] WHERE [Price] < 100")]
-        [InlineData(EngineCodes.MySql, "SELECT * FROM `Phones` WHERE `Price` < 300 INTERSECT ALL SELECT * FROM `Watches` WHERE `Os` = 'Android' UNION ALL SELECT * FROM `Tablets` WHERE `Price` < 100")]
-        [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION SELECT * FROM \"Laptops\" WHERE \"Price\" < 800 UNION ALL SELECT * FROM \"Tablets\" WHERE \"Price\" < 100")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 300 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" < 800 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" < 100")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Phones] WHERE [Price] < 300 EXCEPT SELECT * FROM [Phones] WHERE NOT ([Os] = 'iOS') UNION ALL SELECT * FROM [Tablets] WHERE [Price] < 100")]
+        [InlineData(EngineCodes.MySql,
+            "SELECT * FROM `Phones` WHERE `Price` < 300 INTERSECT ALL SELECT * FROM `Watches` WHERE `Os` = 'Android' UNION ALL SELECT * FROM `Tablets` WHERE `Price` < 100")]
+        [InlineData(EngineCodes.PostgreSql,
+            "SELECT * FROM \"Phones\" WHERE \"Price\" < 300 UNION SELECT * FROM \"Laptops\" WHERE \"Price\" < 800 UNION ALL SELECT * FROM \"Tablets\" WHERE \"Price\" < 100")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"PHONES\" WHERE \"PRICE\" < 300 UNION SELECT * FROM \"LAPTOPS\" WHERE \"PRICE\" < 800 UNION ALL SELECT * FROM \"TABLETS\" WHERE \"PRICE\" < 100")]
         public void UnionWithDifferentEngine(string engine, string sqlText)
         {
             var mobiles = new Query("Phones")
@@ -401,7 +427,7 @@ namespace SqlKata.Tests
         public void NestedEmptyWhere()
         {
             // Empty nested where should be ignored
-            var query = new Query("A").Where(q => new Query().Where(q2 => new Query().Where(q3 => new Query())));
+            var query = new Query("A").Where(_ => new Query().Where(_ => new Query().Where(_ => new Query())));
 
             var c = Compile(query);
 
@@ -411,7 +437,7 @@ namespace SqlKata.Tests
         [Fact]
         public void NestedQuery()
         {
-            var query = new Query("A").Where(q => new Query("B"));
+            var query = new Query("A").Where(_ => new Query("B"));
 
             var c = Compile(query);
 
@@ -424,7 +450,7 @@ namespace SqlKata.Tests
             // in this test, i am testing the compiler dynamic caching functionality
             var query = new Query("users")
                 .Join("countries", j => j.On("countries.id", "users.country_id"))
-                .Where(q => new Query());
+                .Where(_ => new Query());
 
             var c = Compile(query);
 
@@ -452,10 +478,14 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78)\nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [results_wrapper] WHERE [row_num] BETWEEN 21 AND 45")]
-        [InlineData(EngineCodes.MySql, "WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33)\nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24")]
-        [InlineData(EngineCodes.PostgreSql, "WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"Races\" WHERE \"Name\" = '3778' AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24")]
-        [InlineData(EngineCodes.Firebird, "WITH \"RANGE\" AS (SELECT \"D\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"RACES\" WHERE \"NAME\" = '3778' AND \"ID\" > 55 AND \"VALUE\" BETWEEN 18 AND 24")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [range] AS (SELECT [Number] FROM [Sequence] WHERE [Number] < 78)\nSELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Races] WHERE [Id] > 55 AND [Value] BETWEEN 18 AND 24) AS [results_wrapper] WHERE [row_num] BETWEEN 21 AND 45")]
+        [InlineData(EngineCodes.MySql,
+            "WITH `range` AS (SELECT `Id` FROM `seqtbl` WHERE `Id` < 33)\nSELECT * FROM `Races` WHERE `RaceAuthor` IN (SELECT `Name` FROM `Users` WHERE `Status` = 'Available') AND `Id` > 55 AND `Value` BETWEEN 18 AND 24")]
+        [InlineData(EngineCodes.PostgreSql,
+            "WITH \"range\" AS (SELECT \"d\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"Races\" WHERE \"Name\" = '3778' AND \"Id\" > 55 AND \"Value\" BETWEEN 18 AND 24")]
+        [InlineData(EngineCodes.Firebird,
+            "WITH \"RANGE\" AS (SELECT \"D\" FROM generate_series(1, 33) as d)\nSELECT * FROM \"RACES\" WHERE \"NAME\" = '3778' AND \"ID\" > 55 AND \"VALUE\" BETWEEN 18 AND 24")]
         public void CteAndBindings(string engine, string sqlText)
         {
             var query = new Query("Races")
@@ -491,10 +521,14 @@ namespace SqlKata.Tests
 
         // test for issue #50
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5")]
-        [InlineData(EngineCodes.MySql, "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5")]
-        [InlineData(EngineCodes.PostgreSql, "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5")]
-        [InlineData(EngineCodes.Firebird, "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2)\nSELECT * FROM [cte2] WHERE [Column3] = 5")]
+        [InlineData(EngineCodes.MySql,
+            "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2)\nSELECT * FROM `cte2` WHERE `Column3` = 5")]
+        [InlineData(EngineCodes.PostgreSql,
+            "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5")]
+        [InlineData(EngineCodes.Firebird,
+            "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5")]
         public void CascadedCteAndBindings(string engine, string sqlText)
         {
             var cte1 = new Query("Table1");
@@ -520,10 +554,14 @@ namespace SqlKata.Tests
 
         // test for issue #50
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5")]
-        [InlineData(EngineCodes.MySql, "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5")]
-        [InlineData(EngineCodes.PostgreSql, "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5")]
-        [InlineData(EngineCodes.Firebird, "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte2] WHERE [Column3] = 5")]
+        [InlineData(EngineCodes.MySql,
+            "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte2` WHERE `Column3` = 5")]
+        [InlineData(EngineCodes.PostgreSql,
+            "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte2\" WHERE \"Column3\" = 5")]
+        [InlineData(EngineCodes.Firebird,
+            "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE2\" WHERE \"COLUMN3\" = 5")]
         public void CascadedAndMultiReferencedCteAndBindings(string engine, string sqlText)
         {
             var cte1 = new Query("Table1");
@@ -556,10 +594,14 @@ namespace SqlKata.Tests
 
         // test for issue #50
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5")]
-        [InlineData(EngineCodes.MySql, "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte3` WHERE `Column3_4` = 5")]
-        [InlineData(EngineCodes.PostgreSql, "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5")]
-        [InlineData(EngineCodes.Firebird, "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [cte1] AS (SELECT [Column1], [Column2] FROM [Table1] WHERE [Column2] = 1),\n[cte2] AS (SELECT [Column3], [Column4] FROM [Table2] \nINNER JOIN [cte1] ON ([Column1] = [Column3]) WHERE [Column4] = 2),\n[cte3] AS (SELECT [Column3_3], [Column3_4] FROM [Table3] \nINNER JOIN [cte1] ON ([Column1] = [Column3_3]) WHERE [Column3_4] = 33)\nSELECT * FROM [cte3] WHERE [Column3_4] = 5")]
+        [InlineData(EngineCodes.MySql,
+            "WITH `cte1` AS (SELECT `Column1`, `Column2` FROM `Table1` WHERE `Column2` = 1),\n`cte2` AS (SELECT `Column3`, `Column4` FROM `Table2` \nINNER JOIN `cte1` ON (`Column1` = `Column3`) WHERE `Column4` = 2),\n`cte3` AS (SELECT `Column3_3`, `Column3_4` FROM `Table3` \nINNER JOIN `cte1` ON (`Column1` = `Column3_3`) WHERE `Column3_4` = 33)\nSELECT * FROM `cte3` WHERE `Column3_4` = 5")]
+        [InlineData(EngineCodes.PostgreSql,
+            "WITH \"cte1\" AS (SELECT \"Column1\", \"Column2\" FROM \"Table1\" WHERE \"Column2\" = 1),\n\"cte2\" AS (SELECT \"Column3\", \"Column4\" FROM \"Table2\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3\") WHERE \"Column4\" = 2),\n\"cte3\" AS (SELECT \"Column3_3\", \"Column3_4\" FROM \"Table3\" \nINNER JOIN \"cte1\" ON (\"Column1\" = \"Column3_3\") WHERE \"Column3_4\" = 33)\nSELECT * FROM \"cte3\" WHERE \"Column3_4\" = 5")]
+        [InlineData(EngineCodes.Firebird,
+            "WITH \"CTE1\" AS (SELECT \"COLUMN1\", \"COLUMN2\" FROM \"TABLE1\" WHERE \"COLUMN2\" = 1),\n\"CTE2\" AS (SELECT \"COLUMN3\", \"COLUMN4\" FROM \"TABLE2\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3\") WHERE \"COLUMN4\" = 2),\n\"CTE3\" AS (SELECT \"COLUMN3_3\", \"COLUMN3_4\" FROM \"TABLE3\" \nINNER JOIN \"CTE1\" ON (\"COLUMN1\" = \"COLUMN3_3\") WHERE \"COLUMN3_4\" = 33)\nSELECT * FROM \"CTE3\" WHERE \"COLUMN3_4\" = 5")]
         public void MultipleCtesAndBindings(string engine, string sqlText)
         {
             var cte1 = new Query("Table1");
@@ -604,7 +646,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= 11")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= 11")]
         [InlineData(EngineCodes.MySql, "SELECT * FROM `users` LIMIT 18446744073709551615 OFFSET 10")]
         [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"users\" OFFSET 10")]
         [InlineData(EngineCodes.Firebird, "SELECT SKIP 10 * FROM \"USERS\"")]
@@ -618,7 +661,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] BETWEEN 11 AND 15")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] BETWEEN 11 AND 15")]
         [InlineData(EngineCodes.MySql, "SELECT * FROM `users` LIMIT 5 OFFSET 10")]
         [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"users\" LIMIT 5 OFFSET 10")]
         [InlineData(EngineCodes.Firebird, "SELECT * FROM \"USERS\" ROWS 11 TO 15")]
@@ -632,8 +676,10 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]")]
-        [InlineData(EngineCodes.MySql, "SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [users] \nINNER JOIN [countries] ON [countries].[id] = [users].[country_id]")]
+        [InlineData(EngineCodes.MySql,
+            "SELECT * FROM `users` \nINNER JOIN `countries` ON `countries`.`id` = `users`.`country_id`")]
         public void BasicJoin(string engine, string sqlText)
         {
             var query = new Query().From("users").Join("countries", "countries.id", "users.country_id");
@@ -670,6 +716,7 @@ namespace SqlKata.Tests
                 c[EngineCodes.Firebird]);
         }
 
+        [Fact]
         public void OrWhereRawEscaped()
         {
             var query = new Query("Table").WhereRaw("[MyCol] = ANY(?::int\\[\\])", "{1,2,3}");
@@ -723,7 +770,7 @@ namespace SqlKata.Tests
         public void ShouldUseILikeOnPostgresWhenNonCaseSensitive(string engine, string sqlText)
         {
             var query = new Query("Table1")
-                .WhereLike("Column1", "%Upper Word%", false);
+                .WhereLike("Column1", "%Upper Word%", caseSensitive: false);
 
             var c = CompileFor(engine, query);
 
@@ -731,7 +778,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
         public void EscapedWhereLike(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -743,7 +791,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
         public void EscapedWhereStarts(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -755,7 +804,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
         public void EscapedWhereEnds(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -767,7 +817,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
         public void EscapedWhereContains(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -779,7 +830,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%' ESCAPE '\\'")]
         public void EscapedHavingLike(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -791,7 +843,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\\%%' ESCAPE '\\'")]
         public void EscapedHavingStarts(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -803,7 +856,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%' ESCAPE '\\'")]
         public void EscapedHavingEnds(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -815,7 +869,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\\%%' ESCAPE '\\'")]
         public void EscapedHavingContains(string engine, string sqlText)
         {
             var query = new Query("Table1")
@@ -831,7 +886,7 @@ namespace SqlKata.Tests
         {
             Assert.ThrowsAny<ArgumentException>(() =>
             {
-                var q = new Query("Table1")
+                _ = new Query("Table1")
                     .HavingContains("Column1", @"TestString\%", false, @"\aa");
             });
         }
@@ -846,73 +901,92 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT somefunction() as c1", c.ToString());
         }
 
-        [Fact]
-        public void BasicSelect_WithNoTable()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [c1]")]
+        public void BasicSelect_WithNoTable(string engine, string sqlText)
         {
             var q = new Query().Select("c1");
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [c1]", c.ToString());
+
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void BasicSelect_WithNoTableAndWhereClause()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [c1] WHERE [p] = 1")]
+        public void BasicSelect_WithNoTableAndWhereClause(string engine, string sqlText)
         {
             var q = new Query().Select("c1").Where("p", 1);
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [c1] WHERE [p] = 1", c.ToString());
+
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void BasicSelect_WithNoTableWhereRawClause()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [c1] WHERE 1 = 1")]
+        public void BasicSelect_WithNoTableWhereRawClause(string engine, string sqlText)
         {
             var q = new Query().Select("c1").WhereRaw("1 = 1");
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [c1] WHERE 1 = 1", c.ToString());
+
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void BasicSelectAggregate()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM([ViewCount]) FROM [Posts]")]
+        public void BasicSelectAggregate(string engine, string sqlText)
         {
             var q = new Query("Posts").Select("Title")
                 .SelectAggregate("sum", "ViewCount");
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [Title], SUM([ViewCount]) FROM [Posts]", sqlServer.ToString());
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void SelectAggregateShouldIgnoreEmptyFilter()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM([ViewCount]) FROM [Posts]")]
+        public void SelectAggregateShouldIgnoreEmptyFilter(string engine, string sqlText)
         {
             var q = new Query("Posts").Select("Title")
                 .SelectAggregate("sum", "ViewCount", q => q);
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [Title], SUM([ViewCount]) FROM [Posts]", sqlServer.ToString());
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void SelectAggregateShouldIgnoreEmptyQueryFilter()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM([ViewCount]) FROM [Posts]")]
+        public void SelectAggregateShouldIgnoreEmptyQueryFilter(string engine, string sqlText)
         {
             var q = new Query("Posts").Select("Title")
                 .SelectAggregate("sum", "ViewCount", new Query());
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [Title], SUM([ViewCount]) FROM [Posts]", sqlServer.ToString());
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void BasicSelectAggregateWithAlias()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM([ViewCount]) AS [TotalViews] FROM [Posts]")]
+        public void BasicSelectAggregateWithAlias(string engine, string sqlText)
         {
             var q = new Query("Posts").Select("Title")
                 .SelectAggregate("sum", "ViewCount as TotalViews");
 
-            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
-            Assert.Equal("SELECT [Title], SUM([ViewCount]) AS [TotalViews] FROM [Posts]", sqlServer.ToString());
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT [Title], SUM(CASE WHEN [Published_Month] = 'Jan' THEN [ViewCount] END) AS [Published_Jan], SUM(CASE WHEN [Published_Month] = 'Feb' THEN [ViewCount] END) AS [Published_Feb] FROM [Posts]")]
-        [InlineData(EngineCodes.PostgreSql, "SELECT \"Title\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Jan') AS \"Published_Jan\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Feb') AS \"Published_Feb\" FROM \"Posts\"")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [Title], SUM(CASE WHEN [Published_Month] = 'Jan' THEN [ViewCount] END) AS [Published_Jan], SUM(CASE WHEN [Published_Month] = 'Feb' THEN [ViewCount] END) AS [Published_Feb] FROM [Posts]")]
+        [InlineData(EngineCodes.PostgreSql,
+            "SELECT \"Title\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Jan') AS \"Published_Jan\", SUM(\"ViewCount\") FILTER (WHERE \"Published_Month\" = 'Feb') AS \"Published_Feb\" FROM \"Posts\"")]
         public void SelectWithFilter(string engine, string sqlText)
         {
             var query = new Query("Posts").Select("Title")
@@ -925,7 +999,8 @@ namespace SqlKata.Tests
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Posts] WHERE EXISTS (SELECT 1 FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Posts] WHERE EXISTS (SELECT 1 FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])")]
         public void SelectWithExists(string engine, string sqlText)
         {
             var query = new Query("Posts").WhereExists(
@@ -937,21 +1012,18 @@ namespace SqlKata.Tests
             Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void SelectWithExists_OmitSelectIsFalse()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])")]
+        public void SelectWithExists_OmitSelectIsFalse(string engine, string sqlText)
         {
             var q = new Query("Posts").WhereExists(
                 new Query("Comments").Select("Id").WhereColumns("Comments.PostId", "=", "Posts.Id")
             );
 
+            var c = CompileFor(engine, q, compiler1 => { compiler1.OmitSelectInsideExists = false; });
 
-            var compiler = new SqlServerCompiler
-            {
-                OmitSelectInsideExists = false,
-            };
-
-            var sqlServer = compiler.Compile(q).ToString();
-            Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
+            Assert.Equal(sqlText, c.ToString());
         }
     }
 }
