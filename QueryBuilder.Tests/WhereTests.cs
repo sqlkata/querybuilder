@@ -33,5 +33,24 @@ namespace SqlKata.Tests
 
             Assert.Equal(sqlText, c.ToString());
         }
+
+        [Theory]
+        [InlineData(EngineCodes.Firebird, """SELECT * FROM "TABLE1" WHERE "FIELD1" = Field2""")]
+        [InlineData(EngineCodes.MySql, "SELECT * FROM `Table1` WHERE `Field1` = Field2")]
+        [InlineData(EngineCodes.Oracle, """SELECT * FROM "Table1" WHERE "Field1" = Field2""")]
+        [InlineData(EngineCodes.PostgreSql, """SELECT * FROM "Table1" WHERE "Field1" = Field2""")]
+        [InlineData(EngineCodes.Sqlite, """SELECT * FROM "Table1" WHERE "Field1" = Field2""")]
+        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Table1] WHERE [Field1] = Field2")]
+        public void UnsafeLiteralConditions(string engine, string sqlText)
+        {
+            var q = new Query("Table1")
+                .Where("Field1", new UnsafeLiteral("Field2"));
+
+            var c = CompileFor(engine, q);
+
+            Assert.Equal(sqlText, c.ToString());
+        }
+
+
     }
 }
