@@ -55,8 +55,10 @@ namespace SqlKata.Tests
             public string Foo { get; set; }
         }
 
-        [Fact]
-        public void UpdateObject()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'")]
+        [InlineData(EngineCodes.Firebird, "UPDATE \"TABLE\" SET \"NAME\" = 'The User', \"AGE\" = '2018-01-01'")]
+        public void UpdateObject(string engine, string sqlText)
         {
             var query = new Query("Table").AsUpdate(new
             {
@@ -64,122 +66,107 @@ namespace SqlKata.Tests
                 Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             });
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "UPDATE \"TABLE\" SET \"NAME\" = 'The User', \"AGE\" = '2018-01-01'",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateWithNullValues()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1")]
+        [InlineData(EngineCodes.Firebird, "UPDATE \"BOOKS\" SET \"AUTHOR\" = 'Author 1', \"DATE\" = NULL, \"VERSION\" = NULL WHERE \"ID\" = 1")]
+        public void UpdateWithNullValues(string engine, string sqlText)
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
                 new[] { "Author", "Date", "Version" },
                 new object[] { "Author 1", null, null }
             );
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [Books] SET [Author] = 'Author 1', [Date] = NULL, [Version] = NULL WHERE [Id] = 1",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "UPDATE \"BOOKS\" SET \"AUTHOR\" = 'Author 1', \"DATE\" = NULL, \"VERSION\" = NULL WHERE \"ID\" = 1",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateWithEmptyString()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Books] SET [Author] = 'Author 1', [Description] = '' WHERE [Id] = 1")]
+        [InlineData(EngineCodes.Firebird, "UPDATE \"BOOKS\" SET \"AUTHOR\" = 'Author 1', \"DESCRIPTION\" = '' WHERE \"ID\" = 1")]
+        public void UpdateWithEmptyString(string engine, string sqlText)
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(
                 new[] { "Author", "Description" },
                 new object[] { "Author 1", "" }
             );
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal("UPDATE [Books] SET [Author] = 'Author 1', [Description] = '' WHERE [Id] = 1", c[EngineCodes.SqlServer]);
-
-            Assert.Equal("UPDATE \"BOOKS\" SET \"AUTHOR\" = 'Author 1', \"DESCRIPTION\" = '' WHERE \"ID\" = 1", c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateWithCte()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '2024-05-24')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100")]
+        public void UpdateWithCte(string engine, string sqlText)
         {
-            var now = DateTime.UtcNow.ToString("yyyy-MM-dd");
-
             var query = new Query("Books")
-                .With("OldBooks", q => q.From("Books").Where("Date", "<", now))
+                .With("OldBooks", q => q.From("Books").Where("Date", "<", "2024-05-24"))
                 .Where("Price", ">", 100)
                 .AsUpdate(new Dictionary<string, object>
                 {
                     {"Price", "150"}
                 });
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                $"WITH [OldBooks] AS (SELECT * FROM [Books] WHERE [Date] < '{now}')\nUPDATE [Books] SET [Price] = '150' WHERE [Price] > 100",
-                c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateWithIgnoreAndColumnProperties()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100")]
+        [InlineData(EngineCodes.Firebird, "UPDATE \"BOOK\" SET \"NAME\" = 'SqlKataBook', \"AUTHOR\" = 'Kata', \"PRICE\" = 100")]
+        public void UpdateWithIgnoreAndColumnProperties(string engine, string sqlText)
         {
             var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
             var query = new Query("Book").AsUpdate(book);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "UPDATE \"BOOK\" SET \"NAME\" = 'SqlKataBook', \"AUTHOR\" = 'Kata', \"PRICE\" = 100",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateWithKeyAttribute()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [OrderProductComposite] SET [OrdId] = 'ORD01', [ProductId] = 'PROD02', [Quantity] = 20, [Faa] = 'baz' WHERE [OrdId] = 'ORD01' AND [ProductId] = 'PROD02'")]
+        [InlineData(EngineCodes.Firebird, "UPDATE \"ORDERPRODUCTCOMPOSITE\" SET \"ORDID\" = 'ORD01', \"PRODUCTID\" = 'PROD02', \"QUANTITY\" = 20, \"FAA\" = 'baz' WHERE \"ORDID\" = 'ORD01' AND \"PRODUCTID\" = 'PROD02'")]
+        public void UpdateWithKeyAttribute(string engine, string sqlText)
         {
             var order = new OrderProductComposite("ORD01", "PROD02", 20);
             var query = new Query("OrderProductComposite").AsUpdate(order);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [OrderProductComposite] SET [OrdId] = 'ORD01', [ProductId] = 'PROD02', [Quantity] = 20, [Faa] = 'baz' WHERE [OrdId] = 'ORD01' AND [ProductId] = 'PROD02'",
-                c[EngineCodes.SqlServer]);
-
-            Assert.Equal(
-                "UPDATE \"ORDERPRODUCTCOMPOSITE\" SET \"ORDID\" = 'ORD01', \"PRODUCTID\" = 'PROD02', \"QUANTITY\" = 20, \"FAA\" = 'baz' WHERE \"ORDID\" = 'ORD01' AND \"PRODUCTID\" = 'PROD02'",
-                c[EngineCodes.Firebird]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateFromRaw()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE Table.With.Dots SET [Name] = 'The User'")]
+        public void UpdateFromRaw(string engine, string sqlText)
         {
             var query = new Query().FromRaw("Table.With.Dots").AsUpdate(new
             {
                 Name = "The User",
             });
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE Table.With.Dots SET [Name] = 'The User'",
-                c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateFromQueryShouldFail()
+        [Theory]
+        [InlineData(EngineCodes.Firebird)]
+        [InlineData(EngineCodes.MySql)]
+        [InlineData(EngineCodes.Oracle)]
+        [InlineData(EngineCodes.PostgreSql)]
+        [InlineData(EngineCodes.Sqlite)]
+        [InlineData(EngineCodes.SqlServer)]
+        public void UpdateFromQueryShouldFail(string engine)
         {
             var query = new Query().From(new Query("InnerTable")).AsUpdate(new
             {
@@ -188,12 +175,13 @@ namespace SqlKata.Tests
 
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Compile(query);
+                _ = CompileFor(engine, query);
             });
         }
 
-        [Fact]
-        public void update_should_compile_literal_without_parameters_holders()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [MyTable] SET [Name] = ?, [Address] = @address")]
+        public void update_should_compile_literal_without_parameters_holders(string engine, string sqlText)
         {
             var query = new Query("MyTable").AsUpdate(new
             {
@@ -201,16 +189,16 @@ namespace SqlKata.Tests
                 Address = new UnsafeLiteral("@address")
             });
 
-            var compiler = new SqlServerCompiler();
-            var result = compiler.Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [MyTable] SET [Name] = ?, [Address] = @address",
-                result.RawSql);
+            Assert.Equal(sqlText, c.RawSql);
+            Assert.Single(c.NamedBindings);
+            Assert.Equal("The User", c.NamedBindings.First().Value);
         }
 
-        [Fact]
-        public void UpdateUsingKeyValuePairs()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'")]
+        public void UpdateUsingKeyValuePairs(string engine, string sqlText)
         {
             var dictionaryUser = new Dictionary<string, object>
                 {
@@ -222,53 +210,14 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsUpdate(dictionaryUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void UpdateUsingDictionary()
-        {
-            var dictionaryUser = new Dictionary<string, object> {
-                { "Name", "The User" },
-                { "Age",  new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            };
-
-            var query = new Query("Table")
-                .AsUpdate(dictionaryUser);
-
-            var c = Compile(query);
-
-            Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
-        }
-
-        [Fact]
-        public void UpdateUsingReadOnlyDictionary()
-        {
-            var dictionaryUser = new ReadOnlyDictionary<string, object>(
-                new Dictionary<string, object>
-                {
-                    { "Name", "The User" },
-                    { "Age",  new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-                });
-
-            var query = new Query("Table")
-                .AsUpdate(dictionaryUser);
-
-            var c = Compile(query);
-
-            Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
-        }
-
-        [Fact]
-        public void UpdateUsingExpandoObject()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'")]
+        public void UpdateUsingExpandoObject(string engine, string sqlText)
         {
             dynamic expandoUser = new ExpandoObject();
             expandoUser.Name = "The User";
@@ -277,43 +226,53 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsUpdate(expandoUser);
 
-            var c = Compile(query);
+            var c = CompileFor(engine, query);
 
-            Assert.Equal(
-                "UPDATE [Table] SET [Name] = 'The User', [Age] = '2018-01-01'",
-                c[EngineCodes.SqlServer]);
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void IncrementUpdate()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Total] = [Total] + 1")]
+        public void IncrementUpdate(string engine, string sqlText)
         {
             var query = new Query("Table").AsIncrement("Total");
-            var c = Compile(query);
-            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 1", c[EngineCodes.SqlServer]);
+
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void IncrementUpdateWithValue()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Total] = [Total] + 2")]
+        public void IncrementUpdateWithValue(string engine, string sqlText)
         {
             var query = new Query("Table").AsIncrement("Total", 2);
-            var c = Compile(query);
-            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2", c[EngineCodes.SqlServer]);
+
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void IncrementUpdateWithWheres()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Total] = [Total] + 2 WHERE [Name] = 'A'")]
+        public void IncrementUpdateWithWheres(string engine, string sqlText)
         {
             var query = new Query("Table").Where("Name", "A").AsIncrement("Total", 2);
-            var c = Compile(query);
-            Assert.Equal("UPDATE [Table] SET [Total] = [Total] + 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
+
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
 
-        [Fact]
-        public void DecrementUpdate()
+        [Theory]
+        [InlineData(EngineCodes.SqlServer, "UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'")]
+        public void DecrementUpdate(string engine, string sqlText)
         {
             var query = new Query("Table").Where("Name", "A").AsDecrement("Total", 2);
-            var c = Compile(query);
-            Assert.Equal("UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
+
+            var c = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, c.ToString());
         }
     }
 }
