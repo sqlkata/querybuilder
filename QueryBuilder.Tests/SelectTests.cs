@@ -1021,7 +1021,10 @@ namespace SqlKata.Tests
                 new Query("Comments").Select("Id").WhereColumns("Comments.PostId", "=", "Posts.Id")
             );
 
-            var c = CompileFor(engine, q, compiler1 => { compiler1.OmitSelectInsideExists = false; });
+            var c = CompileFor(engine, q, compiler =>
+            {
+                compiler.OmitSelectInsideExists = false;
+            });
 
             Assert.Equal(sqlText, c.ToString());
         }

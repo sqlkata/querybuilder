@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlKata.Compilers;
+using SqlKata.Tests.Infrastructure.TestCompilers;
 
 namespace SqlKata.Tests.Infrastructure
 {
@@ -19,19 +20,24 @@ namespace SqlKata.Tests.Infrastructure
             return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
         }
 
-        protected SqlResult CompileFor(string engine, Query query)
+        protected SqlResult CompileFor(string engine, Query query, Func<Compiler, Compiler> configuration = null)
         {
             var compiler = CreateCompiler(engine);
+            if (configuration != null)
+            {
+                compiler = configuration(compiler);
+            }
 
             return compiler.Compile(query);
         }
 
-        protected SqlResult CompileFor(string engine, Query query, Action<Compiler> action)
+        protected SqlResult CompileFor(string engine, Query query, Action<Compiler> configuration)
         {
-            var compiler = CreateCompiler(engine);
-            action(compiler);
-
-            return compiler.Compile(query);
+            return CompileFor(engine, query, compiler =>
+            {
+                configuration(compiler);
+                return compiler;
+            });
         }
 
         private static Compiler CreateCompiler(string engine)
@@ -43,10 +49,11 @@ namespace SqlKata.Tests.Infrastructure
                 EngineCodes.Oracle => new OracleCompiler(),
                 EngineCodes.PostgreSql => new PostgresCompiler(),
                 EngineCodes.Sqlite => new SqliteCompiler(),
-                EngineCodes.SqlServer => new SqlServerCompiler()
+                EngineCodes.SqlServer => new SqlServerCompiler
                 {
                     UseLegacyPagination = true
                 },
+                EngineCodes.Generic => new TestCompiler(),
                 _ => throw new ArgumentException($"Unsupported engine type: {engine}", nameof(engine)),
             };
         }
