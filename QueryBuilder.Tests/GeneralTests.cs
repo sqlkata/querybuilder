@@ -3,6 +3,7 @@ using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
 using System;
 using System.Linq;
+using SqlKata.Tests.Infrastructure.TestCompilers;
 using Xunit;
 
 namespace SqlKata.Tests
