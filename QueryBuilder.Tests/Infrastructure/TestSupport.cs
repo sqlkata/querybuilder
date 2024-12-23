@@ -20,6 +20,16 @@ namespace SqlKata.Tests.Infrastructure
             return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
         }
 
+        protected SqlResult CompileForGeneric(Query query, Func<Compiler, Compiler> configuration = null)
+        {
+            return CompileFor(EngineCodes.Generic, query, configuration);
+        }
+
+        protected SqlResult CompileForGeneric(Query query, Action<Compiler> configuration)
+        {
+            return CompileFor(EngineCodes.Generic, query, configuration);
+        }
+
         protected SqlResult CompileFor(string engine, Query query, Func<Compiler, Compiler> configuration = null)
         {
             var compiler = CreateCompiler(engine);

@@ -50,7 +50,5 @@ namespace SqlKata.Tests
 
             Assert.Equal(sqlText, c.ToString());
         }
-
-
     }
 }
