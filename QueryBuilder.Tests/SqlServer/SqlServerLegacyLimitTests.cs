@@ -6,12 +6,11 @@ namespace SqlKata.Tests.SqlServer
 {
     public class SqlServerLegacyLimitTests : TestSupport
     {
-        private readonly SqlServerCompiler compiler;
+        private readonly Compiler compiler;
 
         public SqlServerLegacyLimitTests()
         {
-            compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
-            compiler.UseLegacyPagination = true;
+            compiler = CreateCompiler(EngineCodes.SqlServer, useLegacyPagination: true);
         }
 
         [Fact]

@@ -6,11 +6,11 @@ namespace SqlKata.Tests.Sqlite
 {
     public class SqliteLimitTests : TestSupport
     {
-        private readonly SqliteCompiler compiler;
+        private readonly Compiler compiler;
 
         public SqliteLimitTests()
         {
-            compiler = Compilers.Get<SqliteCompiler>(EngineCodes.Sqlite);
+            compiler = CreateCompiler(EngineCodes.Sqlite);
         }
 
         [Fact]

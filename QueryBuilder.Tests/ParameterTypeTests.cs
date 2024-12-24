@@ -43,9 +43,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Table").Where("Col", input);
 
-            var c = Compile(query);
+            var c = CompileFor(EngineCodes.SqlServer, query);
 
-            Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c[EngineCodes.SqlServer]);
+            Assert.Equal($"SELECT * FROM [Table] WHERE [Col] = {rendered}", c.ToString());
         }
     }
 }

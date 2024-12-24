@@ -15,9 +15,9 @@ namespace SqlKata.Tests
                 .Where(q => q.Or().Where("Column1", 10).Or().Where("Column2", 20))
                 .Where("Column3", 30);
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -29,9 +29,9 @@ namespace SqlKata.Tests
                 .Having(q => q.Or().HavingRaw("SUM([Column1]) = ?", 10).Or().HavingRaw("SUM([Column2]) = ?", 20))
                 .HavingRaw("SUM([Column3]) = ?", 30);
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -46,9 +46,9 @@ namespace SqlKata.Tests
             var q = new Query("Table1")
                 .Where("Field1", new UnsafeLiteral("Field2"));
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
     }
 }

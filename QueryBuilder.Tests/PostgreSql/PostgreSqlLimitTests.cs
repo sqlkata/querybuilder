@@ -6,11 +6,11 @@ namespace SqlKata.Tests.PostgreSql
 {
     public class PostgreSqlLimitTests : TestSupport
     {
-        private readonly PostgresCompiler compiler;
+        private readonly Compiler compiler;
 
         public PostgreSqlLimitTests()
         {
-            compiler = Compilers.Get<PostgresCompiler>(EngineCodes.PostgreSql);
+            compiler = CreateCompiler(EngineCodes.PostgreSql);
         }
 
         [Fact]

@@ -6,11 +6,11 @@ namespace SqlKata.Tests.MySql
 {
     public class MySqlLimitTests : TestSupport
     {
-        private readonly MySqlCompiler compiler;
+        private readonly Compiler compiler;
 
         public MySqlLimitTests()
         {
-            compiler = Compilers.Get<MySqlCompiler>(EngineCodes.MySql);
+            compiler = CreateCompiler(EngineCodes.MySql);
         }
 
         [Fact]

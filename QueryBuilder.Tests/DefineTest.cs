@@ -18,9 +18,9 @@ namespace SqlKata.Tests
                 .Define("@name", "Anto")
                 .Where("ProductName", Variable("@name"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -38,9 +38,9 @@ namespace SqlKata.Tests
                 .Where("unitprice", ">", subquery)
                 .Where("UnitsOnOrder", ">", 5);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
 
@@ -60,9 +60,9 @@ namespace SqlKata.Tests
                 .Define("@product", "Coffee")
                 .WhereEnds("ProductName", Variable("@product"), caseSensitive);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
 
@@ -82,9 +82,9 @@ namespace SqlKata.Tests
                 .Define("@perUnit", "12")
                 .WhereStarts("QuantityPerUnit", Variable("@perUnit"), caseSensitive);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -103,9 +103,9 @@ namespace SqlKata.Tests
                 .Select("ProductId", "QuantityPerUnit")
                 .WhereContains("QuantityPerUnit", Variable("@perUnit"), caseSensitive);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -124,9 +124,9 @@ namespace SqlKata.Tests
                 .Define("@id", "20")
                 .WhereLike("SupplierID", Variable("@id"), caseSensitive);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -140,14 +140,14 @@ namespace SqlKata.Tests
                 .Select("ShipVia").Where("ShipVia", Variable("@shipId"));
 
 
-            var query1 = new Query("Shippers")
+            var query = new Query("Shippers")
                 .Select("ShipperID", "CompanyName")
                 .WhereIn("ShipperID", subquery);
 
 
-            var c1 = CompileFor(engine, query1);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c1.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -158,31 +158,32 @@ namespace SqlKata.Tests
                 .Define("@foo", 1)
                 .Having("Id", "=", Variable("@foo"));
 
-            var c1 = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c1.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory(Skip = "Not implemented")]
-        [InlineData(EngineCodes.SqlServer, "SELECT [Employees].[LastName], COUNT(Orders.OrderID) AS NumberOfOrders FROM [Orders] \nINNER JOIN [Employees] ON [Employees].[EmployeeID] = [Orders].[EmployeeID] GROUP BY [LastName] HAVING COUNT(Orders.OrderID) > 80")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [Employees].[LastName], COUNT(Orders.OrderID) AS NumberOfOrders FROM [Orders] \nINNER JOIN [Employees] ON [Employees].[EmployeeID] = [Orders].[EmployeeID] GROUP BY [LastName] HAVING COUNT(Orders.OrderID) > 80")]
         public void Test_Define_HavingRaw(string engine, string sqlText)
         {
-            var query1 = new Query("Orders")
-                               .Define("@count", 80)
-                               .Select("Employees.LastName")
-                               .SelectRaw("COUNT(Orders.OrderID) AS NumberOfOrders")
-                               .Join("Employees", "Employees.EmployeeID", "Orders.EmployeeID")
-                               .GroupBy("LastName")
-                               .HavingRaw("COUNT(Orders.OrderID) > @count");
+            var query = new Query("Orders")
+                .Define("@count", 80)
+                .Select("Employees.LastName")
+                .SelectRaw("COUNT(Orders.OrderID) AS NumberOfOrders")
+                .Join("Employees", "Employees.EmployeeID", "Orders.EmployeeID")
+                .GroupBy("LastName")
+                .HavingRaw("COUNT(Orders.OrderID) > @count");
 
-            var c = CompileFor(engine, query1);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
-
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like 'u%'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like 'u%'")]
         public void Test_Define_HavingStarts(string engine, string sqlText)
         {
             var query = new Query("Customers")
@@ -192,15 +193,16 @@ namespace SqlKata.Tests
                 .GroupBy("Country")
                 .HavingStarts("Country", Variable("@label"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
             Assert.Equal(
                 sqlText,
-                c.ToString());
+                result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d'")]
         public void Test_Define_Having_Ends(string engine, string sqlText)
         {
             var query = new Query("Customers")
@@ -210,15 +212,16 @@ namespace SqlKata.Tests
                 .GroupBy("Country")
                 .HavingEnds("Country", Variable("@label"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
             Assert.Equal(
                 sqlText,
-                c.ToString());
+                result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d%'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d%'")]
         public void Test_Define_Having_Contains(string engine, string sqlText)
         {
             var query = new Query("Customers")
@@ -228,9 +231,9 @@ namespace SqlKata.Tests
                 .GroupBy("Country")
                 .HavingContains("Country", Variable("@label"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -245,17 +248,19 @@ namespace SqlKata.Tests
                     //    .WhereRaw("1 = @one")
                 ).AsCount();
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
 
         [Theory]
         [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Orders] WHERE CAST([RequiredDate] AS DATE) = '1996-08-01'")]
         [InlineData(EngineCodes.PostgreSql, "SELECT * FROM \"Orders\" WHERE \"RequiredDate\"::date = '1996-08-01'")]
-        [InlineData(EngineCodes.Sqlite, "SELECT * FROM \"Orders\" WHERE strftime('%Y-%m-%d', \"RequiredDate\") = cast('1996-08-01' as text)")]
-        [InlineData(EngineCodes.Firebird, "SELECT * FROM \"ORDERS\" WHERE CAST(\"REQUIREDDATE\" as DATE) = '1996-08-01'")]
+        [InlineData(EngineCodes.Sqlite,
+            "SELECT * FROM \"Orders\" WHERE strftime('%Y-%m-%d', \"RequiredDate\") = cast('1996-08-01' as text)")]
+        [InlineData(EngineCodes.Firebird,
+            "SELECT * FROM \"ORDERS\" WHERE CAST(\"REQUIREDDATE\" as DATE) = '1996-08-01'")]
         public void Test_Define_WhereDate(string engine, string sqlText)
         {
             var dateObj = new System.DateTime(year: 1996, month: 8, day: 1);
@@ -264,9 +269,9 @@ namespace SqlKata.Tests
                 .Define("@d", dateObj)
                 .WhereDate("RequiredDate", Variable("@d"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -277,9 +282,9 @@ namespace SqlKata.Tests
                 .Define("@d", 1996)
                 .WhereDatePart("year", "RequiredDate", "=", Variable("@d"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -290,13 +295,14 @@ namespace SqlKata.Tests
                 .Define("@d", "00:00:00")
                 .WhereTime("RequiredDate", "!=", Variable("@d"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT * FROM [Customers] WHERE EXISTS (SELECT 1 FROM [Orders] WHERE [ShipPostalCode] = '8200')")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT * FROM [Customers] WHERE EXISTS (SELECT 1 FROM [Orders] WHERE [ShipPostalCode] = '8200')")]
         public void Test_Define_WhereExists(string engine, string sqlText)
         {
             var query = new Query("Customers")
@@ -305,13 +311,14 @@ namespace SqlKata.Tests
                     .Where("ShipPostalCode", Variable("@postal"))
                 );
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "WITH [prodCTE] AS (SELECT [Categories].[CategoryName], [Products].[UnitPrice] FROM [Products] \nINNER JOIN [Categories] ON [Categories].[CategoryID] = [Products].[CategoryID] WHERE [Products].[UnitPrice] > 10)\nSELECT * FROM [prodCTE]")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [prodCTE] AS (SELECT [Categories].[CategoryName], [Products].[UnitPrice] FROM [Products] \nINNER JOIN [Categories] ON [Categories].[CategoryID] = [Products].[CategoryID] WHERE [Products].[UnitPrice] > 10)\nSELECT * FROM [prodCTE]")]
         public void Test_Define_With(string engine, string sqlText)
         {
             var query = new Query("Products")
@@ -323,13 +330,14 @@ namespace SqlKata.Tests
             var queryCTe = new Query("prodCTE")
                 .With("prodCTE", query);
 
-            var c = CompileFor(engine, queryCTe);
+            var result = CompileFor(engine, queryCTe);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory(Skip = "not implemented")]
-        [InlineData(EngineCodes.SqlServer, "WITH [prodCTE] AS (SELECT c.CategoryName, p.UnitPrice FROM Products p INNER JOIN Categories c ON c.CategoryID = p.CategoryID WHERE p.UnitPrice > 10 AND  2 = 2)\nSELECT [CategoryName], [UnitPrice] FROM [prodCTE]")]
+        [InlineData(EngineCodes.SqlServer,
+            "WITH [prodCTE] AS (SELECT c.CategoryName, p.UnitPrice FROM Products p INNER JOIN Categories c ON c.CategoryID = p.CategoryID WHERE p.UnitPrice > 10 AND  2 = 2)\nSELECT [CategoryName], [UnitPrice] FROM [prodCTE]")]
         public void Test_Define_WithRaw(string engine, string sqlText)
         {
             //WithRaw
@@ -337,15 +345,17 @@ namespace SqlKata.Tests
                 .Define("@unit", 10)
                 .Define("@foo", 2)
                 .Select("CategoryName", "UnitPrice")
-                .WithRaw("prodCTE", "SELECT c.CategoryName, p.UnitPrice FROM Products p INNER JOIN Categories c ON c.CategoryID = p.CategoryID WHERE p.UnitPrice > @unit AND  2 = @foo");
+                .WithRaw("prodCTE",
+                    "SELECT c.CategoryName, p.UnitPrice FROM Products p INNER JOIN Categories c ON c.CategoryID = p.CategoryID WHERE p.UnitPrice > @unit AND  2 = @foo");
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') UNION SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') UNION SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
         public void Test_Define_Union(string engine, string sqlText)
         {
             var q1 = new Query("Suppliers")
@@ -359,13 +369,14 @@ namespace SqlKata.Tests
                 .Union(q1)
                 .WhereNotLike("City", Variable("@city"));
 
-            var c = CompileFor(engine, q2);
+            var result = CompileFor(engine, q2);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') EXCEPT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') EXCEPT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
         public void Test_Define_Except(string engine, string sqlText)
         {
             var q1 = new Query("Suppliers")
@@ -379,13 +390,14 @@ namespace SqlKata.Tests
                 .Except(q1)
                 .WhereNotLike("City", Variable("@city"));
 
-            var c = CompileFor(engine, q2);
+            var result = CompileFor(engine, q2);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
-        [InlineData(EngineCodes.SqlServer, "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') INTERSECT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') INTERSECT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'")]
         public void Test_Define_Intersect(string engine, string sqlText)
         {
             var q1 = new Query("Suppliers")
@@ -399,25 +411,25 @@ namespace SqlKata.Tests
                 .Intersect(q1)
                 .WhereNotLike("City", Variable("@city"));
 
-            var c = CompileFor(engine, q2);
+            var result = CompileFor(engine, q2);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory(Skip = "not implemented")]
-        [InlineData(EngineCodes.SqlServer, "SELECT [City] FROM [Customers] UNION ALL SELECT City FROM Suppliers WHERE 1 = 1 AND 2 = 2")]
+        [InlineData(EngineCodes.SqlServer,
+            "SELECT [City] FROM [Customers] UNION ALL SELECT City FROM Suppliers WHERE 1 = 1 AND 2 = 2")]
         public void Test_Define_CombineRaw(string engine, string sqlText)
         {
-
             var query = new Query("Customers")
-                        .Define("@foo", 1)
-                        .Define("@faa", 2)
-                        .Select("City")
-                        .CombineRaw("UNION ALL SELECT City FROM Suppliers WHERE 1 = @foo AND 2 = @faa");
+                .Define("@foo", 1)
+                .Define("@faa", 2)
+                .Select("City")
+                .CombineRaw("UNION ALL SELECT City FROM Suppliers WHERE 1 = @foo AND 2 = @faa");
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
     }
 }

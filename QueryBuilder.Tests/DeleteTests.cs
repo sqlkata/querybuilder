@@ -17,9 +17,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("Posts").AsDelete();
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -48,9 +48,9 @@ namespace SqlKata.Tests
                 .Where("Authors.Id", 5)
                 .AsDelete();
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -79,9 +79,9 @@ namespace SqlKata.Tests
                 .Where("A.Id", 5)
                 .AsDelete();
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
     }
 }

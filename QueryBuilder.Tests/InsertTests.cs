@@ -42,9 +42,9 @@ namespace SqlKata.Tests
                         Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     });
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -59,9 +59,9 @@ namespace SqlKata.Tests
                     new[] { "name", "model", "year" },
                     new Query("old_cars").Where("price", ">", 100).ForPage(2, 10));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -79,9 +79,9 @@ namespace SqlKata.Tests
                         new object[] { "Reventon roadster", "Lamborghini", 2009 }
                     });
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -94,9 +94,9 @@ namespace SqlKata.Tests
                     new[] { "Id", "Author", "ISBN", "Date" },
                     new object[] { 1, "Author 1", "123456", null });
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -109,9 +109,9 @@ namespace SqlKata.Tests
                     new[] { "Id", "Author", "ISBN", "Description" },
                     new object[] { 1, "Author 1", "123456", "" });
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -127,13 +127,13 @@ namespace SqlKata.Tests
                         fauxImagebytes
                     });
 
-            var c = CompileFor(EngineCodes.SqlServer, query);
+            var result = CompileFor(EngineCodes.SqlServer, query);
 
-            Assert.Equal(2, c.NamedBindings.Count);
-            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (?, ?)", c.RawSql);
-            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (@p0, @p1)", c.Sql);
-            Assert.Equal(1, c.NamedBindings["@p0"]);
-            Assert.Equal(fauxImagebytes, c.NamedBindings["@p1"]);
+            Assert.Equal(2, result.NamedBindings.Count);
+            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (?, ?)", result.RawSql);
+            Assert.Equal("INSERT INTO [Books] ([Id], [CoverImageBytes]) VALUES (@p0, @p1)", result.Sql);
+            Assert.Equal(1, result.NamedBindings["@p0"]);
+            Assert.Equal(fauxImagebytes, result.NamedBindings["@p1"]);
         }
 
         [Theory]
@@ -144,9 +144,9 @@ namespace SqlKata.Tests
             var account = new Account(name: $"popular", color: $"blue", currency: "US");
             var query = new Query("Account").AsInsert(account);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -162,9 +162,9 @@ namespace SqlKata.Tests
                         Age = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     });
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -181,7 +181,7 @@ namespace SqlKata.Tests
 
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Compile(query);
+                CompileFor(EngineCodes.Generic, query);
             });
         }
 
@@ -200,9 +200,9 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -218,9 +218,9 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -238,9 +238,9 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(dictionaryUser);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -255,9 +255,9 @@ namespace SqlKata.Tests
             var query = new Query("Table")
                 .AsInsert(expandoUser);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
     }
 }

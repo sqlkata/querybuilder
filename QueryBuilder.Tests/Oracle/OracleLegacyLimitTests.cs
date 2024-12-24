@@ -8,12 +8,11 @@ namespace SqlKata.Tests.Oracle
     {
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
-        private readonly OracleCompiler compiler;
+        private readonly Compiler compiler;
 
         public OracleLegacyLimitTests()
         {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
-            compiler.UseLegacyPagination = true;
+            compiler = CreateCompiler(EngineCodes.Oracle, useLegacyPagination: true);
         }
 
         [Fact]

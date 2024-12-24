@@ -8,24 +8,7 @@ namespace SqlKata.Tests.Infrastructure
 {
     public abstract class TestSupport
     {
-        protected readonly TestCompilersContainer Compilers = new TestCompilersContainer();
-
-        /// <summary>
-        /// For legacy test support
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        protected IReadOnlyDictionary<string, string> Compile(Query query)
-        {
-            return Compilers.Compile(query).ToDictionary(s => s.Key, v => v.Value.ToString());
-        }
-
         protected SqlResult CompileForGeneric(Query query, Func<Compiler, Compiler> configuration = null)
-        {
-            return CompileFor(EngineCodes.Generic, query, configuration);
-        }
-
-        protected SqlResult CompileForGeneric(Query query, Action<Compiler> configuration)
         {
             return CompileFor(EngineCodes.Generic, query, configuration);
         }
@@ -50,18 +33,21 @@ namespace SqlKata.Tests.Infrastructure
             });
         }
 
-        private static Compiler CreateCompiler(string engine)
+        protected Compiler CreateCompiler(string engine, bool? useLegacyPagination = null)
         {
             return engine switch
             {
                 EngineCodes.Firebird => new FirebirdCompiler(),
                 EngineCodes.MySql => new MySqlCompiler(),
-                EngineCodes.Oracle => new OracleCompiler(),
+                EngineCodes.Oracle => new OracleCompiler
+                {
+                    UseLegacyPagination = useLegacyPagination ?? false
+                },
                 EngineCodes.PostgreSql => new PostgresCompiler(),
                 EngineCodes.Sqlite => new SqliteCompiler(),
                 EngineCodes.SqlServer => new SqlServerCompiler
                 {
-                    UseLegacyPagination = true
+                    UseLegacyPagination = useLegacyPagination ?? true
                 },
                 EngineCodes.Generic => new TestCompiler(),
                 _ => throw new ArgumentException($"Unsupported engine type: {engine}", nameof(engine)),

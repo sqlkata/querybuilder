@@ -17,9 +17,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsCount();
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -39,9 +39,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsCount(["ColumnA", "ColumnB"]);
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -59,9 +59,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").Distinct().AsCount();
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -81,9 +81,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").Distinct().AsCount(new[] { "ColumnA", "ColumnB" });
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -103,9 +103,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsAverage("TTL");
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -125,9 +125,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsSum("PacketsDropped");
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -147,9 +147,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsMax("LatencyMs");
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
 
         [Theory]
@@ -169,9 +169,9 @@ namespace SqlKata.Tests
         {
             var q = new Query("A").AsMin("LatencyMs");
 
-            var c = CompileFor(engine, q);
+            var result = CompileFor(engine, q);
 
-            Assert.Equal(query, c.ToString());
+            Assert.Equal(query, result.ToString());
         }
     }
 }

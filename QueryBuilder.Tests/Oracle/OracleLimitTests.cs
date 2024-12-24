@@ -9,11 +9,11 @@ namespace SqlKata.Tests.Oracle
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private readonly OracleCompiler compiler;
+        private readonly Compiler compiler;
 
         public OracleLimitTests()
         {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+            compiler = CreateCompiler(EngineCodes.Oracle);
         }
 
         [Fact]

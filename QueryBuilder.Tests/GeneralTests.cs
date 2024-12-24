@@ -17,9 +17,9 @@ namespace SqlKata.Tests
             var query = new Query().From("users")
                 .Select("mycol[isthis]");
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -40,9 +40,9 @@ namespace SqlKata.Tests
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
             var query = new Query("series").With("series", series);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -63,9 +63,9 @@ namespace SqlKata.Tests
                 .ForFirebird(q => q.WhereRaw("firebird = 1"));
             var query = new Query("series").From(series.As("series"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -141,9 +141,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Users").SelectRaw("[Id], [Name], {Age}");
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -152,9 +152,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Users").SelectRaw("'\\{1,2,3\\}'::int\\[\\]");
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -192,9 +192,9 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.From("pgsql"))
                 .ForMySql(q => q.From("mysql"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -208,9 +208,9 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.FromRaw("[pgsql]"))
                 .ForMySql(q => q.FromRaw("[mysql]"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -224,9 +224,9 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.FromRaw("[pgsql]"))
                 .ForMySql(q => q.From("mysql"));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -235,13 +235,15 @@ namespace SqlKata.Tests
             var query = new Query("generic")
                 .ForSqlServer(q => q.From("dnu"))
                 .ForSqlServer(q => q.From("mssql"));
-            var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+
+            var c = CompileFor(EngineCodes.SqlServer, query);
+            var c2 = CompileFor(EngineCodes.PostgreSql, query);
+            var c3 = CompileFor(EngineCodes.MySql, query);
 
             Assert.Equal(2, query.Clauses.OfType<AbstractFrom>().Count());
-            Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
-            Assert.Equal("SELECT * FROM \"generic\"", c[EngineCodes.PostgreSql].RawSql);
-            Assert.Equal("SELECT * FROM `generic`", c[EngineCodes.MySql].RawSql);
+            Assert.Equal("SELECT * FROM [mssql]", c.RawSql);
+            Assert.Equal("SELECT * FROM \"generic\"", c2.RawSql);
+            Assert.Equal("SELECT * FROM `generic`", c3.RawSql);
         }
 
         [Theory]
@@ -255,7 +257,7 @@ namespace SqlKata.Tests
             if (table != null)
                 query.From(table);
             query.AddOrReplaceComponent("from", new FromClause { Table = "updated", Engine = engine });
-            var froms = query.Clauses.OfType<FromClause>();
+            var froms = query.Clauses.OfType<FromClause>().ToList();
 
             Assert.Single(froms);
             Assert.Equal("updated", froms.Single().Table);
@@ -312,10 +314,10 @@ namespace SqlKata.Tests
                 .ForSqlServer(q => q.Limit(5))
                 .ForPostgreSql(q => q.Limit(10));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
             Assert.Equal(2, query.GetComponents("limit").Count);
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -340,10 +342,10 @@ namespace SqlKata.Tests
                 .ForMySql(q => q.Offset(5))
                 .ForPostgreSql(q => q.Offset(10));
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
             Assert.Equal(2, query.GetComponents("offset").Count);
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -354,11 +356,11 @@ namespace SqlKata.Tests
                 .Offset(10)
                 .ForPostgreSql(q => q.Offset(20));
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            var c = CompileFor(EngineCodes.MySql, query);
+            var c2 = CompileFor(EngineCodes.PostgreSql, query);
 
-            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
-            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 5 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c.ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 5 OFFSET 20", c2.ToString());
         }
 
         [Fact]
@@ -369,11 +371,11 @@ namespace SqlKata.Tests
                 .Offset(10)
                 .ForPostgreSql(q => q.Limit(20));
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            var c = CompileFor(EngineCodes.MySql, query);
+            var c2 = CompileFor(EngineCodes.PostgreSql, query);
 
-            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c[EngineCodes.MySql].ToString());
-            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 10", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 10", c.ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 10", c2.ToString());
         }
 
         [Fact]
@@ -385,11 +387,11 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.Offset(20))
                 .Limit(7);
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            var c = CompileFor(EngineCodes.MySql, query);
+            var c2 = CompileFor(EngineCodes.PostgreSql, query);
 
-            Assert.Equal("SELECT * FROM `mytable` LIMIT 7 OFFSET 10", c[EngineCodes.MySql].ToString());
-            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 7 OFFSET 20", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 7 OFFSET 10", c.ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 7 OFFSET 20", c2.ToString());
         }
 
         [Fact]
@@ -401,11 +403,11 @@ namespace SqlKata.Tests
                 .ForPostgreSql(q => q.Limit(20))
                 .Offset(7);
 
-            var engines = new[] { EngineCodes.MySql, EngineCodes.PostgreSql };
-            var c = Compilers.Compile(engines, query);
+            var c = CompileFor(EngineCodes.MySql, query);
+            var c2 = CompileFor(EngineCodes.PostgreSql, query);
 
-            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c[EngineCodes.MySql].ToString());
-            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c[EngineCodes.PostgreSql].ToString());
+            Assert.Equal("SELECT * FROM `mytable` LIMIT 5 OFFSET 7", c.ToString());
+            Assert.Equal("SELECT * FROM \"mytable\" LIMIT 20 OFFSET 7", c2.ToString());
         }
 
         [Theory]
@@ -415,15 +417,11 @@ namespace SqlKata.Tests
         public void Where_Nested(string engine, string sqlText)
         {
             var query = new Query("table")
-            .Where(q => q.Where("a", 1).OrWhere("a", 2));
+                .Where(q => q.Where("a", 1).OrWhere("a", 2));
 
-            var engines = new[] {
-                EngineCodes.SqlServer,
-            };
+            var result = CompileFor(engine, query);
 
-            var c = CompileFor(engine, query);
-
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Fact]
@@ -431,9 +429,10 @@ namespace SqlKata.Tests
             Assert.Throws<InvalidOperationException>(() =>
                 new Query("rows").With("rows",
                     new string[0],
-                    new object[][] {
-                        new object[] {},
-                        new object[] {},
+                    new object[][]
+                    {
+                        new object[] { },
+                        new object[] { },
                     }));
 
         [Fact]
@@ -441,7 +440,8 @@ namespace SqlKata.Tests
             Assert.Throws<InvalidOperationException>(() =>
                 new Query("rows").With("rows",
                     new[] { "a", "b", "c" },
-                    new object[][] {
+                    new object[][]
+                    {
                     }));
 
         [Fact]
@@ -449,7 +449,8 @@ namespace SqlKata.Tests
             Assert.Throws<InvalidOperationException>(() =>
                 new Query("rows").With("rows",
                     new[] { "a", "b", "c", "d" },
-                    new object[][] {
+                    new object[][]
+                    {
                         new object[] { 1, 2, 3 },
                         new object[] { 4, 5, 6 },
                     }));
@@ -459,7 +460,8 @@ namespace SqlKata.Tests
             Assert.Throws<InvalidOperationException>(() =>
                 new Query("rows").With("rows",
                     new[] { "a", "b" },
-                    new object[][] {
+                    new object[][]
+                    {
                         new object[] { 1, 2, 3 },
                         new object[] { 4, 5, 6 },
                     }));
@@ -487,33 +489,48 @@ namespace SqlKata.Tests
         {
             var query = new Query("rows").With("rows",
                 new[] { "a" },
-                new object[][] {
+                new object[][]
+                {
                     new object[] { 1 },
+                });
+
+            var result = CompileFor(engine, query);
+
+            Assert.Equal(sqlText, result.ToString());
+        }
+
+        [Theory]
+        [InlineData(
+            EngineCodes.SqlServer,
+            "WITH [rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))\nSELECT * FROM [rows]")]
+        [InlineData(
+            EngineCodes.PostgreSql,
+            "WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"")]
+        [InlineData(
+            EngineCodes.MySql,
+            "WITH `rows` AS (SELECT 1 AS `a`, 2 AS `b`, 3 AS `c` UNION ALL SELECT 4 AS `a`, 5 AS `b`, 6 AS `c`)\nSELECT * FROM `rows`")]
+        [InlineData(
+            EngineCodes.Sqlite,
+            "WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"")]
+        [InlineData(
+            EngineCodes.Firebird,
+            "WITH \"ROWS\" AS (SELECT 1 AS \"A\", 2 AS \"B\", 3 AS \"C\" FROM RDB$DATABASE UNION ALL SELECT 4 AS \"A\", 5 AS \"B\", 6 AS \"C\" FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"")]
+        [InlineData(
+            EngineCodes.Oracle,
+            "WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" FROM DUAL UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\" FROM DUAL)\nSELECT * FROM \"rows\"")]
+        public void AdHoc_TwoRows(string engine, string sqlText)
+        {
+            var query = new Query("rows").With("rows",
+                new[] { "a", "b", "c" },
+                new object[][]
+                {
+                    new object[] { 1, 2, 3 },
+                    new object[] { 4, 5, 6 },
                 });
 
             var c = CompileFor(engine, query);
 
             Assert.Equal(sqlText, c.ToString());
-        }
-
-        [Fact]
-        public void AdHoc_TwoRows()
-        {
-            var query = new Query("rows").With("rows",
-                new[] { "a", "b", "c" },
-                new object[][] {
-                    new object[] { 1, 2, 3 },
-                    new object[] { 4, 5, 6 },
-                });
-
-            var c = Compilers.Compile(query);
-
-            Assert.Equal("WITH [rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))\nSELECT * FROM [rows]", c[EngineCodes.SqlServer].ToString());
-            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.PostgreSql].ToString());
-            Assert.Equal("WITH `rows` AS (SELECT 1 AS `a`, 2 AS `b`, 3 AS `c` UNION ALL SELECT 4 AS `a`, 5 AS `b`, 6 AS `c`)\nSELECT * FROM `rows`", c[EngineCodes.MySql].ToString());
-            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\")\nSELECT * FROM \"rows\"", c[EngineCodes.Sqlite].ToString());
-            Assert.Equal("WITH \"ROWS\" AS (SELECT 1 AS \"A\", 2 AS \"B\", 3 AS \"C\" FROM RDB$DATABASE UNION ALL SELECT 4 AS \"A\", 5 AS \"B\", 6 AS \"C\" FROM RDB$DATABASE)\nSELECT * FROM \"ROWS\"", c[EngineCodes.Firebird].ToString());
-            Assert.Equal("WITH \"rows\" AS (SELECT 1 AS \"a\", 2 AS \"b\", 3 AS \"c\" FROM DUAL UNION ALL SELECT 4 AS \"a\", 5 AS \"b\", 6 AS \"c\" FROM DUAL)\nSELECT * FROM \"rows\"", c[EngineCodes.Oracle].ToString());
         }
 
         [Fact]
@@ -523,20 +540,22 @@ namespace SqlKata.Tests
                 .With("othercte", q => q.From("othertable").Where("othertable.status", "A"))
                 .Where("rows.foo", "bar")
                 .With("rows",
-                new[] { "a", "b", "c" },
-                new object[][] {
-                    new object[] { 1, 2, 3 },
-                    new object[] { 4, 5, 6 },
-                })
+                    new[] { "a", "b", "c" },
+                    new object[][]
+                    {
+                        new object[] { 1, 2, 3 },
+                        new object[] { 4, 5, 6 },
+                    })
                 .Where("rows.baz", "buzz");
 
-            var c = Compilers.Compile(query);
+            var c = CompileFor(EngineCodes.SqlServer, query);
 
-            Assert.Equal(string.Join("\n", new[] {
+            Assert.Equal(string.Join("\n", new[]
+            {
                 "WITH [othercte] AS (SELECT * FROM [othertable] WHERE [othertable].[status] = 'A'),",
                 "[rows] AS (SELECT [a], [b], [c] FROM (VALUES (1, 2, 3), (4, 5, 6)) AS tbl ([a], [b], [c]))",
                 "SELECT * FROM [rows] WHERE [rows].[foo] = 'bar' AND [rows].[baz] = 'buzz'",
-            }), c[EngineCodes.SqlServer].ToString());
+            }), c.ToString());
         }
 
         [Fact]
@@ -547,13 +566,9 @@ namespace SqlKata.Tests
                 Count = new UnsafeLiteral("Count + 1")
             });
 
-            var engines = new[] {
-                EngineCodes.SqlServer,
-            };
+            var c = CompileFor(EngineCodes.SqlServer, query);
 
-            var c = Compilers.Compile(engines, query);
-
-            Assert.Equal("INSERT INTO [Table] ([Count]) VALUES (Count + 1)", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("INSERT INTO [Table] ([Count]) VALUES (Count + 1)", c.ToString());
         }
 
         [Fact]
@@ -564,13 +579,9 @@ namespace SqlKata.Tests
                 Count = new UnsafeLiteral("Count + 1")
             });
 
-            var engines = new[] {
-                EngineCodes.SqlServer,
-            };
+            var c = CompileFor(EngineCodes.SqlServer, query);
 
-            var c = Compilers.Compile(engines, query);
-
-            Assert.Equal("UPDATE [Table] SET [Count] = Count + 1", c[EngineCodes.SqlServer].ToString());
+            Assert.Equal("UPDATE [Table] SET [Count] = Count + 1", c.ToString());
         }
 
         [Theory]
@@ -579,9 +590,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Table").Where("Col", true);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -590,9 +601,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Table").Where("Col", false);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -603,9 +614,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Table").Where("Col", "!=", true);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
 
         [Theory]
@@ -616,9 +627,9 @@ namespace SqlKata.Tests
         {
             var query = new Query("Table").Where("Col", "!=", false);
 
-            var c = CompileFor(engine, query);
+            var result = CompileFor(engine, query);
 
-            Assert.Equal(sqlText, c.ToString());
+            Assert.Equal(sqlText, result.ToString());
         }
     }
 }

@@ -6,11 +6,11 @@ namespace SqlKata.Tests.Firebird
 {
     public class FirebirdLimitTests : TestSupport
     {
-        private readonly FirebirdCompiler compiler;
+        private readonly Compiler compiler;
 
         public FirebirdLimitTests()
         {
-            compiler = Compilers.Get<FirebirdCompiler>(EngineCodes.Firebird);
+            compiler = CreateCompiler(EngineCodes.Firebird);
         }
 
         [Fact]
