@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryBuilder.Benchmarks", "QueryBuilder.Benchmarks\QueryBuilder.Benchmarks.csproj", "{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,18 @@ Global
 		{5DEA7DBC-5B8A-44A9-A070-55E95881A4CF}.Release|x64.Build.0 = Release|Any CPU
 		{5DEA7DBC-5B8A-44A9-A070-55E95881A4CF}.Release|x86.ActiveCfg = Release|Any CPU
 		{5DEA7DBC-5B8A-44A9-A070-55E95881A4CF}.Release|x86.Build.0 = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|x64.Build.0 = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Debug|x86.Build.0 = Debug|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|x64.ActiveCfg = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|x64.Build.0 = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|x86.ActiveCfg = Release|Any CPU
+		{4C4BB0A9-0FD3-455D-B4C4-2BB43C5C7388}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
