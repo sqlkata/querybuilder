@@ -10,58 +10,73 @@ namespace QueryBuilder.Benchmarks;
 [MemoryDiagnoser]
 public class SelectsBenchmark
 {
-    private Query query;
+    private Query selectSimple;
+    private Query selectGroupBy;
+    private Query selectWith;
 
     public Compiler compiler;
 
     [Params(
-        EngineCodes.Firebird,
-        EngineCodes.MySql,
-        EngineCodes.Oracle,
-        EngineCodes.PostgreSql,
-        EngineCodes.Sqlite,
         EngineCodes.SqlServer)]
     public string EngineCode { get; set; }
 
     [GlobalSetup]
     public void Setup()
     {
-        query = new Query("Products")
+        selectSimple = new Query("Products")
             .Select("ProductID", "ProductName", "SupplierID", "CategoryID", "UnitPrice", "UnitsInStock", "UnitsOnOrder",
                 "ReorderLevel", "Discontinued")
-            .WhereContains("ProductName", "Mascarpone")
+            .WhereIn("CategoryID", [1, 2, 3])
+            .Where("SupplierID", 5)
             .Where("UnitPrice", ">=", 10)
             .Where("UnitPrice", "<=", 100)
             .Take(10)
             .Skip(20)
             .OrderBy("UnitPrice", "ProductName");
+
+
+        selectGroupBy = new Query("Products")
+            .Select("SupplierID", "CategoryID")
+            .SelectAvg("UnitPrice")
+            .SelectMin("UnitPrice")
+            .SelectMax("UnitPrice")
+            .Where("CategoryID", 123)
+            .GroupBy("SupplierID", "CategoryID")
+            .HavingRaw("MIN(UnitPrice) >= ?", 10)
+            .Take(10)
+            .Skip(20)
+            .OrderBy("SupplierID", "CategoryID");
+
+        var activePosts = new Query("Comments")
+            .Select("PostId")
+            .SelectRaw("count(1) as Count")
+            .GroupBy("PostId")
+            .HavingRaw("count(1) > 100");
+
+        selectWith = new Query("Posts")
+            .With("ActivePosts", activePosts)
+            .Join("ActivePosts", "ActivePosts.PostId", "Posts.Id")
+            .Select("Posts.*", "ActivePosts.Count");
+
         compiler = TestSupport.CreateCompiler(EngineCode);
     }
 
     [Benchmark]
-    public SqlResult Select()
+    public SqlResult SelectSimple()
     {
-        return compiler.Compile(query);
+        return compiler.Compile(selectSimple);
     }
 
-    public static void Test()
+    [Benchmark]
+    public SqlResult SelectGroupBy()
     {
-        var benchmark = new SelectsBenchmark();
-        benchmark.EngineCode = EngineCodes.SqlServer;
-        benchmark.Setup();
-        var result = benchmark.Select().ToString();
-        if (result !=
-            Regex.Replace("""
-            SELECT [ProductID], [ProductName], [SupplierID], [CategoryID], [UnitPrice], [UnitsInStock],
-                [UnitsOnOrder], [ReorderLevel], [Discontinued]
-            FROM [Products]
-            WHERE LOWER([ProductName]) like '%mascarpone%'
-                AND [UnitPrice] >= 10
-                AND [UnitPrice] <= 100
-            ORDER BY [UnitPrice], [ProductName] OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY
-            """, @"\s+", " "))
-        {
-            throw new ValidationException($"Invalid result: {result}");
-        }
+        return compiler.Compile(selectGroupBy);
     }
+
+    [Benchmark]
+    public SqlResult SelectWith()
+    {
+        return compiler.Compile(selectWith);
+    }
+
 }

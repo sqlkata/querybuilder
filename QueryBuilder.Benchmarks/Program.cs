@@ -3,6 +3,6 @@
 using BenchmarkDotNet.Running;
 using QueryBuilder.Benchmarks;
 
-SelectsBenchmark.Test();
+SelectsBenchmarkTests.TestAll();
 
 BenchmarkRunner.Run<SelectsBenchmark>();
