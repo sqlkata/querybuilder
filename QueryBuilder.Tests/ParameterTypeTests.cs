@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using SqlKata.Compilers;
-using Xunit;
 using System.Collections;
 using SqlKata.Tests.Infrastructure;
 

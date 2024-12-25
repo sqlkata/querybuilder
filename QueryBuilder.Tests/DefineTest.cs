@@ -1,7 +1,5 @@
-using static SqlKata.Expressions;
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
+using static SqlKata.Expressions;
 
 namespace SqlKata.Tests
 {

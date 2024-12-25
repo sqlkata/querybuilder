@@ -1,8 +1,5 @@
-using System;
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using SqlKata.Tests.Infrastructure.TestCompilers;
-using Xunit;
 
 namespace SqlKata.Tests
 {

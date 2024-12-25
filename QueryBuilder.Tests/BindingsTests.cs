@@ -1,8 +1,5 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
-using SqlKata.Compilers;
+﻿using System.Text.RegularExpressions;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests;
 

@@ -1,6 +1,4 @@
-using System;
 using System.Reflection;
-using SqlKata.Compilers;
 
 namespace SqlKata.Tests.Infrastructure.TestCompilers
 {

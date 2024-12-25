@@ -1,9 +1,5 @@
-using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
-using System;
-using System.Collections.Generic;
-using Xunit;
 
 namespace SqlKata.Tests
 {

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure.TestCompilers;
 
 namespace SqlKata.Tests.Infrastructure
