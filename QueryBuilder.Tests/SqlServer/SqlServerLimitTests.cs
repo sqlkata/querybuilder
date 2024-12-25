@@ -15,33 +15,35 @@ namespace SqlKata.Tests.SqlServer
         public void NoLimitNorOffset()
         {
             var query = new Query("Table");
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table]", result.ToString());
         }
 
         [Fact]
         public void LimitOnly()
         {
             var query = new Query("Table").Limit(10);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
-            Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(0L, ctx.Bindings[0]);
-            Assert.Equal(10, ctx.Bindings[1]);
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Table] ORDER BY (SELECT 0) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", result.RawSql);
+            Assert.Equal(2, result.Bindings.Count);
+            Assert.Equal(0L, result.Bindings[0]);
+            Assert.Equal(10, result.Bindings[1]);
         }
 
         [Fact]
         public void OffsetOnly()
         {
             var query = new Query("Table").Offset(20);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
+            var result = compiler.Compile(query);
 
-            Assert.Single(ctx.Bindings);
-            Assert.Equal(20L, ctx.Bindings[0]);
+            Assert.Equal("SELECT * FROM [Table] ORDER BY (SELECT 0) OFFSET ? ROWS", result.RawSql);
+            Assert.Single(result.Bindings);
+            Assert.Equal(20L, result.Bindings[0]);
         }
 
         [Fact]

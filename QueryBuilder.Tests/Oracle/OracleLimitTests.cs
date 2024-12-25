@@ -65,15 +65,13 @@ namespace SqlKata.Tests.Oracle
             var query = new Query(TableName).Limit(5).Offset(20);
 
             // Act
-            var ctx = compiler.Compile(query);
+            var result = compiler.Compile(query);
 
             // Assert:
-            Assert.Equal("SELECT * FROM \"Table\" ORDER BY (SELECT 0 FROM DUAL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", ctx.RawSql);
-            Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(20L, ctx.Bindings[0]);
-            Assert.Equal(5, ctx.Bindings[1]);
-
-            compiler.CompileLimit(ctx);
+            Assert.Equal("SELECT * FROM \"Table\" ORDER BY (SELECT 0 FROM DUAL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", result.RawSql);
+            Assert.Equal(2, result.Bindings.Count);
+            Assert.Equal(20L, result.Bindings[0]);
+            Assert.Equal(5, result.Bindings[1]);
         }
     }
 }
