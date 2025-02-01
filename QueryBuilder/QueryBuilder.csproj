@@ -5,7 +5,7 @@
         <Description>A powerful Dynamic Sql Query Builder supporting SQL Server, MySql, PostgreSql, Sqlite, and Oracle</Description>
         <Authors>Ahmad Moussawi</Authors>
         <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
         <RootNamespace>SqlKata</RootNamespace>
         <AssemblyName>SqlKata.Core</AssemblyName>
         <!-- NuGet settings -->
