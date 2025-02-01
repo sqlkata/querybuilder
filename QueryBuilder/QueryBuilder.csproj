@@ -1,36 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Title>SqlKata The C# Sql Query Builder</Title>
-    <Description>A powerful Dynamic Sql Query Builder supporting Sql Server, MySql, PostgreSql, Oracle and Firebird</Description>
-    <Authors>Ahmad Moussawi</Authors>
-    <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <RootNamespace>SqlKata</RootNamespace>
-    <AssemblyName>SqlKata</AssemblyName>
-
-    <!-- NuGet settings -->
-    <PackageId>SqlKata</PackageId>
-    <PackageTags>sql;query-builder;dynamic-query</PackageTags>
-    <PackageReleaseNotes>https://github.com/sqlkata/querybuilder</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/sqlkata/querybuilder</PackageProjectUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
-
-    <!-- SourceLink settings -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <NoWarn>CS1591</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\SqlKata.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\SqlKata.xml</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
-  </ItemGroup>
+    <PropertyGroup>
+        <Title>SqlKata</Title>
+        <Description>A powerful Dynamic Sql Query Builder supporting SQL Server, MySql, PostgreSql, Sqlite, and Oracle</Description>
+        <Authors>Ahmad Moussawi</Authors>
+        <Copyright>Copyright (c) 2017 Ahmad Moussawi</Copyright>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>SqlKata</RootNamespace>
+        <AssemblyName>SqlKata.Core</AssemblyName>
+        <!-- NuGet settings -->
+        <PackageId>SqlKata</PackageId>
+        <PackageTags>sql;query-builder;dynamic-query</PackageTags>
+        <PackageReleaseNotes>https://github.com/sqlkata/querybuilder</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/sqlkata/querybuilder</PackageProjectUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
+        <!-- SourceLink settings -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <NoWarn>CS1591</NoWarn>
+    </PropertyGroup>
 </Project>

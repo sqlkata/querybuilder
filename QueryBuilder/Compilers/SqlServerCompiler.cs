@@ -173,7 +173,7 @@ namespace SqlKata.Compilers
 
         protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult();
+            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter);
 
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
 
