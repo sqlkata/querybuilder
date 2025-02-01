@@ -266,7 +266,7 @@ namespace SqlKata
         /// <returns></returns>
         public Q From(string table)
         {
-            return AddOrReplaceComponent("from", new FromClause
+            return AddOrReplaceComponent(ComponentName.From, new FromClause
             {
                 Table = table,
             });
@@ -282,7 +282,7 @@ namespace SqlKata
                 query.As(alias);
             };
 
-            return AddOrReplaceComponent("from", new QueryFromClause
+            return AddOrReplaceComponent(ComponentName.From, new QueryFromClause
             {
                 Query = query
             });
@@ -290,7 +290,7 @@ namespace SqlKata
 
         public Q FromRaw(string sql, params object[] bindings)
         {
-            return AddOrReplaceComponent("from", new RawFromClause
+            return AddOrReplaceComponent(ComponentName.From, new RawFromClause
             {
                 Expression = sql,
                 Bindings = bindings,

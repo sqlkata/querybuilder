@@ -24,7 +24,7 @@ namespace SqlKata
 
             foreach (var column in columns)
             {
-                AddComponent("select", new Column
+                AddComponent(ComponentName.Select, new Column
                 {
                     Name = column
                 });
@@ -41,7 +41,7 @@ namespace SqlKata
         {
             Method = "select";
 
-            AddComponent("select", new RawColumn
+            AddComponent(ComponentName.Select, new RawColumn
             {
                 Expression = sql,
                 Bindings = bindings,
@@ -56,7 +56,7 @@ namespace SqlKata
 
             query = query.Clone();
 
-            AddComponent("select", new QueryColumn
+            AddComponent(ComponentName.Select, new QueryColumn
             {
                 Query = query.As(alias),
             });
@@ -73,7 +73,7 @@ namespace SqlKata
         {
             Method = "select";
 
-            AddComponent("select", new AggregatedColumn
+            AddComponent(ComponentName.Select, new AggregatedColumn
             {
                 Column = new Column { Name = column },
                 Aggregate = aggregate,

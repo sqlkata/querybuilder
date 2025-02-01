@@ -52,7 +52,7 @@ namespace SqlKata.Compilers
 
             var safeOrder = "";
 
-            if (!ctx.Query.HasComponent("order"))
+            if (!ctx.Query.HasComponent(ComponentName.Order))
             {
                 safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
             }
