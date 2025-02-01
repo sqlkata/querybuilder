@@ -46,7 +46,11 @@ jobs:
           SQLKATA_MYSQL_DB: ${{ env.DB_MYSQL_DATABASE }}
       - name: Pack
         run: dotnet pack --configuration Release /p:Version=${VERSION} --no-build --output .
-      - name: Push
-        run: dotnet nuget push *.${VERSION}.nupkg --source https://nuget.pkg.github.com/sqlkata/index.json --api-key ${GITHUB_TOKEN}
+      - name: Push to Github Packages
+        run: dotnet nuget push *.${VERSION}.nupkg --skip-duplicate --source https://nuget.pkg.github.com/sqlkata/index.json --api-key ${GITHUB_TOKEN}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to Nuget
+        run: dotnet nuget push *.${VERSION}.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${NUGET_KEY}
+        env:
+          NUGET_KEY: ${{ secrets.NUGET_KEY }}
