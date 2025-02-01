@@ -54,7 +54,7 @@ namespace SqlKata.Compilers
 
             if (!ctx.Query.HasComponent("order"))
             {
-                safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
+                safeOrder = "ORDER BY NULL ";
             }
 
             if (limit == 0)
