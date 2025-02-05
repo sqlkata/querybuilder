@@ -9,8 +9,7 @@ namespace SqlKata
 
     public class InsertClause : AbstractInsertClause
     {
-        public List<string> Columns { get; set; }
-        public List<object> Values { get; set; }
+        public Dictionary<string, object> Data { get; set; }
         public bool ReturnId { get; set; } = false;
 
         public override AbstractClause Clone()
@@ -19,8 +18,7 @@ namespace SqlKata
             {
                 Engine = Engine,
                 Component = Component,
-                Columns = Columns,
-                Values = Values,
+                Data = Data,
                 ReturnId = ReturnId,
             };
         }

@@ -99,14 +99,16 @@ namespace SqlKata
 
         public static string JoinArray(string glue, IEnumerable array)
         {
-            var result = new List<string>();
+            var result = new StringBuilder();
 
             foreach (var item in array)
             {
-                result.Add(item.ToString());
+                result.Append(item + glue);
             }
 
-            return string.Join(glue, result);
+            result.Length -= glue.Length;
+
+            return result.ToString().Trim();
         }
 
         public static string ExpandParameters(string sql, string placeholder, string escapeCharacter, object[] bindings)

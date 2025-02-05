@@ -367,15 +367,17 @@ namespace SqlKata.Compilers
 
 
             var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
-            var parts = new List<string>();
+            var parts = new StringBuilder(toUpdate.Data.Count);
 
-            for (var i = 0; i < toUpdate.Columns.Count; i++)
+            var separator = ", ";
+
+            foreach (var item in toUpdate.Data)
             {
-                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                parts.Append(Wrap(item.Key) + " = " + Parameter(ctx, item.Value) + separator);
             }
 
-            var sets = string.Join(", ", parts);
-
+            parts.Length -= separator.Length;
+            
             wheres = CompileWheres(ctx);
 
             if (!string.IsNullOrEmpty(wheres))
@@ -383,7 +385,7 @@ namespace SqlKata.Compilers
                 wheres = " " + wheres;
             }
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
+            ctx.RawSql = $"UPDATE {table} SET {parts}{wheres}".Trim();
 
             return ctx;
         }
@@ -418,7 +420,7 @@ namespace SqlKata.Compilers
             if (inserts[0] is InsertQueryClause insertQueryClause)
                 return CompileInsertQueryClause(ctx, table, insertQueryClause);
             else
-                return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>());
+                return CompileValueInsertClauses(ctx, table, inserts.Cast<InsertClause>().ToArray());
         }
 
         protected virtual SqlResult CompileInsertQueryClause(
@@ -435,15 +437,15 @@ namespace SqlKata.Compilers
         }
 
         protected virtual SqlResult CompileValueInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> insertClauses)
+            SqlResult ctx, string table, IReadOnlyCollection<InsertClause> insertClauses)
         {
-            bool isMultiValueInsert = insertClauses.Skip(1).Any();
+            bool isMultiValueInsert = insertClauses.Count > 1;
 
             var insertInto = (isMultiValueInsert) ? MultiInsertStartClause : SingleInsertStartClause;
 
             var firstInsert = insertClauses.First();
-            string columns = GetInsertColumnsList(firstInsert.Columns);
-            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
+            string columns = GetInsertColumnsList(firstInsert.Data.Keys);
+            var values = string.Join(", ", Parameterize(ctx, firstInsert.Data.Values));
 
             ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
 
@@ -456,17 +458,21 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        protected virtual SqlResult CompileRemainingInsertClauses(SqlResult ctx, string table, IReadOnlyCollection<InsertClause> inserts)
         {
+            var sql = new StringBuilder(ctx.RawSql, inserts.Count - 1);
+
             foreach (var insert in inserts.Skip(1))
             {
-                string values = string.Join(", ", Parameterize(ctx, insert.Values));
-                ctx.RawSql += $", ({values})";
+                sql.Append($", ({string.Join(", ", Parameterize(ctx, insert.Data.Values))})");
             }
+
+            ctx.RawSql = sql.ToString();
+
             return ctx;
         }
 
-        protected string GetInsertColumnsList(List<string> columnList)
+        protected string GetInsertColumnsList(IReadOnlyCollection<string> columnList)
         {
             var columns = "";
             if (columnList.Any())
@@ -480,7 +486,7 @@ namespace SqlKata.Compilers
             var cteFinder = new CteFinder(query, EngineCode);
             var cteSearchResult = cteFinder.Find();
 
-            var rawSql = new StringBuilder("WITH ");
+            var rawSql = new StringBuilder("WITH ", cteSearchResult.Count * 2 + 3);
             var cteBindings = new List<object>();
 
             foreach (var cte in cteSearchResult)
@@ -497,7 +503,7 @@ namespace SqlKata.Compilers
             rawSql.Append(ctx.RawSql);
 
             ctx.Bindings.InsertRange(0, cteBindings);
-            ctx.RawSql = rawSql.ToString();
+            ctx.RawSql = rawSql.ToString().Trim();
 
             return ctx;
         }
@@ -657,7 +663,7 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var combinedQueries = new List<string>();
+            var combinedQueries = new StringBuilder();
 
             var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
 
@@ -671,7 +677,7 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
-                    combinedQueries.Add($"{combineOperator}{subCtx.RawSql}");
+                    combinedQueries.Append($"{combineOperator}{subCtx.RawSql} ");
                 }
                 else
                 {
@@ -679,13 +685,11 @@ namespace SqlKata.Compilers
 
                     ctx.Bindings.AddRange(combineRawClause.Bindings);
 
-                    combinedQueries.Add(WrapIdentifiers(combineRawClause.Expression));
-
+                    combinedQueries.Append(WrapIdentifiers(combineRawClause.Expression) + " ");
                 }
             }
 
-            return string.Join(" ", combinedQueries);
-
+            return combinedQueries.ToString().Trim();
         }
 
         public virtual string CompileTableExpression(SqlResult ctx, AbstractFrom from)
@@ -817,7 +821,7 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var sql = new List<string>();
+            var sql = new StringBuilder();
             string boolOperator;
 
             var having = ctx.Query.GetComponents("having", EngineCode)
@@ -832,11 +836,11 @@ namespace SqlKata.Compilers
                 {
                     boolOperator = i > 0 ? having[i].IsOr ? "OR " : "AND " : "";
 
-                    sql.Add(boolOperator + compiled);
+                    sql.Append(boolOperator + compiled + " ");
                 }
             }
 
-            return $"HAVING {string.Join(" ", sql)}";
+            return $"HAVING {sql}".Trim();
         }
 
         public virtual string CompileLimit(SqlResult ctx)
@@ -1042,9 +1046,9 @@ namespace SqlKata.Compilers
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public virtual List<string> WrapArray(List<string> values)
+        public virtual IEnumerable<string> WrapArray(IEnumerable<string> values)
         {
-            return values.Select(x => Wrap(x)).ToList();
+            return values.Select(Wrap);
         }
 
         public virtual string WrapIdentifiers(string input)
