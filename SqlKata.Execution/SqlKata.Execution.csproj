@@ -32,7 +32,7 @@
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="dapper" Version="2.0.123" />
+    <PackageReference Include="dapper" Version="2.1.35" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
   </ItemGroup>
 </Project>
