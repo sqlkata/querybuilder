@@ -1,55 +1,57 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests.Firebird
 {
     public class FirebirdLimitTests : TestSupport
     {
-        private readonly FirebirdCompiler compiler;
+        private readonly Compiler compiler;
 
         public FirebirdLimitTests()
         {
-            compiler = Compilers.Get<FirebirdCompiler>(EngineCodes.Firebird);
+            compiler = CreateCompiler(EngineCodes.Firebird);
         }
 
         [Fact]
         public void NoLimitNorOffset()
         {
             var query = new Query("Table");
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM \"TABLE\"", result.ToString());
         }
 
         [Fact]
         public void LimitOnly()
         {
             var query = new Query("Table").Limit(10);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT FIRST 10 * FROM \"TABLE\"", result.ToString());
         }
 
         [Fact]
         public void OffsetOnly()
         {
             var query = new Query("Table").Offset(20);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.Null(compiler.CompileLimit(ctx));
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT SKIP 20 * FROM \"TABLE\"", result.ToString());
         }
 
         [Fact]
         public void LimitAndOffset()
         {
             var query = new Query("Table").Limit(5).Offset(20);
-            var ctx = new SqlResult("?",  "\\") {Query = query};
 
-            Assert.Equal("ROWS ? TO ?", compiler.CompileLimit(ctx));
-            Assert.Equal(21L, ctx.Bindings[0]);
-            Assert.Equal(25L, ctx.Bindings[1]);
-            Assert.Equal(2, ctx.Bindings.Count);
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM \"TABLE\" ROWS ? TO ?", result.RawSql);
+            Assert.Equal(2, result.Bindings.Count);
+            Assert.Equal(21L, result.Bindings[0]);
+            Assert.Equal(25L, result.Bindings[1]);
         }
     }
 }

@@ -1,13 +1,11 @@
-using System;
 using SqlKata.Execution;
-using Xunit;
 
 namespace SqlKata.Tests
 {
     public class ExecutionTests
     {
         [Fact]
-        public void ShouldThrowException()
+        public void Get_WhenWasNotCalledOnXQuery_ShouldThrowException()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -23,8 +21,8 @@ namespace SqlKata.Tests
             var newFactory = QueryExtensions.CreateQueryFactory(db.Query());
             Assert.Equal(db.QueryTimeout, newFactory.QueryTimeout);
         }
-        
-        [Fact(Skip = "timeout over cloned xQuery is not supported yet")]
+
+        [Fact]
         public void TimeoutShouldBeCarriedToNewCreatedFactoryAfterClone()
         {
             var db = new QueryFactory();

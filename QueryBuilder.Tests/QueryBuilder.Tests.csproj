@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <IsPackable>false</IsPackable>
+		<ImplicitUsings>true</ImplicitUsings>
     <RootNamespace>SqlKata.Tests</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <UserSecretsId>c675ce13-c233-4a60-9fcc-dadf8f5238ca</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.0" />
-    <PackageReference Include="MySql.Data" Version="8.0.30" />    
+    <PackageReference Include="MySql.Data" Version="8.0.30" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
