@@ -1,114 +1,83 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 using SqlKata;
 using SqlKata.Compilers;
-using SqlKata.Execution;
-using System.Data.SqlClient;
-using System.Threading.Tasks;
-using System.Linq;
-using Newtonsoft.Json;
-using Npgsql;
-using System.Data;
-using Dapper;
-using System.Data.SQLite;
-using static SqlKata.Expressions;
-using System.IO;
+using SqlKata.Compilers.Abstractions;
+using SqlKata.Compilers.DDLCompiler.CreateTableBuilders.DBSpecificQueries;
+using SqlKata.Compilers.Enums;
+using SqlKata.Contract.CreateTable;
+using SqlKata.Contract.CreateTable.DbTableSpecific;
+using SqlKata.DbTypes.DbColumn;
+using SqlKata.DbTypes.Enums;
 
 namespace Program
 {
     class Program
     {
-        private class Loan
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public List<Installment> Installments { get; set; } = new List<Installment>();
-        }
-
-        private class Installment
-        {
-            public string Id { get; set; }
-            public string LoanId { get; set; }
-            public int DaysCount { get; set; }
-        }
-
         static void Main(string[] args)
         {
-            using (var db = SqlLiteQueryFactory())
-            {
-                var query = db.Query("accounts")
-                    .Where("balance", ">", 0)
-                    .GroupBy("balance")
-                .Limit(10);
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddKataServices();
+            var provider = serviceCollection.BuildServiceProvider();
+            var compilerProvider = provider.GetRequiredService<ICompilerProvider>();
+            var compiler = compilerProvider.CreateCompiler(DataSource.Postgresql);
 
-                var accounts = query.Clone().Get();
-                Console.WriteLine(JsonConvert.SerializeObject(accounts, Formatting.Indented));
+            //var query = new Query("Users").DropTable();
+            //var query = new Query("Users").Truncate();
+            //var query = CreateTable();
+            //var query = CreateTableAs();
 
-                var exists = query.Clone().Exists();
-                Console.WriteLine(exists);
-            }
+            /*            var fromClause = new FromClause()
+                        {
+                            Table = "dbo.user"
+                        };
+
+                        Console.WriteLine(compiler.Wrap(fromClause.Table));*/
+            var query = new Query("users").Select("Id", "FullName").Into("public.Sample");
+            Console.WriteLine(compiler.Compile(query));
         }
 
-        private static void log(Compiler compiler, Query query)
+        private static Query CreateTableAs()
         {
-            var compiled = compiler.Compile(query);
-            Console.WriteLine(compiled.ToString());
-            Console.WriteLine(JsonConvert.SerializeObject(compiled.Bindings));
+            var selectQuery = new Query("Users").Select("id", "fullname", "age");
+            var query = new Query("SampleUsers").CreateTableAs(selectQuery, TableType.Temporary,
+                new OracleDbTableExtensions() { OnCommitPreserveRows = true });
+            return query;
         }
 
-        private static QueryFactory SqlLiteQueryFactory()
+        private static Query CreateTable()
         {
-            var compiler = new SqliteCompiler();
-
-            var connection = new SQLiteConnection("Data Source=Demo.db");
-
-            var db = new QueryFactory(connection, compiler);
-
-            db.Logger = result =>
+            var query = new Query("Users").CreateTable(new List<TableColumnDefinitionDto>()
             {
-                Console.WriteLine(result.ToString());
-            };
-
-            if (!File.Exists("Demo.db"))
-            {
-                Console.WriteLine("db not exists creating db");
-
-                SQLiteConnection.CreateFile("Demo.db");
-
-                db.Statement("create table accounts(id integer primary key autoincrement, name varchar, currency_id varchar, balance decimal, created_at datetime);");
-                for (var i = 0; i < 10; i++)
+                new()
                 {
-                    db.Statement("insert into accounts(name, currency_id, balance, created_at) values(@name, @currency, @balance, @date)", new
+                    ColumnName = "id",
+                    ColumnDbType = new OracleDBColumn()
                     {
-                        name = $"Account {i}",
-                        currency = "USD",
-                        balance = 100 * i * 1.1,
-                        date = DateTime.UtcNow,
-                    });
+                        OracleDbType = OracleDbType.Int32
+                    },
+                    IsAutoIncrement = true,
+                    IsNullable = false,
+                    IsPrimaryKey = true,
+                    IsUnique = false,
+                },
+                new()
+                {
+                    ColumnName = "FullName",
+                    ColumnDbType = new OracleDBColumn()
+                    {
+                        OracleDbType = OracleDbType.Varchar2,
+                        Length = 30,
+                        //Collation = "Arabiv_Ci_100_Ai"
+                    },
+                    IsAutoIncrement = false,
+                    IsNullable = false,
+                    IsPrimaryKey = false,
+                    IsUnique = true,
                 }
-
-            }
-
-            return db;
-
+            }, TableType.Temporary);
+            return query;
         }
-
-        private static QueryFactory SqlServerQueryFactory()
-        {
-            var compiler = new PostgresCompiler();
-            var connection = new SqlConnection(
-               "Server=tcp:localhost,1433;Initial Catalog=Lite;User ID=sa;Password=P@ssw0rd"
-           );
-
-            var db = new QueryFactory(connection, compiler);
-
-            db.Logger = result =>
-            {
-                Console.WriteLine(result.ToString());
-            };
-
-            return db;
-        }
-
     }
 }
