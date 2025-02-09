@@ -571,6 +571,16 @@ namespace SqlKata.Compilers
             return CompileConditions(ctx, wheres);
         }
 
+        protected virtual string CompileHavingFilterConditions(SqlResult ctx, AggregatedCondition aggregatedCondition)
+        {
+            if (aggregatedCondition.Filter is null)
+                return null;
+
+            var wheres = aggregatedCondition.Filter.GetOneComponent<AbstractCondition>("where");
+
+            return CompileCondition(ctx, wheres);
+        }
+
         public virtual SqlResult CompileCte(AbstractFrom cte)
         {
             var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter);
@@ -794,18 +804,18 @@ namespace SqlKata.Compilers
             var columns = ctx.Query
                 .GetComponents<AbstractOrderBy>("order", EngineCode)
                 .Select(x =>
-            {
-
-                if (x is RawOrderBy raw)
                 {
-                    ctx.Bindings.AddRange(raw.Bindings);
-                    return WrapIdentifiers(raw.Expression);
-                }
 
-                var direction = (x as OrderBy).Ascending ? "" : " DESC";
+                    if (x is RawOrderBy raw)
+                    {
+                        ctx.Bindings.AddRange(raw.Bindings);
+                        return WrapIdentifiers(raw.Expression);
+                    }
 
-                return Wrap((x as OrderBy).Column) + direction;
-            });
+                    var direction = (x as OrderBy).Ascending ? "" : " DESC";
+
+                    return Wrap((x as OrderBy).Column) + direction;
+                });
 
             return "ORDER BY " + string.Join(", ", columns);
         }
@@ -953,6 +963,20 @@ namespace SqlKata.Compilers
                 var before = value.Substring(0, index);
                 var after = value.Substring(index + 4);
                 return (before, after);
+            }
+
+            return (value, null);
+        }
+
+        public virtual (string, string) SplitCondition(string value)
+        {
+            var splitedValueBySpace = value.Trim().Split(' ');
+
+            if (splitedValueBySpace.Length > 1)
+            {
+                var column = splitedValueBySpace.First().Trim();
+                var condition = value.Substring(column.Length).Trim();
+                return (column, condition);
             }
 
             return (value, null);

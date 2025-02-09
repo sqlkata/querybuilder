@@ -262,5 +262,26 @@ namespace SqlKata.Compilers
 
             return $"{op} ({subCtx.RawSql})";
         }
+
+        protected virtual string CompileAggregatedCondition(SqlResult ctx, AggregatedCondition item)
+        {
+            if (item is null)
+                return "";
+
+            string aggregate = item.Aggregate.ToUpperInvariant();
+            string keyword = item.Keyword?.PadRight(item.Keyword.Length + 1, ' ').ToUpperInvariant(); // add one space to char end of keyword string, cause of building query
+
+            string filterCondition = CompileHavingFilterConditions(ctx, item);
+
+            if (string.IsNullOrEmpty(filterCondition))
+            {
+                return $"{aggregate}({keyword}{Wrap(item.Column)}) {item.Operator} {item.Value}";
+            }
+
+            var (column, condition) = SplitCondition(filterCondition);
+            return $"{aggregate}({keyword}{column}) {condition}";
+
+        }
+
     }
 }
