@@ -104,7 +104,13 @@ namespace SqlKata.Compilers
 
         public override string WrapValue(string value)
         {
-            return base.WrapValue(value).ToUpperInvariant();
+            if (value == "*") return value;
+
+            var opening = this.OpeningIdentifier;
+            var closing = this.ClosingIdentifier;
+
+            return Regex.Replace(value.Replace(closing, closing + closing), @"^(?<a1>[\w]+)(?<a2>(\(.+))*$",
+                p => opening + p.Groups["a1"].Value.ToUpperInvariant() + closing + p.Groups["a2"].Value);
         }
 
         public override string CompileTrue()

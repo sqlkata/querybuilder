@@ -21,6 +21,15 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT \"ID\", \"NAME\" FROM \"USERS\"", c[EngineCodes.Firebird]);
             Assert.Equal("SELECT \"id\", \"name\" FROM \"users\"", c[EngineCodes.Oracle]);
         }
+        
+        [Fact]
+        public void BasicSelectFromProcedure()
+        {
+            var q = new Query().From("users(5)");
+            var c = Compile(q);
+
+            Assert.Equal("SELECT * FROM \"USERS\"(5)", c[EngineCodes.Firebird]);
+        }
 
         [Fact]
         public void BasicSelectEnumerable()
