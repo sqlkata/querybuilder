@@ -227,6 +227,16 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+
+        protected virtual string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
+
+            var sql = $"{x.Part.ToUpperInvariant()}({column})";
+
+            return sql;
+        }
+
         protected virtual SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
         {
             var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter);
@@ -531,7 +541,19 @@ namespace SqlKata.Compilers
 
                 return "(" + subCtx.RawSql + $"){alias}";
             }
+            if (column is DateQueryColumn dateQueryColumn)
+            {
+                var alias = "";
 
+                if (!string.IsNullOrWhiteSpace(dateQueryColumn.Name))
+                {
+                    alias = $" {ColumnAsKeyword}{WrapValue(dateQueryColumn.Name)}";
+                }
+
+                var subCtx = CompileBasicDateSelect(ctx,dateQueryColumn);
+
+                return subCtx + $"{alias}";
+            }
             if (column is AggregatedColumn aggregatedColumn)
             {
                 string agg = aggregatedColumn.Aggregate.ToUpperInvariant();
@@ -800,6 +822,14 @@ namespace SqlKata.Compilers
                 {
                     ctx.Bindings.AddRange(raw.Bindings);
                     return WrapIdentifiers(raw.Expression);
+                }
+                if (x is DateOrderBy dateOrderBy)
+                {
+                    var direct = dateOrderBy.Ascending ? "" : " DESC";
+
+                    var sql = CompileBasicDateSelect(ctx, new DateQueryColumn { Column = dateOrderBy.Column, Part = dateOrderBy.Part });
+
+                    return sql + direct;
                 }
 
                 var direction = (x as OrderBy).Ascending ? "" : " DESC";

@@ -144,7 +144,24 @@ namespace SqlKata.Compilers
         {
             return "cast(0 as bit)";
         }
+        protected override string CompileBasicDateSelect(SqlResult ctx, DateQueryColumn x)
+        {
+            var column = Wrap(x.Column);
+            var part = x.Part.ToUpperInvariant();
 
+            string left;
+
+            if (part == "TIME" || part == "DATE")
+            {
+                left = $"CAST({column} AS {part.ToUpperInvariant()})";
+            }
+            else
+            {
+                left = $"DATEPART({part.ToUpperInvariant()}, {column})";
+            }
+
+            return left;
+        }
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
