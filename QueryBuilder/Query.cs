@@ -409,9 +409,9 @@ namespace SqlKata
 
             foreach (var property in props)
             {
-                if ((property.GetCustomAttribute(typeof(IgnoreAttribute)) != null) ||
-                    (property.GetCustomAttribute(typeof(IgnoreUpdateAttribute)) != null && !insert) ||
-                    (property.GetCustomAttribute(typeof(IgnoreInsertAttribute)) != null && insert))
+                if ((property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.Always) ||
+                    (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.OnInsert && !insert) ||
+                    (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.OnUpdate && insert))
                 {
                     continue;
                 }
