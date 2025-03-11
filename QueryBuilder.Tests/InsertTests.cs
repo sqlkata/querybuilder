@@ -13,11 +13,13 @@ namespace SqlKata.Tests
     {
         private class Account
         {
-            public Account(string name, string currency = null, string created_at = null, string color = null)
+            public Account(string name, string currency = null, string created_at = null, string color = null, int pages = 0, int serie = 1)
             {
                 this.name = name ?? throw new ArgumentNullException(nameof(name));
                 this.Currency = currency;
                 this.color = color;
+                this.pages = pages;
+                this.serie = serie;
             }
 
             public string name { get; set; }
@@ -27,6 +29,12 @@ namespace SqlKata.Tests
 
             [Ignore]
             public string color { get; set; }
+
+            [Ignore(IgnoreOperation.OnUpdate)]
+            public int pages { get; set; }
+
+            [Ignore(IgnoreOperation.OnInsert)]
+            public int serie { get; set; }
         }
 
         [Fact]
@@ -163,17 +171,17 @@ namespace SqlKata.Tests
         [Fact]
         public void InsertWithIgnoreAndColumnProperties()
         {
-            var account = new Account(name: $"popular", color: $"blue", currency: "US");
+            var account = new Account(name: $"popular", color: $"blue", currency: "US", pages: 100, serie: 10);
             var query = new Query("Account").AsInsert(account);
 
             var c = Compile(query);
 
             Assert.Equal(
-                "INSERT INTO [Account] ([name], [currency_id]) VALUES ('popular', 'US')",
+                "INSERT INTO [Account] ([name], [currency_id], [pages]) VALUES ('popular', 'US', 100)",
                 c[EngineCodes.SqlServer]);
 
             Assert.Equal(
-                "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\") VALUES ('popular', 'US')",
+                "INSERT INTO \"ACCOUNT\" (\"NAME\", \"CURRENCY_ID\", \"PAGES\") VALUES ('popular', 'US', 100)",
                  c[EngineCodes.Firebird]);
         }
 

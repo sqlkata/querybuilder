@@ -402,14 +402,16 @@ namespace SqlKata
         /// and will add it automatically to the Where clause
         /// </param>
         /// <returns></returns>
-        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false)
+        private IEnumerable<KeyValuePair<string, object>> BuildKeyValuePairsFromObject(object data, bool considerKeys = false, bool insert= true)
         {
             var dictionary = new Dictionary<string, object>();
             var props = CacheDictionaryProperties.GetOrAdd(data.GetType(), type => type.GetRuntimeProperties().ToArray());
 
             foreach (var property in props)
             {
-                if (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null)
+                if ((property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.Always) ||
+                    (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.OnInsert && insert) ||
+                    (property.GetCustomAttribute(typeof(IgnoreAttribute)) != null && ((IgnoreAttribute)property.GetCustomAttribute(typeof(IgnoreAttribute))).IgnoreOperation == IgnoreOperation.OnUpdate && !insert))
                 {
                     continue;
                 }

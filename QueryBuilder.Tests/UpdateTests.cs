@@ -13,12 +13,14 @@ namespace SqlKata.Tests
     {
         private class Book
         {
-            public Book(string name, string author, decimal price = 1.0m, string color = null)
+            public Book(string name, string author, decimal price = 1.0m, string color = null, int pages = 0, int serie = 1)
             {
                 this.Name = name ?? throw new ArgumentNullException(nameof(name));
                 this.BookPrice = price;
                 this.color = color;
                 this.BookAuthor = author;
+                this.pages = pages;
+                this.serie = serie;
             }
 
             public string Name { get; set; }
@@ -31,6 +33,12 @@ namespace SqlKata.Tests
 
             [Ignore]
             public string color { get; set; }
+
+            [Ignore(IgnoreOperation.OnUpdate)]
+            public int pages { get; set; }
+
+            [Ignore(IgnoreOperation.OnInsert)]
+            public int serie { get; set; }
         }
 
         private class OrderProductComposite
@@ -132,17 +140,17 @@ namespace SqlKata.Tests
         [Fact]
         public void UpdateWithIgnoreAndColumnProperties()
         {
-            var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m);
+            var book = new Book(name: $"SqlKataBook", author: "Kata", color: $"red", price: 100m, pages: 100, serie:10);
             var query = new Query("Book").AsUpdate(book);
 
             var c = Compile(query);
 
             Assert.Equal(
-                "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100",
+                "UPDATE [Book] SET [Name] = 'SqlKataBook', [Author] = 'Kata', [Price] = 100, [serie] = 10",
                 c[EngineCodes.SqlServer]);
 
             Assert.Equal(
-                "UPDATE \"BOOK\" SET \"NAME\" = 'SqlKataBook', \"AUTHOR\" = 'Kata', \"PRICE\" = 100",
+                "UPDATE \"BOOK\" SET \"NAME\" = 'SqlKataBook', \"AUTHOR\" = 'Kata', \"PRICE\" = 100, \"SERIE\" = 10",
                 c[EngineCodes.Firebird]);
         }
 

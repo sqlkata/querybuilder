@@ -23,5 +23,17 @@ namespace SqlKata
     /// </example>
     public class IgnoreAttribute : Attribute
     {
+        public IgnoreOperation IgnoreOperation { get; }
+        public IgnoreAttribute(IgnoreOperation ignoreOperation = IgnoreOperation.Always)
+        {
+            IgnoreOperation = ignoreOperation;
+        }
+    }
+
+    public enum IgnoreOperation
+    {
+        OnInsert,
+        OnUpdate,
+        Always
     }
 }

@@ -9,7 +9,7 @@ namespace SqlKata
     {
         public Query AsUpdate(object data)
         {
-            var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true);
+            var dictionary = BuildKeyValuePairsFromObject(data, considerKeys: true, insert: false);
 
             return AsUpdate(dictionary);
         }
