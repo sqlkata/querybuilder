@@ -34,10 +34,10 @@ namespace SqlKata.Tests
             [Ignore]
             public string color { get; set; }
 
-            [Ignore(IgnoreOperation.OnInsert)]
+            [Ignore(IgnoreOperation.OnUpdate)]
             public int pages { get; set; }
 
-            [Ignore(IgnoreOperation.OnUpdate)]
+            [Ignore(IgnoreOperation.OnInsert)]
             public int serie { get; set; }
         }
 
