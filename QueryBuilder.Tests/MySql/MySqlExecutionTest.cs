@@ -213,12 +213,12 @@ namespace SqlKata.Tests
                 // 2020
                 {"2020-01-01", 10},
                 {"2020-05-01", 20},
-                
+
                 // 2021
                 {"2021-01-01", 40},
                 {"2021-02-01", 10},
                 {"2021-04-01", -10},
-                
+
                 // 2022
                 {"2022-01-01", 80},
                 {"2022-02-01", -30},
@@ -251,10 +251,11 @@ namespace SqlKata.Tests
 
         QueryFactory DB()
         {
-            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
+            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST") ?? "localhost";
+            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER") ?? "root";
+            var password = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_PASSWORD") ?? "my-secret-pw";
+            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB") ?? "test";
+            var cs = $"server={host};user={user};database={dbName};password={password}";
 
             var connection = new MySqlConnection(cs);
 
