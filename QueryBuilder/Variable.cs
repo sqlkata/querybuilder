@@ -6,7 +6,7 @@ namespace SqlKata
 
         public Variable(string name)
         {
-            this.Name = name;
+            this.Name = $"@{name.TrimStart('@')}";
         }
 
     }

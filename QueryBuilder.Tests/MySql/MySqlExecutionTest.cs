@@ -1,13 +1,12 @@
-using SqlKata.Compilers;
-using Xunit;
-using SqlKata.Execution;
-using MySql.Data.MySqlClient;
-using System;
-using System.Linq;
-using static SqlKata.Expressions;
 using System.Collections.Generic;
+using System.Linq;
+using MySql.Data.MySqlClient;
+using SqlKata.Compilers;
+using SqlKata.Execution;
+using Xunit;
+using static SqlKata.Expressions;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.MySql
 {
     public class MySqlExecutionTest
     {
@@ -127,6 +126,37 @@ namespace SqlKata.Tests
             var count = db.Query("Cars")
                 .Define("Threshold", 5)
                 .Where("Id", "<", SqlKata.Expressions.Variable("Threshold"))
+                .Count<int>();
+
+            Assert.Equal(4, count);
+
+            db.Drop("Cars");
+        }
+
+        [Fact]
+        public void QueryWithParameter()
+        {
+            var db = DB().Create("Cars", new[] {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
+            });
+
+            for (int i = 0; i < 10; i++)
+            {
+                db.Query("Cars").Insert(new
+                {
+                    Brand = "Brand " + i,
+                    Year = "2020",
+                });
+            }
+
+
+            var count = db.Query("Cars")
+                .DefineParameter("Threshold", 5)
+                .Where("Id", "<", Variable("Threshold"))
+                .Where("Id", "<", Variable("Threshold"))
                 .Count<int>();
 
             Assert.Equal(4, count);
