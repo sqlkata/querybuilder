@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -32,13 +33,13 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool SupportsFilterClause { get; set; } = false;
 
         /// <summary>
         /// If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool OmitSelectInsideExists { get; set; } = true;
 
         protected virtual string SingleRowDummyTableName { get => null; }
@@ -69,10 +70,45 @@ namespace SqlKata.Compilers
                 .ToDictionary(x => parameterPrefix + x.i, x => x.v);
         }
 
+        protected Dictionary<string, string> generateNamedParameterMapping(Dictionary<string,object> namedBindings)
+        {
+            return namedBindings
+                .Where(v => v.Value is NamedParameterVariable _)
+                .ToDictionary(x => x.Key,
+                    x => ((NamedParameterVariable) x.Value).Variable);
+        }
+
+        protected string remapNamedParameters(string sql, Dictionary<string, string> mapping)
+        {
+            if (mapping.Count == 0) return sql;
+            var pattern = string.Join("|", mapping.Keys.Select(Regex.Escape));
+            return Regex.Replace(sql, pattern, match => mapping[match.Value]);
+        }
+
+        protected Dictionary<string, object> cleanupNamedBindings(Dictionary<string, object> namedBindings)
+        {
+            var result = new Dictionary<string, object>();
+
+            foreach (var (key, value) in namedBindings)
+            {
+                var actualKey = value is NamedParameterVariable k ? k.Variable : key;
+                var actualValue = value is NamedParameterVariable v ? v.Value : value;
+
+                result.TryAdd(actualKey, actualValue);
+            }
+
+            return result;
+        }
+
+
         protected SqlResult PrepareResult(SqlResult ctx)
         {
             ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
             ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => parameterPrefix + i);
+            var mapping = generateNamedParameterMapping(ctx.NamedBindings);
+            if (mapping.Count == 0) return ctx;
+            ctx.NamedBindings = cleanupNamedBindings(ctx.NamedBindings);
+            ctx.Sql = remapNamedParameters(ctx.Sql,mapping);
             return ctx;
         }
 
@@ -295,7 +331,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                // check if we have alias 
+                // check if we have alias
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
                 {
                     ctx.RawSql = $"DELETE {Wrap(fromClause.Alias)} FROM {table} {joins}{where}";

@@ -376,6 +376,22 @@ namespace SqlKata
             return this;
         }
 
+        /// <summary>
+        /// Define a parameter to be used within the query
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Query DefineParameter(string variable, object value)
+        {
+            Variables.Add(variable, new NamedParameterVariable(variable,value));
+
+            return this;
+        }
+
+
+
+
         public object FindVariable(string variable)
         {
             var found = Variables.ContainsKey(variable);
