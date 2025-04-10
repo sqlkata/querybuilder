@@ -64,51 +64,35 @@ namespace SqlKata.Compilers
 
         };
 
-        protected Dictionary<string, object> generateNamedBindings(object[] bindings)
+        protected (string Name,object Variable)[] generateNamedBindingsArray(object[] bindings)
         {
-            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPrefix + x.i, x => x.v);
-        }
-
-        protected Dictionary<string, string> generateNamedParameterMapping(Dictionary<string,object> namedBindings)
-        {
-            return namedBindings
-                .Where(v => v.Value is NamedParameterVariable _)
-                .ToDictionary(x => x.Key,
-                    x => ((NamedParameterVariable) x.Value).Variable);
-        }
-
-        protected string remapNamedParameters(string sql, Dictionary<string, string> mapping)
-        {
-            if (mapping.Count == 0) return sql;
-            var pattern = string.Join("|", mapping.Keys.Select(Regex.Escape));
-            return Regex.Replace(sql, pattern, match => mapping[match.Value]);
-        }
-
-        protected Dictionary<string, object> cleanupNamedBindings(Dictionary<string, object> namedBindings)
-        {
-            var result = new Dictionary<string, object>();
-
-            foreach (var (key, value) in namedBindings)
+            return Helper.Flatten(bindings).Select((v, i) =>
             {
-                var actualKey = value is NamedParameterVariable k ? k.Variable : key;
-                var actualValue = value is NamedParameterVariable v ? v.Value : value;
+                if (v is NamedParameterVariable param)
+                {
+                    return (param.Variable, param.Value);
+                }
+                return (parameterPrefix + i, v);
+            }).ToArray();
+        }
 
-                result.TryAdd(actualKey, actualValue);
+        protected Dictionary<string, object> generateNamedBindings((string, object)[] bindings)
+        {
+            var dictionary = new Dictionary<string, object>();
+            foreach (var (name, variable) in bindings)
+            {
+                dictionary.TryAdd(name, variable);
             }
 
-            return result;
+            return dictionary;
         }
 
 
         protected SqlResult PrepareResult(SqlResult ctx)
         {
-            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => parameterPrefix + i);
-            var mapping = generateNamedParameterMapping(ctx.NamedBindings);
-            if (mapping.Count == 0) return ctx;
-            ctx.NamedBindings = cleanupNamedBindings(ctx.NamedBindings);
-            ctx.Sql = remapNamedParameters(ctx.Sql,mapping);
+            var bindings = generateNamedBindingsArray(ctx.Bindings.ToArray());
+            ctx.NamedBindings = generateNamedBindings(bindings);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => bindings[i].Name);
             return ctx;
         }
 

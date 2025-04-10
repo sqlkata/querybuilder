@@ -28,6 +28,8 @@ namespace SqlKata.Tests
         [Fact]
         public void Test_Define_Parameter_Where()
         {
+            // note parameters need to start with @ or any other standard parameter indicator for
+            // the library running the query.
             var query = new Query("Products")
                 .Define("@name", "Anto")
                 .DefineParameter("@param", "param")

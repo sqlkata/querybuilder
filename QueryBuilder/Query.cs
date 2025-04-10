@@ -371,7 +371,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query Define(string variable, object value)
         {
-            Variables.Add($"@{variable.TrimStart('@')}", value);
+            Variables.Add(variable, value);
 
             return this;
         }
@@ -384,8 +384,7 @@ namespace SqlKata
         /// <returns></returns>
         public Query DefineParameter(string variable, object value)
         {
-            var name = $"@{variable.TrimStart('@')}";
-            Variables.Add(name, new NamedParameterVariable(name,value));
+            Variables.Add(variable, new NamedParameterVariable(variable,value));
 
             return this;
         }
