@@ -46,6 +46,10 @@ namespace SqlKata
                 }
 
                 var value = deepParameters[i];
+                if (value is NamedParameterVariable v)
+                {
+                    return ChangeToSqlValue(v.Value);
+                }
                 return ChangeToSqlValue(value);
             });
 

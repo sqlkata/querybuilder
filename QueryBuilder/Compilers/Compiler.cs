@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -32,13 +33,13 @@ namespace SqlKata.Compilers
         /// <summary>
         /// Whether the compiler supports the `SELECT ... FILTER` syntax
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool SupportsFilterClause { get; set; } = false;
 
         /// <summary>
         /// If true the compiler will remove the SELECT clause for the query used inside WHERE EXISTS
         /// </summary>
-        /// <value></value>            
+        /// <value></value>
         public virtual bool OmitSelectInsideExists { get; set; } = true;
 
         protected virtual string SingleRowDummyTableName { get => null; }
@@ -63,16 +64,35 @@ namespace SqlKata.Compilers
 
         };
 
-        protected Dictionary<string, object> generateNamedBindings(object[] bindings)
+        protected (string Name,object Variable)[] generateNamedBindingsArray(object[] bindings)
         {
-            return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPrefix + x.i, x => x.v);
+            return Helper.Flatten(bindings).Select((v, i) =>
+            {
+                if (v is NamedParameterVariable param)
+                {
+                    return (param.Variable, param.Value);
+                }
+                return (parameterPrefix + i, v);
+            }).ToArray();
         }
+
+        protected Dictionary<string, object> generateNamedBindings((string, object)[] bindings)
+        {
+            var dictionary = new Dictionary<string, object>();
+            foreach (var (name, variable) in bindings)
+            {
+                dictionary.TryAdd(name, variable);
+            }
+
+            return dictionary;
+        }
+
 
         protected SqlResult PrepareResult(SqlResult ctx)
         {
-            ctx.NamedBindings = generateNamedBindings(ctx.Bindings.ToArray());
-            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => parameterPrefix + i);
+            var bindings = generateNamedBindingsArray(ctx.Bindings.ToArray());
+            ctx.NamedBindings = generateNamedBindings(bindings);
+            ctx.Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => bindings[i].Name);
             return ctx;
         }
 
@@ -295,7 +315,7 @@ namespace SqlKata.Compilers
             }
             else
             {
-                // check if we have alias 
+                // check if we have alias
                 if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
                 {
                     ctx.RawSql = $"DELETE {Wrap(fromClause.Alias)} FROM {table} {joins}{where}";

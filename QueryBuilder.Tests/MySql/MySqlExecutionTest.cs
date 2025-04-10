@@ -1,13 +1,12 @@
-using SqlKata.Compilers;
-using Xunit;
-using SqlKata.Execution;
-using MySql.Data.MySqlClient;
-using System;
-using System.Linq;
-using static SqlKata.Expressions;
 using System.Collections.Generic;
+using System.Linq;
+using MySql.Data.MySqlClient;
+using SqlKata.Compilers;
+using SqlKata.Execution;
+using Xunit;
+using static SqlKata.Expressions;
 
-namespace SqlKata.Tests
+namespace SqlKata.Tests.MySql
 {
     public class MySqlExecutionTest
     {
@@ -135,6 +134,37 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void QueryWithParameter()
+        {
+            var db = DB().Create("Cars", new[] {
+                "Id INT PRIMARY KEY AUTO_INCREMENT",
+                "Brand TEXT NOT NULL",
+                "Year INT NOT NULL",
+                "Color TEXT NULL",
+            });
+
+            for (int i = 0; i < 10; i++)
+            {
+                db.Query("Cars").Insert(new
+                {
+                    Brand = "Brand " + i,
+                    Year = "2020",
+                });
+            }
+
+
+            var count = db.Query("Cars")
+                .DefineParameter("Threshold", 5)
+                .Where("Id", "<", Variable("Threshold"))
+                .Where("Id", "<", Variable("Threshold"))
+                .Count<int>();
+
+            Assert.Equal(4, count);
+
+            db.Drop("Cars");
+        }
+
+        [Fact]
         public void InlineTable()
         {
             var db = DB().Create("Transaction", new[] {
@@ -213,12 +243,12 @@ namespace SqlKata.Tests
                 // 2020
                 {"2020-01-01", 10},
                 {"2020-05-01", 20},
-                
+
                 // 2021
                 {"2021-01-01", 40},
                 {"2021-02-01", 10},
                 {"2021-04-01", -10},
-                
+
                 // 2022
                 {"2022-01-01", 80},
                 {"2022-02-01", -30},
@@ -251,10 +281,11 @@ namespace SqlKata.Tests
 
         QueryFactory DB()
         {
-            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST");
-            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER");
-            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB");
-            var cs = $"server={host};user={user};database={dbName}";
+            var host = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_HOST") ?? "localhost";
+            var user = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_USER") ?? "root";
+            var password = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_PASSWORD") ?? "my-secret-pw";
+            var dbName = System.Environment.GetEnvironmentVariable("SQLKATA_MYSQL_DB") ?? "test";
+            var cs = $"server={host};user={user};database={dbName};password={password}";
 
             var connection = new MySqlConnection(cs);
 

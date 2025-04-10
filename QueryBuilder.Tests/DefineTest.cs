@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using static SqlKata.Expressions;
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
@@ -15,13 +16,41 @@ namespace SqlKata.Tests
         public void Test_Define_Where()
         {
             var query = new Query("Products")
-              .Define("@name", "Anto")
-              .Where("ProductName", Variable("@name"));
+                .Define("@name", "Anto")
+                .Where("ProductName", Variable("@name"));
 
             var c = Compile(query);
 
             Assert.Equal("SELECT * FROM [Products] WHERE [ProductName] = 'Anto'", c[EngineCodes.SqlServer]);
 
+        }
+
+        [Fact]
+        public void Test_Define_Parameter_Where()
+        {
+            // note parameters need to start with @ or any other standard parameter indicator for
+            // the library running the query.
+            var query = new Query("Products")
+                .Define("@name", "Anto")
+                .DefineParameter("@param", "param")
+                .Where("ProductName", Variable("@name"))
+                .Where("ProductName", Variable("@param"))
+                .Where("ProductName", Variable("@param"));
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Products] WHERE [ProductName] = 'Anto' AND [ProductName] = 'param'" +
+                " AND [ProductName] = 'param'", c[EngineCodes.SqlServer]);
+
+            var s = Compilers.Compile(query)[EngineCodes.SqlServer];
+            Assert.Equal("SELECT * FROM [Products] WHERE [ProductName] = @p0 AND [ProductName] = @param" +
+                         " AND [ProductName] = @param", s.Sql);
+            var expected = new Dictionary<string, object>()
+            {
+                { "@param", "param" },
+                { "@p0", "Anto" }
+            };
+            Assert.Equal(expected, s.NamedBindings);
         }
 
         [Fact]
@@ -41,6 +70,31 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT * FROM [Products] WHERE [unitprice] > (SELECT AVG([unitprice]) AS [avg] FROM [Products] WHERE [UnitsInStock] > 10) AND [UnitsOnOrder] > 5", c[EngineCodes.SqlServer]);
 
+        }
+
+        [Fact]
+        public void Test_Define_Parameter_SubQuery()
+        {
+
+            var query = new Query("Products")
+                .DefineParameter("@a", 1)
+                .DefineParameter("@b","b")
+                .Where(q=> q.Where("a", "=", Variable("@a")))
+                .OrWhere(q =>
+                    q.Where("a", "=", Variable("@a"))
+                        .Where("b",">",Variable("@b"))
+                        .Where("a",">",0));
+
+            var s = Compilers.Compile(query)[EngineCodes.SqlServer];
+            Assert.Equal("SELECT * FROM [Products] WHERE ([a] = @a) OR ([a] = @a AND [b] > @b AND [a] > @p3)", s.Sql);
+            Assert.Equal(3,s.NamedBindings.Count);
+            var expected = new Dictionary<string, object>()
+            {
+                { "@a", 1 },
+                { "@b", "b" },
+                { "@p3", 0 }
+            };
+            Assert.Equal(expected, s.NamedBindings);
         }
 
 
