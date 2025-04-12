@@ -285,7 +285,7 @@ namespace SqlKata.Execution
         public async Task<SqlMapper.GridReader> GetMultipleAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default)
         {
             var compiled = this.Compiler.Compile(queries);
@@ -324,7 +324,7 @@ namespace SqlKata.Execution
         public async Task<IEnumerable<IEnumerable<T>>> GetAsync<T>(
             Query[] queries,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -388,7 +388,7 @@ namespace SqlKata.Execution
             string aggregateOperation,
             string[] columns = null,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -524,6 +524,76 @@ namespace SqlKata.Execution
             };
         }
 
+        public ScrollToResult<T> ScrollTo<T>(Query query, int skip, int take = 25, IDbTransaction transaction = null, int? timeout = null)
+        {
+            if (skip < 0)
+            {
+                throw new ArgumentException("Skip param should be greater than or equal to 0", nameof(skip));
+            }
+
+            if (take < 1)
+            {
+                throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(take));
+            }
+
+            var count = Count<long>(query.Clone(), null, transaction, timeout);
+
+            IEnumerable<T> list;
+
+            if (count > 0)
+            {
+                list = Get<T>(query.Clone().Skip(skip).Take(take), transaction, timeout);
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
+
+            return new ScrollToResult<T>
+            {
+                Query = query,
+                Skip = skip,
+                Take = take,
+                Count = count,
+                List = list
+            };
+        }
+
+        public async Task<ScrollToResult<T>> ScrollToAsync<T>(Query query, int skip, int take = 25, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
+        {
+            if (skip < 1)
+            {
+                throw new ArgumentException("Page param should be greater than or equal to 1", nameof(skip));
+            }
+
+            if (take < 1)
+            {
+                throw new ArgumentException("PerPage param should be greater than or equal to 1", nameof(take));
+            }
+
+            var count = await CountAsync<long>(query.Clone(), null, transaction, timeout, cancellationToken);
+
+            IEnumerable<T> list;
+
+            if (count > 0)
+            {
+                list = await GetAsync<T>(query.Clone().Skip(skip).Take(take), transaction, timeout, cancellationToken);
+            }
+            else
+            {
+                list = Enumerable.Empty<T>();
+            }
+
+            return new ScrollToResult<T>
+            {
+                Query = query,
+                Skip = skip,
+                Take = take,
+                Count = count,
+                List = list
+            };
+        }
+
         public void Chunk<T>(
             Query query,
             int chunkSize,
@@ -553,7 +623,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Func<IEnumerable<T>, int, bool> func,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
@@ -592,7 +662,7 @@ namespace SqlKata.Execution
             int chunkSize,
             Action<IEnumerable<T>, int> action,
             IDbTransaction transaction = null,
-            int? timeout = null, 
+            int? timeout = null,
             CancellationToken cancellationToken = default
         )
         {
