@@ -539,10 +539,6 @@ namespace SqlKata
                 throw new ArgumentException($"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
             }
 
-            // remove unneeded components
-            query = query.Clone().ClearComponent("select")
-                .SelectRaw("1");
-
             return AddComponent("where", new ExistsCondition
             {
                 Query = query,

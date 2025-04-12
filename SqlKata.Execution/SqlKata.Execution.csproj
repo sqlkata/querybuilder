@@ -12,22 +12,27 @@
     <PackageTags>sql;query-builder;dynamic-query</PackageTags>
     <PackageReleaseNotes>https://github.com/sqlkata/querybuilder</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/sqlkata/querybuilder</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/sqlkata/querybuilder/licence</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/sqlkata/querybuilder</RepositoryUrl>
 
     <!-- SourceLink settings -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
-
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\SqlKata.Execution.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\SqlKata.Execution.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\QueryBuilder\QueryBuilder.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="dapper" Version="1.50.5" />
+    <PackageReference Include="dapper" Version="2.1.35" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
   </ItemGroup>
 </Project>

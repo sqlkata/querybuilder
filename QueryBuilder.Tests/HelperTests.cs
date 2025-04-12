@@ -14,7 +14,7 @@ namespace SqlKata.Tests
         [InlineData("   ")]
         public void ItShouldKeepItAsIs(string input)
         {
-            var output = Helper.ReplaceAll(input, "any", x => x + "");
+            var output = Helper.ReplaceAll(input, "any", "\\", x => x + "");
 
             Assert.Equal(input, output);
         }
@@ -28,7 +28,7 @@ namespace SqlKata.Tests
         [InlineData(" ? ? hello", " @ @ hello")]
         public void ReplaceOnTheBegining(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => "@");
+            var output = Helper.ReplaceAll(input, "?", "\\", x => "@");
             Assert.Equal(expected, output);
         }
 
@@ -39,11 +39,13 @@ namespace SqlKata.Tests
         [InlineData("hello ? ?? ? ", "hello @ @@ @ ")]
         public void ReplaceOnTheEnd(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => "@");
+            var output = Helper.ReplaceAll(input, "?", "\\", x => "@");
             Assert.Equal(expected, output);
         }
 
         [Theory]
+        [InlineData("hel\\?o ??? ", "hel\\?o 012 ")]
+        [InlineData("hel\\?o ?? \\?", "hel\\?o 01 \\?")]
         [InlineData("hello?", "hello0")]
         [InlineData("hello? ", "hello0 ")]
         [InlineData("hello??? ", "hello012 ")]
@@ -51,7 +53,7 @@ namespace SqlKata.Tests
         [InlineData("????", "0123")]
         public void ReplaceWithPositions(string input, string expected)
         {
-            var output = Helper.ReplaceAll(input, "?", x => x + "");
+            var output = Helper.ReplaceAll(input, "?", "\\", x => x + "");
             Assert.Equal(expected, output);
         }
 
@@ -220,7 +222,7 @@ namespace SqlKata.Tests
         [Fact]
         public void ExpandParameters()
         {
-            var expanded = Helper.ExpandParameters("where id = ? or id in (?) or id in (?)", "?", new object[] { 1, new[] { 1, 2 }, new object[] { } });
+            var expanded = Helper.ExpandParameters("where id = ? or id in (?) or id in (?)", "?", "\\", new object[] { 1, new[] { 1, 2 }, new object[] { } });
 
             Assert.Equal("where id = ? or id in (?,?) or id in ()", expanded);
         }

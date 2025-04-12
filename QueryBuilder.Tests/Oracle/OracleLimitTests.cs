@@ -9,7 +9,7 @@ namespace SqlKata.Tests.Oracle
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private OracleCompiler compiler;
+        private readonly OracleCompiler compiler;
 
         public OracleLimitTests()
         {
@@ -21,7 +21,7 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName);
-            var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
             // Act & Assert:
             Assert.Null(compiler.CompileLimit(ctx));
@@ -32,12 +32,12 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Limit(10);
-            var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
             //  Act & Assert:
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
             Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(0, ctx.Bindings[0]);
+            Assert.Equal(0L, ctx.Bindings[0]);
             Assert.Equal(10, ctx.Bindings[1]);
         }
 
@@ -46,13 +46,13 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Offset(20);
-            var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
             // Act & Assert:
             Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
 
             Assert.Single(ctx.Bindings);
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
         }
 
         [Fact]
@@ -60,13 +60,13 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Limit(5).Offset(20);
-            var ctx = new SqlResult { Query = query, RawSql = SqlPlaceholder };
+            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
             // Act & Assert:
             Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
 
             Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(20, ctx.Bindings[0]);
+            Assert.Equal(20L, ctx.Bindings[0]);
             Assert.Equal(5, ctx.Bindings[1]);
 
             compiler.CompileLimit(ctx);
