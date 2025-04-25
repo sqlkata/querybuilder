@@ -51,12 +51,12 @@ namespace SqlKata
         public override Query Clone()
         {
             var clone = base.Clone();
-            clone.Parent = Parent;
+            clone.Parent = (Parent as Query)?.Clone();
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
             clone.Method = Method;
-            clone.Includes = Includes;
-            clone.Variables = Variables;
+            clone.Includes = Includes.Select(i => i.Clone()).ToList();
+            clone.Variables = Variables.ToDictionary();
             return clone;
         }
 
