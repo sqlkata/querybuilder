@@ -859,9 +859,8 @@ namespace SqlKata.Execution
         internal SqlResult CompileAndLog(Query query)
         {
             var compiled = this.Compiler.Compile(query);
-
+            query.ToRaw = compiled.RawSql;
             this.Logger(compiled);
-
             return compiled;
         }
 

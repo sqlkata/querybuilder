@@ -371,7 +371,16 @@ namespace SqlKata.Compilers
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
             {
-                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                var values = toUpdate.Values[i];
+                if (values is object[] v && v.Length > 0)
+                {
+                    SetUpCaseWhenUpdatePart(ctx, parts, toUpdate.Columns[i], v);
+                }
+                else if (values is not Array)
+                {
+                    SetUpDirectUpdatePart(ctx, parts, toUpdate.Columns[i], values);
+                }
+                else throw new MissingMemberException();
             }
 
             var sets = string.Join(", ", parts);
@@ -386,6 +395,141 @@ namespace SqlKata.Compilers
             ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
 
             return ctx;
+        }
+
+        private void SetUpCaseWhenUpdatePart(SqlResult ctx, List<string> parts, string columnName, object[] value)
+        {
+            StringBuilder casewrap = new StringBuilder($"{Wrap(columnName)} = ");
+            bool hasOne = false;
+
+            foreach (var item in value)
+            {
+                if (item is object[] i && i.Length >= 3)
+                {
+                    int indent = 0;
+
+                    object val = i.Last();
+                    var subparts = i.Take(i.Length - 1).ToArray();
+
+                    int pointer = 0;
+                    bool substart = true;
+                    bool start = true;
+                    bool setasfield = false;
+                    bool criteriaValue = false;
+                    var field = string.Empty;
+
+                    while (pointer <= (subparts.Length - 1))
+                    {
+                        var piece = subparts[pointer].ToString().ToUpperInvariant().Trim();
+                        if (pointer > 0 && !substart)
+                        {
+                            if (!VERB.SpecialChar.Any(s => s == piece) && criteriaValue)
+                            {
+                                pointer = subparts.Length;
+                                break;
+                            }
+                            else if (VERB.AndOpertors.Any(s => s == piece))
+                            {
+                                casewrap.Append(" ").Append(VERB.And).Append(" ");
+                                pointer++;
+                                substart = true;
+                                continue;
+                            }
+                            else if (VERB.OrOpertors.Any(s => s == piece))
+                            {
+                                casewrap.Append(" ").Append(VERB.Or).Append(" ");
+                                pointer++;
+                                substart = true;
+                                continue;
+                            }
+                        }
+
+                        if (!criteriaValue && VERB.AndOrOpertors.Any(s => s == piece))
+                        {
+                            pointer = subparts.Length;
+                            break;
+                        }
+                        else if (piece == VERB.StartParenth)
+                        {
+                            indent++;
+                            pointer++; casewrap.Append(VERB.StartParenth);
+                            continue;
+                        }
+                        else if (piece == VERB.EndParenth)
+                        {
+                            if (indent > 0)
+                            {
+                                indent--;
+                                casewrap.Append(VERB.EndParenth);
+                                pointer++;
+                                continue;
+                            }
+                        }
+
+                        if (substart && !string.IsNullOrEmpty(field))
+                        {
+                            criteriaValue = true;
+                        }
+                        if (piece == VERB.PushField && criteriaValue)
+                        {
+                            setasfield = true;
+                            pointer++;
+                            continue;
+                        }
+
+                        else if (string.IsNullOrEmpty(field))
+                        {
+                            field = piece;
+                        }
+                        if (substart && criteriaValue && !string.IsNullOrEmpty(field))
+                        {
+
+                            if (!hasOne && start)
+                            {
+                                casewrap.Append(VERB.CaseWhen);
+                                hasOne = true;
+                            }
+                            else if (start)
+                            {
+                                casewrap.Append(" ").Append(VERB.When);
+                            }
+
+                            casewrap.Append($" {field} = {(setasfield ? subparts[pointer] : Parameter(ctx, subparts[pointer]))}");
+                            substart = false;
+                            setasfield = false;
+                            start = false;
+                            criteriaValue = false;
+                            field = string.Empty;
+                        }
+                        pointer++;
+
+                    }
+                    if (indent > 0 && hasOne)
+                    {
+                        casewrap.Append("".PadLeft(indent, ')'));
+                    }
+
+                    if (hasOne)
+                    {
+                        casewrap.Append($" {VERB.Then} {Parameter(ctx, val)}");
+                    }
+                }
+            }
+            if (!hasOne)
+            {
+                casewrap.Append($"{Wrap(columnName)}");
+            }
+            else
+            {
+                casewrap.Append($" {VERB.Else} {Wrap(columnName)} {VERB.End}");
+            }
+            parts.Add(casewrap.ToString());
+            casewrap.Length = 0;
+        }
+
+        private void SetUpDirectUpdatePart(SqlResult ctx, List<string> parts, string columnName, object value)
+        {
+            parts.Add($"{Wrap(columnName)} = {Parameter(ctx, value)}");
         }
 
         protected virtual SqlResult CompileInsertQuery(Query query)
@@ -1020,6 +1164,10 @@ namespace SqlKata.Compilers
                 var value = ctx.Query.FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
                 return parameterPlaceholder;
+            }
+            else if (parameter == DBNull.Value)
+            {
+                parameter = null;
             }
 
             ctx.Bindings.Add(parameter);
