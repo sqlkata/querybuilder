@@ -420,8 +420,8 @@ namespace SqlKata.Compilers
 
                     while (pointer <= (subparts.Length - 1))
                     {
-                        var piece = subparts[pointer].ToString().ToUpperInvariant().Trim();
-                        if (pointer > 0 && !substart)
+                        var piece = subparts[pointer]?.ToString().ToUpperInvariant().Trim();
+                        if (pointer > 0 && !substart && piece != null)
                         {
                             if (!VERB.SpecialChar.Any(s => s == piece) && criteriaValue)
                             {
@@ -444,7 +444,8 @@ namespace SqlKata.Compilers
                             }
                         }
 
-                        if (!criteriaValue && VERB.AndOrOpertors.Any(s => s == piece))
+
+                        if (!criteriaValue && (piece is null || VERB.AndOrOpertors.Any(s => s == piece)))
                         {
                             pointer = subparts.Length;
                             break;
@@ -481,6 +482,7 @@ namespace SqlKata.Compilers
                         {
                             field = piece;
                         }
+
                         if (substart && criteriaValue && !string.IsNullOrEmpty(field))
                         {
 
@@ -494,7 +496,14 @@ namespace SqlKata.Compilers
                                 casewrap.Append(" ").Append(VERB.When);
                             }
 
-                            casewrap.Append($" {field} = {(setasfield ? subparts[pointer] : Parameter(ctx, subparts[pointer]))}");
+                            if (subparts[pointer] is not null)
+                            {
+                                casewrap.Append($" {field} = {(setasfield ? subparts[pointer] : Parameter(ctx, subparts[pointer]))}");
+                            }
+                            else
+                            {
+                                casewrap.Append($" {field} is NULL");
+                            }
                             substart = false;
                             setasfield = false;
                             start = false;
