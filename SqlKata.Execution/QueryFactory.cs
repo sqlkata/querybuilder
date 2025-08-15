@@ -671,8 +671,7 @@ namespace SqlKata.Execution
 
             var dynamicResult = result
                 .Cast<IDictionary<string, object>>()
-                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
-                .ToList();
+                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase));
 
             foreach (var include in query.Includes)
             {
@@ -697,9 +696,7 @@ namespace SqlKata.Execution
                         include.ForeignKey = table.Singularize(false) + "Id";
                     }
 
-                    var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
-                    .Select(x => x[include.LocalKey].ToString())
-                    .ToList();
+                    var localIds = dynamicResult.Where( x => x[include.LocalKey] != null ).Select( x => x[include.LocalKey].ToString() );
 
                     if (!localIds.Any())
                     {
