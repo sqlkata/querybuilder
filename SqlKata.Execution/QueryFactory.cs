@@ -72,6 +72,23 @@ namespace SqlKata.Execution
             return xQuery;
         }
 
+        public IEnumerable<T> GetUnbuffered<T>( Query query, IDbTransaction transaction = null, int? timeout = null )
+        {
+            var compiled = CompileAndLog( query );
+
+            var result = this.Connection.Query<T>(
+                compiled.Sql,
+                compiled.NamedBindings,
+                transaction: transaction,
+                buffered: false,
+                commandTimeout: timeout ?? this.QueryTimeout
+            );
+
+            result = handleIncludes<T>( query, result );
+
+            return result;
+        }
+
         public IEnumerable<T> Get<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             var compiled = CompileAndLog(query);
