@@ -72,6 +72,33 @@ namespace SqlKata.Execution
             return xQuery;
         }
 
+        /// <summary>
+        /// <para>Executes an unbuffered <see cref="Query"/> without reading all results to memory at the same time.</para>
+        /// <para>The execution of a <see cref="Query"/> with <see cref="Query.Includes"/> is *NOT* supported this way.</para>
+        /// <para>IMPORTANT: The returned <see cref="IEnumerable{T}"/> *MUST* be fully iterated over by the caller to free underlying allotted resources.
+        /// If this does not occur, subsequent queries will fail (especially if the underlying DB does not support multiple result sets).</para>
+        /// </summary>
+        /// <exception cref="InvalidOperationException">if <paramref name="query"/> has <see cref="Query.Includes"/></exception>
+        public IEnumerable<T> GetUnbuffered<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
+        {
+            var compiled = CompileAndLog(query);
+
+            if(query.Includes.Count != 0)
+            {
+                throw new InvalidOperationException($"{nameof( GetUnbuffered )} does not support {nameof( Query )} execution with {nameof( query.Includes )}.");
+            }
+            
+            var result = this.Connection.Query<T>(
+                compiled.Sql,
+                compiled.NamedBindings,
+                transaction: transaction,
+                buffered: false,
+                commandTimeout: timeout ?? this.QueryTimeout
+            );
+
+            return result;
+        }
+
         public IEnumerable<T> Get<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
             var compiled = CompileAndLog(query);
