@@ -73,9 +73,8 @@ namespace SqlKata.Execution
         }
 
         /// <summary>
-        /// <para>Executes an unbuffered <see cref="Query"/> without reading all results to memory at the same time.
-        /// (Does not call <see cref="Enumerable.ToList{TSource}(IEnumerable{TSource})"/> or similar on the result.)</para>
-        /// <para>The execution of a <see cref="Query"/> with <see cref="Query.Includes"/> is NOT supported this way.</para>
+        /// <para>Executes an unbuffered <see cref="Query"/> without reading all results to memory at the same time.</para>
+        /// <para>The execution of a <see cref="Query"/> with <see cref="Query.Includes"/> is *NOT* supported this way.</para>
         /// <para>IMPORTANT: The returned <see cref="IEnumerable{T}"/> *MUST* be fully iterated over by the caller to free underlying allotted resources.
         /// If this does not occur, subsequent queries will fail (especially if the underlying DB does not support multiple result sets).</para>
         /// </summary>
