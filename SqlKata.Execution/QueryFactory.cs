@@ -72,10 +72,23 @@ namespace SqlKata.Execution
             return xQuery;
         }
 
-        public IEnumerable<T> GetUnbuffered<T>( Query query, IDbTransaction transaction = null, int? timeout = null )
+        /// <summary>
+        /// <para>Executes an unbuffered <see cref="Query"/> without reading all results to memory at the same time.
+        /// (Does not call <see cref="Enumerable.ToList{TSource}(IEnumerable{TSource})"/> or similar on the result.)</para>
+        /// <para>The execution of a <see cref="Query"/> with <see cref="Query.Includes"/> is NOT supported this way.</para>
+        /// <para>IMPORTANT: The returned <see cref="IEnumerable{T}"/> *MUST* be fully iterated over by the caller to free underlying allotted resources.
+        /// If this does not occur, subsequent queries will fail (especially if the underlying DB does not support multiple result sets).</para>
+        /// </summary>
+        /// <exception cref="InvalidOperationException">if <paramref name="query"/> has <see cref="Query.Includes"/></exception>
+        public IEnumerable<T> GetUnbuffered<T>(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
-            var compiled = CompileAndLog( query );
+            var compiled = CompileAndLog(query);
 
+            if(query.Includes.Count != 0)
+            {
+                throw new InvalidOperationException($"{nameof( GetUnbuffered )} does not support {nameof( Query )} execution with {nameof( query.Includes )}.");
+            }
+            
             var result = this.Connection.Query<T>(
                 compiled.Sql,
                 compiled.NamedBindings,
@@ -83,8 +96,6 @@ namespace SqlKata.Execution
                 buffered: false,
                 commandTimeout: timeout ?? this.QueryTimeout
             );
-
-            result = handleIncludes<T>( query, result );
 
             return result;
         }
@@ -688,7 +699,8 @@ namespace SqlKata.Execution
 
             var dynamicResult = result
                 .Cast<IDictionary<string, object>>()
-                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase));
+                .Select(x => new Dictionary<string, object>(x, StringComparer.OrdinalIgnoreCase))
+                .ToList();
 
             foreach (var include in query.Includes)
             {
@@ -713,9 +725,11 @@ namespace SqlKata.Execution
                         include.ForeignKey = table.Singularize(false) + "Id";
                     }
 
-                    var localIds = dynamicResult.Where( x => x[include.LocalKey] != null ).Select( x => x[include.LocalKey].ToString() );
+                    var localIds = dynamicResult.Where(x => x[include.LocalKey] != null)
+                    .Select(x => x[include.LocalKey].ToString())
+                    .ToList();
 
-                    if (!localIds.Any())
+                    if(!localIds.Any())
                     {
                         continue;
                     }
