@@ -729,7 +729,7 @@ namespace SqlKata.Execution
                     .Select(x => x[include.LocalKey].ToString())
                     .ToList();
 
-                    if(!localIds.Any())
+                    if (!localIds.Any())
                     {
                         continue;
                     }
