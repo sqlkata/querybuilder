@@ -19,10 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Release
+        run: dotnet build --no-restore
       - name: Start MySql
         run: |
           sudo /etc/init.d/mysql start
@@ -31,7 +36,7 @@ jobs:
           mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
           mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
       - name: Test
-        run: dotnet test --configuration Release --no-build
+        run: dotnet test --no-build --verbosity normal
         env:
           SQLKATA_MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
           SQLKATA_MYSQL_USER: ${{ env.DB_MYSQL_USER }}
