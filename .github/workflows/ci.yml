@@ -42,15 +42,18 @@ jobs:
           mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
           mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
       
-      - name: Start MS SQL
-        uses: potatoqualitee/mssqlsuite@v1.11
-        with:
-          install: sqlengine, sqlclient
-          admin-username: ${{ env.DB_MSSQL_USER }}
-          sa-password: ${{ env.DB_MSSQL_PASSWORD }}
+      - name: Install SQL Server
+        run: |
+          sudo su
+          curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+          add-apt-repository "$(curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/mssql-server-2022.list)"
+          apt-get update
+          ACCEPT_EULA=Y apt-get install -y mssql-server mssql-tools unixodbc-dev
+          /opt/mssql/bin/mssql-conf setup accept-eula --edition Developer --sapassword "${{ env.DB_MSSQL_PASSWORD }}"
 
-      - name: Test connection with custom sa user
-        run: sqlcmd -S ${{ env.DB_MSSQL_HOST }} -U ${{ env.DB_MSSQL_USER }} -P ${{ env.DB_MSSQL_PASSWORD }} -d tempdb -Q "SELECT @@version;" -C          
+      - name: Run SQL commands (example)
+        run: |
+          sqlcmd -S localhost -U SA -P "${{ env.DB_MSSQL_PASSWORD }}" -Q "SELECT @@VERSION"
       
       - name: Run Test
         run: dotnet test --no-build --verbosity normal
