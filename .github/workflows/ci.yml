@@ -20,9 +20,28 @@ env:
   DB_MSSQL_USER: sa
   DB_MSSQL_PASSWORD: secret
   DB_MSSQL_DATABASE: test_sqlkata
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Define a service container for SQL Server
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          SA_PASSWORD: ${{ env.DB_MSSQL_PASSWORD }} # Use a GitHub secret for the password
+          ACCEPT_EULA: 'Y'
+        ports:
+          - 1433:1433 # Map the port
+        # Wait for the service to be ready before running steps
+        options: >-
+          --health-cmd "sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10      
+          
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -42,18 +61,19 @@ jobs:
           mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
           mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
       
-      - name: Install SQL Server
+      - name: Install sqlcmd tools
         run: |
-          sudo su
-          curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-          add-apt-repository "$(curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/mssql-server-2022.list)"
-          apt-get update
-          ACCEPT_EULA=Y apt-get install -y mssql-server mssql-tools unixodbc-dev
-          /opt/mssql/bin/mssql-conf setup accept-eula --edition Developer --sapassword "${{ env.DB_MSSQL_PASSWORD }}"
+          sudo apt-get update
+          sudo apt-get install -y curl apt-transport-https gnupg
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/microsoft.list
+          sudo apt-get update
+          sudo apt-get install -y mssql-tools unixodbc-dev
+          echo '/opt/mssql-tools/bin' | sudo tee -a $GITHUB_PATH
 
       - name: Run SQL commands (example)
-        run: |
-          sqlcmd -S localhost -U SA -P "${{ env.DB_MSSQL_PASSWORD }}" -Q "SELECT @@VERSION"
+        run: |          
+          sqlcmd -S localhost,1433 -U SA -P "${{ env.DB_MSSQL_PASSWORD }}" -Q "SELECT @@VERSION"
       
       - name: Run Test
         run: dotnet test --no-build --verbosity normal
