@@ -18,7 +18,7 @@ env:
   # MS SQL
   DB_MSSQL_HOST: localhost  
   DB_MSSQL_USER: sa
-  DB_MSSQL_PASSWORD: secret
+  DB_MSSQL_PASSWORD: ZLWFwFhySXbX
   DB_MSSQL_DATABASE: test_sqlkata
 
 
