@@ -119,7 +119,7 @@ public static class Helper {
 
         if (!match.Success) {
             // we did not found a match return the string as is.
-            return new List<string> { expression };
+            return [expression];
         }
 
         var table = expression.Substring(0, expression.IndexOf(".{"));

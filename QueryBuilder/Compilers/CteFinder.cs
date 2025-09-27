@@ -17,7 +17,7 @@ public class CteFinder {
         if (null != orderedCteList)
             return orderedCteList;
 
-        namesOfPreviousCtes = new HashSet<string>();
+        namesOfPreviousCtes = [];
 
         orderedCteList = findInternal(query);
 

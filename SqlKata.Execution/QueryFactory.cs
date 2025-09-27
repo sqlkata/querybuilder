@@ -632,7 +632,7 @@ public class QueryFactory : IDisposable {
 
                 foreach (var item in dynamicResult) {
                     var localValue = item[include.LocalKey].ToString();
-                    item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                    item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : [];
                 }
 
                 continue;
@@ -718,7 +718,7 @@ public class QueryFactory : IDisposable {
 
                 foreach (var item in dynamicResult) {
                     var localValue = item[include.LocalKey].ToString();
-                    item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : new List<Dictionary<string, object>>();
+                    item[include.Name] = children.ContainsKey(localValue) ? children[localValue] : [];
                 }
 
                 continue;

@@ -45,8 +45,8 @@ public partial class Compiler {
     /// A list of white-listed operators
     /// </summary>
     /// <value></value>
-    protected readonly HashSet<string> operators = new HashSet<string>
-    {
+    protected readonly HashSet<string> operators =
+    [
         "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
         "like", "not like",
         "ilike", "not ilike",
@@ -54,11 +54,9 @@ public partial class Compiler {
         "rlike", "not rlike",
         "regexp", "not regexp",
         "similar to", "not similar to"
-    };
+    ];
 
-    protected HashSet<string> userOperators = new HashSet<string> {
-
-    };
+    protected HashSet<string> userOperators = [];
 
     protected Dictionary<string, object> generateNamedBindings(object[] bindings) {
         return Helper.Flatten(bindings).Select((v, i) => new { i, v })
@@ -89,7 +87,7 @@ public partial class Compiler {
         }
 
         var outerClause = new AggregateClause() {
-            Columns = new List<string> { "*" },
+            Columns = ["*"],
             Type = clause.Type
         };
 

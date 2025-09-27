@@ -15,9 +15,9 @@ public class SqlResult {
     }
     public Query Query { get; set; }
     public string RawSql { get; set; } = "";
-    public List<object> Bindings { get; set; } = new List<object>();
+    public List<object> Bindings { get; set; } = [];
     public string Sql { get; set; } = "";
-    public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
+    public Dictionary<string, object> NamedBindings = [];
 
     private static readonly Type[] NumberTypes =
     {

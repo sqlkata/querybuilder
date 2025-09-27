@@ -12,8 +12,8 @@ public partial class Query : BaseQuery<Query> {
     public bool IsDistinct { get; set; } = false;
     public string QueryAlias { get; set; }
     public string Method { get; set; } = "select";
-    public List<Include> Includes = new List<Include>();
-    public Dictionary<string, object> Variables = new Dictionary<string, object>();
+    public List<Include> Includes = [];
+    public Dictionary<string, object> Variables = [];
 
     public Query() : base() {
     }
@@ -125,7 +125,7 @@ public partial class Query : BaseQuery<Query> {
         var clause = new AdHocTableFromClause() {
             Alias = alias,
             Columns = columnsList,
-            Values = new List<object>(),
+            Values = [],
         };
 
         foreach (var values in valuesCollectionList) {

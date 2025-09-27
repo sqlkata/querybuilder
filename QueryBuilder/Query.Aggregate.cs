@@ -11,14 +11,14 @@ public partial class Query {
         this.ClearComponent("aggregate")
         .AddComponent("aggregate", new AggregateClause {
             Type = type,
-            Columns = columns?.ToList() ?? new List<string>(),
+            Columns = columns?.ToList() ?? [],
         });
 
         return this;
     }
 
     public Query AsCount(string[] columns = null) {
-        var cols = columns?.ToList() ?? new List<string> { };
+        var cols = columns?.ToList() ?? [];
 
         if (!cols.Any()) {
             cols.Add("*");

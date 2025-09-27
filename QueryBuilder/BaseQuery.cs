@@ -9,7 +9,7 @@ public abstract class AbstractQuery {
 }
 
 public abstract partial class BaseQuery<Q> : AbstractQuery where Q : BaseQuery<Q> {
-    public List<AbstractClause> Clauses { get; set; } = new List<AbstractClause>();
+    public List<AbstractClause> Clauses { get; set; } = [];
 
     private bool orFlag = false;
     private bool notFlag = false;

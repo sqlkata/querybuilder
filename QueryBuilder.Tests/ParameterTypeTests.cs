@@ -16,8 +16,8 @@ public class ParameterTypeTests : TestSupport {
     }
 
     public class ParameterTypeGenerator : IEnumerable<object[]> {
-        private readonly List<object[]> _data = new List<object[]>
-        {
+        private readonly List<object[]> _data =
+        [
             new object[] {"1", 1},
             new object[] {Convert.ToSingle("10.5", CultureInfo.InvariantCulture).ToString(), 10.5},
             new object[] {"-2", -2},
@@ -28,7 +28,7 @@ public class ParameterTypeTests : TestSupport {
             new object[] {"0 /* First */", EnumExample.First},
             new object[] {"1 /* Second */", EnumExample.Second},
             new object[] {"'a string'", "a string"},
-        };
+        ];
 
         public IEnumerator<object[]> GetEnumerator() => _data.GetEnumerator();
 

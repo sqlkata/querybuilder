@@ -7,7 +7,7 @@ using System.Reflection;
 
 internal class ConditionsCompilerProvider {
     private readonly Type compilerType;
-    private readonly Dictionary<string, MethodInfo> methodsCache = new Dictionary<string, MethodInfo>();
+    private readonly Dictionary<string, MethodInfo> methodsCache = [];
     private readonly object syncRoot = new object();
 
     public ConditionsCompilerProvider(Compiler compiler) {
