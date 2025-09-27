@@ -1,75 +1,68 @@
+namespace SqlKata.Tests.Oracle;
+
 using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
 using Xunit;
 
-namespace SqlKata.Tests.Oracle
-{
-    public class OracleLimitTests : TestSupport
-    {
-        private const string TableName = "Table";
-        private const string SqlPlaceholder = "GENERATED_SQL";
+public class OracleLimitTests : TestSupport {
+    private const string TableName = "Table";
+    private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private readonly OracleCompiler compiler;
+    private readonly OracleCompiler compiler;
 
-        public OracleLimitTests()
-        {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
-        }
+    public OracleLimitTests() {
+        compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+    }
 
-        [Fact]
-        public void NoLimitNorOffset()
-        {
-            // Arrange:
-            var query = new Query(TableName);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
+    [Fact]
+    public void NoLimitNorOffset() {
+        // Arrange:
+        var query = new Query(TableName);
+        var ctx = new SqlResult("?", "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.Null(compiler.CompileLimit(ctx));
-        }
+        // Act & Assert:
+        Assert.Null(compiler.CompileLimit(ctx));
+    }
 
-        [Fact]
-        public void LimitOnly()
-        {
-            // Arrange:
-            var query = new Query(TableName).Limit(10);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
+    [Fact]
+    public void LimitOnly() {
+        // Arrange:
+        var query = new Query(TableName).Limit(10);
+        var ctx = new SqlResult("?", "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            //  Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
-            Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(0L, ctx.Bindings[0]);
-            Assert.Equal(10, ctx.Bindings[1]);
-        }
+        //  Act & Assert:
+        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+        Assert.Equal(2, ctx.Bindings.Count);
+        Assert.Equal(0L, ctx.Bindings[0]);
+        Assert.Equal(10, ctx.Bindings[1]);
+    }
 
-        [Fact]
-        public void OffsetOnly()
-        {
-            // Arrange:
-            var query = new Query(TableName).Offset(20);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
+    [Fact]
+    public void OffsetOnly() {
+        // Arrange:
+        var query = new Query(TableName).Offset(20);
+        var ctx = new SqlResult("?", "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
+        // Act & Assert:
+        Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
 
-            Assert.Single(ctx.Bindings);
-            Assert.Equal(20L, ctx.Bindings[0]);
-        }
+        Assert.Single(ctx.Bindings);
+        Assert.Equal(20L, ctx.Bindings[0]);
+    }
 
-        [Fact]
-        public void LimitAndOffset()
-        {
-            // Arrange:
-            var query = new Query(TableName).Limit(5).Offset(20);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
+    [Fact]
+    public void LimitAndOffset() {
+        // Arrange:
+        var query = new Query(TableName).Limit(5).Offset(20);
+        var ctx = new SqlResult("?", "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+        // Act & Assert:
+        Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
 
-            Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(20L, ctx.Bindings[0]);
-            Assert.Equal(5, ctx.Bindings[1]);
+        Assert.Equal(2, ctx.Bindings.Count);
+        Assert.Equal(20L, ctx.Bindings[0]);
+        Assert.Equal(5, ctx.Bindings[1]);
 
-            compiler.CompileLimit(ctx);
-        }
+        compiler.CompileLimit(ctx);
     }
 }
