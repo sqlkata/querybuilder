@@ -17,7 +17,7 @@ env:
 
   # MS SQL
   DB_MSSQL_HOST: localhost  
-  DB_MSSQL_USER: admin
+  DB_MSSQL_USER: sa
   DB_MSSQL_PASSWORD: secret
   DB_MSSQL_DATABASE: test_sqlkata
 jobs:
@@ -49,8 +49,8 @@ jobs:
           admin-username: ${{ env.DB_MSSQL_USER }}
           sa-password: ${{ env.DB_MSSQL_PASSWORD }}
 
-      - name: Test connection with custom admin user
-        run: sqlcmd -S ${{ env.DB_MSSQL_HOST }} -U ${{ env.DB_MSSQL_USER }} -P ${{ env.DB_MSSQL_PASSWORD }} -d ${{ env.DB_MSSQL_DATABASE }} -Q "SELECT @@version;" -C          
+      - name: Test connection with custom sa user
+        run: sqlcmd -S ${{ env.DB_MSSQL_HOST }} -U ${{ env.DB_MSSQL_USER }} -P ${{ env.DB_MSSQL_PASSWORD }} -d tempdb -Q "SELECT @@version;" -C          
       
       - name: Run Test
         run: dotnet test --no-build --verbosity normal
