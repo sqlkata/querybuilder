@@ -10,10 +10,16 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   # MYSQL DB
-  DB_MYSQL_DATABASE: test_sqlkata
+  DB_MYSQL_HOST: localhost  
   DB_MYSQL_USER: root
   DB_MYSQL_PASSWORD: "root"
-  DB_MYSQL_HOST: localhost
+  DB_MYSQL_DATABASE: test_sqlkata  
+
+  # MS SQL
+  DB_MSSQL_HOST: localhost  
+  DB_MSSQL_USER: admin
+  DB_MSSQL_PASSWORD: secret
+  DB_MSSQL_DATABASE: test_sqlkata
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,7 +41,18 @@ jobs:
           mysql -e 'CREATE DATABASE ${{ env.DB_MYSQL_DATABASE }};' -u${{ env.DB_MYSQL_USER }}
           mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
           mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
-      - name: Test
+      
+      - name: Start MS SQL
+        uses: potatoqualitee/mssqlsuite@v1.11
+        with:
+          install: sqlengine, sqlclient
+          admin-username: ${{ env.DB_MSSQL_USER }}
+          sa-password: ${{ env.DB_MSSQL_PASSWORD }}
+
+      - name: Test connection with custom admin user
+        run: sqlcmd -S ${{ env.DB_MSSQL_HOST }} -U ${{ env.DB_MSSQL_USER }} -P ${{ env.DB_MSSQL_PASSWORD }} -d ${{ env.DB_MSSQL_DATABASE }} -Q "SELECT @@version;" -C          
+      
+      - name: Run Test
         run: dotnet test --no-build --verbosity normal
         env:
           SQLKATA_MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
