@@ -10,37 +10,33 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   # MYSQL DB
-  DB_MYSQL_HOST: localhost
-  DB_MYSQL_USER: root
-  DB_MYSQL_PASSWORD: "root"
   DB_MYSQL_DATABASE: test_sqlkata
 
   # MS SQL
   DB_MSSQL_HOST: localhost
   DB_MSSQL_USER: sa
-  DB_MSSQL_PASSWORD: "cQKY1w4?8+4]"
   DB_MSSQL_DATABASE: test_sqlkata
 
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     # Define a service container for SQL Server
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          SA_PASSWORD: "${{ env.DB_MSSQL_PASSWORD }}" # Use a GitHub secret for the password
-          ACCEPT_EULA: 'Y'
-        ports:
-          - 1433:1433 # Map the port
-        # Wait for the service to be ready before running steps
-        options: >-
-          --health-cmd "sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 20
+    # services:
+    #   mssql:
+    #     image: mcr.microsoft.com/mssql/server:2022-latest
+    #     env:
+    #       MSSQL_SA_PASSWORD: "${{ secrets.MSSQL_SA_PASSWORD }}"
+    #       ACCEPT_EULA: 'Y'
+    #       MSSQL_PID: Express
+    #     ports:
+    #       - 1433:1433 # Map the port
+    #     # Wait for the service to be ready before running steps
+    #     options: >-
+    #       --health-cmd "sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q 'SELECT 1'"
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 20
 
     timeout-minutes: 20
     steps:
@@ -56,28 +52,29 @@ jobs:
       - name: Start MySql
         run: |
           sudo /etc/init.d/mysql start
-          mysqladmin -u ${{ env.DB_MYSQL_USER }} -p${{ env.DB_MYSQL_PASSWORD }} password ''
-          mysql -e 'CREATE DATABASE ${{ env.DB_MYSQL_DATABASE }};' -u${{ env.DB_MYSQL_USER }}
-          mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
-          mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
+          mysqladmin -u root -proot password "${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          mysql -uroot -p"${{ secrets.MYSQL_ROOT_PASSWORD }}" -e 'CREATE DATABASE ${{ env.DB_MYSQL_DATABASE }};'
+          mysql -uroot -p"${{ secrets.MYSQL_ROOT_PASSWORD }}" -e 'CREATE TABLE cars(id int primary key auto_increment);' ${{ env.DB_MYSQL_DATABASE }}
+          mysql -uroot -p"${{ secrets.MYSQL_ROOT_PASSWORD }}" -e 'SHOW TABLES;' ${{ env.DB_MYSQL_DATABASE }}
 
-      - name: Install sqlcmd tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl apt-transport-https gnupg
-          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-          echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/microsoft.list
-          sudo apt-get update
-          sudo apt-get install -y mssql-tools unixodbc-dev
-          echo '/opt/mssql-tools/bin' | sudo tee -a $GITHUB_PATH
+      # - name: Install sqlcmd tools
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y curl apt-transport-https gnupg
+      #     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+      #     echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/microsoft.list
+      #     sudo apt-get update
+      #     sudo apt-get install -y mssql-tools unixodbc-dev
+      #     echo '/opt/mssql-tools/bin' | sudo tee -a $GITHUB_PATH
 
-      - name: Run SQL commands (example)
-        run: |
-          sqlcmd -S localhost,1433 -U SA -P "${{ env.DB_MSSQL_PASSWORD }}" -Q "SELECT @@VERSION"
+      # - name: Run SQL commands (example)
+      #   run: |
+      #     sqlcmd -S localhost,1433 -U SA -P "${{ secrets.MSSQL_SA_PASSWORD }}" -Q "SELECT @@VERSION"
 
       - name: Run Test
         run: dotnet test --no-build --verbosity normal
         env:
-          SQLKATA_MYSQL_HOST: ${{ env.DB_MYSQL_HOST }}
-          SQLKATA_MYSQL_USER: ${{ env.DB_MYSQL_USER }}
+          SQLKATA_MYSQL_HOST: localhost
+          SQLKATA_MYSQL_USER: root
           SQLKATA_MYSQL_DB: ${{ env.DB_MYSQL_DATABASE }}
+          SQLKATA_MYSQL_PASSWORD: "${{ secrets.MYSQL_ROOT_PASSWORD }}"
