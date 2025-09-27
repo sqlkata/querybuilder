@@ -10,28 +10,28 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   # MYSQL DB
-  DB_MYSQL_HOST: localhost  
+  DB_MYSQL_HOST: localhost
   DB_MYSQL_USER: root
   DB_MYSQL_PASSWORD: "root"
-  DB_MYSQL_DATABASE: test_sqlkata  
+  DB_MYSQL_DATABASE: test_sqlkata
 
   # MS SQL
-  DB_MSSQL_HOST: localhost  
+  DB_MSSQL_HOST: localhost
   DB_MSSQL_USER: sa
-  DB_MSSQL_PASSWORD: ZLWFwFhySXbX
+  DB_MSSQL_PASSWORD: "cQKY1w4?8+4]"
   DB_MSSQL_DATABASE: test_sqlkata
 
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     # Define a service container for SQL Server
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
-          SA_PASSWORD: ${{ env.DB_MSSQL_PASSWORD }} # Use a GitHub secret for the password
+          SA_PASSWORD: "${{ env.DB_MSSQL_PASSWORD }}" # Use a GitHub secret for the password
           ACCEPT_EULA: 'Y'
         ports:
           - 1433:1433 # Map the port
@@ -40,9 +40,9 @@ jobs:
           --health-cmd "sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q 'SELECT 1'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10      
-          
-    timeout-minutes: 15
+          --health-retries 20
+
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -60,7 +60,7 @@ jobs:
           mysql -e 'CREATE DATABASE ${{ env.DB_MYSQL_DATABASE }};' -u${{ env.DB_MYSQL_USER }}
           mysql -e 'CREATE TABLE cars(id int primary key auto_increment);' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
           mysql -e 'SHOW TABLES;' -u${{ env.DB_MYSQL_USER }} ${{ env.DB_MYSQL_DATABASE }}
-      
+
       - name: Install sqlcmd tools
         run: |
           sudo apt-get update
@@ -72,9 +72,9 @@ jobs:
           echo '/opt/mssql-tools/bin' | sudo tee -a $GITHUB_PATH
 
       - name: Run SQL commands (example)
-        run: |          
+        run: |
           sqlcmd -S localhost,1433 -U SA -P "${{ env.DB_MSSQL_PASSWORD }}" -Q "SELECT @@VERSION"
-      
+
       - name: Run Test
         run: dotnet test --no-build --verbosity normal
         env:
