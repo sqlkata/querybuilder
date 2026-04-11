@@ -276,3 +276,6 @@ __pycache__/
 
 # Thumbs
 Thumbs.db
+
+# BenchmarkDotNet report
+BenchmarkDotNet.Artifacts/
