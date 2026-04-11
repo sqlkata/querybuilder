@@ -1,6 +1,4 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests.Oracle
 {
@@ -9,11 +7,11 @@ namespace SqlKata.Tests.Oracle
         private const string TableName = "Table";
         private const string SqlPlaceholder = "GENERATED_SQL";
 
-        private readonly OracleCompiler compiler;
+        private readonly Compiler compiler;
 
         public OracleLimitTests()
         {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+            compiler = CreateCompiler(EngineCodes.Oracle);
         }
 
         [Fact]
@@ -21,10 +19,12 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.Null(compiler.CompileLimit(ctx));
+            // Act
+            var ctx = compiler.Compile(query);
+
+            // Assert:
+            Assert.Equal("SELECT * FROM \"Table\"", ctx.RawSql);
         }
 
         [Fact]
@@ -32,10 +32,12 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Limit(10);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            //  Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+            // Act
+            var ctx = compiler.Compile(query);
+
+            // Assert:
+            Assert.Equal("SELECT * FROM \"Table\" ORDER BY (SELECT 0 FROM DUAL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", ctx.RawSql);
             Assert.Equal(2, ctx.Bindings.Count);
             Assert.Equal(0L, ctx.Bindings[0]);
             Assert.Equal(10, ctx.Bindings[1]);
@@ -46,11 +48,12 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Offset(20);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS", compiler.CompileLimit(ctx));
+            // Act
+            var ctx = compiler.Compile(query);
 
+            // Assert:
+            Assert.Equal("SELECT * FROM \"Table\" ORDER BY (SELECT 0 FROM DUAL) OFFSET ? ROWS", ctx.RawSql);
             Assert.Single(ctx.Bindings);
             Assert.Equal(20L, ctx.Bindings[0]);
         }
@@ -60,16 +63,15 @@ namespace SqlKata.Tests.Oracle
         {
             // Arrange:
             var query = new Query(TableName).Limit(5).Offset(20);
-            var ctx = new SqlResult("?",  "\\") { Query = query, RawSql = SqlPlaceholder };
 
-            // Act & Assert:
-            Assert.EndsWith("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", compiler.CompileLimit(ctx));
+            // Act
+            var result = compiler.Compile(query);
 
-            Assert.Equal(2, ctx.Bindings.Count);
-            Assert.Equal(20L, ctx.Bindings[0]);
-            Assert.Equal(5, ctx.Bindings[1]);
-
-            compiler.CompileLimit(ctx);
+            // Assert:
+            Assert.Equal("SELECT * FROM \"Table\" ORDER BY (SELECT 0 FROM DUAL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", result.RawSql);
+            Assert.Equal(2, result.Bindings.Count);
+            Assert.Equal(20L, result.Bindings[0]);
+            Assert.Equal(5, result.Bindings[1]);
         }
     }
 }

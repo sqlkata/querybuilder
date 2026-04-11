@@ -1,17 +1,15 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests.Oracle
 {
     public class OracleInsertManyTests : TestSupport
     {
         private const string TableName = "Table";
-        private readonly OracleCompiler compiler;
+        private readonly Compiler compiler;
 
         public OracleInsertManyTests()
         {
-            compiler = Compilers.Get<OracleCompiler>(EngineCodes.Oracle);
+            compiler = CreateCompiler(EngineCodes.Oracle);
         }
 
         [Fact]

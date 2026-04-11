@@ -1,16 +1,14 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests.SqlServer
 {
     public class NestedSelectTests : TestSupport
     {
-        private readonly SqlServerCompiler compiler;
+        private readonly Compiler compiler;
 
         public NestedSelectTests()
         {
-            compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
+            compiler = CreateCompiler(EngineCodes.SqlServer);
         }
 
         [Fact]

@@ -1,16 +1,14 @@
-using SqlKata.Compilers;
 using SqlKata.Tests.Infrastructure;
-using Xunit;
 
 namespace SqlKata.Tests.SqlServer
 {
     public class SqlServerTests : TestSupport
     {
-        private readonly SqlServerCompiler compiler;
+        private readonly Compiler compiler;
 
         public SqlServerTests()
         {
-            compiler = Compilers.Get<SqlServerCompiler>(EngineCodes.SqlServer);
+            compiler = CreateCompiler(EngineCodes.SqlServer);
         }
 
 
@@ -18,7 +16,9 @@ namespace SqlKata.Tests.SqlServer
         public void SqlServerTop()
         {
             var query = new Query("table").Limit(1);
+
             var result = compiler.Compile(query);
+
             Assert.Equal("SELECT TOP (@p0) * FROM [table]", result.Sql);
         }
 
@@ -27,7 +27,9 @@ namespace SqlKata.Tests.SqlServer
         public void SqlServerSelectWithParameterPlaceHolder()
         {
             var query = new Query("table").Select("Column\\?");
+
             var result = compiler.Compile(query);
+
             Assert.Equal("SELECT [Column\\?] FROM [table]", result.Sql);
         }
 
@@ -35,31 +37,36 @@ namespace SqlKata.Tests.SqlServer
         public void SqlServerTopWithDistinct()
         {
             var query = new Query("table").Limit(1).Distinct();
+
             var result = compiler.Compile(query);
+
             Assert.Equal("SELECT DISTINCT TOP (@p0) * FROM [table]", result.Sql);
         }
 
 
-        [Theory()]
+        [Theory]
         [InlineData(-100)]
         [InlineData(0)]
         public void OffsetSqlServer_Should_Be_Ignored_If_Zero_Or_Negative(int offset)
         {
-            var q = new Query().From("users").Offset(offset);
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            var query = new Query().From("users").Offset(offset);
 
-            Assert.Equal("SELECT * FROM [users]", c.ToString());
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [users]", result.ToString());
         }
 
         [Fact]
         public void SqlServerSelectWithParameterPlaceHolderEscaped()
         {
             var query = new Query("table").Select("Column\\?");
+
             var result = compiler.Compile(query);
+
             Assert.Equal("SELECT [Column?] FROM [table]", result.ToString());
         }
 
-        [Theory()]
+        [Theory]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
@@ -68,8 +75,10 @@ namespace SqlKata.Tests.SqlServer
         [InlineData(1000000)]
         public void OffsetSqlServer_Should_Be_Incremented_By_One(int offset)
         {
-            var q = new Query().From("users").Offset(offset);
-            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            var query = new Query().From("users").Offset(offset);
+
+            var c = compiler.Compile(query);
+
             Assert.Equal(
                 "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [users]) AS [results_wrapper] WHERE [row_num] >= " +
                 (offset + 1), c.ToString());

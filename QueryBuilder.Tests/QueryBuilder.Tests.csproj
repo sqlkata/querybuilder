@@ -3,6 +3,7 @@
         <TargetFrameworks>net8.0</TargetFrameworks>
         <OutputType>Library</OutputType>
         <IsPackable>false</IsPackable>
+			  <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>SqlKata.Tests</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
