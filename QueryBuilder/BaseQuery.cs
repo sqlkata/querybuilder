@@ -16,6 +16,8 @@ namespace SqlKata
         private bool orFlag = false;
         private bool notFlag = false;
         public string EngineScope = null;
+        public string ToRaw { get; set; }
+
 
         public Q SetEngineScope(string engine)
         {
