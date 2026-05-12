@@ -80,8 +80,25 @@ namespace SqlKata.Compilers
         private Query TransformAggregateQuery(Query query)
         {
             var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            var hasGroup = query.HasComponent("group", EngineCode);
 
-            if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
+            if (clause.Columns.Count == 1 && !query.IsDistinct && (!hasGroup || clause.Type != "count")) return query;
+
+            if (hasGroup && clause.Columns.Count == 1 && !query.IsDistinct)
+            {
+                var innerQuery = query.Clone();
+                innerQuery.ClearComponent("aggregate", EngineCode);
+
+                var groupedOuterClause = new AggregateClause()
+                {
+                    Columns = new List<string> { "*" },
+                    Type = clause.Type
+                };
+
+                return new Query()
+                    .AddComponent("aggregate", groupedOuterClause)
+                    .From(innerQuery, $"{clause.Type}Query");
+            }
 
             if (query.IsDistinct)
             {
@@ -89,7 +106,7 @@ namespace SqlKata.Compilers
                 query.ClearComponent("select", EngineCode);
                 query.Select(clause.Columns.ToArray());
             }
-            else
+            else if (!hasGroup)
             {
                 foreach (var column in clause.Columns)
                 {
@@ -129,8 +146,7 @@ namespace SqlKata.Compilers
                 if (query.Method == "aggregate")
                 {
                     query.ClearComponent("limit")
-                        .ClearComponent("order")
-                        .ClearComponent("group");
+                        .ClearComponent("order");
 
                     query = TransformAggregateQuery(query);
                 }

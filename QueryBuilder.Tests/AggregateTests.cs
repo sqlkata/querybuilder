@@ -30,6 +30,20 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void CountWithGroupBy()
+        {
+            var query = new Query("org_storage")
+                .Select("organization_id")
+                .LeftJoin("organizations", "org_storage.organization_id", "organizations.id")
+                .GroupBy("organization_id")
+                .AsCount();
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT COUNT(*) AS [count] FROM (SELECT [organization_id] FROM [org_storage] \nLEFT JOIN [organizations] ON [org_storage].[organization_id] = [organizations].[id] GROUP BY [organization_id]) AS [countQuery]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
         public void DistinctCount()
         {
             var query = new Query("A").Distinct().AsCount();
@@ -67,6 +81,18 @@ namespace SqlKata.Tests
             var c = Compile(query);
 
             Assert.Equal("SELECT SUM([PacketsDropped]) AS [sum] FROM [A]", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void SumWithGroupBy()
+        {
+            var query = new Query("A")
+                .GroupBy("UserId")
+                .AsSum("PacketsDropped");
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT SUM([PacketsDropped]) AS [sum] FROM [A] GROUP BY [UserId]", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
