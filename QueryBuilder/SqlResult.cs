@@ -6,19 +6,48 @@ using System.Linq;
 
 namespace SqlKata
 {
+    /// <summary>
+    /// Represents the SQL text and bindings produced by compiling a <see cref="Query"/>.
+    /// </summary>
     public class SqlResult
     {
         private string ParameterPlaceholder { get; set; }
         private string EscapeCharacter { get; set; }
+
+        /// <summary>
+        /// Initializes a new SQL result with the placeholder and escape character used by the compiler.
+        /// </summary>
+        /// <param name="parameterPlaceholder">The placeholder token used for parameter bindings.</param>
+        /// <param name="escapeCharacter">The escape character used while replacing placeholders.</param>
         public SqlResult(string parameterPlaceholder, string escapeCharacter)
         {
             ParameterPlaceholder = parameterPlaceholder;
             EscapeCharacter = escapeCharacter;
         }
+
+        /// <summary>
+        /// Gets or sets the query that produced this result.
+        /// </summary>
         public Query Query { get; set; }
+
+        /// <summary>
+        /// Gets or sets the raw SQL text before bindings are expanded.
+        /// </summary>
         public string RawSql { get; set; } = "";
+
+        /// <summary>
+        /// Gets or sets the ordered binding values for the compiled SQL.
+        /// </summary>
         public List<object> Bindings { get; set; } = new List<object>();
+
+        /// <summary>
+        /// Gets or sets the compiled SQL text.
+        /// </summary>
         public string Sql { get; set; } = "";
+
+        /// <summary>
+        /// Stores bindings by name for compilers that support named parameters.
+        /// </summary>
         public Dictionary<string, object> NamedBindings = new Dictionary<string, object>();
 
         private static readonly Type[] NumberTypes =
@@ -33,6 +62,10 @@ namespace SqlKata
             typeof(ulong),
         };
 
+        /// <summary>
+        /// Returns the raw SQL with binding values inlined for inspection and debugging.
+        /// </summary>
+        /// <returns>The SQL text with bindings converted to SQL literals.</returns>
         public override string ToString()
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
