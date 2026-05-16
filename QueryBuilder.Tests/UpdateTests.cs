@@ -95,6 +95,28 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void UpdateWithReturning()
+        {
+            var query = new Query("Books")
+                .Where("Id", 10)
+                .AsUpdate(new Dictionary<string, object>
+                {
+                    { "Title", "SqlKata" }
+                })
+                .Returning("Id", "UpdatedAt");
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query);
+            Assert.Equal(
+                "UPDATE \"Books\" SET \"Title\" = 'SqlKata' WHERE \"Id\" = 10 RETURNING \"Id\", \"UpdatedAt\"",
+                postgres.ToString());
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, query);
+            Assert.Equal(
+                "UPDATE [Books] SET [Title] = 'SqlKata' OUTPUT INSERTED.[Id], INSERTED.[UpdatedAt] WHERE [Id] = 10",
+                sqlServer.ToString());
+        }
+
+        [Fact]
         public void UpdateWithEmptyString()
         {
             var query = new Query("Books").Where("Id", 1).AsUpdate(

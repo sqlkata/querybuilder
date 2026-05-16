@@ -14,6 +14,48 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = false;
 
+        protected override string CompileInsertReturningBeforeSource(SqlResult ctx)
+        {
+            var output = CompileOutputReturning(ctx);
+            return string.IsNullOrEmpty(output) ? "" : $" {output}";
+        }
+
+        protected override string CompileUpdateReturningBeforeWhere(SqlResult ctx)
+        {
+            var output = CompileOutputReturning(ctx);
+            return string.IsNullOrEmpty(output) ? "" : $" {output}";
+        }
+
+        protected override string CompileInsertReturningAfterSource(SqlResult ctx)
+        {
+            return "";
+        }
+
+        protected override string CompileUpdateReturningAfterWhere(SqlResult ctx)
+        {
+            return "";
+        }
+
+        protected string CompileOutputReturning(SqlResult ctx)
+        {
+            var columns = ctx.Query
+                .GetComponents<AbstractColumn>("returning", EngineCode)
+                .Select(x => CompileOutputColumn(ctx, x))
+                .ToList();
+
+            return columns.Any() ? $"OUTPUT {string.Join(", ", columns)}" : null;
+        }
+
+        protected string CompileOutputColumn(SqlResult ctx, AbstractColumn column)
+        {
+            if (column is Column normalColumn)
+            {
+                return $"INSERTED.{Wrap(normalColumn.Name)}";
+            }
+
+            return CompileColumn(ctx, column);
+        }
+
         protected override SqlResult CompileSelectQuery(Query query)
         {
             if (!UseLegacyPagination || !query.HasOffset(EngineCode))

@@ -76,6 +76,26 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void InsertWithReturning()
+        {
+            var query = new Query("Books")
+                .AsInsert(
+                    new[] { "Title", "Author" },
+                    new object[] { "SqlKata", "Kata" })
+                .Returning("Id", "CreatedAt");
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query);
+            Assert.Equal(
+                "INSERT INTO \"Books\" (\"Title\", \"Author\") VALUES ('SqlKata', 'Kata') RETURNING \"Id\", \"CreatedAt\"",
+                postgres.ToString());
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, query);
+            Assert.Equal(
+                "INSERT INTO [Books] ([Title], [Author]) OUTPUT INSERTED.[Id], INSERTED.[CreatedAt] VALUES ('SqlKata', 'Kata')",
+                sqlServer.ToString());
+        }
+
+        [Fact]
         public void InsertMultiRecords()
         {
             var query = new Query("expensive_cars")

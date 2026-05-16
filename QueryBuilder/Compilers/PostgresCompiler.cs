@@ -13,6 +13,17 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
         public override bool SupportsFilterClause { get; set; } = true;
 
+        protected override string CompileInsertReturningAfterSource(SqlResult ctx)
+        {
+            var returning = CompileStandardReturning(ctx);
+            return string.IsNullOrEmpty(returning) ? "" : $" {returning}";
+        }
+
+        protected override string CompileUpdateReturningAfterWhere(SqlResult ctx)
+        {
+            var returning = CompileStandardReturning(ctx);
+            return string.IsNullOrEmpty(returning) ? "" : $" {returning}";
+        }
 
         protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
         {
