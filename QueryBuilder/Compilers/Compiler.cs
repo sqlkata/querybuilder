@@ -353,6 +353,8 @@ namespace SqlKata.Compilers
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
+                var returningBeforeWhere = CompileUpdateReturningBeforeWhere(ctx);
+
                 wheres = CompileWheres(ctx);
 
                 if (!string.IsNullOrEmpty(wheres))
@@ -360,7 +362,9 @@ namespace SqlKata.Compilers
                     wheres = " " + wheres;
                 }
 
-                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value}{wheres}";
+                var returningAfterWhere = CompileUpdateReturningAfterWhere(ctx);
+
+                ctx.RawSql = $"UPDATE {table} SET {column} = {column} {sign} {value}{returningBeforeWhere}{wheres}{returningAfterWhere}";
 
                 return ctx;
             }
@@ -376,6 +380,8 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
+            var returningBefore = CompileUpdateReturningBeforeWhere(ctx);
+
             wheres = CompileWheres(ctx);
 
             if (!string.IsNullOrEmpty(wheres))
@@ -383,7 +389,9 @@ namespace SqlKata.Compilers
                 wheres = " " + wheres;
             }
 
-            ctx.RawSql = $"UPDATE {table} SET {sets}{wheres}";
+            var returningAfter = CompileUpdateReturningAfterWhere(ctx);
+
+            ctx.RawSql = $"UPDATE {table} SET {sets}{returningBefore}{wheres}{returningAfter}";
 
             return ctx;
         }
@@ -426,10 +434,12 @@ namespace SqlKata.Compilers
         {
             string columns = GetInsertColumnsList(clause.Columns);
 
+            var returningBefore = CompileInsertReturningBeforeSource(ctx);
             var subCtx = CompileSelectQuery(clause.Query);
             ctx.Bindings.AddRange(subCtx.Bindings);
+            var returningAfter = CompileInsertReturningAfterSource(ctx);
 
-            ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
+            ctx.RawSql = $"{SingleInsertStartClause} {table}{columns}{returningBefore} {subCtx.RawSql}{returningAfter}";
 
             return ctx;
         }
@@ -443,15 +453,24 @@ namespace SqlKata.Compilers
 
             var firstInsert = insertClauses.First();
             string columns = GetInsertColumnsList(firstInsert.Columns);
-            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
 
-            ctx.RawSql = $"{insertInto} {table}{columns} VALUES ({values})";
+            var returningBefore = CompileInsertReturningBeforeSource(ctx);
+            var values = string.Join(", ", Parameterize(ctx, firstInsert.Values));
+            var returningAfter = CompileInsertReturningAfterSource(ctx);
+
+            ctx.RawSql = $"{insertInto} {table}{columns}{returningBefore} VALUES ({values})";
 
             if (isMultiValueInsert)
-                return CompileRemainingInsertClauses(ctx, table, insertClauses);
+            {
+                ctx = CompileRemainingInsertClauses(ctx, table, insertClauses);
+                ctx.RawSql += returningAfter;
+                return ctx;
+            }
 
-            if (firstInsert.ReturnId && !string.IsNullOrEmpty(LastId))
+            if (firstInsert.ReturnId && !HasReturning(ctx) && !string.IsNullOrEmpty(LastId))
                 ctx.RawSql += ";" + LastId;
+            else
+                ctx.RawSql += returningAfter;
 
             return ctx;
         }
@@ -473,6 +492,51 @@ namespace SqlKata.Compilers
                 columns = $" ({string.Join(", ", WrapArray(columnList))})";
 
             return columns;
+        }
+
+        protected bool HasReturning(SqlResult ctx)
+        {
+            return ctx.Query.HasComponent("returning", EngineCode);
+        }
+
+        protected string CompileStandardReturning(SqlResult ctx)
+        {
+            var columns = ctx.Query
+                .GetComponents<AbstractColumn>("returning", EngineCode)
+                .Select(x => CompileColumn(ctx, x))
+                .ToList();
+
+            return columns.Any() ? $"RETURNING {string.Join(", ", columns)}" : null;
+        }
+
+        protected virtual string CompileInsertReturningBeforeSource(SqlResult ctx)
+        {
+            return "";
+        }
+
+        protected virtual string CompileInsertReturningAfterSource(SqlResult ctx)
+        {
+            ThrowIfReturningUnsupported(ctx);
+            return "";
+        }
+
+        protected virtual string CompileUpdateReturningBeforeWhere(SqlResult ctx)
+        {
+            return "";
+        }
+
+        protected virtual string CompileUpdateReturningAfterWhere(SqlResult ctx)
+        {
+            ThrowIfReturningUnsupported(ctx);
+            return "";
+        }
+
+        protected void ThrowIfReturningUnsupported(SqlResult ctx)
+        {
+            if (HasReturning(ctx))
+            {
+                throw new InvalidOperationException($"{EngineCode} compiler does not support returning clauses");
+            }
         }
 
         protected virtual SqlResult CompileCteQuery(SqlResult ctx, Query query)
