@@ -184,7 +184,7 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : $"({sql})";
         }
 
-        protected string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
+        protected virtual string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
         {
             var op = clause.IsNot ? "NOT " : "";
             return $"{op}{Wrap(clause.First)} {checkOperator(clause.Operator)} {Wrap(clause.Second)}";
