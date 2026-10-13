@@ -154,7 +154,72 @@ namespace SqlKata
         [Obsolete("Use dedicated properties (Conditions, FromClause) instead.")]
         public Join AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
         {
-            return AddComponent(component, clause, engineCode);
+            engineCode ??= EngineScope;
+            clause.Engine = engineCode;
+            clause.Component = component;
+
+            if (clause is AbstractFrom from || component == "from")
+            {
+                var fromClause = clause as AbstractFrom;
+                if (fromClause != null)
+                {
+                    if (FromClause == null || FromClause.Engine == engineCode)
+                    {
+                        FromClause = fromClause;
+                        var current = _clauses.Where(x => x.Component == "from").SingleOrDefault(c => c.Engine == engineCode);
+                        if (current != null)
+                        {
+                            _clauses.Remove(current);
+                        }
+                    }
+                    else if (engineCode == null)
+                    {
+                        // FromClause has an engine-specific clause, while incoming clause is generic.
+                        // Preserve the engine-specific clause in _clauses, and set FromClause to generic.
+                        if (!_clauses.Contains(FromClause))
+                        {
+                            _clauses.Add(FromClause);
+                        }
+                        var current = _clauses.Where(x => x.Component == "from").SingleOrDefault(c => c.Engine == null);
+                        if (current != null)
+                        {
+                            _clauses.Remove(current);
+                        }
+                        FromClause = fromClause;
+                    }
+                    else
+                    {
+                        // FromClause has a different engine (or is generic).
+                        // Keep FromClause, and replace in _clauses for this specific engineCode.
+                        var current = _clauses.Where(x => x.Component == "from").SingleOrDefault(c => c.Engine == engineCode);
+                        if (current != null)
+                        {
+                            _clauses.Remove(current);
+                        }
+                        _clauses.Add(fromClause);
+                    }
+                }
+            }
+            else if (clause is AbstractCondition || component == "where")
+            {
+                var currentWhere = Conditions.Clauses.SingleOrDefault(c => engineCode == null || c.Engine == engineCode);
+                if (currentWhere != null)
+                {
+                    Conditions.Clauses.Remove(currentWhere);
+                }
+                Conditions.AddComponent(component, clause, engineCode);
+            }
+            else
+            {
+                var current = _clauses.Where(x => x.Component == component).SingleOrDefault(c => c.Engine == engineCode);
+                if (current != null)
+                {
+                    _clauses.Remove(current);
+                }
+                _clauses.Add(clause);
+            }
+
+            return this;
         }
 
         [Obsolete("Use dedicated properties (Conditions, FromClause) instead.")]
@@ -162,9 +227,18 @@ namespace SqlKata
         {
             engineCode ??= EngineScope;
 
-            if (component == "from" && FromClause is C cFrom && (engineCode == null || FromClause.Engine == null || FromClause.Engine == engineCode))
+            if (component == "from")
             {
-                return new List<C> { cFrom };
+                var list = new List<C>();
+                if (FromClause is C cFrom && (engineCode == null || FromClause.Engine == null || FromClause.Engine == engineCode))
+                {
+                    list.Add(cFrom);
+                }
+                list.AddRange(_clauses
+                    .Where(x => x.Component == component)
+                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                    .Cast<C>());
+                return list;
             }
 
             if (component == "where")
@@ -203,7 +277,7 @@ namespace SqlKata
         public bool HasComponent(string component, string engineCode = null)
         {
             engineCode ??= EngineScope;
-            if (component == "from") return FromClause != null && (engineCode == null || FromClause.Engine == null || FromClause.Engine == engineCode);
+            if (component == "from") return (FromClause != null && (engineCode == null || FromClause.Engine == null || FromClause.Engine == engineCode)) || _clauses.Any(x => x.Component == "from" && (engineCode == null || x.Engine == null || engineCode == x.Engine));
             if (component == "where") return Conditions.HasConditions(engineCode);
             return _clauses.Any(x => x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine));
         }
@@ -219,6 +293,7 @@ namespace SqlKata
                 {
                     FromClause = null;
                 }
+                _clauses.RemoveAll(x => x.Component == "from" && (engineCode == null || x.Engine == null || engineCode == x.Engine));
             }
             else if (component == "where")
             {
