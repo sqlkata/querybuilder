@@ -250,6 +250,17 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void DedicatedFromAndSelectClauses()
+        {
+            var query = new Query("users")
+                .Select("id", "name")
+                .ForSqlServer(q => q.From("mssql_users").Select("created_at"));
+
+            Assert.Equal(2, query.FromClauses.Count);
+            Assert.Equal(3, query.SelectClauses.Count);
+        }
+
+        [Fact]
         public void OneLimitPerEngine()
         {
             var query = new Query("mytable")

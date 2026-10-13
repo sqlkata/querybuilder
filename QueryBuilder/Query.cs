@@ -43,13 +43,19 @@ namespace SqlKata
         }
 
         public List<BaseJoin> Joins { get; set; } = new List<BaseJoin>();
+        public List<AbstractFrom> FromClauses { get; set; } = new List<AbstractFrom>();
+        public List<AbstractColumn> SelectClauses { get; set; } = new List<AbstractColumn>();
 
-        [Obsolete("Use dedicated properties (Wheres, Havings, Joins) instead.")]
+
+
+        [Obsolete("Use dedicated properties (Wheres, Havings, Joins, FromClauses, SelectClauses) instead.")]
         public List<AbstractClause> Clauses
         {
             get
             {
                 var all = new List<AbstractClause>(_clauses);
+                all.AddRange(FromClauses);
+                all.AddRange(SelectClauses);
                 all.AddRange(Joins);
                 all.AddRange(Wheres.Clauses);
                 all.AddRange(Havings.Clauses);
@@ -61,6 +67,8 @@ namespace SqlKata
                 Wheres.Clauses.Clear();
                 Havings.Clauses.Clear();
                 Joins.Clear();
+                FromClauses.Clear();
+                SelectClauses.Clear();
                 if (value != null)
                 {
                     foreach (var clause in value)
@@ -76,6 +84,14 @@ namespace SqlKata
                         else if (clause is BaseJoin bj)
                         {
                             Joins.Add(bj);
+                        }
+                        else if (clause is AbstractFrom from)
+                        {
+                            FromClauses.Add(from);
+                        }
+                        else if (clause is AbstractColumn col)
+                        {
+                            SelectClauses.Add(col);
                         }
                         else
                         {
@@ -134,6 +150,8 @@ namespace SqlKata
             this.Wheres = new ConditionGroup { Clauses = source.Wheres.Clauses.Select(x => x.Clone()).ToList() };
             this.Havings = new ConditionGroup { Clauses = source.Havings.Clauses.Select(x => x.Clone()).ToList() };
             this.Joins = source.Joins.Select(x => (BaseJoin)x.Clone()).ToList();
+            this.FromClauses = source.FromClauses.Select(x => (AbstractFrom)x.Clone()).ToList();
+            this.SelectClauses = source.SelectClauses.Select(x => (AbstractColumn)x.Clone()).ToList();
             return this;
         }
 
@@ -179,6 +197,12 @@ namespace SqlKata
                 case "join" when clause is BaseJoin bj:
                     Joins.Add(bj);
                     break;
+                case "from" when clause is AbstractFrom from:
+                    FromClauses.Add(from);
+                    break;
+                case "select" when clause is AbstractColumn col:
+                    SelectClauses.Add(col);
+                    break;
                 default:
                     _clauses.Add(clause);
                     break;
@@ -200,33 +224,46 @@ namespace SqlKata
         {
             engineCode = engineCode ?? EngineScope;
 
+            clause.Engine = engineCode;
+            clause.Component = component;
+
             switch (component)
             {
                 case "where":
-                    var currentWhere = Wheres.Clauses.SingleOrDefault(c => (engineCode == null || c.Engine == engineCode));
+                    var currentWhere = Wheres.Clauses.SingleOrDefault(c => c.Engine == engineCode);
                     if (currentWhere != null)
                         Wheres.Clauses.Remove(currentWhere);
                     Wheres.AddComponent("where", clause, engineCode);
                     break;
                 case "having":
-                    var currentHaving = Havings.Clauses.SingleOrDefault(c => (engineCode == null || c.Engine == engineCode));
+                    var currentHaving = Havings.Clauses.SingleOrDefault(c => c.Engine == engineCode);
                     if (currentHaving != null)
                         Havings.Clauses.Remove(currentHaving);
                     Havings.AddComponent("having", clause, engineCode);
                     break;
                 case "join" when clause is BaseJoin bj:
-                    var currentJoin = Joins.SingleOrDefault(c => (engineCode == null || c.Engine == engineCode));
+                    var currentJoin = Joins.SingleOrDefault(c => c.Engine == engineCode);
                     if (currentJoin != null)
                         Joins.Remove(currentJoin);
                     Joins.Add(bj);
+                    break;
+                case "from" when clause is AbstractFrom from:
+                    var currentFrom = FromClauses.SingleOrDefault(c => c.Engine == engineCode);
+                    if (currentFrom != null)
+                        FromClauses.Remove(currentFrom);
+                    FromClauses.Add(from);
+                    break;
+                case "select" when clause is AbstractColumn col:
+                    var currentSelect = SelectClauses.SingleOrDefault(c => c.Engine == engineCode);
+                    if (currentSelect != null)
+                        SelectClauses.Remove(currentSelect);
+                    SelectClauses.Add(col);
                     break;
                 default:
                     var current = _clauses.Where(x => x.Component == component).SingleOrDefault(c => c.Engine == engineCode);
                     if (current != null)
                         _clauses.Remove(current);
                     _clauses.Add(clause);
-                    clause.Engine = engineCode;
-                    clause.Component = component;
                     break;
             }
 
@@ -249,6 +286,14 @@ namespace SqlKata
                 "where" => Wheres.GetComponents<C>(null, engineCode),
                 "having" => Havings.GetComponents<C>(null, engineCode),
                 "join" => Joins
+                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                    .Cast<C>()
+                    .ToList(),
+                "from" => FromClauses
+                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
+                    .Cast<C>()
+                    .ToList(),
+                "select" => SelectClauses
                     .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
                     .Cast<C>()
                     .ToList(),
@@ -312,6 +357,8 @@ namespace SqlKata
                 "where" => Wheres.HasConditions(engineCode),
                 "having" => Havings.HasConditions(engineCode),
                 "join" => Joins.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
+                "from" => FromClauses.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
+                "select" => SelectClauses.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
                 _ => _clauses.Any(x => x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine))
             };
         }
@@ -336,6 +383,12 @@ namespace SqlKata
                     break;
                 case "join":
                     Joins.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
+                    break;
+                case "from":
+                    FromClauses.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
+                    break;
+                case "select":
+                    SelectClauses.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
                     break;
                 default:
                     _clauses.RemoveAll(x => x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine));
