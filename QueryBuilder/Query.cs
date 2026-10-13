@@ -8,8 +8,6 @@ namespace SqlKata
 {
     public partial class Query
     {
-        protected List<AbstractClause> _clauses = new List<AbstractClause>();
-
         private ConditionGroup _wheres;
         public ConditionGroup Wheres
         {
@@ -19,7 +17,6 @@ namespace SqlKata
                 _wheres = value;
                 if (_wheres != null)
                 {
-                    _wheres.EngineScope = this.EngineScope;
                     _wheres.OnGetOr = () => Havings?.SetOr(false);
                     _wheres.OnGetNot = () => Havings?.SetNot(false);
                 }
@@ -35,7 +32,6 @@ namespace SqlKata
                 _havings = value;
                 if (_havings != null)
                 {
-                    _havings.EngineScope = this.EngineScope;
                     _havings.OnGetOr = () => Wheres?.SetOr(false);
                     _havings.OnGetNot = () => Wheres?.SetNot(false);
                 }
@@ -45,57 +41,102 @@ namespace SqlKata
         public List<BaseJoin> Joins { get; set; } = new List<BaseJoin>();
         public List<AbstractFrom> FromClauses { get; set; } = new List<AbstractFrom>();
         public List<AbstractColumn> SelectClauses { get; set; } = new List<AbstractColumn>();
+        public List<AbstractFrom> CteClauses { get; set; } = new List<AbstractFrom>();
+        public List<AbstractOrderBy> OrderByClauses { get; set; } = new List<AbstractOrderBy>();
+        public List<AbstractColumn> GroupByClauses { get; set; } = new List<AbstractColumn>();
+        public List<LimitClause> LimitClauses { get; set; } = new List<LimitClause>();
+        public List<OffsetClause> OffsetClauses { get; set; } = new List<OffsetClause>();
+        public List<AggregateClause> AggregateClauses { get; set; } = new List<AggregateClause>();
+        public List<AbstractCombine> CombineClauses { get; set; } = new List<AbstractCombine>();
+        public List<AbstractInsertClause> InsertClauses { get; set; } = new List<AbstractInsertClause>();
+        public List<AbstractClause> UpdateClauses { get; set; } = new List<AbstractClause>();
 
-
-
-        [Obsolete("Use dedicated properties (Wheres, Havings, Joins, FromClauses, SelectClauses) instead.")]
+        [Obsolete("Use dedicated properties (Wheres, Havings, Joins, FromClauses, SelectClauses, etc.) instead.")]
         public List<AbstractClause> Clauses
         {
             get
             {
-                var all = new List<AbstractClause>(_clauses);
-                all.AddRange(FromClauses);
+                var all = new List<AbstractClause>();
+                all.AddRange(CteClauses);
                 all.AddRange(SelectClauses);
+                all.AddRange(FromClauses);
                 all.AddRange(Joins);
                 all.AddRange(Wheres.Clauses);
+                all.AddRange(GroupByClauses);
                 all.AddRange(Havings.Clauses);
+                all.AddRange(OrderByClauses);
+                all.AddRange(LimitClauses);
+                all.AddRange(OffsetClauses);
+                all.AddRange(AggregateClauses);
+                all.AddRange(CombineClauses);
+                all.AddRange(InsertClauses);
+                all.AddRange(UpdateClauses);
                 return all;
             }
             set
             {
-                _clauses.Clear();
-                Wheres.Clauses.Clear();
-                Havings.Clauses.Clear();
-                Joins.Clear();
-                FromClauses.Clear();
+                CteClauses.Clear();
                 SelectClauses.Clear();
+                FromClauses.Clear();
+                Joins.Clear();
+                Wheres.Clauses.Clear();
+                GroupByClauses.Clear();
+                Havings.Clauses.Clear();
+                OrderByClauses.Clear();
+                LimitClauses.Clear();
+                OffsetClauses.Clear();
+                AggregateClauses.Clear();
+                CombineClauses.Clear();
+                InsertClauses.Clear();
+                UpdateClauses.Clear();
                 if (value != null)
                 {
                     foreach (var clause in value)
                     {
-                        if (clause.Component == "where")
+                        switch (clause.Component)
                         {
-                            Wheres.Clauses.Add(clause);
-                        }
-                        else if (clause.Component == "having")
-                        {
-                            Havings.Clauses.Add(clause);
-                        }
-                        else if (clause is BaseJoin bj)
-                        {
-                            Joins.Add(bj);
-                        }
-                        else if (clause is AbstractFrom from)
-                        {
-                            FromClauses.Add(from);
-                        }
-                        else if (clause is AbstractColumn col)
-                        {
-                            SelectClauses.Add(col);
-                        }
-                        else
-                        {
-                            _clauses.Add(clause);
+                            case "where":
+                                Wheres.Clauses.Add(clause);
+                                break;
+                            case "having":
+                                Havings.Clauses.Add(clause);
+                                break;
+                            case "join" when clause is BaseJoin bj:
+                                Joins.Add(bj);
+                                break;
+                            case "from" when clause is AbstractFrom from:
+                                FromClauses.Add(from);
+                                break;
+                            case "select" when clause is AbstractColumn col:
+                                SelectClauses.Add(col);
+                                break;
+                            case "cte" when clause is AbstractFrom cte:
+                                CteClauses.Add(cte);
+                                break;
+                            case "order" when clause is AbstractOrderBy order:
+                                OrderByClauses.Add(order);
+                                break;
+                            case "group" when clause is AbstractColumn col:
+                                GroupByClauses.Add(col);
+                                break;
+                            case "limit" when clause is LimitClause limit:
+                                LimitClauses.Add(limit);
+                                break;
+                            case "offset" when clause is OffsetClause offset:
+                                OffsetClauses.Add(offset);
+                                break;
+                            case "aggregate" when clause is AggregateClause agg:
+                                AggregateClauses.Add(agg);
+                                break;
+                            case "combine" when clause is AbstractCombine combine:
+                                CombineClauses.Add(combine);
+                                break;
+                            case "insert" when clause is AbstractInsertClause insert:
+                                InsertClauses.Add(insert);
+                                break;
+                            case "update":
+                                UpdateClauses.Add(clause);
+                                break;
                         }
                     }
                 }
@@ -146,12 +187,20 @@ namespace SqlKata
         /// </summary>
         public Query CopyClausesFrom(Query source)
         {
-            this._clauses = source._clauses.Select(x => x.Clone()).ToList();
             this.Wheres = new ConditionGroup { Clauses = source.Wheres.Clauses.Select(x => x.Clone()).ToList() };
             this.Havings = new ConditionGroup { Clauses = source.Havings.Clauses.Select(x => x.Clone()).ToList() };
             this.Joins = source.Joins.Select(x => (BaseJoin)x.Clone()).ToList();
             this.FromClauses = source.FromClauses.Select(x => (AbstractFrom)x.Clone()).ToList();
             this.SelectClauses = source.SelectClauses.Select(x => (AbstractColumn)x.Clone()).ToList();
+            this.CteClauses = source.CteClauses.Select(x => (AbstractFrom)x.Clone()).ToList();
+            this.OrderByClauses = source.OrderByClauses.Select(x => (AbstractOrderBy)x.Clone()).ToList();
+            this.GroupByClauses = source.GroupByClauses.Select(x => (AbstractColumn)x.Clone()).ToList();
+            this.LimitClauses = source.LimitClauses.Select(x => (LimitClause)x.Clone()).ToList();
+            this.OffsetClauses = source.OffsetClauses.Select(x => (OffsetClause)x.Clone()).ToList();
+            this.AggregateClauses = source.AggregateClauses.Select(x => (AggregateClause)x.Clone()).ToList();
+            this.CombineClauses = source.CombineClauses.Select(x => (AbstractCombine)x.Clone()).ToList();
+            this.InsertClauses = source.InsertClauses.Select(x => (AbstractInsertClause)x.Clone()).ToList();
+            this.UpdateClauses = source.UpdateClauses.Select(x => x.Clone()).ToList();
             return this;
         }
 
@@ -168,233 +217,14 @@ namespace SqlKata
             return clone;
         }
 
-
-        /// <summary>
-        /// Add a component clause to the query.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="clause"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public Query AddComponent(string component, AbstractClause clause, string engineCode = null)
-        {
-            if (engineCode == null)
-            {
-                engineCode = EngineScope;
-            }
-
-            clause.Engine = engineCode;
-            clause.Component = component;
-
-            switch (component)
-            {
-                case "where":
-                    Wheres.AddComponent("where", clause, engineCode);
-                    break;
-                case "having":
-                    Havings.AddComponent("having", clause, engineCode);
-                    break;
-                case "join" when clause is BaseJoin bj:
-                    Joins.Add(bj);
-                    break;
-                case "from" when clause is AbstractFrom from:
-                    FromClauses.Add(from);
-                    break;
-                case "select" when clause is AbstractColumn col:
-                    SelectClauses.Add(col);
-                    break;
-                default:
-                    _clauses.Add(clause);
-                    break;
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// If the query already contains a clause for the given component
-        /// and engine, replace it with the specified clause. Otherwise, just
-        /// add the clause.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="clause"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public Query AddOrReplaceComponent(string component, AbstractClause clause, string engineCode = null)
-        {
-            engineCode = engineCode ?? EngineScope;
-
-            clause.Engine = engineCode;
-            clause.Component = component;
-
-            switch (component)
-            {
-                case "where":
-                    var currentWhere = Wheres.Clauses.SingleOrDefault(c => c.Engine == engineCode);
-                    if (currentWhere != null)
-                        Wheres.Clauses.Remove(currentWhere);
-                    Wheres.AddComponent("where", clause, engineCode);
-                    break;
-                case "having":
-                    var currentHaving = Havings.Clauses.SingleOrDefault(c => c.Engine == engineCode);
-                    if (currentHaving != null)
-                        Havings.Clauses.Remove(currentHaving);
-                    Havings.AddComponent("having", clause, engineCode);
-                    break;
-                case "join" when clause is BaseJoin bj:
-                    var currentJoin = Joins.SingleOrDefault(c => c.Engine == engineCode);
-                    if (currentJoin != null)
-                        Joins.Remove(currentJoin);
-                    Joins.Add(bj);
-                    break;
-                case "from" when clause is AbstractFrom from:
-                    var currentFrom = FromClauses.SingleOrDefault(c => c.Engine == engineCode);
-                    if (currentFrom != null)
-                        FromClauses.Remove(currentFrom);
-                    FromClauses.Add(from);
-                    break;
-                case "select" when clause is AbstractColumn col:
-                    var currentSelect = SelectClauses.SingleOrDefault(c => c.Engine == engineCode);
-                    if (currentSelect != null)
-                        SelectClauses.Remove(currentSelect);
-                    SelectClauses.Add(col);
-                    break;
-                default:
-                    var current = _clauses.Where(x => x.Component == component).SingleOrDefault(c => c.Engine == engineCode);
-                    if (current != null)
-                        _clauses.Remove(current);
-                    _clauses.Add(clause);
-                    break;
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Get the list of clauses for a component.
-        /// </summary>
-        /// <returns></returns>
-        public List<C> GetComponents<C>(string component, string engineCode = null) where C : AbstractClause
-        {
-            if (engineCode == null)
-            {
-                engineCode = EngineScope;
-            }
-
-            return component switch
-            {
-                "where" => Wheres.GetComponents<C>(null, engineCode),
-                "having" => Havings.GetComponents<C>(null, engineCode),
-                "join" => Joins
-                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                    .Cast<C>()
-                    .ToList(),
-                "from" => FromClauses
-                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                    .Cast<C>()
-                    .ToList(),
-                "select" => SelectClauses
-                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                    .Cast<C>()
-                    .ToList(),
-                _ => _clauses
-                    .Where(x => x.Component == component)
-                    .Where(x => engineCode == null || x.Engine == null || engineCode == x.Engine)
-                    .Cast<C>()
-                    .ToList()
-            };
-        }
-
-        /// <summary>
-        /// Get the list of clauses for a component.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public List<AbstractClause> GetComponents(string component, string engineCode = null)
-        {
-            return GetComponents<AbstractClause>(component, engineCode);
-        }
-
-        /// <summary>
-        /// Get a single component clause from the query.
-        /// </summary>
-        /// <returns></returns>
-        public C GetOneComponent<C>(string component, string engineCode = null) where C : AbstractClause
-        {
-            engineCode = engineCode ?? EngineScope;
-
-            var all = GetComponents<C>(component, engineCode);
-            return all.FirstOrDefault(c => c.Engine == engineCode) ?? all.FirstOrDefault(c => c.Engine == null);
-        }
-
-        /// <summary>
-        /// Get a single component clause from the query.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public AbstractClause GetOneComponent(string component, string engineCode = null)
-        {
-            return GetOneComponent<AbstractClause>(component, engineCode);
-        }
-
-        /// <summary>
-        /// Return whether the query has clauses for a component.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public bool HasComponent(string component, string engineCode = null)
-        {
-            if (engineCode == null)
-            {
-                engineCode = EngineScope;
-            }
-
-            return component switch
-            {
-                "where" => Wheres.HasConditions(engineCode),
-                "having" => Havings.HasConditions(engineCode),
-                "join" => Joins.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
-                "from" => FromClauses.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
-                "select" => SelectClauses.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine),
-                _ => _clauses.Any(x => x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine))
-            };
-        }
-
-        /// <summary>
-        /// Remove all clauses for a component.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <param name="engineCode"></param>
-        /// <returns></returns>
-        public Query ClearComponent(string component, string engineCode = null)
+        internal Query AddOrReplace<T>(List<T> list, T clause, string engineCode = null) where T : AbstractClause
         {
             engineCode ??= EngineScope;
-
-            switch (component)
-            {
-                case "where":
-                    Wheres.Clear(engineCode);
-                    break;
-                case "having":
-                    Havings.Clear(engineCode);
-                    break;
-                case "join":
-                    Joins.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
-                    break;
-                case "from":
-                    FromClauses.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
-                    break;
-                case "select":
-                    SelectClauses.RemoveAll(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
-                    break;
-                default:
-                    _clauses.RemoveAll(x => x.Component == component && (engineCode == null || x.Engine == null || engineCode == x.Engine));
-                    break;
-            }
-
+            clause.Engine = engineCode;
+            var current = list.SingleOrDefault(c => c.Engine == engineCode);
+            if (current != null)
+                list.Remove(current);
+            list.Add(clause);
             return this;
         }
 
@@ -421,7 +251,7 @@ namespace SqlKata
         internal long GetOffset(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            var offset = OffsetClauses.ForEngineOrDefault(engineCode);
 
             return offset?.Offset ?? 0;
         }
@@ -429,7 +259,7 @@ namespace SqlKata
         internal int GetLimit(string engineCode = null)
         {
             engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            var limit = LimitClauses.ForEngineOrDefault(engineCode);
 
             return limit?.Limit ?? 0;
         }
@@ -478,11 +308,13 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
+            CteClauses.Add(new QueryFromClause
             {
                 Query = query,
                 Alias = alias,
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query With(Func<Query, Query> fn)
@@ -518,6 +350,7 @@ namespace SqlKata
                 Alias = alias,
                 Columns = columnsList,
                 Values = new List<object>(),
+                Engine = EngineScope
             };
 
             foreach (var values in valuesCollectionList)
@@ -531,37 +364,36 @@ namespace SqlKata
                 clause.Values.AddRange(valuesList);
             }
 
-            return AddComponent("cte", clause);
+            CteClauses.Add(clause);
+            return this;
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent("cte", new RawFromClause
+            CteClauses.Add(new RawFromClause
             {
                 Alias = alias,
                 Expression = sql,
                 Bindings = bindings,
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query Limit(int value)
         {
-            var newClause = new LimitClause
+            return AddOrReplace(LimitClauses, new LimitClause
             {
                 Limit = value
-            };
-
-            return AddOrReplaceComponent("limit", newClause);
+            });
         }
 
         public Query Offset(long value)
         {
-            var newClause = new OffsetClause
+            return AddOrReplace(OffsetClauses, new OffsetClause
             {
                 Offset = value
-            };
-
-            return AddOrReplaceComponent("offset", newClause);
+            });
         }
 
         public Query Offset(int value)
@@ -648,10 +480,11 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                OrderByClauses.Add(new OrderBy
                 {
                     Column = column,
-                    Ascending = true
+                    Ascending = true,
+                    Engine = EngineScope
                 });
             }
 
@@ -662,10 +495,11 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                OrderByClauses.Add(new OrderBy
                 {
                     Column = column,
-                    Ascending = false
+                    Ascending = false,
+                    Engine = EngineScope
                 });
             }
 
@@ -674,25 +508,32 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent("order", new RawOrderBy
+            OrderByClauses.Add(new RawOrderBy
             {
                 Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToArray()
+                Bindings = Helper.Flatten(bindings).ToArray(),
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom { });
+            OrderByClauses.Add(new OrderByRandom
+            {
+                Engine = EngineScope
+            });
+            return this;
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
-                AddComponent("group", new Column
+                GroupByClauses.Add(new Column
                 {
-                    Name = column
+                    Name = column,
+                    Engine = EngineScope
                 });
             }
 
@@ -701,10 +542,11 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent("group", new RawColumn
+            GroupByClauses.Add(new RawColumn
             {
                 Expression = expression,
                 Bindings = bindings,
+                Engine = EngineScope
             });
 
             return this;

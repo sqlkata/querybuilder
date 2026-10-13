@@ -17,7 +17,7 @@ namespace SqlKata.Compilers
         {
             var ctx = base.CompileInsertQuery(query);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var inserts = ctx.Query.InsertClauses.ForEngine(EngineCode).ToList();
 
             if (inserts.Count > 1)
             {
@@ -57,7 +57,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
+                ctx.Query.LimitClauses.Clear();
 
                 return $"SELECT FIRST {parameterPlaceholder}" + compiled.Substring(6);
             }
@@ -65,7 +65,7 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.Insert(0, offset);
 
-                ctx.Query.ClearComponent("offset");
+                ctx.Query.OffsetClauses.Clear();
 
                 return $"SELECT SKIP {parameterPlaceholder}" + compiled.Substring(6);
             }

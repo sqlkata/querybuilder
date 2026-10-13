@@ -64,11 +64,13 @@ namespace SqlKata
 
             if (query.Havings.HasConditions(EngineScope))
             {
-                Havings.AddComponent("having", new NestedCondition
+                Havings.Clauses.Add(new NestedCondition
                 {
                     Conditions = query.Havings,
                     IsNot = Havings.GetNot(),
                     IsOr = Havings.GetOr(),
+                    Engine = EngineScope,
+                    Component = "having"
                 });
             }
 
@@ -79,11 +81,13 @@ namespace SqlKata
         {
             if (group.HasConditions(EngineScope))
             {
-                Havings.AddComponent("having", new NestedCondition
+                Havings.Clauses.Add(new NestedCondition
                 {
                     Conditions = group,
                     IsNot = Havings.GetNot(),
                     IsOr = Havings.GetOr(),
+                    Engine = EngineScope,
+                    Component = "having"
                 });
             }
 

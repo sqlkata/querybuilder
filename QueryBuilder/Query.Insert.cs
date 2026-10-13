@@ -31,10 +31,12 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
+            InsertClauses.Clear();
+            InsertClauses.Add(new InsertClause
             {
                 Columns = columnsList,
-                Values = valuesList
+                Values = valuesList,
+                Engine = EngineScope
             });
 
             return this;
@@ -49,11 +51,13 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertClause
+            InsertClauses.Clear();
+            InsertClauses.Add(new InsertClause
             {
                 Columns = values.Select(x => x.Key).ToList(),
                 Values = values.Select(x => x.Value).ToList(),
                 ReturnId = returnId,
+                Engine = EngineScope
             });
 
             return this;
@@ -77,7 +81,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            ClearComponent("insert");
+            InsertClauses.Clear();
 
             foreach (var values in valuesCollectionList)
             {
@@ -87,10 +91,11 @@ namespace SqlKata
                     throw new InvalidOperationException($"{nameof(columns)} count should be equal to each {nameof(rowsValues)} entry count");
                 }
 
-                AddComponent("insert", new InsertClause
+                InsertClauses.Add(new InsertClause
                 {
                     Columns = columnsList,
-                    Values = valuesList
+                    Values = valuesList,
+                    Engine = EngineScope
                 });
             }
 
@@ -107,10 +112,12 @@ namespace SqlKata
         {
             Method = "insert";
 
-            ClearComponent("insert").AddComponent("insert", new InsertQueryClause
+            InsertClauses.Clear();
+            InsertClauses.Add(new InsertQueryClause
             {
                 Columns = columns.ToList(),
                 Query = query.Clone(),
+                Engine = EngineScope
             });
 
             return this;

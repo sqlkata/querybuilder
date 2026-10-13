@@ -561,7 +561,7 @@ namespace SqlKata
 
         public static T WhereExists<T>(this T target, Query query) where T : IConditional
         {
-            if (!query.HasComponent("from"))
+            if (!query.FromClauses.Any())
             {
                 throw new ArgumentException($"'{nameof(FromClause)}' cannot be empty if used inside a '{nameof(WhereExists)}' condition");
             }

@@ -252,7 +252,8 @@ namespace SqlKata.Compilers
 
             if (OmitSelectInsideExists)
             {
-                query.ClearComponent("select").SelectRaw("1");
+                query.SelectClauses.Clear();
+                query.SelectRaw("1");
             }
 
             var subCtx = CompileSubQuery(ctx, query);

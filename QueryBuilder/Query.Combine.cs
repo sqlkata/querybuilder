@@ -13,12 +13,15 @@ namespace SqlKata
                 throw new InvalidOperationException("Only select queries can be combined.");
             }
 
-            return AddComponent("combine", new Combine
+            CombineClauses.Add(new Combine
             {
                 Query = query,
                 Operation = operation,
                 All = all,
+                Engine = EngineScope
             });
+
+            return this;
         }
 
         public Query CombineRaw(string sql, params object[] bindings)
@@ -28,11 +31,14 @@ namespace SqlKata
                 throw new InvalidOperationException("Only select queries can be combined.");
             }
 
-            return AddComponent("combine", new RawCombine
+            CombineClauses.Add(new RawCombine
             {
                 Expression = sql,
                 Bindings = bindings,
+                Engine = EngineScope
             });
+
+            return this;
         }
 
         public Query Union(Query query, bool all = false)

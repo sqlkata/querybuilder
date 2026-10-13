@@ -24,9 +24,10 @@ namespace SqlKata
 
             foreach (var column in columns)
             {
-                AddComponent("select", new Column
+                SelectClauses.Add(new Column
                 {
-                    Name = column
+                    Name = column,
+                    Engine = EngineScope
                 });
             }
 
@@ -41,10 +42,11 @@ namespace SqlKata
         {
             Method = "select";
 
-            AddComponent("select", new RawColumn
+            SelectClauses.Add(new RawColumn
             {
                 Expression = sql,
                 Bindings = bindings,
+                Engine = EngineScope
             });
 
             return this;
@@ -56,9 +58,10 @@ namespace SqlKata
 
             query = query.Clone();
 
-            AddComponent("select", new QueryColumn
+            SelectClauses.Add(new QueryColumn
             {
                 Query = query.As(alias),
+                Engine = EngineScope
             });
 
             return this;
@@ -73,11 +76,12 @@ namespace SqlKata
         {
             Method = "select";
 
-            AddComponent("select", new AggregatedColumn
+            SelectClauses.Add(new AggregatedColumn
             {
                 Column = new Column { Name = column },
                 Aggregate = aggregate,
                 Filter = filter,
+                Engine = EngineScope
             });
 
             return this;
