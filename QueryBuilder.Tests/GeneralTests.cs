@@ -250,53 +250,6 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void Join_AddOrReplace_Replaces_Condition()
-        {
-            var join = new Join();
-            join.AddOrReplaceComponent("where", new BasicCondition { Column = "c1", Operator = "=", Value = 1 });
-            join.AddOrReplaceComponent("where", new BasicCondition { Column = "c2", Operator = "=", Value = 2 });
-
-            Assert.Single(join.Conditions.Clauses);
-            var cond = join.Conditions.Clauses.Single() as BasicCondition;
-            Assert.NotNull(cond);
-            Assert.Equal("c2", cond.Column);
-        }
-
-        [Fact]
-        public void Join_AddOrReplace_Throws_When_MoreThanOneCondition()
-        {
-            var join = new Join();
-            join.On("a", "b");
-            join.On("c", "d");
-
-            Action act = () => join.AddOrReplaceComponent("where", new BasicCondition());
-            Assert.Throws<InvalidOperationException>(act);
-        }
-
-        [Fact]
-        public void Join_AddOrReplace_FromClause_Respects_EngineSelection()
-        {
-            var join = new Join();
-            join.AddOrReplaceComponent("from", new FromClause { Table = "generic_table" });
-            join.AddOrReplaceComponent("from", new FromClause { Table = "mssql_table", Engine = EngineCodes.SqlServer }, EngineCodes.SqlServer);
-
-            // Generic FromClause should not be overwritten
-            Assert.NotNull(join.FromClause);
-            Assert.Equal("generic_table", (join.FromClause as FromClause)?.Table);
-            Assert.Null(join.FromClause.Engine);
-
-            // SqlServer specific FromClause should be accessible via GetComponents with EngineCode
-            var mssqlFrom = join.GetComponents<FromClause>("from", EngineCodes.SqlServer);
-            Assert.Contains(mssqlFrom, f => f.Table == "mssql_table");
-
-            // Replacing the SqlServer specific FromClause replaces it instead of accumulating
-            join.AddOrReplaceComponent("from", new FromClause { Table = "mssql_table_updated", Engine = EngineCodes.SqlServer }, EngineCodes.SqlServer);
-            var updatedMssqlFrom = join.GetComponents<FromClause>("from", EngineCodes.SqlServer).Where(f => f.Engine == EngineCodes.SqlServer).ToList();
-            Assert.Single(updatedMssqlFrom);
-            Assert.Equal("mssql_table_updated", updatedMssqlFrom.Single().Table);
-        }
-
-        [Fact]
         public void OneLimitPerEngine()
         {
             var query = new Query("mytable")

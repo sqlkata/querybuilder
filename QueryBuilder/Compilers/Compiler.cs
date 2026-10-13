@@ -787,7 +787,7 @@ namespace SqlKata.Compilers
         {
 
 #pragma warning disable CS0618
-            var from = join.GetOneComponent<AbstractFrom>("from", EngineCode) ?? join.FromClause;
+            var from = join.FromClause ?? join.GetOneComponent<AbstractFrom>("from", EngineCode);
 #pragma warning restore CS0618
             var conditions = join.Conditions.GetConditions(EngineCode);
 
