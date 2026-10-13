@@ -104,18 +104,6 @@ namespace SqlKata
             return this;
         }
 
-        public Query Parent { get; set; }
-
-        public Query SetParent(Query parent)
-        {
-            if (this == parent)
-            {
-                throw new ArgumentException($"Cannot set the same {nameof(Query)} as a parent of itself");
-            }
-
-            this.Parent = parent;
-            return this;
-        }
 
         private string comment;
 
@@ -153,7 +141,6 @@ namespace SqlKata
         {
             var clone = new Query();
             clone.CopyClausesFrom(this);
-            clone.Parent = Parent;
             clone.EngineScope = EngineScope;
             clone.QueryAlias = QueryAlias;
             clone.IsDistinct = IsDistinct;
@@ -717,11 +704,6 @@ namespace SqlKata
             if (found)
             {
                 return Variables[variable];
-            }
-
-            if (Parent != null)
-            {
-                return (Parent as Query).FindVariable(variable);
             }
 
             throw new Exception($"Variable '{variable}' not found");

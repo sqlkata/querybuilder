@@ -58,7 +58,6 @@ namespace SqlKata.Execution
 
             xQuery.CopyClausesFrom(query);
 
-            xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;
             xQuery.IsDistinct = query.IsDistinct;
             xQuery.Method = query.Method;
