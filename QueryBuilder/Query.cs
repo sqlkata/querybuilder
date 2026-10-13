@@ -163,12 +163,6 @@ namespace SqlKata
             return clone;
         }
 
-        public Query NewChild()
-        {
-            var newQuery = NewQuery().SetParent(this);
-            newQuery.EngineScope = this.EngineScope;
-            return newQuery;
-        }
 
         /// <summary>
         /// Add a component clause to the query.

@@ -20,7 +20,6 @@ namespace SqlKata
         public Query From(Query query, string alias = null)
         {
             query = query.Clone();
-            query.SetParent(this);
 
             if (alias != null)
             {
@@ -44,9 +43,7 @@ namespace SqlKata
 
         public Query From(Func<Query, Query> callback, string alias = null)
         {
-            var query = new Query();
-
-            query.SetParent(this);
+            var query = NewQuery();
 
             return From(callback.Invoke(query), alias);
         }

@@ -58,7 +58,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileQueryCondition(SqlResult ctx, QueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSubQuery(ctx, x.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -67,7 +67,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSubQuery(ctx, x.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -217,7 +217,7 @@ namespace SqlKata.Compilers
         protected virtual string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
         {
 
-            var subCtx = CompileSelectQuery(item.Query);
+            var subCtx = CompileSubQuery(ctx, item.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -255,7 +255,7 @@ namespace SqlKata.Compilers
                 query.ClearComponent("select").SelectRaw("1");
             }
 
-            var subCtx = CompileSelectQuery(query);
+            var subCtx = CompileSubQuery(ctx, query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 

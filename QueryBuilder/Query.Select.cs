@@ -66,7 +66,7 @@ namespace SqlKata
 
         public Query Select(Func<Query, Query> callback, string alias)
         {
-            return Select(callback.Invoke(NewChild()), alias);
+            return Select(callback.Invoke(NewQuery()), alias);
         }
 
         public Query SelectAggregate(string aggregate, string column, Query filter = null)
@@ -90,7 +90,7 @@ namespace SqlKata
                 return SelectAggregate(aggregate, column);
             }
 
-            return SelectAggregate(aggregate, column, filter.Invoke(NewChild()));
+            return SelectAggregate(aggregate, column, filter.Invoke(NewQuery()));
         }
 
         public Query SelectSum(string column, Func<Query, Query> filter = null)

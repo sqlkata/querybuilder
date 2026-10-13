@@ -108,43 +108,51 @@ namespace SqlKata.Compilers
 
         protected virtual SqlResult CompileRaw(Query query)
         {
-            SqlResult ctx;
+            QueryStack.Push(query);
+            try
+            {
+                SqlResult ctx;
 
-            if (query.Method == "insert")
-            {
-                ctx = CompileInsertQuery(query);
-            }
-            else if (query.Method == "update")
-            {
-                ctx = CompileUpdateQuery(query);
-            }
-            else if (query.Method == "delete")
-            {
-                ctx = CompileDeleteQuery(query);
-            }
-            else
-            {
-                if (query.Method == "aggregate")
+                if (query.Method == "insert")
                 {
-                    query.ClearComponent("limit")
-                        .ClearComponent("order")
-                        .ClearComponent("group");
+                    ctx = CompileInsertQuery(query);
+                }
+                else if (query.Method == "update")
+                {
+                    ctx = CompileUpdateQuery(query);
+                }
+                else if (query.Method == "delete")
+                {
+                    ctx = CompileDeleteQuery(query);
+                }
+                else
+                {
+                    if (query.Method == "aggregate")
+                    {
+                        query.ClearComponent("limit")
+                            .ClearComponent("order")
+                            .ClearComponent("group");
 
-                    query = TransformAggregateQuery(query);
+                        query = TransformAggregateQuery(query);
+                    }
+
+                    ctx = CompileSelectQuery(query);
                 }
 
-                ctx = CompileSelectQuery(query);
-            }
+                // handle CTEs
+                if (query.HasComponent("cte", EngineCode))
+                {
+                    ctx = CompileCteQuery(ctx, query);
+                }
 
-            // handle CTEs
-            if (query.HasComponent("cte", EngineCode))
+                ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
+
+                return ctx;
+            }
+            finally
             {
-                ctx = CompileCteQuery(ctx, query);
+                QueryStack.Pop();
             }
-
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
-
-            return ctx;
         }
 
         /// <summary>
@@ -194,6 +202,40 @@ namespace SqlKata.Compilers
             ctx = PrepareResult(ctx);
 
             return ctx;
+        }
+
+        [ThreadStatic]
+        private static Stack<Query> _queryStack;
+
+        protected static Stack<Query> QueryStack => _queryStack ??= new Stack<Query>();
+
+        public virtual object FindVariable(string name)
+        {
+            if (_queryStack != null)
+            {
+                foreach (var query in _queryStack)
+                {
+                    if (query?.Variables != null && query.Variables.TryGetValue(name, out var value))
+                    {
+                        return value;
+                    }
+                }
+            }
+
+            throw new Exception($"Variable '{name}' not found");
+        }
+
+        protected virtual SqlResult CompileSubQuery(SqlResult parentCtx, Query query)
+        {
+            QueryStack.Push(query);
+            try
+            {
+                return CompileSelectQuery(query);
+            }
+            finally
+            {
+                QueryStack.Pop();
+            }
         }
 
         protected virtual SqlResult CompileSelectQuery(Query query)
@@ -424,7 +466,7 @@ namespace SqlKata.Compilers
         {
             string columns = GetInsertColumnsList(clause.Columns);
 
-            var subCtx = CompileSelectQuery(clause.Query);
+            var subCtx = CompileSubQuery(ctx, clause.Query);
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
@@ -523,7 +565,7 @@ namespace SqlKata.Compilers
                     alias = $" {ColumnAsKeyword}{WrapValue(queryColumn.Query.QueryAlias)}";
                 }
 
-                var subCtx = CompileSelectQuery(queryColumn.Query);
+                var subCtx = CompileSubQuery(ctx, queryColumn.Query);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -585,7 +627,7 @@ namespace SqlKata.Compilers
             }
             else if (cte is QueryFromClause queryFromClause)
             {
-                var subCtx = CompileSelectQuery(queryFromClause.Query);
+                var subCtx = CompileSubQuery(ctx, queryFromClause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
@@ -665,7 +707,7 @@ namespace SqlKata.Compilers
                 {
                     var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
 
-                    var subCtx = CompileSelectQuery(combineClause.Query);
+                    var subCtx = CompileSubQuery(ctx, combineClause.Query);
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -700,7 +742,7 @@ namespace SqlKata.Compilers
 
                 var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : $" {TableAsKeyword}" + WrapValue(fromQuery.QueryAlias);
 
-                var subCtx = CompileSelectQuery(fromQuery);
+                var subCtx = CompileSubQuery(ctx, fromQuery);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -992,7 +1034,7 @@ namespace SqlKata.Compilers
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
             {
-                var value = ctx.Query.FindVariable(variable.Name);
+                var value = FindVariable(variable.Name);
                 return value;
             }
 
@@ -1017,7 +1059,7 @@ namespace SqlKata.Compilers
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
             {
-                var value = ctx.Query.FindVariable(variable.Name);
+                var value = FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
                 return parameterPlaceholder;
             }

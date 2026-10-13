@@ -134,5 +134,117 @@ namespace SqlKata.Tests
                 c[EngineCodes.SqlServer]
             );
         }
+
+        [Fact]
+        public void CallbackSubqueries_ResolveOuterVariables_WhereIn()
+        {
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .WhereIn("UserId", sub => sub.From("Users").Where("TenantId", Expressions.Variable("tenantId")));
+
+            var c = Compilers.Compile(q);
+
+            Assert.Equal("SELECT * FROM [Orders] WHERE [UserId] IN (SELECT * FROM [Users] WHERE [TenantId] = ?)", c[EngineCodes.SqlServer].RawSql);
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void CallbackSubqueries_ResolveOuterVariables_Where()
+        {
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .Where("Total", ">", sub => sub.From("Stats").Select("AvgTotal").Where("TenantId", Expressions.Variable("tenantId")));
+
+            var c = Compilers.Compile(q);
+
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void CallbackSubqueries_ResolveOuterVariables_WhereExists()
+        {
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .WhereExists(sub => sub.From("Users").Where("TenantId", Expressions.Variable("tenantId")));
+
+            var c = Compilers.Compile(q);
+
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void CallbackSubqueries_ResolveOuterVariables_Join()
+        {
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .Join("Users", j => j.On("Orders.UserId", "Users.Id")
+                    .WhereIn("Users.TenantId", sub => sub.From("Tenants").Select("Id").Where("Id", Expressions.Variable("tenantId"))));
+
+            var c = Compilers.Compile(q);
+
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void ExternalSubquery_ResolvesOuterVariables_WithoutParentConnection()
+        {
+            // sub is completely isolated, no Parent or callbacks used
+            var sub = new Query("Users").Where("TenantId", Expressions.Variable("tenantId"));
+
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .WhereIn("UserId", sub);
+
+            var c = Compilers.Compile(q);
+
+            Assert.Equal("SELECT * FROM [Orders] WHERE [UserId] IN (SELECT * FROM [Users] WHERE [TenantId] = ?)", c[EngineCodes.SqlServer].RawSql);
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void CallbackSubqueries_ResolveOuterVariables_From()
+        {
+            var q = new Query()
+                .Define("tenantId", 42)
+                .From(sub => sub.From("Users").Where("TenantId", Expressions.Variable("tenantId")), "u");
+
+            var c = Compilers.Compile(q);
+
+            Assert.Equal("SELECT * FROM (SELECT * FROM [Users] WHERE [TenantId] = ?) AS [u]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void ExternalSubquery_ResolveOuterVariables_From()
+        {
+            var sub = new Query("Users").Where("TenantId", Expressions.Variable("tenantId"));
+
+            var q = new Query()
+                .Define("tenantId", 42)
+                .From(sub, "u");
+
+            var c = Compilers.Compile(q);
+
+            Assert.Equal("SELECT * FROM (SELECT * FROM [Users] WHERE [TenantId] = ?) AS [u]", c[EngineCodes.SqlServer].RawSql);
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+        }
+
+        [Fact]
+        public void SqlServer_LegacyPagination_InSubquery_ResolvesOuterVariables()
+        {
+            var compiler = new SqlServerCompiler { UseLegacyPagination = true };
+
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .WhereIn("UserId", sub => sub.From("Users")
+                    .Where("TenantId", Expressions.Variable("tenantId"))
+                    .OrderBy("Id")
+                    .Offset(10)
+                    .Limit(5));
+
+            var result = compiler.Compile(q);
+
+            Assert.Contains(42, result.Bindings);
+        }
     }
 }

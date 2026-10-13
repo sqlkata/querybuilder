@@ -60,7 +60,7 @@ namespace SqlKata
 
         public Query Having(Func<Query, Query> callback)
         {
-            var query = callback.Invoke(NewChild());
+            var query = callback.Invoke(NewQuery());
 
             if (query.Havings.HasConditions(EngineScope))
             {
@@ -338,8 +338,7 @@ namespace SqlKata
 
         public Query HavingIn(string column, Func<Query, Query> callback)
         {
-            Havings.WhereIn(column, callback);
-            return this;
+            return HavingIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query HavingNotIn(string column, Query query)
@@ -350,8 +349,7 @@ namespace SqlKata
 
         public Query HavingNotIn(string column, Func<Query, Query> callback)
         {
-            Havings.WhereNotIn(column, callback);
-            return this;
+            return HavingNotIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query OrHavingIn(string column, Query query)
@@ -362,8 +360,7 @@ namespace SqlKata
 
         public Query OrHavingIn(string column, Func<Query, Query> callback)
         {
-            Havings.OrWhereIn(column, callback);
-            return this;
+            return OrHavingIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query OrHavingNotIn(string column, Query query)
@@ -374,8 +371,7 @@ namespace SqlKata
 
         public Query OrHavingNotIn(string column, Func<Query, Query> callback)
         {
-            Havings.OrWhereNotIn(column, callback);
-            return this;
+            return OrHavingNotIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query Having(string column, string op, Query query)
@@ -386,8 +382,7 @@ namespace SqlKata
 
         public Query Having(string column, string op, Func<Query, Query> callback)
         {
-            Havings.Where(column, op, callback);
-            return this;
+            return Having(column, op, callback.Invoke(NewQuery()));
         }
 
         public Query OrHaving(string column, string op, Query query)
@@ -398,8 +393,7 @@ namespace SqlKata
 
         public Query OrHaving(string column, string op, Func<Query, Query> callback)
         {
-            Havings.OrWhere(column, op, callback);
-            return this;
+            return OrHaving(column, op, callback.Invoke(NewQuery()));
         }
 
         public Query HavingSub(Query query, object value)
@@ -434,8 +428,7 @@ namespace SqlKata
 
         public Query HavingExists(Func<Query, Query> callback)
         {
-            Havings.WhereExists(callback);
-            return this;
+            return HavingExists(callback.Invoke(NewQuery()));
         }
 
         public Query HavingNotExists(Query query)
@@ -446,8 +439,7 @@ namespace SqlKata
 
         public Query HavingNotExists(Func<Query, Query> callback)
         {
-            Havings.WhereNotExists(callback);
-            return this;
+            return HavingNotExists(callback.Invoke(NewQuery()));
         }
 
         public Query OrHavingExists(Query query)
@@ -458,8 +450,7 @@ namespace SqlKata
 
         public Query OrHavingExists(Func<Query, Query> callback)
         {
-            Havings.OrWhereExists(callback);
-            return this;
+            return OrHavingExists(callback.Invoke(NewQuery()));
         }
 
         public Query OrHavingNotExists(Query query)
@@ -470,8 +461,7 @@ namespace SqlKata
 
         public Query OrHavingNotExists(Func<Query, Query> callback)
         {
-            Havings.OrWhereNotExists(callback);
-            return this;
+            return OrHavingNotExists(callback.Invoke(NewQuery()));
         }
 
         #region Date

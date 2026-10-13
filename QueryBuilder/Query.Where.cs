@@ -60,7 +60,7 @@ namespace SqlKata
 
         public Query Where(Func<Query, Query> callback)
         {
-            var query = callback.Invoke(NewChild());
+            var query = callback.Invoke(NewQuery());
 
             if (query.Wheres.HasConditions(EngineScope))
             {
@@ -338,8 +338,7 @@ namespace SqlKata
 
         public Query WhereIn(string column, Func<Query, Query> callback)
         {
-            Wheres.WhereIn(column, callback);
-            return this;
+            return WhereIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query WhereNotIn(string column, Query query)
@@ -350,8 +349,7 @@ namespace SqlKata
 
         public Query WhereNotIn(string column, Func<Query, Query> callback)
         {
-            Wheres.WhereNotIn(column, callback);
-            return this;
+            return WhereNotIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query OrWhereIn(string column, Query query)
@@ -362,8 +360,7 @@ namespace SqlKata
 
         public Query OrWhereIn(string column, Func<Query, Query> callback)
         {
-            Wheres.OrWhereIn(column, callback);
-            return this;
+            return OrWhereIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query OrWhereNotIn(string column, Query query)
@@ -374,8 +371,7 @@ namespace SqlKata
 
         public Query OrWhereNotIn(string column, Func<Query, Query> callback)
         {
-            Wheres.OrWhereNotIn(column, callback);
-            return this;
+            return OrWhereNotIn(column, callback.Invoke(NewQuery()));
         }
 
         public Query Where(string column, string op, Query query)
@@ -386,8 +382,7 @@ namespace SqlKata
 
         public Query Where(string column, string op, Func<Query, Query> callback)
         {
-            Wheres.Where(column, op, callback);
-            return this;
+            return Where(column, op, callback.Invoke(NewQuery()));
         }
 
         public Query OrWhere(string column, string op, Query query)
@@ -398,8 +393,7 @@ namespace SqlKata
 
         public Query OrWhere(string column, string op, Func<Query, Query> callback)
         {
-            Wheres.OrWhere(column, op, callback);
-            return this;
+            return OrWhere(column, op, callback.Invoke(NewQuery()));
         }
 
         public Query WhereSub(Query query, object value)
@@ -434,8 +428,7 @@ namespace SqlKata
 
         public Query WhereExists(Func<Query, Query> callback)
         {
-            Wheres.WhereExists(callback);
-            return this;
+            return WhereExists(callback.Invoke(NewQuery()));
         }
 
         public Query WhereNotExists(Query query)
@@ -446,8 +439,7 @@ namespace SqlKata
 
         public Query WhereNotExists(Func<Query, Query> callback)
         {
-            Wheres.WhereNotExists(callback);
-            return this;
+            return WhereNotExists(callback.Invoke(NewQuery()));
         }
 
         public Query OrWhereExists(Query query)
@@ -458,8 +450,7 @@ namespace SqlKata
 
         public Query OrWhereExists(Func<Query, Query> callback)
         {
-            Wheres.OrWhereExists(callback);
-            return this;
+            return OrWhereExists(callback.Invoke(NewQuery()));
         }
 
         public Query OrWhereNotExists(Query query)
@@ -470,8 +461,7 @@ namespace SqlKata
 
         public Query OrWhereNotExists(Func<Query, Query> callback)
         {
-            Wheres.OrWhereNotExists(callback);
-            return this;
+            return OrWhereNotExists(callback.Invoke(NewQuery()));
         }
 
         #region Date
