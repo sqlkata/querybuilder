@@ -30,7 +30,7 @@ namespace SqlKata.Execution
                 query.QueryFactory.QueryTimeout = this.QueryFactory?.QueryTimeout ?? 30;
             }
 
-            query.Clauses = this.Clauses.Select(x => x.Clone()).ToList();
+            query.CopyClausesFrom(this);
             query.Logger = this.Logger;
 
             query.QueryAlias = QueryAlias;

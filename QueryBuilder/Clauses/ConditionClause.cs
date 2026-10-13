@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlKata
 {
@@ -119,7 +120,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a column and a full "subquery".
     /// </summary>
-    public class QueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class QueryCondition : AbstractCondition
     {
         public string Column { get; set; }
         public string Operator { get; set; }
@@ -128,7 +129,7 @@ namespace SqlKata
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new QueryCondition<T>
+            return new QueryCondition
             {
                 Engine = Engine,
                 Column = Column,
@@ -144,7 +145,7 @@ namespace SqlKata
     /// <summary>
     /// Represents a comparison between a full "subquery" and a value.
     /// </summary>
-    public class SubQueryCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class SubQueryCondition : AbstractCondition
     {
         public object Value { get; set; }
         public string Operator { get; set; }
@@ -153,7 +154,7 @@ namespace SqlKata
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
-            return new SubQueryCondition<T>
+            return new SubQueryCondition
             {
                 Engine = Engine,
                 Value = Value,
@@ -169,17 +170,17 @@ namespace SqlKata
     /// <summary>
     /// Represents a "is in" condition.
     /// </summary>
-    public class InCondition<T> : AbstractCondition
+    public class InCondition : AbstractCondition
     {
         public string Column { get; set; }
-        public IEnumerable<T> Values { get; set; }
+        public IEnumerable<object> Values { get; set; }
         public override AbstractClause Clone()
         {
-            return new InCondition<T>
+            return new InCondition
             {
                 Engine = Engine,
                 Column = Column,
-                Values = new List<T>(Values),
+                Values = new List<object>(Values),
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,
@@ -212,14 +213,14 @@ namespace SqlKata
     /// <summary>
     /// Represents a "is between" condition.
     /// </summary>
-    public class BetweenCondition<T> : AbstractCondition
+    public class BetweenCondition : AbstractCondition
     {
         public string Column { get; set; }
-        public T Higher { get; set; }
-        public T Lower { get; set; }
+        public object Higher { get; set; }
+        public object Lower { get; set; }
         public override AbstractClause Clone()
         {
-            return new BetweenCondition<T>
+            return new BetweenCondition
             {
                 Engine = Engine,
                 Column = Column,
@@ -280,15 +281,23 @@ namespace SqlKata
     /// Represents a "nested" clause condition.
     /// i.e OR (myColumn = "A")
     /// </summary>
-    public class NestedCondition<T> : AbstractCondition where T : BaseQuery<T>
+    public class NestedCondition : AbstractCondition
     {
-        public T Query { get; set; }
+        public IClauseContainer Conditions { get; set; }
+
+        [Obsolete("Use Conditions instead.")]
+        public IClauseContainer Query
+        {
+            get => Conditions;
+            set => Conditions = value;
+        }
+
         public override AbstractClause Clone()
         {
-            return new NestedCondition<T>
+            return new NestedCondition
             {
                 Engine = Engine,
-                Query = Query.Clone(),
+                Conditions = Conditions?.Clone(),
                 IsOr = IsOr,
                 IsNot = IsNot,
                 Component = Component,

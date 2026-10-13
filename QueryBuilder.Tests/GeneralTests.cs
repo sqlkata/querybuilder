@@ -57,37 +57,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"", c[EngineCodes.Firebird]);
         }
 
-        [Fact]
-        public void ItShouldCacheMethodInfoByType()
-        {
-            var compiler = new TestSqlServerCompiler();
 
-            var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
-            );
-
-            var call2 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
-            );
-
-            Assert.Same(call1, call2);
-        }
-
-        [Fact]
-        public void Return_Different_MethodInfo_WhenSame_Method_With_Different_GenericTypes()
-        {
-            var compiler = new TestSqlServerCompiler();
-
-            var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(NestedCondition<Query>), "CompileNestedCondition"
-            );
-
-            var call2 = compiler.Call_FindCompilerMethodInfo(
-                typeof(NestedCondition<Join>), "CompileNestedCondition"
-            );
-
-            Assert.NotSame(call1, call2);
-        }
 
         [Fact]
         public void Custom_compiler_with_empty_identifier_overrides_should_remove_identifiers()

@@ -56,7 +56,7 @@ namespace SqlKata.Execution
 
             xQuery.QueryFactory = this;
 
-            xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
+            xQuery.CopyClausesFrom(query);
 
             xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;

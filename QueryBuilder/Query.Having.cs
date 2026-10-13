@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace SqlKata
 {
@@ -9,648 +7,560 @@ namespace SqlKata
     {
         public Query Having(string column, string op, object value)
         {
-
-            // If the value is "null", we will just assume the developer wants to add a
-            // Having null clause to the query. So, we will allow a short-cut here to
-            // that method for convenience so the developer doesn't have to check.
-            if (value == null)
-            {
-                return Not(op != "=").HavingNull(column);
-            }
-
-            return AddComponent("having", new BasicCondition
-            {
-                Column = column,
-                Operator = op,
-                Value = value,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.Where(column, op, value);
+            return this;
         }
 
         public Query HavingNot(string column, string op, object value)
         {
-            return Not().Having(column, op, value);
+            Havings.WhereNot(column, op, value);
+            return this;
         }
 
         public Query OrHaving(string column, string op, object value)
         {
-            return Or().Having(column, op, value);
+            Havings.OrWhere(column, op, value);
+            return this;
         }
 
         public Query OrHavingNot(string column, string op, object value)
         {
-            return this.Or().Not().Having(column, op, value);
+            Havings.OrWhereNot(column, op, value);
+            return this;
         }
 
-        public Query Having(string column, object value)
-        {
-            return Having(column, "=", value);
-        }
-        public Query HavingNot(string column, object value)
-        {
-            return HavingNot(column, "=", value);
-        }
-        public Query OrHaving(string column, object value)
-        {
-            return OrHaving(column, "=", value);
-        }
-        public Query OrHavingNot(string column, object value)
-        {
-            return OrHavingNot(column, "=", value);
-        }
+        public Query Having(string column, object value) => Having(column, "=", value);
+        public Query HavingNot(string column, object value) => HavingNot(column, "=", value);
+        public Query OrHaving(string column, object value) => OrHaving(column, "=", value);
+        public Query OrHavingNot(string column, object value) => OrHavingNot(column, "=", value);
 
-        /// <summary>
-        /// Perform a Having constraint
-        /// </summary>
-        /// <param name="constraints"></param>
-        /// <returns></returns>
         public Query Having(object constraints)
         {
-            var dictionary = new Dictionary<string, object>();
-
-            foreach (var item in constraints.GetType().GetRuntimeProperties())
-            {
-                dictionary.Add(item.Name, item.GetValue(constraints));
-            }
-
-            return Having(dictionary);
+            Havings.Where(constraints);
+            return this;
         }
 
         public Query Having(IEnumerable<KeyValuePair<string, object>> values)
         {
-            var query = this;
-            var orFlag = GetOr();
-            var notFlag = GetNot();
-
-            foreach (var tuple in values)
-            {
-                if (orFlag)
-                {
-                    query = query.Or();
-                }
-                else
-                {
-                    query.And();
-                }
-
-                query = this.Not(notFlag).Having(tuple.Key, tuple.Value);
-            }
-
-            return query;
+            Havings.Where(values);
+            return this;
         }
 
         public Query HavingRaw(string sql, params object[] bindings)
         {
-            return AddComponent("having", new RawCondition
-            {
-                Expression = sql,
-                Bindings = bindings,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereRaw(sql, bindings);
+            return this;
         }
 
         public Query OrHavingRaw(string sql, params object[] bindings)
         {
-            return Or().HavingRaw(sql, bindings);
+            Havings.OrWhereRaw(sql, bindings);
+            return this;
         }
 
-        /// <summary>
-        /// Apply a nested Having clause
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <returns></returns>
         public Query Having(Func<Query, Query> callback)
         {
             var query = callback.Invoke(NewChild());
 
-            return AddComponent("having", new NestedCondition<Query>
+            if (query.Havings.HasConditions(EngineScope))
             {
-                Query = query,
-                IsNot = GetNot(),
-                IsOr = GetOr(),
-            });
+                Havings.AddComponent("having", new NestedCondition
+                {
+                    Conditions = query.Havings,
+                    IsNot = Havings.GetNot(),
+                    IsOr = Havings.GetOr(),
+                });
+            }
+
+            return this;
+        }
+
+        public Query Having(ConditionGroup group)
+        {
+            if (group.HasConditions(EngineScope))
+            {
+                Havings.AddComponent("having", new NestedCondition
+                {
+                    Conditions = group,
+                    IsNot = Havings.GetNot(),
+                    IsOr = Havings.GetOr(),
+                });
+            }
+
+            return this;
         }
 
         public Query HavingNot(Func<Query, Query> callback)
         {
-            return Not().Having(callback);
+            Havings.Not();
+            return Having(callback);
+        }
+
+        public Query HavingNot(ConditionGroup group)
+        {
+            Havings.Not();
+            return Having(group);
         }
 
         public Query OrHaving(Func<Query, Query> callback)
         {
-            return Or().Having(callback);
+            Havings.Or();
+            return Having(callback);
+        }
+
+        public Query OrHaving(ConditionGroup group)
+        {
+            Havings.Or();
+            return Having(group);
         }
 
         public Query OrHavingNot(Func<Query, Query> callback)
         {
-            return Not().Or().Having(callback);
+            Havings.Or().Not();
+            return Having(callback);
+        }
+
+        public Query OrHavingNot(ConditionGroup group)
+        {
+            Havings.Or().Not();
+            return Having(group);
         }
 
         public Query HavingColumns(string first, string op, string second)
         {
-            return AddComponent("having", new TwoColumnsCondition
-            {
-                First = first,
-                Second = second,
-                Operator = op,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereColumns(first, op, second);
+            return this;
         }
 
         public Query OrHavingColumns(string first, string op, string second)
         {
-            return Or().HavingColumns(first, op, second);
+            Havings.OrWhereColumns(first, op, second);
+            return this;
         }
 
         public Query HavingNull(string column)
         {
-            return AddComponent("having", new NullCondition
-            {
-                Column = column,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereNull(column);
+            return this;
         }
 
         public Query HavingNotNull(string column)
         {
-            return Not().HavingNull(column);
+            Havings.WhereNotNull(column);
+            return this;
         }
 
         public Query OrHavingNull(string column)
         {
-            return this.Or().HavingNull(column);
+            Havings.OrWhereNull(column);
+            return this;
         }
 
         public Query OrHavingNotNull(string column)
         {
-            return Or().Not().HavingNull(column);
+            Havings.OrWhereNotNull(column);
+            return this;
         }
 
         public Query HavingTrue(string column)
         {
-            return AddComponent("having", new BooleanCondition
-            {
-                Column = column,
-                Value = true,
-            });
-        }
-
-        public Query OrHavingTrue(string column)
-        {
-            return Or().HavingTrue(column);
+            Havings.WhereTrue(column);
+            return this;
         }
 
         public Query HavingFalse(string column)
         {
-            return AddComponent("having", new BooleanCondition
-            {
-                Column = column,
-                Value = false,
-            });
+            Havings.WhereFalse(column);
+            return this;
+        }
+
+        public Query OrHavingTrue(string column)
+        {
+            Havings.OrWhereTrue(column);
+            return this;
         }
 
         public Query OrHavingFalse(string column)
         {
-            return Or().HavingFalse(column);
+            Havings.OrWhereFalse(column);
+            return this;
         }
 
         public Query HavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
-                Operator = "like",
-                Column = column,
-                Value = value,
-                CaseSensitive = caseSensitive,
-                EscapeCharacter = escapeCharacter,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereLike(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingLike(column, value, caseSensitive, escapeCharacter);
+            Havings.WhereNotLike(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingLike(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereLike(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingLike(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereNotLike(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
+
         public Query HavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
-                Operator = "starts",
-                Column = column,
-                Value = value,
-                CaseSensitive = caseSensitive,
-                EscapeCharacter = escapeCharacter,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereStarts(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
+            Havings.WhereNotStarts(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingStarts(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereStarts(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingStarts(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereNotStarts(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
-                Operator = "ends",
-                Column = column,
-                Value = value,
-                CaseSensitive = caseSensitive,
-                EscapeCharacter = escapeCharacter,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereEnds(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
+            Havings.WhereNotEnds(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingEnds(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereEnds(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingEnds(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereNotEnds(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return AddComponent("having", new BasicStringCondition
-            {
-                Operator = "contains",
-                Column = column,
-                Value = value,
-                CaseSensitive = caseSensitive,
-                EscapeCharacter = escapeCharacter,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereContains(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Not().HavingContains(column, value, caseSensitive, escapeCharacter);
+            Havings.WhereNotContains(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().HavingContains(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereContains(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query OrHavingNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
         {
-            return Or().Not().HavingContains(column, value, caseSensitive, escapeCharacter);
+            Havings.OrWhereNotContains(column, value, caseSensitive, escapeCharacter);
+            return this;
         }
 
         public Query HavingBetween<T>(string column, T lower, T higher)
         {
-            return AddComponent("having", new BetweenCondition<T>
-            {
-                Column = column,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-                Lower = lower,
-                Higher = higher
-            });
+            Havings.WhereBetween(column, lower, higher);
+            return this;
+        }
+
+        public Query HavingNotBetween<T>(string column, T lower, T higher)
+        {
+            Havings.WhereNotBetween(column, lower, higher);
+            return this;
         }
 
         public Query OrHavingBetween<T>(string column, T lower, T higher)
         {
-            return Or().HavingBetween(column, lower, higher);
+            Havings.OrWhereBetween(column, lower, higher);
+            return this;
         }
-        public Query HavingNotBetween<T>(string column, T lower, T higher)
-        {
-            return Not().HavingBetween(column, lower, higher);
-        }
+
         public Query OrHavingNotBetween<T>(string column, T lower, T higher)
         {
-            return Or().Not().HavingBetween(column, lower, higher);
+            Havings.OrWhereNotBetween(column, lower, higher);
+            return this;
         }
 
         public Query HavingIn<T>(string column, IEnumerable<T> values)
         {
-            // If the developer has passed a string they most likely want a List<string>
-            // since string is considered as List<char>
-            if (values is string)
-            {
-                string val = values as string;
-
-                return AddComponent("having", new InCondition<string>
-                {
-                    Column = column,
-                    IsOr = GetOr(),
-                    IsNot = GetNot(),
-                    Values = new List<string> { val }
-                });
-            }
-
-            return AddComponent("having", new InCondition<T>
-            {
-                Column = column,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-                Values = values.Distinct().ToList()
-            });
-
-
-        }
-
-        public Query OrHavingIn<T>(string column, IEnumerable<T> values)
-        {
-            return Or().HavingIn(column, values);
+            Havings.WhereIn(column, values);
+            return this;
         }
 
         public Query HavingNotIn<T>(string column, IEnumerable<T> values)
         {
-            return Not().HavingIn(column, values);
+            Havings.WhereNotIn(column, values);
+            return this;
+        }
+
+        public Query OrHavingIn<T>(string column, IEnumerable<T> values)
+        {
+            Havings.OrWhereIn(column, values);
+            return this;
         }
 
         public Query OrHavingNotIn<T>(string column, IEnumerable<T> values)
         {
-            return Or().Not().HavingIn(column, values);
+            Havings.OrWhereNotIn(column, values);
+            return this;
         }
-
 
         public Query HavingIn(string column, Query query)
         {
-            return AddComponent("having", new InQueryCondition
-            {
-                Column = column,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-                Query = query,
-            });
+            Havings.WhereIn(column, query);
+            return this;
         }
+
         public Query HavingIn(string column, Func<Query, Query> callback)
         {
-            var query = callback.Invoke(new Query());
-
-            return HavingIn(column, query);
+            Havings.WhereIn(column, callback);
+            return this;
         }
 
-        public Query OrHavingIn(string column, Query query)
-        {
-            return Or().HavingIn(column, query);
-        }
-
-        public Query OrHavingIn(string column, Func<Query, Query> callback)
-        {
-            return Or().HavingIn(column, callback);
-        }
         public Query HavingNotIn(string column, Query query)
         {
-            return Not().HavingIn(column, query);
+            Havings.WhereNotIn(column, query);
+            return this;
         }
 
         public Query HavingNotIn(string column, Func<Query, Query> callback)
         {
-            return Not().HavingIn(column, callback);
+            Havings.WhereNotIn(column, callback);
+            return this;
+        }
+
+        public Query OrHavingIn(string column, Query query)
+        {
+            Havings.OrWhereIn(column, query);
+            return this;
+        }
+
+        public Query OrHavingIn(string column, Func<Query, Query> callback)
+        {
+            Havings.OrWhereIn(column, callback);
+            return this;
         }
 
         public Query OrHavingNotIn(string column, Query query)
         {
-            return Or().Not().HavingIn(column, query);
+            Havings.OrWhereNotIn(column, query);
+            return this;
         }
 
         public Query OrHavingNotIn(string column, Func<Query, Query> callback)
         {
-            return Or().Not().HavingIn(column, callback);
-        }
-
-
-        /// <summary>
-        /// Perform a sub query Having clause
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="op"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public Query Having(string column, string op, Func<Query, Query> callback)
-        {
-            var query = callback.Invoke(NewChild());
-
-            return Having(column, op, query);
+            Havings.OrWhereNotIn(column, callback);
+            return this;
         }
 
         public Query Having(string column, string op, Query query)
         {
-            return AddComponent("having", new QueryCondition<Query>
-            {
-                Column = column,
-                Operator = op,
-                Query = query,
-                IsNot = GetNot(),
-                IsOr = GetOr(),
-            });
+            Havings.Where(column, op, query);
+            return this;
+        }
+
+        public Query Having(string column, string op, Func<Query, Query> callback)
+        {
+            Havings.Where(column, op, callback);
+            return this;
         }
 
         public Query OrHaving(string column, string op, Query query)
         {
-            return Or().Having(column, op, query);
+            Havings.OrWhere(column, op, query);
+            return this;
         }
+
         public Query OrHaving(string column, string op, Func<Query, Query> callback)
         {
-            return Or().Having(column, op, callback);
+            Havings.OrWhere(column, op, callback);
+            return this;
+        }
+
+        public Query HavingSub(Query query, object value)
+        {
+            Havings.WhereSub(query, value);
+            return this;
+        }
+
+        public Query HavingSub(Query query, string op, object value)
+        {
+            Havings.WhereSub(query, op, value);
+            return this;
+        }
+
+        public Query OrHavingSub(Query query, object value)
+        {
+            Havings.OrWhereSub(query, value);
+            return this;
+        }
+
+        public Query OrHavingSub(Query query, string op, object value)
+        {
+            Havings.OrWhereSub(query, op, value);
+            return this;
         }
 
         public Query HavingExists(Query query)
         {
-            if (!query.HasComponent("from"))
-            {
-                throw new ArgumentException($"{nameof(FromClause)} cannot be empty if used inside a {nameof(HavingExists)} condition");
-            }
-
-            // simplify the query as much as possible
-            query = query.Clone().ClearComponent("select")
-                .SelectRaw("1")
-                .Limit(1);
-
-            return AddComponent("having", new ExistsCondition
-            {
-                Query = query,
-                IsNot = GetNot(),
-                IsOr = GetOr(),
-            });
+            Havings.WhereExists(query);
+            return this;
         }
+
         public Query HavingExists(Func<Query, Query> callback)
         {
-            var childQuery = new Query().SetParent(this);
-            return HavingExists(callback.Invoke(childQuery));
+            Havings.WhereExists(callback);
+            return this;
         }
 
         public Query HavingNotExists(Query query)
         {
-            return Not().HavingExists(query);
+            Havings.WhereNotExists(query);
+            return this;
         }
 
         public Query HavingNotExists(Func<Query, Query> callback)
         {
-            return Not().HavingExists(callback);
+            Havings.WhereNotExists(callback);
+            return this;
         }
 
         public Query OrHavingExists(Query query)
         {
-            return Or().HavingExists(query);
-        }
-        public Query OrHavingExists(Func<Query, Query> callback)
-        {
-            return Or().HavingExists(callback);
-        }
-        public Query OrHavingNotExists(Query query)
-        {
-            return Or().Not().HavingExists(query);
-        }
-        public Query OrHavingNotExists(Func<Query, Query> callback)
-        {
-            return Or().Not().HavingExists(callback);
+            Havings.OrWhereExists(query);
+            return this;
         }
 
-        #region date
+        public Query OrHavingExists(Func<Query, Query> callback)
+        {
+            Havings.OrWhereExists(callback);
+            return this;
+        }
+
+        public Query OrHavingNotExists(Query query)
+        {
+            Havings.OrWhereNotExists(query);
+            return this;
+        }
+
+        public Query OrHavingNotExists(Func<Query, Query> callback)
+        {
+            Havings.OrWhereNotExists(callback);
+            return this;
+        }
+
+        #region Date
         public Query HavingDatePart(string part, string column, string op, object value)
         {
-            return AddComponent("having", new BasicDateCondition
-            {
-                Operator = op,
-                Column = column,
-                Value = value,
-                Part = part,
-                IsOr = GetOr(),
-                IsNot = GetNot(),
-            });
+            Havings.WhereDatePart(part, column, op, value);
+            return this;
         }
+
         public Query HavingNotDatePart(string part, string column, string op, object value)
         {
-            return Not().HavingDatePart(part, column, op, value);
+            Havings.WhereNotDatePart(part, column, op, value);
+            return this;
         }
 
         public Query OrHavingDatePart(string part, string column, string op, object value)
         {
-            return Or().HavingDatePart(part, column, op, value);
+            Havings.OrWhereDatePart(part, column, op, value);
+            return this;
         }
 
         public Query OrHavingNotDatePart(string part, string column, string op, object value)
         {
-            return Or().Not().HavingDatePart(part, column, op, value);
+            Havings.OrWhereNotDatePart(part, column, op, value);
+            return this;
         }
 
         public Query HavingDate(string column, string op, object value)
         {
-            return HavingDatePart("date", column, op, value);
+            Havings.WhereDate(column, op, value);
+            return this;
         }
+
         public Query HavingNotDate(string column, string op, object value)
         {
-            return Not().HavingDate(column, op, value);
+            Havings.WhereNotDate(column, op, value);
+            return this;
         }
+
         public Query OrHavingDate(string column, string op, object value)
         {
-            return Or().HavingDate(column, op, value);
+            Havings.OrWhereDate(column, op, value);
+            return this;
         }
+
         public Query OrHavingNotDate(string column, string op, object value)
         {
-            return Or().Not().HavingDate(column, op, value);
+            Havings.OrWhereNotDate(column, op, value);
+            return this;
         }
 
         public Query HavingTime(string column, string op, object value)
         {
-            return HavingDatePart("time", column, op, value);
+            Havings.WhereTime(column, op, value);
+            return this;
         }
+
         public Query HavingNotTime(string column, string op, object value)
         {
-            return Not().HavingTime(column, op, value);
+            Havings.WhereNotTime(column, op, value);
+            return this;
         }
+
         public Query OrHavingTime(string column, string op, object value)
         {
-            return Or().HavingTime(column, op, value);
+            Havings.OrWhereTime(column, op, value);
+            return this;
         }
+
         public Query OrHavingNotTime(string column, string op, object value)
         {
-            return Or().Not().HavingTime(column, op, value);
+            Havings.OrWhereNotTime(column, op, value);
+            return this;
         }
 
-        public Query HavingDatePart(string part, string column, object value)
-        {
-            return HavingDatePart(part, column, "=", value);
-        }
-        public Query HavingNotDatePart(string part, string column, object value)
-        {
-            return HavingNotDatePart(part, column, "=", value);
-        }
+        public Query HavingDatePart(string part, string column, object value) => HavingDatePart(part, column, "=", value);
+        public Query HavingNotDatePart(string part, string column, object value) => HavingNotDatePart(part, column, "=", value);
+        public Query OrHavingDatePart(string part, string column, object value) => OrHavingDatePart(part, column, "=", value);
+        public Query OrHavingNotDatePart(string part, string column, object value) => OrHavingNotDatePart(part, column, "=", value);
 
-        public Query OrHavingDatePart(string part, string column, object value)
-        {
-            return OrHavingDatePart(part, column, "=", value);
-        }
+        public Query HavingDate(string column, object value) => HavingDate(column, "=", value);
+        public Query HavingNotDate(string column, object value) => HavingNotDate(column, "=", value);
+        public Query OrHavingDate(string column, object value) => OrHavingDate(column, "=", value);
+        public Query OrHavingNotDate(string column, object value) => OrHavingNotDate(column, "=", value);
 
-        public Query OrHavingNotDatePart(string part, string column, object value)
-        {
-            return OrHavingNotDatePart(part, column, "=", value);
-        }
-
-        public Query HavingDate(string column, object value)
-        {
-            return HavingDate(column, "=", value);
-        }
-        public Query HavingNotDate(string column, object value)
-        {
-            return HavingNotDate(column, "=", value);
-        }
-        public Query OrHavingDate(string column, object value)
-        {
-            return OrHavingDate(column, "=", value);
-        }
-        public Query OrHavingNotDate(string column, object value)
-        {
-            return OrHavingNotDate(column, "=", value);
-        }
-
-        public Query HavingTime(string column, object value)
-        {
-            return HavingTime(column, "=", value);
-        }
-        public Query HavingNotTime(string column, object value)
-        {
-            return HavingNotTime(column, "=", value);
-        }
-        public Query OrHavingTime(string column, object value)
-        {
-            return OrHavingTime(column, "=", value);
-        }
-        public Query OrHavingNotTime(string column, object value)
-        {
-            return OrHavingNotTime(column, "=", value);
-        }
-
+        public Query HavingTime(string column, object value) => HavingTime(column, "=", value);
+        public Query HavingNotTime(string column, object value) => HavingNotTime(column, "=", value);
+        public Query OrHavingTime(string column, object value) => OrHavingTime(column, "=", value);
+        public Query OrHavingNotTime(string column, object value) => OrHavingNotTime(column, "=", value);
         #endregion
     }
 }

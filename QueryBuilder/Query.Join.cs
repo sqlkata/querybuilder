@@ -9,10 +9,15 @@ namespace SqlKata
         {
             var join = callback.Invoke(new Join().AsInner());
 
-            return AddComponent("join", new BaseJoin
+            var baseJoin = new BaseJoin
             {
-                Join = join
-            });
+                Join = join,
+                Component = "join",
+                Engine = EngineScope
+            };
+            Joins.Add(baseJoin);
+
+            return this;
         }
 
         public Query Join(

@@ -7,7 +7,6 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
         protected virtual string OpeningIdentifier { get; set; } = "\"";
@@ -24,7 +23,6 @@ namespace SqlKata.Compilers
 
         protected Compiler()
         {
-            _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
         public virtual string EngineCode { get; }
@@ -746,8 +744,10 @@ namespace SqlKata.Compilers
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
         {
 
-            var from = join.GetOneComponent<AbstractFrom>("from", EngineCode);
-            var conditions = join.GetComponents<AbstractCondition>("where", EngineCode);
+#pragma warning disable CS0618
+            var from = join.FromClause ?? join.GetOneComponent<AbstractFrom>("from", EngineCode);
+#pragma warning restore CS0618
+            var conditions = join.Conditions.GetConditions(EngineCode);
 
             var joinTable = CompileTableExpression(ctx, from);
             var constraints = CompileConditions(ctx, conditions);
