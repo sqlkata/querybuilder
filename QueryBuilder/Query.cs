@@ -6,24 +6,148 @@ using System.Reflection;
 
 namespace SqlKata
 {
-    public partial class Query : BaseQuery<Query>
+    public partial class Query
     {
+        private ConditionGroup _wheres;
+        public ConditionGroup Wheres
+        {
+            get => _wheres;
+            set
+            {
+                _wheres = value;
+                if (_wheres != null)
+                {
+                    _wheres.OnGetOr = () => Havings?.SetOr(false);
+                    _wheres.OnGetNot = () => Havings?.SetNot(false);
+                }
+            }
+        }
+
+        private ConditionGroup _havings;
+        public ConditionGroup Havings
+        {
+            get => _havings;
+            set
+            {
+                _havings = value;
+                if (_havings != null)
+                {
+                    _havings.OnGetOr = () => Wheres?.SetOr(false);
+                    _havings.OnGetNot = () => Wheres?.SetNot(false);
+                }
+            }
+        }
+
+        public List<BaseJoin> Joins { get; set; } = [];
+        public List<AbstractFrom> FromClauses { get; set; } = [];
+        public List<AbstractColumn> SelectClauses { get; set; } = [];
+        public List<AbstractFrom> CteClauses { get; set; } = [];
+        public List<AbstractOrderBy> OrderByClauses { get; set; } = [];
+        public List<AbstractColumn> GroupByClauses { get; set; } = [];
+        public List<LimitClause> LimitClauses { get; set; } = [];
+        public List<OffsetClause> OffsetClauses { get; set; } = [];
+        public List<AggregateClause> AggregateClauses { get; set; } = [];
+        public List<AbstractCombine> CombineClauses { get; set; } = [];
+        public List<AbstractInsertClause> InsertClauses { get; set; } = [];
+        public List<AbstractClause> UpdateClauses { get; set; } = [];
+
+        private string _engineScope = null;
+        public string EngineScope
+        {
+            get => _engineScope;
+            set
+            {
+                _engineScope = value;
+                if (Wheres != null) Wheres.EngineScope = value;
+                if (Havings != null) Havings.EngineScope = value;
+            }
+        }
+
+        public Query SetEngineScope(string engine)
+        {
+            this.EngineScope = engine;
+            return this;
+        }
+
+
         private string comment;
 
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-        public List<Include> Includes = new List<Include>();
-        public Dictionary<string, object> Variables = new Dictionary<string, object>();
+        public List<Include> Includes = [];
+        public Dictionary<string, object> Variables = [];
 
-        public Query() : base()
+        public Query()
         {
+            Wheres = new ConditionGroup();
+            Havings = new ConditionGroup();
         }
 
-        public Query(string table, string comment = null) : base()
+        public Query(string table, string comment = null) : this()
         {
             From(table);
             Comment(comment);
+        }
+
+        /// <summary>
+        /// Copy all clauses, conditions, and joins from the source query.
+        /// </summary>
+        public Query CopyClausesFrom(Query source)
+        {
+            this.Wheres = new ConditionGroup { Clauses = source.Wheres.Clauses.Select(x => x.Clone()).ToList() };
+            this.Havings = new ConditionGroup { Clauses = source.Havings.Clauses.Select(x => x.Clone()).ToList() };
+            this.Joins = source.Joins.Select(x => (BaseJoin)x.Clone()).ToList();
+            this.FromClauses = source.FromClauses.Select(x => (AbstractFrom)x.Clone()).ToList();
+            this.SelectClauses = source.SelectClauses.Select(x => (AbstractColumn)x.Clone()).ToList();
+            this.CteClauses = source.CteClauses.Select(x => (AbstractFrom)x.Clone()).ToList();
+            this.OrderByClauses = source.OrderByClauses.Select(x => (AbstractOrderBy)x.Clone()).ToList();
+            this.GroupByClauses = source.GroupByClauses.Select(x => (AbstractColumn)x.Clone()).ToList();
+            this.LimitClauses = source.LimitClauses.Select(x => (LimitClause)x.Clone()).ToList();
+            this.OffsetClauses = source.OffsetClauses.Select(x => (OffsetClause)x.Clone()).ToList();
+            this.AggregateClauses = source.AggregateClauses.Select(x => (AggregateClause)x.Clone()).ToList();
+            this.CombineClauses = source.CombineClauses.Select(x => (AbstractCombine)x.Clone()).ToList();
+            this.InsertClauses = source.InsertClauses.Select(x => (AbstractInsertClause)x.Clone()).ToList();
+            this.UpdateClauses = source.UpdateClauses.Select(x => x.Clone()).ToList();
+            return this;
+        }
+
+        public virtual Query Clone()
+        {
+            var clone = new Query();
+            clone.CopyClausesFrom(this);
+            clone.EngineScope = EngineScope;
+            clone.QueryAlias = QueryAlias;
+            clone.IsDistinct = IsDistinct;
+            clone.Method = Method;
+            clone.Includes = Includes.Select(i => i.Clone()).ToList();
+            clone.Variables = new Dictionary<string, object>(Variables);
+            return clone;
+        }
+
+        internal Query AddOrReplace<T>(List<T> list, T clause, string engineCode = null) where T : AbstractClause
+        {
+            engineCode ??= EngineScope;
+            clause.Engine = engineCode;
+            var current = list.SingleOrDefault(c => c.Engine == engineCode);
+            if (current != null)
+                list.Remove(current);
+            list.Add(clause);
+            return this;
+        }
+
+        public Query Or()
+        {
+            Wheres.Or();
+            Havings.Or();
+            return this;
+        }
+
+        public Query Not(bool flag = true)
+        {
+            Wheres.Not(flag);
+            Havings.Not(flag);
+            return this;
         }
 
         public string GetComment() => comment ?? "";
@@ -34,30 +158,18 @@ namespace SqlKata
 
         internal long GetOffset(string engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
-            var offset = this.GetOneComponent<OffsetClause>("offset", engineCode);
+            engineCode ??= EngineScope;
+            var offset = OffsetClauses.ForEngineOrDefault(engineCode);
 
             return offset?.Offset ?? 0;
         }
 
         internal int GetLimit(string engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
-            var limit = this.GetOneComponent<LimitClause>("limit", engineCode);
+            engineCode ??= EngineScope;
+            var limit = LimitClauses.ForEngineOrDefault(engineCode);
 
             return limit?.Limit ?? 0;
-        }
-
-        public override Query Clone()
-        {
-            var clone = base.Clone();
-            clone.Parent = Parent;
-            clone.QueryAlias = QueryAlias;
-            clone.IsDistinct = IsDistinct;
-            clone.Method = Method;
-            clone.Includes = Includes.Select(i => i.Clone()).ToList();
-            clone.Variables = new Dictionary<string, object>(Variables);
-            return clone;
         }
 
         public Query As(string alias)
@@ -104,11 +216,13 @@ namespace SqlKata
             // clear the query alias
             query.QueryAlias = null;
 
-            return AddComponent("cte", new QueryFromClause
+            CteClauses.Add(new QueryFromClause
             {
                 Query = query,
                 Alias = alias,
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query With(Func<Query, Query> fn)
@@ -144,6 +258,7 @@ namespace SqlKata
                 Alias = alias,
                 Columns = columnsList,
                 Values = new List<object>(),
+                Engine = EngineScope
             };
 
             foreach (var values in valuesCollectionList)
@@ -157,37 +272,36 @@ namespace SqlKata
                 clause.Values.AddRange(valuesList);
             }
 
-            return AddComponent("cte", clause);
+            CteClauses.Add(clause);
+            return this;
         }
 
         public Query WithRaw(string alias, string sql, params object[] bindings)
         {
-            return AddComponent("cte", new RawFromClause
+            CteClauses.Add(new RawFromClause
             {
                 Alias = alias,
                 Expression = sql,
                 Bindings = bindings,
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query Limit(int value)
         {
-            var newClause = new LimitClause
+            return AddOrReplace(LimitClauses, new LimitClause
             {
                 Limit = value
-            };
-
-            return AddOrReplaceComponent("limit", newClause);
+            });
         }
 
         public Query Offset(long value)
         {
-            var newClause = new OffsetClause
+            return AddOrReplace(OffsetClauses, new OffsetClause
             {
                 Offset = value
-            };
-
-            return AddOrReplaceComponent("offset", newClause);
+            });
         }
 
         public Query Offset(int value)
@@ -274,10 +388,11 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                OrderByClauses.Add(new OrderBy
                 {
                     Column = column,
-                    Ascending = true
+                    Ascending = true,
+                    Engine = EngineScope
                 });
             }
 
@@ -288,10 +403,11 @@ namespace SqlKata
         {
             foreach (var column in columns)
             {
-                AddComponent("order", new OrderBy
+                OrderByClauses.Add(new OrderBy
                 {
                     Column = column,
-                    Ascending = false
+                    Ascending = false,
+                    Engine = EngineScope
                 });
             }
 
@@ -300,25 +416,32 @@ namespace SqlKata
 
         public Query OrderByRaw(string expression, params object[] bindings)
         {
-            return AddComponent("order", new RawOrderBy
+            OrderByClauses.Add(new RawOrderBy
             {
                 Expression = expression,
-                Bindings = Helper.Flatten(bindings).ToArray()
+                Bindings = Helper.Flatten(bindings).ToArray(),
+                Engine = EngineScope
             });
+            return this;
         }
 
         public Query OrderByRandom(string seed)
         {
-            return AddComponent("order", new OrderByRandom { });
+            OrderByClauses.Add(new OrderByRandom
+            {
+                Engine = EngineScope
+            });
+            return this;
         }
 
         public Query GroupBy(params string[] columns)
         {
             foreach (var column in columns)
             {
-                AddComponent("group", new Column
+                GroupByClauses.Add(new Column
                 {
-                    Name = column
+                    Name = column,
+                    Engine = EngineScope
                 });
             }
 
@@ -327,16 +450,17 @@ namespace SqlKata
 
         public Query GroupByRaw(string expression, params object[] bindings)
         {
-            AddComponent("group", new RawColumn
+            GroupByClauses.Add(new RawColumn
             {
                 Expression = expression,
                 Bindings = bindings,
+                Engine = EngineScope
             });
 
             return this;
         }
 
-        public override Query NewQuery()
+        public virtual Query NewQuery()
         {
             return new Query();
         }
@@ -383,11 +507,6 @@ namespace SqlKata
             if (found)
             {
                 return Variables[variable];
-            }
-
-            if (Parent != null)
-            {
-                return (Parent as Query).FindVariable(variable);
             }
 
             throw new Exception($"Variable '{variable}' not found");

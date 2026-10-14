@@ -7,38 +7,26 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        protected virtual MethodInfo FindCompilerMethodInfo(Type clauseType, string methodName)
-        {
-            return _compileConditionMethodsProvider.GetMethodInfo(clauseType, methodName);
-        }
-
         protected virtual string CompileCondition(SqlResult ctx, AbstractCondition clause)
         {
-            var clauseType = clause.GetType();
-
-            var name = clauseType.Name;
-
-            name = name.Substring(0, name.IndexOf("Condition"));
-
-            var methodName = "Compile" + name + "Condition";
-
-            var methodInfo = FindCompilerMethodInfo(clauseType, methodName);
-
-            try
+            return clause switch
             {
-
-                var result = methodInfo.Invoke(this, new object[] {
-                    ctx,
-                    clause
-                });
-
-                return result as string;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Failed to invoke '{methodName}'", ex);
-            }
-
+                BasicDateCondition date => CompileBasicDateCondition(ctx, date),
+                BasicStringCondition str => CompileBasicStringCondition(ctx, str),
+                BasicCondition basic => CompileBasicCondition(ctx, basic),
+                TwoColumnsCondition two => CompileTwoColumnsCondition(ctx, two),
+                BetweenCondition between => CompileBetweenCondition(ctx, between),
+                InCondition inCondition => CompileInCondition(ctx, inCondition),
+                InQueryCondition inQuery => CompileInQueryCondition(ctx, inQuery),
+                NullCondition nullCondition => CompileNullCondition(ctx, nullCondition),
+                BooleanCondition booleanCondition => CompileBooleanCondition(ctx, booleanCondition),
+                NestedCondition nested => CompileNestedCondition(ctx, nested),
+                ExistsCondition exists => CompileExistsCondition(ctx, exists),
+                QueryCondition queryCondition => CompileQueryCondition(ctx, queryCondition),
+                SubQueryCondition subQuery => CompileSubQueryCondition(ctx, subQuery),
+                RawCondition raw => CompileRawCondition(ctx, raw),
+                _ => throw new ArgumentOutOfRangeException(nameof(clause), $"Unsupported condition type: {clause.GetType().Name}")
+            };
         }
 
         protected virtual string CompileConditions(SqlResult ctx, List<AbstractCondition> conditions)
@@ -68,18 +56,18 @@ namespace SqlKata.Compilers
             return WrapIdentifiers(x.Expression);
         }
 
-        protected virtual string CompileQueryCondition<T>(SqlResult ctx, QueryCondition<T> x) where T : BaseQuery<T>
+        protected virtual string CompileQueryCondition(SqlResult ctx, QueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSubQuery(ctx, x.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             return Wrap(x.Column) + " " + checkOperator(x.Operator) + " (" + subCtx.RawSql + ")";
         }
 
-        protected virtual string CompileSubQueryCondition<T>(SqlResult ctx, SubQueryCondition<T> x) where T : BaseQuery<T>
+        protected virtual string CompileSubQueryCondition(SqlResult ctx, SubQueryCondition x)
         {
-            var subCtx = CompileSelectQuery(x.Query);
+            var subCtx = CompileSubQuery(ctx, x.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -168,20 +156,31 @@ namespace SqlKata.Compilers
             return x.IsNot ? $"NOT ({sql})" : sql;
         }
 
-        protected virtual string CompileNestedCondition<Q>(SqlResult ctx, NestedCondition<Q> x) where Q : BaseQuery<Q>
+        protected virtual string CompileNestedCondition(SqlResult ctx, NestedCondition x)
         {
-            if (!(x.Query.HasComponent("where", EngineCode) || x.Query.HasComponent("having", EngineCode)))
+            if (x.Conditions is ConditionGroup group)
+            {
+                if (!group.HasConditions(EngineCode))
+                {
+                    return null;
+                }
+
+                var sql = CompileConditions(ctx, group.GetConditions(EngineCode));
+                return x.IsNot ? $"NOT ({sql})" : $"({sql})";
+            }
+
+            if (!(x.Conditions.HasComponent("where", EngineCode) || x.Conditions.HasComponent("having", EngineCode)))
             {
                 return null;
             }
 
-            var clause = x.Query.HasComponent("where", EngineCode) ? "where" : "having";
+            var clause = x.Conditions.HasComponent("where", EngineCode) ? "where" : "having";
 
-            var clauses = x.Query.GetComponents<AbstractCondition>(clause, EngineCode);
+            var clauses = x.Conditions.GetComponents<AbstractCondition>(clause, EngineCode);
 
-            var sql = CompileConditions(ctx, clauses);
+            var sql2 = CompileConditions(ctx, clauses);
 
-            return x.IsNot ? $"NOT ({sql})" : $"({sql})";
+            return x.IsNot ? $"NOT ({sql2})" : $"({sql2})";
         }
 
         protected string CompileTwoColumnsCondition(SqlResult ctx, TwoColumnsCondition clause)
@@ -190,7 +189,7 @@ namespace SqlKata.Compilers
             return $"{op}{Wrap(clause.First)} {checkOperator(clause.Operator)} {Wrap(clause.Second)}";
         }
 
-        protected virtual string CompileBetweenCondition<T>(SqlResult ctx, BetweenCondition<T> item)
+        protected virtual string CompileBetweenCondition(SqlResult ctx, BetweenCondition item)
         {
             var between = item.IsNot ? "NOT BETWEEN" : "BETWEEN";
             var lower = Parameter(ctx, item.Lower);
@@ -199,7 +198,7 @@ namespace SqlKata.Compilers
             return Wrap(item.Column) + $" {between} {lower} AND {higher}";
         }
 
-        protected virtual string CompileInCondition<T>(SqlResult ctx, InCondition<T> item)
+        protected virtual string CompileInCondition(SqlResult ctx, InCondition item)
         {
             var column = Wrap(item.Column);
 
@@ -210,15 +209,15 @@ namespace SqlKata.Compilers
 
             var inOperator = item.IsNot ? "NOT IN" : "IN";
 
-            var values = Parameterize(ctx, item.Values);
+            var parameterizedValues = Parameterize(ctx, item.Values);
 
-            return column + $" {inOperator} ({values})";
+            return column + $" {inOperator} ({parameterizedValues})";
         }
 
         protected virtual string CompileInQueryCondition(SqlResult ctx, InQueryCondition item)
         {
 
-            var subCtx = CompileSelectQuery(item.Query);
+            var subCtx = CompileSubQuery(ctx, item.Query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -253,10 +252,11 @@ namespace SqlKata.Compilers
 
             if (OmitSelectInsideExists)
             {
-                query.ClearComponent("select").SelectRaw("1");
+                query.SelectClauses.Clear();
+                query.SelectRaw("1");
             }
 
-            var subCtx = CompileSelectQuery(query);
+            var subCtx = CompileSubQuery(ctx, query);
 
             ctx.Bindings.AddRange(subCtx.Bindings);
 

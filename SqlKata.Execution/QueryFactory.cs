@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Humanizer;
 using SqlKata.Compilers;
+using SqlKata.Extensions;
 
 namespace SqlKata.Execution
 {
@@ -56,9 +57,8 @@ namespace SqlKata.Execution
 
             xQuery.QueryFactory = this;
 
-            xQuery.Clauses = query.Clauses.Select(x => x.Clone()).ToList();
+            xQuery.CopyClausesFrom(query);
 
-            xQuery.SetParent(query.Parent);
             xQuery.QueryAlias = query.QueryAlias;
             xQuery.IsDistinct = query.IsDistinct;
             xQuery.Method = query.Method;
@@ -350,9 +350,9 @@ namespace SqlKata.Execution
 
         public bool Exists(Query query, IDbTransaction transaction = null, int? timeout = null)
         {
-            var clone = query.Clone()
-                .ClearComponent("select")
-                .SelectRaw("1 as [Exists]")
+            var clone = query.Clone();
+            clone.SelectClauses.Clear();
+            clone.SelectRaw("1 as [Exists]")
                 .Limit(1);
 
             var rows = Get(clone, transaction, timeout);
@@ -362,9 +362,9 @@ namespace SqlKata.Execution
 
         public async Task<bool> ExistsAsync(Query query, IDbTransaction transaction = null, int? timeout = null, CancellationToken cancellationToken = default)
         {
-            var clone = query.Clone()
-                .ClearComponent("select")
-                .SelectRaw("1 as [Exists]")
+            var clone = query.Clone();
+            clone.SelectClauses.Clear();
+            clone.SelectRaw("1 as [Exists]")
                 .Limit(1);
 
             var rows = await GetAsync(clone, transaction, timeout, cancellationToken);
@@ -685,7 +685,7 @@ namespace SqlKata.Execution
                         // I will try to fetch the table name if provided and appending the Id as a convention
                         // Here am using Humanizer package to help getting the singular form of the table
 
-                        var fromTable = query.GetOneComponent("from") as FromClause;
+                        var fromTable = query.FromClauses.ForEngineOrDefault(query.EngineScope) as FromClause;
 
                         if (fromTable == null)
                         {
@@ -786,7 +786,7 @@ namespace SqlKata.Execution
                         // I will try to fetch the table name if provided and appending the Id as a convention
                         // Here am using Humanizer package to help getting the singular form of the table
 
-                        var fromTable = query.GetOneComponent("from") as FromClause;
+                        var fromTable = query.FromClauses.ForEngineOrDefault(query.EngineScope) as FromClause;
 
                         if (fromTable == null)
                         {

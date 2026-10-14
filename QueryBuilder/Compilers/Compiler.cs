@@ -7,7 +7,6 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
-        private readonly ConditionsCompilerProvider _compileConditionMethodsProvider;
         protected virtual string parameterPlaceholder { get; set; } = "?";
         protected virtual string parameterPrefix { get; set; } = "@p";
         protected virtual string OpeningIdentifier { get; set; } = "\"";
@@ -24,7 +23,6 @@ namespace SqlKata.Compilers
 
         protected Compiler()
         {
-            _compileConditionMethodsProvider = new ConditionsCompilerProvider(this);
         }
 
         public virtual string EngineCode { get; }
@@ -79,74 +77,111 @@ namespace SqlKata.Compilers
 
         private Query TransformAggregateQuery(Query query)
         {
-            var clause = query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
+            var clause = query.AggregateClauses.ForEngineOrDefault(EngineCode);
 
-            if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
-
-            if (query.IsDistinct)
+            // Case 1: Simple single-column aggregate without DISTINCT.
+            // Example: query.From("users").AsCount("id")
+            // Output:  SELECT COUNT("id") FROM "users"
+            // No subquery is required; standard SQL natively supports single-column aggregates.
+            // Limits, orders, and group-by clauses are stripped because they do not apply to a scalar aggregate.
+            if (clause.Columns.Count == 1 && !query.IsDistinct)
             {
-                query.ClearComponent("aggregate", EngineCode);
-                query.ClearComponent("select", EngineCode);
-                query.Select(clause.Columns.ToArray());
+                var single = query.Clone();
+                single.LimitClauses.Clear();
+                single.OrderByClauses.Clear();
+                single.GroupByClauses.Clear();
+                return single;
+            }
+
+            // Case 2 & 3: Multi-column aggregates or DISTINCT aggregates require wrapping the query in a subquery:
+            // Output template: SELECT <aggregate>(*) FROM (<inner_query>) AS <type>Query
+            var transformed = query.Clone();
+            transformed.LimitClauses.Clear();
+            transformed.OrderByClauses.Clear();
+            transformed.GroupByClauses.Clear();
+
+            if (transformed.IsDistinct)
+            {
+                // Case 2: DISTINCT aggregate.
+                // Example: query.From("users").Distinct().AsCount("first_name", "last_name")
+                // SQL dialects generally do not allow multi-column COUNT(DISTINCT a, b).
+                // Instead, the inner query projects the distinct columns:
+                //   Inner: SELECT DISTINCT "first_name", "last_name" FROM "users"
+                //   Outer: SELECT COUNT(*) FROM (SELECT DISTINCT "first_name", "last_name" FROM "users") AS countQuery
+                transformed.AggregateClauses.ClearForEngine(EngineCode);
+                transformed.SelectClauses.ClearForEngine(EngineCode);
+                transformed.Select(clause.Columns.ToArray());
             }
             else
             {
+                // Case 3: Multi-column aggregate without DISTINCT.
+                // Example: query.From("users").AsCount("first_name", "last_name")
+                // In standard SQL, COUNT(a, b) is invalid syntax because aggregates take a single expression or '*'.
+                // In SQL aggregate semantics, counting multiple columns means counting rows where none of those columns are NULL:
+                //   Inner: SELECT * FROM "users" WHERE "first_name" IS NOT NULL AND "last_name" IS NOT NULL
+                //   Outer: SELECT COUNT(*) FROM (SELECT * FROM "users" WHERE "first_name" IS NOT NULL AND "last_name" IS NOT NULL) AS countQuery
                 foreach (var column in clause.Columns)
                 {
-                    query.WhereNotNull(column);
+                    transformed.WhereNotNull(column);
                 }
             }
 
             var outerClause = new AggregateClause()
             {
                 Columns = new List<string> { "*" },
-                Type = clause.Type
+                Type = clause.Type,
+                Engine = EngineCode
             };
 
-            return new Query()
-                .AddComponent("aggregate", outerClause)
-                .From(query, $"{clause.Type}Query");
+            var outerQuery = new Query()
+                .From(transformed, $"{clause.Type}Query");
+            outerQuery.AggregateClauses.Add(outerClause);
+            return outerQuery;
         }
 
         protected virtual SqlResult CompileRaw(Query query)
         {
-            SqlResult ctx;
+            QueryStack.Push(query);
+            try
+            {
+                SqlResult ctx;
 
-            if (query.Method == "insert")
-            {
-                ctx = CompileInsertQuery(query);
-            }
-            else if (query.Method == "update")
-            {
-                ctx = CompileUpdateQuery(query);
-            }
-            else if (query.Method == "delete")
-            {
-                ctx = CompileDeleteQuery(query);
-            }
-            else
-            {
-                if (query.Method == "aggregate")
+                if (query.Method == "insert")
                 {
-                    query.ClearComponent("limit")
-                        .ClearComponent("order")
-                        .ClearComponent("group");
+                    ctx = CompileInsertQuery(query);
+                }
+                else if (query.Method == "update")
+                {
+                    ctx = CompileUpdateQuery(query);
+                }
+                else if (query.Method == "delete")
+                {
+                    ctx = CompileDeleteQuery(query);
+                }
+                else
+                {
+                    if (query.Method == "aggregate")
+                    {
+                        query = TransformAggregateQuery(query);
+                    }
 
-                    query = TransformAggregateQuery(query);
+                    ctx = CompileSelectQuery(query);
                 }
 
-                ctx = CompileSelectQuery(query);
-            }
+                // handle CTEs
+                if (query.CteClauses.ForEngine(EngineCode).Any())
+                {
+                    ctx = CompileCteQuery(ctx, query);
+                }
 
-            // handle CTEs
-            if (query.HasComponent("cte", EngineCode))
+                ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
+
+                return ctx;
+            }
+            finally
             {
-                ctx = CompileCteQuery(ctx, query);
+                QueryStack.Pop();
             }
-
-            ctx.RawSql = Helper.ExpandParameters(ctx.RawSql, parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
-
-            return ctx;
         }
 
         /// <summary>
@@ -198,11 +233,45 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
+        [ThreadStatic]
+        private static Stack<Query> _queryStack;
+
+        protected static Stack<Query> QueryStack => _queryStack ??= new Stack<Query>();
+
+        public virtual object FindVariable(string name)
+        {
+            if (_queryStack != null)
+            {
+                foreach (var query in _queryStack)
+                {
+                    if (query?.Variables != null && query.Variables.TryGetValue(name, out var value))
+                    {
+                        return value;
+                    }
+                }
+            }
+
+            throw new Exception($"Variable '{name}' not found");
+        }
+
+        protected virtual SqlResult CompileSubQuery(SqlResult parentCtx, Query query)
+        {
+            QueryStack.Push(query);
+            try
+            {
+                return CompileSelectQuery(query);
+            }
+            finally
+            {
+                QueryStack.Pop();
+            }
+        }
+
         protected virtual SqlResult CompileSelectQuery(Query query)
         {
             var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
-                Query = query.Clone(),
+                Query = query,
             };
 
             var results = new[] {
@@ -255,12 +324,11 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            var fromClause = ctx.Query.FromClauses.ForEngineOrDefault(EngineCode);
+            if (fromClause is null)
             {
                 throw new InvalidOperationException("No table set to delete");
             }
-
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             string table = null;
 
@@ -317,12 +385,11 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent("from", EngineCode))
+            var fromClause = ctx.Query.FromClauses.ForEngineOrDefault(EngineCode);
+            if (fromClause is null)
             {
                 throw new InvalidOperationException("No table set to update");
             }
-
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
 
             string table = null;
 
@@ -343,7 +410,7 @@ namespace SqlKata.Compilers
             }
 
             // check for increment statements
-            var clause = ctx.Query.GetOneComponent("update", EngineCode);
+            var clause = ctx.Query.UpdateClauses.ForEngineOrDefault(EngineCode);
 
             string wheres;
 
@@ -366,7 +433,7 @@ namespace SqlKata.Compilers
             }
 
 
-            var toUpdate = ctx.Query.GetOneComponent<InsertClause>("update", EngineCode);
+            var toUpdate = clause as InsertClause;
             var parts = new List<string>();
 
             for (var i = 0; i < toUpdate.Columns.Count; i++)
@@ -395,12 +462,9 @@ namespace SqlKata.Compilers
                 Query = query
             };
 
-            if (!ctx.Query.HasComponent("from", EngineCode))
-                throw new InvalidOperationException("No table set to insert");
-
-            var fromClause = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
+            var fromClause = ctx.Query.FromClauses.ForEngineOrDefault(EngineCode);
             if (fromClause is null)
-                throw new InvalidOperationException("Invalid table expression");
+                throw new InvalidOperationException("No table set to insert");
 
             string table = null;
             if (fromClause is FromClause fromClauseCast)
@@ -414,7 +478,7 @@ namespace SqlKata.Compilers
             if (table is null)
                 throw new InvalidOperationException("Invalid table expression");
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var inserts = ctx.Query.InsertClauses.ForEngine(EngineCode).ToList();
             if (inserts[0] is InsertQueryClause insertQueryClause)
                 return CompileInsertQueryClause(ctx, table, insertQueryClause);
             else
@@ -426,7 +490,7 @@ namespace SqlKata.Compilers
         {
             string columns = GetInsertColumnsList(clause.Columns);
 
-            var subCtx = CompileSelectQuery(clause.Query);
+            var subCtx = CompileSubQuery(ctx, clause.Query);
             ctx.Bindings.AddRange(subCtx.Bindings);
 
             ctx.RawSql = $"{SingleInsertStartClause} {table}{columns} {subCtx.RawSql}";
@@ -525,7 +589,7 @@ namespace SqlKata.Compilers
                     alias = $" {ColumnAsKeyword}{WrapValue(queryColumn.Query.QueryAlias)}";
                 }
 
-                var subCtx = CompileSelectQuery(queryColumn.Query);
+                var subCtx = CompileSubQuery(ctx, queryColumn.Query);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -566,7 +630,10 @@ namespace SqlKata.Compilers
                 return null;
             }
 
-            var wheres = aggregatedColumn.Filter.GetComponents<AbstractCondition>("where");
+            var wheres = aggregatedColumn.Filter.Wheres.Clauses
+                .ForEngine(EngineCode)
+                .Cast<AbstractCondition>()
+                .ToList();
 
             return CompileConditions(ctx, wheres);
         }
@@ -587,7 +654,7 @@ namespace SqlKata.Compilers
             }
             else if (cte is QueryFromClause queryFromClause)
             {
-                var subCtx = CompileSelectQuery(queryFromClause.Query);
+                var subCtx = CompileSubQuery(ctx, queryFromClause.Query);
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
                 ctx.RawSql = $"{WrapValue(queryFromClause.Alias)} AS ({subCtx.RawSql})";
@@ -610,10 +677,9 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileColumns(SqlResult ctx)
         {
-            if (ctx.Query.HasComponent("aggregate", EngineCode))
+            var aggregate = ctx.Query.AggregateClauses.ForEngineOrDefault(EngineCode);
+            if (aggregate != null)
             {
-                var aggregate = ctx.Query.GetOneComponent<AggregateClause>("aggregate", EngineCode);
-
                 var aggregateColumns = aggregate.Columns
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
                     .ToList();
@@ -635,8 +701,8 @@ namespace SqlKata.Compilers
                 return "SELECT 1";
             }
 
-            var columns = ctx.Query
-                .GetComponents<AbstractColumn>("select", EngineCode)
+            var columns = ctx.Query.SelectClauses
+                .ForEngine(EngineCode)
                 .Select(x => CompileColumn(ctx, x))
                 .ToList();
 
@@ -652,14 +718,13 @@ namespace SqlKata.Compilers
         {
 
             // Handle UNION, EXCEPT and INTERSECT
-            if (!ctx.Query.GetComponents("combine", EngineCode).Any())
+            var clauses = ctx.Query.CombineClauses.ForEngine(EngineCode).ToList();
+            if (!clauses.Any())
             {
                 return null;
             }
 
             var combinedQueries = new List<string>();
-
-            var clauses = ctx.Query.GetComponents<AbstractCombine>("combine", EngineCode);
 
             foreach (var clause in clauses)
             {
@@ -667,7 +732,7 @@ namespace SqlKata.Compilers
                 {
                     var combineOperator = combineClause.Operation.ToUpperInvariant() + " " + (combineClause.All ? "ALL " : "");
 
-                    var subCtx = CompileSelectQuery(combineClause.Query);
+                    var subCtx = CompileSubQuery(ctx, combineClause.Query);
 
                     ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -702,7 +767,7 @@ namespace SqlKata.Compilers
 
                 var alias = string.IsNullOrEmpty(fromQuery.QueryAlias) ? "" : $" {TableAsKeyword}" + WrapValue(fromQuery.QueryAlias);
 
-                var subCtx = CompileSelectQuery(fromQuery);
+                var subCtx = CompileSubQuery(ctx, fromQuery);
 
                 ctx.Bindings.AddRange(subCtx.Bindings);
 
@@ -719,10 +784,9 @@ namespace SqlKata.Compilers
 
         public virtual string CompileFrom(SqlResult ctx)
         {
-            if (ctx.Query.HasComponent("from", EngineCode))
+            var from = ctx.Query.FromClauses.ForEngineOrDefault(EngineCode);
+            if (from != null)
             {
-                var from = ctx.Query.GetOneComponent<AbstractFrom>("from", EngineCode);
-
                 return "FROM " + CompileTableExpression(ctx, from);
             }
 
@@ -731,14 +795,15 @@ namespace SqlKata.Compilers
 
         public virtual string CompileJoins(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("join", EngineCode))
+            var joins = ctx.Query.Joins
+                .ForEngine(EngineCode)
+                .Select(x => CompileJoin(ctx, x.Join))
+                .ToList();
+
+            if (!joins.Any())
             {
                 return null;
             }
-
-            var joins = ctx.Query
-                .GetComponents<BaseJoin>("join", EngineCode)
-                .Select(x => CompileJoin(ctx, x.Join));
 
             return "\n" + string.Join("\n", joins);
         }
@@ -746,8 +811,8 @@ namespace SqlKata.Compilers
         public virtual string CompileJoin(SqlResult ctx, Join join, bool isNested = false)
         {
 
-            var from = join.GetOneComponent<AbstractFrom>("from", EngineCode);
-            var conditions = join.GetComponents<AbstractCondition>("where", EngineCode);
+            var from = join.FromClause;
+            var conditions = join.Conditions.GetConditions(EngineCode);
 
             var joinTable = CompileTableExpression(ctx, from);
             var constraints = CompileConditions(ctx, conditions);
@@ -759,12 +824,15 @@ namespace SqlKata.Compilers
 
         public virtual string CompileWheres(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("where", EngineCode))
+            if (!ctx.Query.Wheres.HasConditions(EngineCode))
             {
                 return null;
             }
 
-            var conditions = ctx.Query.GetComponents<AbstractCondition>("where", EngineCode);
+            var conditions = ctx.Query.Wheres.Clauses
+                .ForEngine(EngineCode)
+                .Cast<AbstractCondition>()
+                .ToList();
             var sql = CompileConditions(ctx, conditions).Trim();
 
             return string.IsNullOrEmpty(sql) ? null : $"WHERE {sql}";
@@ -772,27 +840,23 @@ namespace SqlKata.Compilers
 
         public virtual string CompileGroups(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("group", EngineCode))
+            var columns = ctx.Query.GroupByClauses
+                .ForEngine(EngineCode)
+                .Select(x => CompileColumn(ctx, x))
+                .ToList();
+
+            if (!columns.Any())
             {
                 return null;
             }
-
-            var columns = ctx.Query
-                .GetComponents<AbstractColumn>("group", EngineCode)
-                .Select(x => CompileColumn(ctx, x));
 
             return "GROUP BY " + string.Join(", ", columns);
         }
 
         public virtual string CompileOrders(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("order", EngineCode))
-            {
-                return null;
-            }
-
-            var columns = ctx.Query
-                .GetComponents<AbstractOrderBy>("order", EngineCode)
+            var columns = ctx.Query.OrderByClauses
+                .ForEngine(EngineCode)
                 .Select(x =>
             {
 
@@ -805,14 +869,19 @@ namespace SqlKata.Compilers
                 var direction = (x as OrderBy).Ascending ? "" : " DESC";
 
                 return Wrap((x as OrderBy).Column) + direction;
-            });
+            }).ToList();
+
+            if (!columns.Any())
+            {
+                return null;
+            }
 
             return "ORDER BY " + string.Join(", ", columns);
         }
 
         public virtual string CompileHaving(SqlResult ctx)
         {
-            if (!ctx.Query.HasComponent("having", EngineCode))
+            if (!ctx.Query.Havings.HasConditions(EngineCode))
             {
                 return null;
             }
@@ -820,7 +889,8 @@ namespace SqlKata.Compilers
             var sql = new List<string>();
             string boolOperator;
 
-            var having = ctx.Query.GetComponents("having", EngineCode)
+            var having = ctx.Query.Havings.Clauses
+                .ForEngine(EngineCode)
                 .Cast<AbstractCondition>()
                 .ToList();
 
@@ -992,7 +1062,7 @@ namespace SqlKata.Compilers
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
             {
-                var value = ctx.Query.FindVariable(variable.Name);
+                var value = FindVariable(variable.Name);
                 return value;
             }
 
@@ -1017,7 +1087,7 @@ namespace SqlKata.Compilers
             // if we face a variable we have to lookup the variable from the predefined variables
             if (parameter is Variable variable)
             {
-                var value = ctx.Query.FindVariable(variable.Name);
+                var value = FindVariable(variable.Name);
                 ctx.Bindings.Add(value);
                 return parameterPlaceholder;
             }

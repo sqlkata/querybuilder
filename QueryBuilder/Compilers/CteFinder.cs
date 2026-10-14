@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlKata.Compilers
 {
@@ -32,7 +33,7 @@ namespace SqlKata.Compilers
 
         private List<AbstractFrom> findInternal(Query queryToSearch)
         {
-            var cteList = queryToSearch.GetComponents<AbstractFrom>("cte", engineCode);
+            var cteList = queryToSearch.CteClauses.ForEngine(engineCode).ToList();
 
             var resultList = new List<AbstractFrom>();
 

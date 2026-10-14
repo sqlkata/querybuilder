@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,7 +18,7 @@ namespace SqlKata.Compilers
         {
             var ctx = base.CompileInsertQuery(query);
 
-            var inserts = ctx.Query.GetComponents<AbstractInsertClause>("insert", EngineCode);
+            var inserts = ctx.Query.InsertClauses.ForEngine(EngineCode).ToList();
 
             if (inserts.Count > 1)
             {
@@ -57,17 +58,13 @@ namespace SqlKata.Compilers
             {
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.ClearComponent("limit");
-
-                return $"SELECT FIRST {parameterPlaceholder}" + compiled.Substring(6);
+                return string.Concat($"SELECT FIRST {parameterPlaceholder}", compiled.AsSpan(6));
             }
             else if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Insert(0, offset);
 
-                ctx.Query.ClearComponent("offset");
-
-                return $"SELECT SKIP {parameterPlaceholder}" + compiled.Substring(6);
+                return string.Concat($"SELECT SKIP {parameterPlaceholder}", compiled.AsSpan(6));
             }
 
             return compiled;

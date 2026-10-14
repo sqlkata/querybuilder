@@ -10,11 +10,12 @@ namespace SqlKata
 
             Method = "aggregate";
 
-            this.ClearComponent("aggregate")
-            .AddComponent("aggregate", new AggregateClause
+            AggregateClauses.Clear();
+            AggregateClauses.Add(new AggregateClause
             {
                 Type = type,
-                Columns = columns?.ToList() ?? new List<string>(),
+                Columns = columns?.ToList() ?? [],
+                Engine = EngineScope
             });
 
             return this;
@@ -22,19 +23,19 @@ namespace SqlKata
 
         public Query AsCount(string[] columns = null)
         {
-            var cols = columns?.ToList() ?? new List<string> { };
+            var cols = columns?.ToList() ?? [];
 
-            if (!cols.Any())
+            if (cols.Count == 0)
             {
                 cols.Add("*");
             }
 
-            return AsAggregate("count", cols.ToArray());
+            return AsAggregate("count", [.. cols]);
         }
 
         public Query AsAvg(string column)
         {
-            return AsAggregate("avg", new string[] { column });
+            return AsAggregate("avg", [column]);
         }
         public Query AsAverage(string column)
         {
@@ -43,17 +44,17 @@ namespace SqlKata
 
         public Query AsSum(string column)
         {
-            return AsAggregate("sum", new[] { column });
+            return AsAggregate("sum", [column]);
         }
 
         public Query AsMax(string column)
         {
-            return AsAggregate("max", new[] { column });
+            return AsAggregate("max", [column]);
         }
 
         public Query AsMin(string column)
         {
-            return AsAggregate("min", new[] { column });
+            return AsAggregate("min", [column]);
         }
     }
 }

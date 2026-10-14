@@ -57,37 +57,7 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM (SELECT * FROM \"TABLE\" WHERE firebird = 1) AS \"SERIES\"", c[EngineCodes.Firebird]);
         }
 
-        [Fact]
-        public void ItShouldCacheMethodInfoByType()
-        {
-            var compiler = new TestSqlServerCompiler();
 
-            var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
-            );
-
-            var call2 = compiler.Call_FindCompilerMethodInfo(
-                typeof(BasicCondition), "CompileBasicCondition"
-            );
-
-            Assert.Same(call1, call2);
-        }
-
-        [Fact]
-        public void Return_Different_MethodInfo_WhenSame_Method_With_Different_GenericTypes()
-        {
-            var compiler = new TestSqlServerCompiler();
-
-            var call1 = compiler.Call_FindCompilerMethodInfo(
-                typeof(NestedCondition<Query>), "CompileNestedCondition"
-            );
-
-            var call2 = compiler.Call_FindCompilerMethodInfo(
-                typeof(NestedCondition<Join>), "CompileNestedCondition"
-            );
-
-            Assert.NotSame(call1, call2);
-        }
 
         [Fact]
         public void Custom_compiler_with_empty_identifier_overrides_should_remove_identifiers()
@@ -229,7 +199,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.Clauses.OfType<AbstractFrom>().Count());
+            Assert.Equal(2, query.FromClauses.Count);
             Assert.Equal("SELECT * FROM [mssql]", c[EngineCodes.SqlServer].RawSql);
             Assert.Equal("SELECT * FROM \"generic\"", c[EngineCodes.PostgreSql].RawSql);
             Assert.Equal("SELECT * FROM `generic`", c[EngineCodes.MySql].RawSql);
@@ -244,25 +214,25 @@ namespace SqlKata.Tests
         {
             var query = new Query();
             if (table != null)
-                query.From(table);
-            query.AddOrReplaceComponent("from", new FromClause() { Table = "updated", Engine = engine });
-            var froms = query.Clauses.OfType<FromClause>();
+                query.For(engine, q => q.From(table));
+            query.For(engine, q => q.From("updated"));
+            var froms = query.FromClauses.ForEngine(engine);
 
             Assert.Single(froms);
-            Assert.Equal("updated", froms.Single().Table);
+            Assert.Equal("updated", (froms.Single() as FromClause).Table);
         }
 
         [Theory]
         [InlineData(null, "generic")]
         [InlineData(EngineCodes.SqlServer, "mssql")]
         [InlineData(EngineCodes.MySql, "generic")]
-        public void GetOneComponent_Prefers_Engine(string engine, string column)
+        public void ForEngineOrDefault_Prefers_Engine(string engine, string column)
         {
             var query = new Query()
                 .Where("generic", "foo")
                 .ForSqlServer(q => q.Where("mssql", "foo"));
 
-            var where = query.GetOneComponent("where", engine) as BasicCondition;
+            var where = query.Wheres.Clauses.ForEngineOrDefault(engine) as BasicCondition;
 
             Assert.NotNull(where);
             Assert.Equal(column, where.Column);
@@ -271,12 +241,56 @@ namespace SqlKata.Tests
         [Fact]
         public void AddOrReplace_Throws_MoreThanOne()
         {
-            var query = new Query()
-                .Where("a", "b")
-                .Where("c", "d");
+            var query = new Query();
+            query.FromClauses.Add(new FromClause { Table = "a" });
+            query.FromClauses.Add(new FromClause { Table = "b" });
 
-            Action act = () => query.AddOrReplaceComponent("where", new BasicCondition());
+            Action act = () => query.From("c");
             Assert.Throws<InvalidOperationException>(act);
+        }
+
+        [Fact]
+        public void DedicatedFromAndSelectClauses()
+        {
+            var query = new Query("users")
+                .Select("id", "name")
+                .ForSqlServer(q => q.From("mssql_users").Select("created_at"));
+
+            Assert.Equal(2, query.FromClauses.Count);
+            Assert.Equal(3, query.SelectClauses.Count);
+        }
+
+        [Fact]
+        public void DedicatedExplicitClauseProperties()
+        {
+            var query = new Query("users")
+                .With("active_users", new Query("users").Where("active", true))
+                .Select("id", "name")
+                .OrderBy("name")
+                .GroupBy("id", "name")
+                .Limit(10)
+                .Offset(20)
+                .Union(new Query("archived_users"));
+
+            Assert.Single(query.CteClauses);
+            Assert.Equal(2, query.SelectClauses.Count);
+            Assert.Single(query.OrderByClauses);
+            Assert.Equal(2, query.GroupByClauses.Count);
+            Assert.Single(query.LimitClauses);
+            Assert.Equal(10, query.LimitClauses[0].Limit);
+            Assert.Single(query.OffsetClauses);
+            Assert.Equal(20, query.OffsetClauses[0].Offset);
+            Assert.Single(query.CombineClauses);
+
+            var cloned = query.Clone();
+            Assert.NotSame(query.CteClauses, cloned.CteClauses);
+            Assert.NotSame(query.OrderByClauses, cloned.OrderByClauses);
+            Assert.NotSame(query.GroupByClauses, cloned.GroupByClauses);
+            Assert.NotSame(query.LimitClauses, cloned.LimitClauses);
+            Assert.NotSame(query.OffsetClauses, cloned.OffsetClauses);
+            Assert.NotSame(query.CombineClauses, cloned.CombineClauses);
+            Assert.Single(cloned.CteClauses);
+            Assert.Equal(10, cloned.LimitClauses[0].Limit);
         }
 
         [Fact]
@@ -286,7 +300,7 @@ namespace SqlKata.Tests
                 .ForSqlServer(q => q.Limit(5))
                 .ForSqlServer(q => q.Limit(10));
 
-            var limits = query.GetComponents<LimitClause>("limit", EngineCodes.SqlServer);
+            var limits = query.LimitClauses.ForEngine(EngineCodes.SqlServer).ToList();
             Assert.Single(limits);
             Assert.Equal(10, limits.Single().Limit);
         }
@@ -301,7 +315,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("limit").Count);
+            Assert.Equal(2, query.LimitClauses.Count);
             Assert.Equal("SELECT TOP (5) * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" LIMIT 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM `mytable`", c[EngineCodes.MySql].ToString());
@@ -314,9 +328,9 @@ namespace SqlKata.Tests
                 .ForSqlServer(q => q.Offset(5))
                 .ForSqlServer(q => q.Offset(10));
 
-            var limits = query.GetComponents<OffsetClause>("offset", EngineCodes.SqlServer);
-            Assert.Single(limits);
-            Assert.Equal(10, limits.Single().Offset);
+            var offsets = query.OffsetClauses.ForEngine(EngineCodes.SqlServer).ToList();
+            Assert.Single(offsets);
+            Assert.Equal(10, offsets.Single().Offset);
         }
 
         [Fact]
@@ -329,7 +343,7 @@ namespace SqlKata.Tests
             var engines = new[] { EngineCodes.SqlServer, EngineCodes.MySql, EngineCodes.PostgreSql };
             var c = Compilers.Compile(engines, query);
 
-            Assert.Equal(2, query.GetComponents("offset").Count);
+            Assert.Equal(2, query.OffsetClauses.Count);
             Assert.Equal("SELECT * FROM `mytable` LIMIT 18446744073709551615 OFFSET 5", c[EngineCodes.MySql].ToString());
             Assert.Equal("SELECT * FROM \"mytable\" OFFSET 10", c[EngineCodes.PostgreSql].ToString());
             Assert.Equal("SELECT * FROM [mytable]", c[EngineCodes.SqlServer].ToString());
@@ -665,6 +679,80 @@ namespace SqlKata.Tests
             Assert.Equal(query.Includes.Count, clone.Includes.Count);
             Assert.Equal(query.Includes[0].Name, clone.Includes[0].Name);
             Assert.Equal(query.Variables["myvar"], clone.Variables["myvar"]);
+        }
+
+        [Fact]
+        public void Compile_Aggregate_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users")
+                .OrderBy("id")
+                .Limit(10)
+                .GroupBy("category")
+                .AsCount();
+
+            var compiler = new PostgresCompiler();
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.OrderByClauses);
+            Assert.Single(query.LimitClauses);
+            Assert.Single(query.GroupByClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_DistinctAggregate_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users")
+                .Distinct()
+                .AsAvg("score");
+
+            var compiler = new PostgresCompiler();
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.True(query.IsDistinct);
+            Assert.Single(query.AggregateClauses);
+            Assert.Empty(query.SelectClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_SqlServer_Top_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users").Limit(5);
+            var compiler = new SqlServerCompiler { UseLegacyPagination = true };
+
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.LimitClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_Firebird_Limit_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users").Limit(5);
+            var compiler = new FirebirdCompiler();
+
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.LimitClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_WhereExists_DoesNotMutateSubquery()
+        {
+            var inner = new Query("orders").Select("id", "total");
+            var outer = new Query("users").WhereExists(inner);
+
+            var compiler = new PostgresCompiler();
+            compiler.Compile(outer);
+
+            Assert.Equal(2, inner.SelectClauses.Count);
         }
     }
 }
