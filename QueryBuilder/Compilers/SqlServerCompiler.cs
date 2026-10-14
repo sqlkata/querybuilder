@@ -14,118 +14,120 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.SqlServer;
         public bool UseLegacyPagination { get; set; } = false;
 
-        protected override SqlResult CompileSelectQuery(Query query)
+        public override void VisitSelectQuery(CompileContext ctx, Query query)
         {
             if (!UseLegacyPagination || !query.HasOffset(EngineCode))
             {
-                return base.CompileSelectQuery(query);
+                base.VisitSelectQuery(ctx, query);
+                return;
             }
 
             query = query.Clone();
 
-            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
-            {
-                Query = query,
-            };
-
             var limit = query.GetLimit(EngineCode);
             var offset = query.GetOffset(EngineCode);
-
 
             if (!query.SelectClauses.Any())
             {
                 query.Select("*");
             }
 
-            var order = CompileOrders(ctx) ?? "ORDER BY (SELECT 0)";
+            ctx.PushQuery(query);
+            var beforeOrder = ctx.Buffer.Length;
+            var beforeOrderBindings = ctx.Bindings.Count;
+            VisitOrders(ctx, query);
+            var order = ctx.Buffer.Length > beforeOrder ? ctx.Buffer.ToString(beforeOrder, ctx.Buffer.Length - beforeOrder).TrimStart() : "ORDER BY (SELECT 0)";
+            var orderBindings = ctx.Bindings.Skip(beforeOrderBindings).ToArray();
+            ctx.Buffer.Length = beforeOrder;
+            ctx.Bindings.RemoveRange(beforeOrderBindings, orderBindings.Length);
+            ctx.PopQuery();
 
-            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", ctx.Bindings.ToArray());
+            query.SelectRaw($"ROW_NUMBER() OVER ({order}) AS [row_num]", orderBindings);
 
             query.OrderByClauses.Clear();
 
+            ctx.PushQuery(query);
+            var beforeInner = ctx.Buffer.Length;
+            try
+            {
+                base.VisitSelectQuery(ctx, query);
+            }
+            finally
+            {
+                ctx.PopQuery();
+            }
 
-            var result = base.CompileSelectQuery(query);
+            var innerSql = ctx.Buffer.ToString(beforeInner, ctx.Buffer.Length - beforeInner);
+            ctx.Buffer.Length = beforeInner;
 
             if (limit == 0)
             {
-                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] >= {parameterPlaceholder}";
-                result.Bindings.Add(offset + 1);
-            }
-            else
-            {
-                result.RawSql = $"SELECT * FROM ({result.RawSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {parameterPlaceholder} AND {parameterPlaceholder}";
-                result.Bindings.Add(offset + 1);
-                result.Bindings.Add(limit + offset);
+                ctx.Bindings.Add(offset + 1);
+                ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] >= {parameterPlaceholder}");
+                return;
             }
 
-            return result;
+            ctx.Bindings.Add(offset + 1);
+            ctx.Bindings.Add(limit + offset);
+            ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {parameterPlaceholder} AND {parameterPlaceholder}");
         }
 
-        protected override string CompileColumns(SqlResult ctx)
+        public override void VisitSelectPrefix(CompileContext ctx, Query query)
         {
-            var compiled = base.CompileColumns(ctx);
-
             if (!UseLegacyPagination)
             {
-                return compiled;
+                base.VisitSelectPrefix(ctx, query);
+                return;
             }
 
-            // If there is a limit on the query, but not an offset, we will add the top
-            // clause to the query, which serves as a "limit" type clause within the
-            // SQL Server system similar to the limit keywords available in MySQL.
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset == 0)
             {
-                // top bindings should be inserted first
-                ctx.Bindings.Insert(0, limit);
+                ctx.Bindings.Add(limit);
 
-                // handle distinct
-                if (compiled.StartsWith("SELECT DISTINCT"))
-                {
-                    return $"SELECT DISTINCT TOP ({parameterPlaceholder}){compiled.Substring(15)}";
-                }
-
-                return $"SELECT TOP ({parameterPlaceholder}){compiled.Substring(6)}";
+                var distinct = query.IsDistinct ? "DISTINCT " : "";
+                ctx.Write($"SELECT {distinct}TOP ({parameterPlaceholder}) ");
+                return;
             }
 
-            return compiled;
+            base.VisitSelectPrefix(ctx, query);
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
             if (UseLegacyPagination)
             {
-                // in legacy versions of Sql Server, limit is handled by TOP
-                // and ROW_NUMBER techniques
-                return null;
+                return;
             }
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
-                return null;
+                return;
             }
 
-            var safeOrder = "";
-            if (!ctx.Query.OrderByClauses.Any())
+            ctx.EnsureSpace();
+
+            if (!query.OrderByClauses.Any())
             {
-                safeOrder = "ORDER BY (SELECT 0) ";
+                ctx.Write("ORDER BY (SELECT 0) ");
             }
 
             if (limit == 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
+                ctx.Write($"OFFSET {parameterPlaceholder} ROWS");
+                return;
             }
 
             ctx.Bindings.Add(offset);
             ctx.Bindings.Add(limit);
 
-            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
+            ctx.Write($"OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY");
         }
 
         public override string CompileRandom(string seed)
@@ -143,7 +145,7 @@ namespace SqlKata.Compilers
             return "cast(0 as bit)";
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
             var part = condition.Part.ToUpperInvariant();
@@ -159,30 +161,28 @@ namespace SqlKata.Compilers
                 left = $"DATEPART({part.ToUpperInvariant()}, {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            if (condition.IsNot)
+            {
+                ctx.Write("NOT (");
+            }
+
+            ctx.Write(left).Write(" ").Write(condition.Operator).Write(" ").Write(Parameter(ctx, condition.Value));
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write(")");
             }
-
-            return sql;
         }
 
-        protected override SqlResult CompileAdHocQuery(AdHocTableFromClause adHoc)
+        public override void VisitAdHocTableFromClause(CompileContext ctx, AdHocTableFromClause adHoc)
         {
-            var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter);
-
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
 
             var valueRow = string.Join(", ", Enumerable.Repeat(parameterPlaceholder, adHoc.Columns.Count));
             var valueRows = string.Join(", ", Enumerable.Repeat($"({valueRow})", adHoc.Values.Count / adHoc.Columns.Count));
-            var sql = $"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})";
 
-            ctx.RawSql = sql;
-            ctx.Bindings = adHoc.Values;
-
-            return ctx;
+            ctx.Write($"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})");
+            ctx.Bindings.AddRange(adHoc.Values);
         }
     }
 }

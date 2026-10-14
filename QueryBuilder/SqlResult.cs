@@ -8,8 +8,11 @@ namespace SqlKata
 {
     public class SqlResult
     {
-        private string ParameterPlaceholder { get; set; }
-        private string EscapeCharacter { get; set; }
+        public string ParameterPlaceholder { get; set; } = "?";
+        public string EscapeCharacter { get; set; } = "\\";
+
+        public SqlResult() { }
+
         public SqlResult(string parameterPlaceholder, string escapeCharacter)
         {
             ParameterPlaceholder = parameterPlaceholder;

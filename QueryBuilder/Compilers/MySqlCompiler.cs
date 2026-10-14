@@ -10,40 +10,35 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.MySql;
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
-
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (offset == 0 && limit == 0)
             {
-                return null;
+                return;
             }
+
+            ctx.EnsureSpace();
 
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"LIMIT {parameterPlaceholder}";
+                ctx.Write($"LIMIT {parameterPlaceholder}");
+                return;
             }
 
             if (limit == 0)
             {
-
-                // MySql will not accept offset without limit, so we will put a large number
-                // to avoid this error.
-
                 ctx.Bindings.Add(offset);
-                return $"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}";
+                ctx.Write($"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}");
+                return;
             }
-
-            // We have both values
 
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
-
-            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
-
+            ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
         }
     }
 }
