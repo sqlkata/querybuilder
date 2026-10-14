@@ -20,21 +20,23 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset > 0)
             {
+                ctx.EnsureSpace();
                 ctx.Bindings.Add(offset);
-                return $"LIMIT -1 OFFSET {parameterPlaceholder}";
+                ctx.Write($"LIMIT -1 OFFSET {parameterPlaceholder}");
+                return;
             }
 
-            return base.CompileLimit(ctx);
+            base.VisitLimit(ctx, query);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
@@ -51,17 +53,31 @@ namespace SqlKata.Compilers
 
             if (!formatMap.ContainsKey(condition.Part))
             {
-                return $"{column} {condition.Operator} {value}";
+                if (condition.IsNot)
+                {
+                    ctx.Write("NOT (");
+                }
+
+                ctx.Write(column).Write(" ").Write(condition.Operator).Write(" ").Write(value);
+
+                if (condition.IsNot)
+                {
+                    ctx.Write(")");
+                }
+
+                return;
             }
 
             var sql = $"strftime('{formatMap[condition.Part]}', {column}) {condition.Operator} cast({value} as text)";
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write($"NOT ({sql})");
             }
-
-            return sql;
+            else
+            {
+                ctx.Write(sql);
+            }
         }
     }
 }

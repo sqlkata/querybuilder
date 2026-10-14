@@ -14,61 +14,64 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.Firebird;
         protected override string SingleRowDummyTableName => "RDB$DATABASE";
 
-        protected override SqlResult CompileInsertQuery(Query query)
+        public override void VisitInsertQuery(CompileContext ctx, Query query)
         {
-            var ctx = base.CompileInsertQuery(query);
+            var before = ctx.Buffer.Length;
+            base.VisitInsertQuery(ctx, query);
+            var sql = ctx.Buffer.ToString(before, ctx.Buffer.Length - before);
+            ctx.Buffer.Length = before;
 
-            var inserts = ctx.Query.InsertClauses.ForEngine(EngineCode).ToList();
+            var inserts = query.InsertClauses.ForEngine(EngineCode).ToList();
 
             if (inserts.Count > 1)
             {
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)\s+VALUES\s+\(", ") SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)$", " FROM RDB$DATABASE");
+                sql = Regex.Replace(sql, @"\)\s+VALUES\s+\(", ") SELECT ");
+                sql = Regex.Replace(sql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
+                sql = Regex.Replace(sql, @"\)$", " FROM RDB$DATABASE");
             }
 
-            return ctx;
+            ctx.Write(sql);
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset > 0)
             {
+                ctx.EnsureSpace();
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return $"ROWS {parameterPlaceholder} TO {parameterPlaceholder}";
+                ctx.Write($"ROWS {parameterPlaceholder} TO {parameterPlaceholder}");
             }
-
-            return null;
         }
 
-
-        protected override string CompileSelectPrefix(SqlResult ctx)
+        public override void VisitSelectPrefix(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
-            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
+            var distinct = query.IsDistinct ? "DISTINCT " : "";
 
             if (limit > 0 && offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"SELECT FIRST {parameterPlaceholder} {distinct}";
+                ctx.Write($"SELECT FIRST {parameterPlaceholder} {distinct}");
+                return;
             }
 
             if (limit == 0 && offset > 0)
             {
                 ctx.Bindings.Add(offset);
-                return $"SELECT SKIP {parameterPlaceholder} {distinct}";
+                ctx.Write($"SELECT SKIP {parameterPlaceholder} {distinct}");
+                return;
             }
 
-            return base.CompileSelectPrefix(ctx);
+            base.VisitSelectPrefix(ctx, query);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
@@ -87,14 +90,17 @@ namespace SqlKata.Compilers
                 left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            if (condition.IsNot)
+            {
+                ctx.Write("NOT (");
+            }
+
+            ctx.Write(left).Write(" ").Write(condition.Operator).Write(" ").Write(Parameter(ctx, condition.Value));
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write(")");
             }
-
-            return sql;
         }
 
         public override string WrapValue(string value)

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace SqlKata.Compilers
 {
@@ -20,89 +18,95 @@ namespace SqlKata.Compilers
         public bool UseLegacyPagination { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
 
-        protected override SqlResult CompileSelectQuery(Query query)
+        public override void VisitSelectQuery(CompileContext ctx, Query query)
         {
             if (!UseLegacyPagination)
             {
-                return base.CompileSelectQuery(query);
+                base.VisitSelectQuery(ctx, query);
+                return;
             }
 
-            var result = base.CompileSelectQuery(query);
+            var beforeInner = ctx.Buffer.Length;
+            base.VisitSelectQuery(ctx, query);
+            var innerSql = ctx.Buffer.ToString(beforeInner, ctx.Buffer.Length - beforeInner);
+            ctx.Buffer.Length = beforeInner;
 
-            ApplyLegacyLimit(result);
-
-            return result;
+            ctx.Write(ApplyLegacyLimit(ctx, innerSql));
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
             if (UseLegacyPagination)
             {
-                // in pre-12c versions of Oracle, limit is handled by ROWNUM techniques
-                return null;
+                return;
             }
 
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
-
-            if (limit == 0 && offset == 0)
-            {
-                return null;
-            }
-
-            var safeOrder = "";
-
-            if (!ctx.Query.OrderByClauses.Any())
-            {
-                safeOrder = "ORDER BY (SELECT 0 FROM DUAL) ";
-            }
-
-            if (limit == 0)
-            {
-                ctx.Bindings.Add(offset);
-                return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS";
-            }
-
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
-
-            return $"{safeOrder}OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY";
-        }
-
-        internal void ApplyLegacyLimit(SqlResult ctx)
-        {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit == 0 && offset == 0)
             {
                 return;
             }
 
+            ctx.EnsureSpace();
+
+            if (!query.OrderByClauses.Any())
+            {
+                ctx.Write("ORDER BY (SELECT 0 FROM DUAL) ");
+            }
+
+            if (limit == 0)
+            {
+                ctx.Bindings.Add(offset);
+                ctx.Write($"OFFSET {parameterPlaceholder} ROWS");
+                return;
+            }
+
+            ctx.Bindings.Add(offset);
+            ctx.Bindings.Add(limit);
+
+            ctx.Write($"OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY");
+        }
+
+        internal void ApplyLegacyLimit(CompileContext ctx)
+        {
+            ctx.RawSql = ApplyLegacyLimit(ctx, ctx.RawSql);
+        }
+
+        internal string ApplyLegacyLimit(CompileContext ctx, string sql)
+        {
+            var limit = ctx.Query.GetLimit(EngineCode);
+            var offset = ctx.Query.GetOffset(EngineCode);
+
+            if (limit == 0 && offset == 0)
+            {
+                return sql;
+            }
+
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(offset);
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({ctx.RawSql}) WHERE ROWNUM <= {parameterPlaceholder}";
+                newSql = $"SELECT * FROM ({sql}) WHERE ROWNUM <= {parameterPlaceholder}";
                 ctx.Bindings.Add(limit);
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({ctx.RawSql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
                 ctx.Bindings.Add(limit + offset);
                 ctx.Bindings.Add(offset);
             }
 
-            ctx.RawSql = newSql;
+            return newSql;
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
-
             var column = Wrap(condition.Column);
             var value = Parameter(ctx, condition.Value);
 
@@ -125,10 +129,9 @@ namespace SqlKata.Compilers
                         valueFormat = $"{value}";
                     else
                     {
-                        // assume HH:MM format
                         if (condition.Value.ToString().Split(':').Count() == 2)
                             valueFormat = $"TO_DATE({value}, 'HH24:MI')";
-                        else // assume HH:MM:SS format
+                        else
                             valueFormat = $"TO_DATE({value}, 'HH24:MI:SS')";
                     }
                     sql = $"TO_CHAR({column}, 'HH24:MI:SS') {condition.Operator} TO_CHAR({valueFormat}, 'HH24:MI:SS')";
@@ -148,15 +151,19 @@ namespace SqlKata.Compilers
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write("NOT (");
             }
 
-            return sql;
+            ctx.Write(sql);
 
+            if (condition.IsNot)
+            {
+                ctx.Write(")");
+            }
         }
 
-        protected override SqlResult CompileRemainingInsertClauses(
-            SqlResult ctx, string table, IEnumerable<InsertClause> inserts)
+        public override void VisitRemainingInsertClauses(
+            CompileContext ctx, string table, IEnumerable<InsertClause> inserts)
         {
             foreach (var insert in inserts.Skip(1))
             {
@@ -164,13 +171,10 @@ namespace SqlKata.Compilers
                 string values = string.Join(", ", Parameterize(ctx, insert.Values));
 
                 string intoFormat = " INTO {0}{1} VALUES ({2})";
-                var nextInsert = string.Format(intoFormat, table, columns, values);
-
-                ctx.RawSql += nextInsert;
+                ctx.Write(string.Format(intoFormat, table, columns, values));
             }
 
-            ctx.RawSql += " SELECT 1 FROM DUAL";
-            return ctx;
+            ctx.Write(" SELECT 1 FROM DUAL");
         }
     }
 }

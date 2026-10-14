@@ -13,10 +13,8 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
         public override bool SupportsFilterClause { get; set; } = true;
 
-
-        protected override string CompileBasicStringCondition(SqlResult ctx, BasicStringCondition x)
+        protected override void VisitBasicStringCondition(CompileContext ctx, BasicStringCondition x)
         {
-
             var column = Wrap(x.Column);
 
             var value = Resolve(ctx, x.Value) as string;
@@ -46,28 +44,32 @@ namespace SqlKata.Compilers
                 }
             }
 
-            string sql;
+            if (x.IsNot)
+            {
+                ctx.Write("NOT (");
+            }
 
             if (x.Value is UnsafeLiteral)
             {
-                sql = $"{column} {checkOperator(method)} {value}";
+                ctx.Write(column).Write(" ").Write(checkOperator(method)).Write(" ").Write(value);
             }
             else
             {
-                sql = $"{column} {checkOperator(method)} {Parameter(ctx, value)}";
+                ctx.Write(column).Write(" ").Write(checkOperator(method)).Write(" ").Write(Parameter(ctx, value));
             }
 
             if (!string.IsNullOrEmpty(x.EscapeCharacter))
             {
-                sql = $"{sql} ESCAPE '{x.EscapeCharacter}'";
+                ctx.Write(" ESCAPE '").Write(x.EscapeCharacter).Write("'");
             }
 
-            return x.IsNot ? $"NOT ({sql})" : sql;
-
+            if (x.IsNot)
+            {
+                ctx.Write(")");
+            }
         }
 
-
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
@@ -86,14 +88,17 @@ namespace SqlKata.Compilers
                 left = $"DATE_PART('{condition.Part.ToUpperInvariant()}', {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            if (condition.IsNot)
+            {
+                ctx.Write("NOT (");
+            }
+
+            ctx.Write(left).Write(" ").Write(condition.Operator).Write(" ").Write(Parameter(ctx, condition.Value));
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write(")");
             }
-
-            return sql;
         }
     }
 }
