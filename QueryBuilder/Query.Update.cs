@@ -28,7 +28,7 @@ namespace SqlKata
 
             Method = "update";
 
-            UpdateClauses.Clear();
+            UpdateClauses.ClearForEngine(EngineScope);
             UpdateClauses.Add(new InsertClause
             {
                 Columns = columns.ToList(),
@@ -48,7 +48,7 @@ namespace SqlKata
 
             Method = "update";
 
-            UpdateClauses.Clear();
+            UpdateClauses.ClearForEngine(EngineScope);
             UpdateClauses.Add(new InsertClause
             {
                 Columns = values.Select(x => x.Key).ToList(),

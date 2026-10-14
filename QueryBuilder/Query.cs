@@ -38,110 +38,18 @@ namespace SqlKata
             }
         }
 
-        public List<BaseJoin> Joins { get; set; } = new List<BaseJoin>();
-        public List<AbstractFrom> FromClauses { get; set; } = new List<AbstractFrom>();
-        public List<AbstractColumn> SelectClauses { get; set; } = new List<AbstractColumn>();
-        public List<AbstractFrom> CteClauses { get; set; } = new List<AbstractFrom>();
-        public List<AbstractOrderBy> OrderByClauses { get; set; } = new List<AbstractOrderBy>();
-        public List<AbstractColumn> GroupByClauses { get; set; } = new List<AbstractColumn>();
-        public List<LimitClause> LimitClauses { get; set; } = new List<LimitClause>();
-        public List<OffsetClause> OffsetClauses { get; set; } = new List<OffsetClause>();
-        public List<AggregateClause> AggregateClauses { get; set; } = new List<AggregateClause>();
-        public List<AbstractCombine> CombineClauses { get; set; } = new List<AbstractCombine>();
-        public List<AbstractInsertClause> InsertClauses { get; set; } = new List<AbstractInsertClause>();
-        public List<AbstractClause> UpdateClauses { get; set; } = new List<AbstractClause>();
-
-        [Obsolete("Use dedicated properties (Wheres, Havings, Joins, FromClauses, SelectClauses, etc.) instead.")]
-        public List<AbstractClause> Clauses
-        {
-            get
-            {
-                var all = new List<AbstractClause>();
-                all.AddRange(CteClauses);
-                all.AddRange(SelectClauses);
-                all.AddRange(FromClauses);
-                all.AddRange(Joins);
-                all.AddRange(Wheres.Clauses);
-                all.AddRange(GroupByClauses);
-                all.AddRange(Havings.Clauses);
-                all.AddRange(OrderByClauses);
-                all.AddRange(LimitClauses);
-                all.AddRange(OffsetClauses);
-                all.AddRange(AggregateClauses);
-                all.AddRange(CombineClauses);
-                all.AddRange(InsertClauses);
-                all.AddRange(UpdateClauses);
-                return all;
-            }
-            set
-            {
-                CteClauses.Clear();
-                SelectClauses.Clear();
-                FromClauses.Clear();
-                Joins.Clear();
-                Wheres.Clauses.Clear();
-                GroupByClauses.Clear();
-                Havings.Clauses.Clear();
-                OrderByClauses.Clear();
-                LimitClauses.Clear();
-                OffsetClauses.Clear();
-                AggregateClauses.Clear();
-                CombineClauses.Clear();
-                InsertClauses.Clear();
-                UpdateClauses.Clear();
-                if (value != null)
-                {
-                    foreach (var clause in value)
-                    {
-                        switch (clause.Component)
-                        {
-                            case "where":
-                                Wheres.Clauses.Add(clause);
-                                break;
-                            case "having":
-                                Havings.Clauses.Add(clause);
-                                break;
-                            case "join" when clause is BaseJoin bj:
-                                Joins.Add(bj);
-                                break;
-                            case "from" when clause is AbstractFrom from:
-                                FromClauses.Add(from);
-                                break;
-                            case "select" when clause is AbstractColumn col:
-                                SelectClauses.Add(col);
-                                break;
-                            case "cte" when clause is AbstractFrom cte:
-                                CteClauses.Add(cte);
-                                break;
-                            case "order" when clause is AbstractOrderBy order:
-                                OrderByClauses.Add(order);
-                                break;
-                            case "group" when clause is AbstractColumn col:
-                                GroupByClauses.Add(col);
-                                break;
-                            case "limit" when clause is LimitClause limit:
-                                LimitClauses.Add(limit);
-                                break;
-                            case "offset" when clause is OffsetClause offset:
-                                OffsetClauses.Add(offset);
-                                break;
-                            case "aggregate" when clause is AggregateClause agg:
-                                AggregateClauses.Add(agg);
-                                break;
-                            case "combine" when clause is AbstractCombine combine:
-                                CombineClauses.Add(combine);
-                                break;
-                            case "insert" when clause is AbstractInsertClause insert:
-                                InsertClauses.Add(insert);
-                                break;
-                            case "update":
-                                UpdateClauses.Add(clause);
-                                break;
-                        }
-                    }
-                }
-            }
-        }
+        public List<BaseJoin> Joins { get; set; } = [];
+        public List<AbstractFrom> FromClauses { get; set; } = [];
+        public List<AbstractColumn> SelectClauses { get; set; } = [];
+        public List<AbstractFrom> CteClauses { get; set; } = [];
+        public List<AbstractOrderBy> OrderByClauses { get; set; } = [];
+        public List<AbstractColumn> GroupByClauses { get; set; } = [];
+        public List<LimitClause> LimitClauses { get; set; } = [];
+        public List<OffsetClause> OffsetClauses { get; set; } = [];
+        public List<AggregateClause> AggregateClauses { get; set; } = [];
+        public List<AbstractCombine> CombineClauses { get; set; } = [];
+        public List<AbstractInsertClause> InsertClauses { get; set; } = [];
+        public List<AbstractClause> UpdateClauses { get; set; } = [];
 
         private string _engineScope = null;
         public string EngineScope
@@ -167,8 +75,8 @@ namespace SqlKata
         public bool IsDistinct { get; set; } = false;
         public string QueryAlias { get; set; }
         public string Method { get; set; } = "select";
-        public List<Include> Includes = new List<Include>();
-        public Dictionary<string, object> Variables = new Dictionary<string, object>();
+        public List<Include> Includes = [];
+        public Dictionary<string, object> Variables = [];
 
         public Query()
         {
@@ -250,7 +158,7 @@ namespace SqlKata
 
         internal long GetOffset(string engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
             var offset = OffsetClauses.ForEngineOrDefault(engineCode);
 
             return offset?.Offset ?? 0;
@@ -258,7 +166,7 @@ namespace SqlKata
 
         internal int GetLimit(string engineCode = null)
         {
-            engineCode = engineCode ?? EngineScope;
+            engineCode ??= EngineScope;
             var limit = LimitClauses.ForEngineOrDefault(engineCode);
 
             return limit?.Limit ?? 0;

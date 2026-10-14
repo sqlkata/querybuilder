@@ -680,5 +680,79 @@ namespace SqlKata.Tests
             Assert.Equal(query.Includes[0].Name, clone.Includes[0].Name);
             Assert.Equal(query.Variables["myvar"], clone.Variables["myvar"]);
         }
+
+        [Fact]
+        public void Compile_Aggregate_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users")
+                .OrderBy("id")
+                .Limit(10)
+                .GroupBy("category")
+                .AsCount();
+
+            var compiler = new PostgresCompiler();
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.OrderByClauses);
+            Assert.Single(query.LimitClauses);
+            Assert.Single(query.GroupByClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_DistinctAggregate_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users")
+                .Distinct()
+                .AsAvg("score");
+
+            var compiler = new PostgresCompiler();
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.True(query.IsDistinct);
+            Assert.Single(query.AggregateClauses);
+            Assert.Empty(query.SelectClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_SqlServer_Top_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users").Limit(5);
+            var compiler = new SqlServerCompiler { UseLegacyPagination = true };
+
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.LimitClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_Firebird_Limit_DoesNotMutateOriginalQuery()
+        {
+            var query = new Query("users").Limit(5);
+            var compiler = new FirebirdCompiler();
+
+            var res1 = compiler.Compile(query);
+            var res2 = compiler.Compile(query);
+
+            Assert.Single(query.LimitClauses);
+            Assert.Equal(res1.RawSql, res2.RawSql);
+        }
+
+        [Fact]
+        public void Compile_WhereExists_DoesNotMutateSubquery()
+        {
+            var inner = new Query("orders").Select("id", "total");
+            var outer = new Query("users").WhereExists(inner);
+
+            var compiler = new PostgresCompiler();
+            compiler.Compile(outer);
+
+            Assert.Equal(2, inner.SelectClauses.Count);
+        }
     }
 }

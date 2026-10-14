@@ -79,19 +79,50 @@ namespace SqlKata.Compilers
         {
             var clause = query.AggregateClauses.ForEngineOrDefault(EngineCode);
 
-            if (clause.Columns.Count == 1 && !query.IsDistinct) return query;
-
-            if (query.IsDistinct)
+            // Case 1: Simple single-column aggregate without DISTINCT.
+            // Example: query.From("users").AsCount("id")
+            // Output:  SELECT COUNT("id") FROM "users"
+            // No subquery is required; standard SQL natively supports single-column aggregates.
+            // Limits, orders, and group-by clauses are stripped because they do not apply to a scalar aggregate.
+            if (clause.Columns.Count == 1 && !query.IsDistinct)
             {
-                query.AggregateClauses.ClearForEngine(EngineCode);
-                query.SelectClauses.ClearForEngine(EngineCode);
-                query.Select(clause.Columns.ToArray());
+                var single = query.Clone();
+                single.LimitClauses.Clear();
+                single.OrderByClauses.Clear();
+                single.GroupByClauses.Clear();
+                return single;
+            }
+
+            // Case 2 & 3: Multi-column aggregates or DISTINCT aggregates require wrapping the query in a subquery:
+            // Output template: SELECT <aggregate>(*) FROM (<inner_query>) AS <type>Query
+            var transformed = query.Clone();
+            transformed.LimitClauses.Clear();
+            transformed.OrderByClauses.Clear();
+            transformed.GroupByClauses.Clear();
+
+            if (transformed.IsDistinct)
+            {
+                // Case 2: DISTINCT aggregate.
+                // Example: query.From("users").Distinct().AsCount("first_name", "last_name")
+                // SQL dialects generally do not allow multi-column COUNT(DISTINCT a, b).
+                // Instead, the inner query projects the distinct columns:
+                //   Inner: SELECT DISTINCT "first_name", "last_name" FROM "users"
+                //   Outer: SELECT COUNT(*) FROM (SELECT DISTINCT "first_name", "last_name" FROM "users") AS countQuery
+                transformed.AggregateClauses.ClearForEngine(EngineCode);
+                transformed.SelectClauses.ClearForEngine(EngineCode);
+                transformed.Select(clause.Columns.ToArray());
             }
             else
             {
+                // Case 3: Multi-column aggregate without DISTINCT.
+                // Example: query.From("users").AsCount("first_name", "last_name")
+                // In standard SQL, COUNT(a, b) is invalid syntax because aggregates take a single expression or '*'.
+                // In SQL aggregate semantics, counting multiple columns means counting rows where none of those columns are NULL:
+                //   Inner: SELECT * FROM "users" WHERE "first_name" IS NOT NULL AND "last_name" IS NOT NULL
+                //   Outer: SELECT COUNT(*) FROM (SELECT * FROM "users" WHERE "first_name" IS NOT NULL AND "last_name" IS NOT NULL) AS countQuery
                 foreach (var column in clause.Columns)
                 {
-                    query.WhereNotNull(column);
+                    transformed.WhereNotNull(column);
                 }
             }
 
@@ -103,7 +134,7 @@ namespace SqlKata.Compilers
             };
 
             var outerQuery = new Query()
-                .From(query, $"{clause.Type}Query");
+                .From(transformed, $"{clause.Type}Query");
             outerQuery.AggregateClauses.Add(outerClause);
             return outerQuery;
         }
@@ -131,10 +162,6 @@ namespace SqlKata.Compilers
                 {
                     if (query.Method == "aggregate")
                     {
-                        query.LimitClauses.Clear();
-                        query.OrderByClauses.Clear();
-                        query.GroupByClauses.Clear();
-
                         query = TransformAggregateQuery(query);
                     }
 
@@ -244,7 +271,7 @@ namespace SqlKata.Compilers
         {
             var ctx = new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
-                Query = query.Clone(),
+                Query = query,
             };
 
             var results = new[] {

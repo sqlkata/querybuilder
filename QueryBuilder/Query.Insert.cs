@@ -31,7 +31,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            InsertClauses.Clear();
+            InsertClauses.ClearForEngine(EngineScope);
             InsertClauses.Add(new InsertClause
             {
                 Columns = columnsList,
@@ -51,7 +51,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            InsertClauses.Clear();
+            InsertClauses.ClearForEngine(EngineScope);
             InsertClauses.Add(new InsertClause
             {
                 Columns = values.Select(x => x.Key).ToList(),
@@ -81,7 +81,7 @@ namespace SqlKata
 
             Method = "insert";
 
-            InsertClauses.Clear();
+            InsertClauses.ClearForEngine(EngineScope);
 
             foreach (var values in valuesCollectionList)
             {
@@ -112,7 +112,7 @@ namespace SqlKata
         {
             Method = "insert";
 
-            InsertClauses.Clear();
+            InsertClauses.ClearForEngine(EngineScope);
             InsertClauses.Add(new InsertQueryClause
             {
                 Columns = columns.ToList(),

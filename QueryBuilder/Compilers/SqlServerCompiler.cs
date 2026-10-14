@@ -81,10 +81,8 @@ namespace SqlKata.Compilers
                 // top bindings should be inserted first
                 ctx.Bindings.Insert(0, limit);
 
-                ctx.Query.LimitClauses.Clear();
-
                 // handle distinct
-                if (compiled.IndexOf("SELECT DISTINCT") == 0)
+                if (compiled.StartsWith("SELECT DISTINCT"))
                 {
                     return $"SELECT DISTINCT TOP ({parameterPlaceholder}){compiled.Substring(15)}";
                 }
