@@ -47,27 +47,25 @@ namespace SqlKata.Compilers
         }
 
 
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileSelectPrefix(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(ctx);
-
             var limit = ctx.Query.GetLimit(EngineCode);
             var offset = ctx.Query.GetOffset(EngineCode);
+            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Insert(0, limit);
-
-                return string.Concat($"SELECT FIRST {parameterPlaceholder}", compiled.AsSpan(6));
+                ctx.Bindings.Add(limit);
+                return $"SELECT FIRST {parameterPlaceholder} {distinct}";
             }
-            else if (limit == 0 && offset > 0)
+
+            if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Insert(0, offset);
-
-                return string.Concat($"SELECT SKIP {parameterPlaceholder}", compiled.AsSpan(6));
+                ctx.Bindings.Add(offset);
+                return $"SELECT SKIP {parameterPlaceholder} {distinct}";
             }
 
-            return compiled;
+            return base.CompileSelectPrefix(ctx);
         }
 
         protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)

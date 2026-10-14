@@ -754,5 +754,29 @@ namespace SqlKata.Tests
 
             Assert.Equal(2, inner.SelectClauses.Count);
         }
+
+        [Fact]
+        public void SqlServer_SelectPrefix_TopWithColumnBindings_PreservesParameterOrder()
+        {
+            var query = new Query("users").SelectRaw("? AS [bonus]", 100).Limit(5);
+            var compiler = new SqlServerCompiler { UseLegacyPagination = true };
+
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT TOP (@p0) @p1 AS [bonus] FROM [users]", result.Sql);
+            Assert.Equal(5, result.NamedBindings["@p0"]);
+            Assert.Equal(100, result.NamedBindings["@p1"]);
+        }
+
+        [Fact]
+        public void Firebird_SelectPrefix_FirstWithDistinct()
+        {
+            var query = new Query("users").Select("name").Distinct().Limit(10);
+            var compiler = new FirebirdCompiler();
+
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT FIRST 10 DISTINCT \"NAME\" FROM \"USERS\"", result.ToString());
+        }
     }
 }

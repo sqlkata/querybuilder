@@ -675,7 +675,19 @@ namespace SqlKata.Compilers
             return ctx;
         }
 
-        protected virtual string CompileColumns(SqlResult ctx)
+        protected virtual string CompileSelectPrefix(SqlResult ctx)
+        {
+            var aggregate = ctx.Query.AggregateClauses.ForEngineOrDefault(EngineCode);
+            if (aggregate != null)
+            {
+                return "SELECT ";
+            }
+
+            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+            return $"SELECT {distinct}";
+        }
+
+        protected virtual string CompileColumnExpressions(SqlResult ctx)
         {
             var aggregate = ctx.Query.AggregateClauses.ForEngineOrDefault(EngineCode);
             if (aggregate != null)
@@ -684,21 +696,19 @@ namespace SqlKata.Compilers
                     .Select(x => CompileColumn(ctx, new Column { Name = x }))
                     .ToList();
 
-                string sql = string.Empty;
-
                 if (aggregateColumns.Count == 1)
                 {
-                    sql = string.Join(", ", aggregateColumns);
+                    var sql = string.Join(", ", aggregateColumns);
 
                     if (ctx.Query.IsDistinct)
                     {
                         sql = "DISTINCT " + sql;
                     }
 
-                    return "SELECT " + aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
+                    return aggregate.Type.ToUpperInvariant() + "(" + sql + $") {ColumnAsKeyword}" + WrapValue(aggregate.Type);
                 }
 
-                return "SELECT 1";
+                return "1";
             }
 
             var columns = ctx.Query.SelectClauses
@@ -706,12 +716,12 @@ namespace SqlKata.Compilers
                 .Select(x => CompileColumn(ctx, x))
                 .ToList();
 
-            var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+            return columns.Any() ? string.Join(", ", columns) : "*";
+        }
 
-            var select = columns.Any() ? string.Join(", ", columns) : "*";
-
-            return $"SELECT {distinct}{select}";
-
+        protected virtual string CompileColumns(SqlResult ctx)
+        {
+            return $"{CompileSelectPrefix(ctx)}{CompileColumnExpressions(ctx)}";
         }
 
         public virtual string CompileUnion(SqlResult ctx)

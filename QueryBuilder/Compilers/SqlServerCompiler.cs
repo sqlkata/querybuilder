@@ -61,13 +61,11 @@ namespace SqlKata.Compilers
             return result;
         }
 
-        protected override string CompileColumns(SqlResult ctx)
+        protected override string CompileSelectPrefix(SqlResult ctx)
         {
-            var compiled = base.CompileColumns(ctx);
-
             if (!UseLegacyPagination)
             {
-                return compiled;
+                return base.CompileSelectPrefix(ctx);
             }
 
             // If there is a limit on the query, but not an offset, we will add the top
@@ -78,19 +76,13 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                // top bindings should be inserted first
-                ctx.Bindings.Insert(0, limit);
+                ctx.Bindings.Add(limit);
 
-                // handle distinct
-                if (compiled.StartsWith("SELECT DISTINCT"))
-                {
-                    return $"SELECT DISTINCT TOP ({parameterPlaceholder}){compiled.Substring(15)}";
-                }
-
-                return $"SELECT TOP ({parameterPlaceholder}){compiled.Substring(6)}";
+                var distinct = ctx.Query.IsDistinct ? "DISTINCT " : "";
+                return $"SELECT {distinct}TOP ({parameterPlaceholder}) ";
             }
 
-            return compiled;
+            return base.CompileSelectPrefix(ctx);
         }
 
         public override string CompileLimit(SqlResult ctx)
