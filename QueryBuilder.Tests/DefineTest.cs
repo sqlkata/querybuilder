@@ -47,76 +47,41 @@ namespace SqlKata.Tests
         [Fact]
         public void Test_Define_WhereEnds()
         {
-
             var query1 = new Query("Products")
                 .Select("ProductId")
                 .Define("@product", "Coffee")
                 .WhereEnds("ProductName", Variable("@product"));
 
-
-            var query2 = new Query("Products")
-                .Select("ProductId", "ProductName")
-                .Define("@product", "Coffee")
-                .WhereEnds("ProductName", Variable("@product"), true);
-
             var c1 = Compile(query1);
-            var c2 = Compile(query2);
 
-            Assert.Equal("SELECT [ProductId] FROM [Products] WHERE LOWER([ProductName]) like '%coffee'", c1[EngineCodes.SqlServer]);
-
-            Assert.Equal("SELECT [ProductId], [ProductName] FROM [Products] WHERE [ProductName] like '%Coffee'", c2[EngineCodes.SqlServer]);
-
+            Assert.Equal("SELECT [ProductId] FROM [Products] WHERE [ProductName] like '%Coffee'", c1[EngineCodes.SqlServer]);
         }
-
-
 
         [Fact]
         public void Test_Define_WhereStarts()
         {
-
-
             var query1 = new Query("Products")
                         .Select("ProductId", "QuantityPerUnit")
                         .Define("@perUnit", "12")
                         .WhereStarts("QuantityPerUnit", Variable("@perUnit"));
 
-
-            var query2 = new Query("Products")
-                               .Select("ProductId", "QuantityPerUnit")
-                               .Define("@perUnit", "12")
-                               .WhereStarts("QuantityPerUnit", Variable("@perUnit"), true);
-
             var c1 = Compile(query1);
-            var c2 = Compile(query2);
 
-            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE LOWER([QuantityPerUnit]) like '12%'", c1[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE [QuantityPerUnit] like '12%'", c2[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE [QuantityPerUnit] like '12%'", c1[EngineCodes.SqlServer]);
         }
-
 
         [Fact]
         public void Test_Define_WhereContains()
         {
-
             var query1 = new Query("Products")
                 .Define("@perUnit", "500")
                 .Select("ProductId", "QuantityPerUnit")
                 .WhereContains("QuantityPerUnit", Variable("@perUnit"));
 
-
-            var query2 = new Query("Products")
-                .Define("@perUnit", "500")
-                .Select("ProductId", "QuantityPerUnit")
-                .WhereContains("QuantityPerUnit", Variable("@perUnit"), true);
-
             var c1 = Compile(query1);
-            var c2 = Compile(query2);
 
-            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE LOWER([QuantityPerUnit]) like '%500%'", c1[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE [QuantityPerUnit] like '%500%'", c2[EngineCodes.SqlServer]);
-
+            Assert.Equal("SELECT [ProductId], [QuantityPerUnit] FROM [Products] WHERE [QuantityPerUnit] like '%500%'", c1[EngineCodes.SqlServer]);
         }
-
 
         [Fact]
         public void Test_Define_WhereLike()
@@ -126,18 +91,9 @@ namespace SqlKata.Tests
                 .Define("@id", "20")
                 .WhereLike("SupplierID", Variable("@id"));
 
-
-            var query2 = new Query("Products")
-                .Select("ProductId", "ProductName", "SupplierID")
-                .Define("@id", "20")
-                .WhereLike("SupplierID", Variable("@id"), true);
-
             var c1 = Compile(query1);
-            var c2 = Compile(query2);
 
-            Assert.Equal("SELECT [ProductId], [ProductName], [SupplierID] FROM [Products] WHERE LOWER([SupplierID]) like '20'", c1[EngineCodes.SqlServer]);
-
-            Assert.Equal("SELECT [ProductId], [ProductName], [SupplierID] FROM [Products] WHERE [SupplierID] like '20'", c2[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [ProductId], [ProductName], [SupplierID] FROM [Products] WHERE [SupplierID] like '20'", c1[EngineCodes.SqlServer]);
         }
 
 
@@ -202,7 +158,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like 'u%'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING [Country] like 'U%'", c[EngineCodes.SqlServer]);
 
         }
 
@@ -220,7 +176,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING [Country] like '%d'", c[EngineCodes.SqlServer]);
         }
 
 
@@ -238,7 +194,7 @@ namespace SqlKata.Tests
 
             var c = Compile(query);
 
-            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING LOWER([Country]) like '%d%'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT COUNT(CustomerID), [Country] FROM [Customers] GROUP BY [Country] HAVING [Country] like '%d%'", c[EngineCodes.SqlServer]);
 
         }
 
@@ -367,7 +323,7 @@ namespace SqlKata.Tests
                             .WhereNotLike("City", Variable("@city"));
 
             var c = Compile(q2);
-            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') UNION SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT ([City] like 'Z') UNION SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
         }
 
 
@@ -386,7 +342,7 @@ namespace SqlKata.Tests
                         .WhereNotLike("City", Variable("@city"));
 
             var c = Compile(q2);
-            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') EXCEPT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT ([City] like 'Z') EXCEPT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -404,7 +360,7 @@ namespace SqlKata.Tests
                         .WhereNotLike("City", Variable("@city"));
 
             var c = Compile(q2);
-            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT (LOWER([City]) like 'z') INTERSECT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT [City] FROM [Customers] WHERE NOT ([City] like 'Z') INTERSECT SELECT [City] FROM [Suppliers] WHERE [City] = 'Beirut'", c[EngineCodes.SqlServer]);
         }
 
         /*

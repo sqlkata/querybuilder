@@ -13,62 +13,6 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
         public override bool SupportsFilterClause { get; set; } = true;
 
-        protected override void VisitBasicStringCondition(CompileContext ctx, BasicStringCondition x)
-        {
-            var column = Wrap(x.Column);
-
-            var value = Resolve(ctx, x.Value) as string;
-
-            if (value == null)
-            {
-                throw new ArgumentException("Expecting a non nullable string");
-            }
-
-            var method = x.Operator;
-
-            if (new[] { "starts", "ends", "contains", "like", "ilike" }.Contains(x.Operator))
-            {
-                method = x.CaseSensitive ? "LIKE" : "ILIKE";
-
-                switch (x.Operator)
-                {
-                    case "starts":
-                        value = $"{value}%";
-                        break;
-                    case "ends":
-                        value = $"%{value}";
-                        break;
-                    case "contains":
-                        value = $"%{value}%";
-                        break;
-                }
-            }
-
-            if (x.IsNot)
-            {
-                ctx.Write("NOT (");
-            }
-
-            if (x.Value is UnsafeLiteral)
-            {
-                ctx.Write(column).Write(" ").Write(checkOperator(method)).Write(" ").Write(value);
-            }
-            else
-            {
-                ctx.Write(column).Write(" ").Write(checkOperator(method)).Write(" ").Write(Parameter(ctx, value));
-            }
-
-            if (!string.IsNullOrEmpty(x.EscapeCharacter))
-            {
-                ctx.Write(" ESCAPE '").Write(x.EscapeCharacter).Write("'");
-            }
-
-            if (x.IsNot)
-            {
-                ctx.Write(")");
-            }
-        }
-
         protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);

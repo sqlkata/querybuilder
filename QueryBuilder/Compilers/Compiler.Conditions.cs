@@ -6,6 +6,8 @@ namespace SqlKata.Compilers
 {
     public partial class Compiler
     {
+        private static readonly string[] stringOperators = ["starts", "ends", "contains", "like"];
+
         public virtual void VisitConditions(CompileContext ctx, List<AbstractCondition> conditions)
         {
             var isFirst = true;
@@ -38,7 +40,8 @@ namespace SqlKata.Compilers
                 }
             }
 
-            if (ctx.Buffer.Length > 0 && ctx.Buffer[ctx.Buffer.Length - 1] == ' ')
+            // trim the ending whitespace
+            if (!isFirst && ctx.Buffer.Length > 0 && ctx.Buffer[^1] == ' ')
             {
                 ctx.Buffer.Length--;
             }
@@ -134,16 +137,15 @@ namespace SqlKata.Compilers
         {
             var column = Wrap(x.Column);
 
-            var value = Resolve(ctx, x.Value) as string;
 
-            if (value == null)
+            if (Resolve(ctx, x.Value) is not string value)
             {
                 throw new ArgumentException("Expecting a non nullable string");
             }
 
             var method = x.Operator;
 
-            if (new[] { "starts", "ends", "contains", "like" }.Contains(x.Operator))
+            if (stringOperators.Contains(x.Operator))
             {
                 method = "LIKE";
 
@@ -159,12 +161,6 @@ namespace SqlKata.Compilers
                         value = $"%{value}%";
                         break;
                 }
-            }
-
-            if (!x.CaseSensitive)
-            {
-                column = CompileLower(column);
-                value = value.ToLowerInvariant();
             }
 
             if (x.IsNot)
@@ -275,16 +271,14 @@ namespace SqlKata.Compilers
 
         protected virtual void VisitInCondition(CompileContext ctx, InCondition item)
         {
-            ctx.Write(Wrap(item.Column));
-
             if (!item.Values.Any())
             {
-                ctx.Write(item.IsNot ? " 1 = 1 /* NOT IN [empty list] */" : " 1 = 0 /* IN [empty list] */");
+                ctx.Write(item.IsNot ? "1 = 1 /* NOT IN [empty list] */" : "1 = 0 /* IN [empty list] */");
                 return;
             }
 
             var inOperator = item.IsNot ? " NOT IN (" : " IN (";
-            ctx.Write(inOperator).Write(Parameterize(ctx, item.Values)).Write(")");
+            ctx.Write(Wrap(item.Column)).Write(inOperator).Write(Parameterize(ctx, item.Values)).Write(")");
         }
 
         protected virtual void VisitInQueryCondition(CompileContext ctx, InQueryCondition item)
@@ -327,7 +321,7 @@ namespace SqlKata.Compilers
         // Backward compatibility wrappers delegating to visitor methods
         protected virtual string CompileCondition(CompileContext ctx, AbstractCondition clause)
         {
-            var temp = new CompileContext(ctx.CurrentQuery, parameterPlaceholder, EscapeCharacter);
+            var temp = new CompileContext(ctx);
             VisitCondition(temp, clause);
             ctx.Bindings.AddRange(temp.Bindings);
             return temp.Buffer.ToString();
@@ -335,7 +329,7 @@ namespace SqlKata.Compilers
 
         protected virtual string CompileConditions(CompileContext ctx, List<AbstractCondition> conditions)
         {
-            var temp = new CompileContext(ctx.CurrentQuery, parameterPlaceholder, EscapeCharacter);
+            var temp = new CompileContext(ctx);
             VisitConditions(temp, conditions);
             ctx.Bindings.AddRange(temp.Bindings);
             return temp.Buffer.ToString();
@@ -356,9 +350,9 @@ namespace SqlKata.Compilers
         protected virtual string CompileBooleanCondition(CompileContext ctx, BooleanCondition item) => RunToString(ctx, c => VisitBooleanCondition(c, item));
         protected virtual string CompileExistsCondition(CompileContext ctx, ExistsCondition item) => RunToString(ctx, c => VisitExistsCondition(c, item));
 
-        private string RunToString(CompileContext ctx, Action<CompileContext> action)
+        private static string RunToString(CompileContext ctx, Action<CompileContext> action)
         {
-            var temp = new CompileContext(ctx.CurrentQuery, parameterPlaceholder, EscapeCharacter);
+            var temp = new CompileContext(ctx);
             action(temp);
             ctx.Bindings.AddRange(temp.Bindings);
             return temp.Buffer.ToString();

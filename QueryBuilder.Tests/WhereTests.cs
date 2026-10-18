@@ -58,6 +58,24 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void ConditionGroup_HasConditions_DeepCheck()
+        {
+            var query = new Query("Users")
+                .Where(q => q.For(EngineCodes.Oracle, q2 => q2.Where("Age", ">", 18)));
+
+            Assert.True(query.Wheres.HasConditions(EngineCodes.Oracle));
+            Assert.False(query.Wheres.HasConditions(EngineCodes.SqlServer));
+
+            var group = new ConditionGroup();
+            var inner = new ConditionGroup { EngineScope = EngineCodes.Oracle };
+            inner.Where("Age", ">", 18);
+            group.Clauses.Add(new NestedCondition { Conditions = inner });
+
+            Assert.True(group.HasConditions(EngineCodes.Oracle));
+            Assert.False(group.HasConditions(EngineCodes.SqlServer));
+        }
+
+        [Fact]
         public void Or_FollowedByWhere_DoesNotAffectSubsequentHaving()
         {
             var q = new Query("Table1")
@@ -245,6 +263,80 @@ namespace SqlKata.Tests
             var result = compiler.Compile(q);
 
             Assert.Contains(42, result.Bindings);
+        }
+
+        [Fact]
+        public void NestedCondition_ScopedToAnotherEngine_ShouldNotProduceBareWhere()
+        {
+            var query = new Query("Users")
+                .Where(q => q.For(EngineCodes.Oracle, q2 => q2.Where("Age", ">", 18)));
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users]", result.RawSql);
+        }
+
+        [Fact]
+        public void NestedCondition_ScopedToAnotherEngine_ShouldNotProduceBareHaving()
+        {
+            var query = new Query("Users")
+                .Having(q => q.For(EngineCodes.Oracle, q2 => q2.Having("Age", ">", 18)));
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users]", result.RawSql);
+        }
+
+        [Fact]
+        public void WhereIn_EmptyCollection_ShouldEmitConstantPredicateWithoutColumn()
+        {
+            var query = new Query("Users").WhereIn("id", System.Array.Empty<int>());
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE 1 = 0 /* IN [empty list] */", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Users\" WHERE 1 = 0 /* IN [empty list] */", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void WhereNotIn_EmptyCollection_ShouldEmitConstantPredicateWithoutColumn()
+        {
+            var query = new Query("Users").WhereNotIn("id", System.Array.Empty<int>());
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE 1 = 1 /* NOT IN [empty list] */", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Users\" WHERE 1 = 1 /* NOT IN [empty list] */", c[EngineCodes.PostgreSql]);
+        }
+
+        [Fact]
+        public void WhereIn_EmptyCollection_CombinedWithOtherConditions()
+        {
+            var query = new Query("Users")
+                .Where("Status", "Active")
+                .WhereIn("id", System.Array.Empty<int>());
+
+            var c = Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE [Status] = 'Active' AND 1 = 0 /* IN [empty list] */", c[EngineCodes.SqlServer]);
+        }
+
+        [Fact]
+        public void Subquery_AggregateFilter_ResolvesOuterVariables()
+        {
+            var q = new Query("Orders")
+                .Define("tenantId", 42)
+                .Where("Total", ">", sub => sub.From("Stats")
+                    .SelectSum("Amount", f => f.Where("TenantId", Expressions.Variable("tenantId"))));
+
+            var c = Compilers.Compile(q);
+
+            Assert.Contains(42, c[EngineCodes.SqlServer].Bindings);
+            Assert.Equal("SELECT * FROM [Orders] WHERE [Total] > (SELECT SUM(CASE WHEN [TenantId] = ? THEN [Amount] END) FROM [Stats])", c[EngineCodes.SqlServer].RawSql);
+            Assert.Contains(42, c[EngineCodes.PostgreSql].Bindings);
+            Assert.Equal("SELECT * FROM \"Orders\" WHERE \"Total\" > (SELECT SUM(\"Amount\") FILTER (WHERE \"TenantId\" = ?) FROM \"Stats\")", c[EngineCodes.PostgreSql].RawSql);
         }
     }
 }

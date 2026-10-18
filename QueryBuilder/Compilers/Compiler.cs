@@ -555,14 +555,14 @@ namespace SqlKata.Compilers
         {
             string agg = aggregatedColumn.Aggregate.ToUpperInvariant();
 
-            var tempCtx = new CompileContext(ctx.CurrentQuery, parameterPlaceholder, EscapeCharacter);
+            var tempCtx = new CompileContext(ctx);
             VisitColumn(tempCtx, aggregatedColumn.Column);
             ctx.Bindings.AddRange(tempCtx.Bindings);
 
             var (col, alias) = SplitAlias(tempCtx.Buffer.ToString());
             alias = string.IsNullOrEmpty(alias) ? "" : $" {ColumnAsKeyword}{alias}";
 
-            var filterCtx = new CompileContext(ctx.CurrentQuery, parameterPlaceholder, EscapeCharacter);
+            var filterCtx = new CompileContext(ctx);
             VisitFilterConditions(filterCtx, aggregatedColumn);
 
             if (filterCtx.Buffer.Length == 0)
@@ -699,19 +699,25 @@ namespace SqlKata.Compilers
             }
         }
 
-        public virtual void VisitWheres(CompileContext ctx, Query query)
+        public virtual void VisitWheres(CompileContext ctx, Query query) =>
+            VisitConditionsClause(ctx, "WHERE", query.Wheres);
+
+        public virtual void VisitHaving(CompileContext ctx, Query query) =>
+            VisitConditionsClause(ctx, "HAVING", query.Havings);
+
+        protected virtual void VisitConditionsClause(CompileContext ctx, string keyword, ConditionGroup group)
         {
-            if (!query.Wheres.HasConditions(EngineCode))
+            if (!group.HasConditions(EngineCode))
             {
                 return;
             }
 
+            var before = ctx.Buffer.Length;
             ctx.EnsureSpace();
-            var beforeWhere = ctx.Buffer.Length;
-            ctx.Write("WHERE ");
+            ctx.Write(keyword).Write(" ");
             var beforeConds = ctx.Buffer.Length;
 
-            var conditions = query.Wheres.Clauses
+            var conditions = group.Clauses
                 .ForEngine(EngineCode)
                 .Cast<AbstractCondition>()
                 .ToList();
@@ -720,7 +726,7 @@ namespace SqlKata.Compilers
 
             if (ctx.Buffer.Length == beforeConds)
             {
-                ctx.Buffer.Length = beforeWhere;
+                ctx.Buffer.Length = before;
             }
         }
 
@@ -763,31 +769,6 @@ namespace SqlKata.Compilers
                     var direction = orderBy.Ascending ? "" : " DESC";
                     ctx.Write(Wrap(orderBy.Column)).Write(direction);
                 }
-            }
-        }
-
-        public virtual void VisitHaving(CompileContext ctx, Query query)
-        {
-            if (!query.Havings.HasConditions(EngineCode))
-            {
-                return;
-            }
-
-            ctx.EnsureSpace();
-            var beforeHaving = ctx.Buffer.Length;
-            ctx.Write("HAVING ");
-            var beforeConds = ctx.Buffer.Length;
-
-            var having = query.Havings.Clauses
-                .ForEngine(EngineCode)
-                .Cast<AbstractCondition>()
-                .ToList();
-
-            VisitConditions(ctx, having);
-
-            if (ctx.Buffer.Length == beforeConds)
-            {
-                ctx.Buffer.Length = beforeHaving;
             }
         }
 

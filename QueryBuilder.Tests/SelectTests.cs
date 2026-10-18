@@ -742,94 +742,94 @@ namespace SqlKata.Tests
         }
 
         [Fact]
-        public void ShouldUseILikeOnPostgresWhenNonCaseSensitive()
+        public void WhereLike_DefaultDatabaseHandling()
         {
             var q = new Query("Table1")
-                .WhereLike("Column1", "%Upper Word%", false);
+                .WhereLike("Column1", "%Upper Word%");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%upper word%'", c[EngineCodes.SqlServer]);
-            Assert.Equal("SELECT * FROM \"Table1\" WHERE \"Column1\" ilike '%Upper Word%'", c[EngineCodes.PostgreSql]);
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE [Column1] like '%Upper Word%'", c[EngineCodes.SqlServer]);
+            Assert.Equal("SELECT * FROM \"Table1\" WHERE \"Column1\" like '%Upper Word%'", c[EngineCodes.PostgreSql]);
         }
 
         [Fact]
         public void EscapedWhereLike()
         {
             var q = new Query("Table1")
-                .WhereLike("Column1", @"TestString\%", false, @"\");
+                .WhereLike("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE [Column1] like 'TestString\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedWhereStarts()
         {
             var q = new Query("Table1")
-                .WhereStarts("Column1", @"TestString\%", false, @"\");
+                .WhereStarts("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like 'teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE [Column1] like 'TestString\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedWhereEnds()
         {
             var q = new Query("Table1")
-                .WhereEnds("Column1", @"TestString\%", false, @"\");
+                .WhereEnds("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE [Column1] like '%TestString\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedWhereContains()
         {
             var q = new Query("Table1")
-                .WhereContains("Column1", @"TestString\%", false, @"\");
+                .WhereContains("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] WHERE LOWER([Column1]) like '%teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] WHERE [Column1] like '%TestString\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedHavingLike()
         {
             var q = new Query("Table1")
-                .HavingLike("Column1", @"TestString\%", false, @"\");
+                .HavingLike("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] HAVING [Column1] like 'TestString\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedHavingStarts()
         {
             var q = new Query("Table1")
-                .HavingStarts("Column1", @"TestString\%", false, @"\");
+                .HavingStarts("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like 'teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] HAVING [Column1] like 'TestString\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedHavingEnds()
         {
             var q = new Query("Table1")
-                .HavingEnds("Column1", @"TestString\%", false, @"\");
+                .HavingEnds("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] HAVING [Column1] like '%TestString\%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
         public void EscapedHavingContains()
         {
             var q = new Query("Table1")
-                .HavingContains("Column1", @"TestString\%", false, @"\");
+                .HavingContains("Column1", @"TestString\%", @"\");
             var c = Compile(q);
 
-            Assert.Equal(@"SELECT * FROM [Table1] HAVING LOWER([Column1]) like '%teststring\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
+            Assert.Equal(@"SELECT * FROM [Table1] HAVING [Column1] like '%TestString\%%' ESCAPE '\'", c[EngineCodes.SqlServer]);
         }
 
         [Fact]
@@ -838,7 +838,7 @@ namespace SqlKata.Tests
             Assert.ThrowsAny<ArgumentException>(() =>
             {
                 var q = new Query("Table1")
-                    .HavingContains("Column1", @"TestString\%", false, @"\aa");
+                    .HavingContains("Column1", @"TestString\%", @"\aa");
             });
         }
 

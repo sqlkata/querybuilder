@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SqlKata.Compilers
@@ -46,6 +47,29 @@ namespace SqlKata.Compilers
             if (query != null)
             {
                 _queryStack.Push(query);
+            }
+        }
+
+        public CompileContext(CompileContext other)
+        {
+            if (other != null)
+            {
+                ParameterPlaceholder = other.ParameterPlaceholder;
+                EscapeCharacter = other.EscapeCharacter;
+                CopyQueryStackFrom(other);
+            }
+        }
+
+        public void CopyQueryStackFrom(CompileContext source)
+        {
+            if (source?.QueryStack == null) return;
+            _queryStack.Clear();
+            foreach (var q in source.QueryStack.Reverse())
+            {
+                if (q != null)
+                {
+                    _queryStack.Push(q);
+                }
             }
         }
 

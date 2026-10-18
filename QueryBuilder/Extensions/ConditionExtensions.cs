@@ -259,14 +259,13 @@ namespace SqlKata
             return target.Or().WhereFalse(column);
         }
 
-        public static T WhereLike<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereLike<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
             target.AddComponent("where", new BasicStringCondition
             {
                 Operator = "like",
                 Column = column,
                 Value = value,
-                CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = target.GetOr(),
                 IsNot = target.GetNot(),
@@ -275,29 +274,28 @@ namespace SqlKata
             return target;
         }
 
-        public static T WhereNotLike<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereNotLike<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Not().WhereLike(column, value, caseSensitive, escapeCharacter);
+            return target.Not().WhereLike(column, value, escapeCharacter);
         }
 
-        public static T OrWhereLike<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereLike<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().WhereLike(column, value, caseSensitive, escapeCharacter);
+            return target.Or().WhereLike(column, value, escapeCharacter);
         }
 
-        public static T OrWhereNotLike<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereNotLike<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().Not().WhereLike(column, value, caseSensitive, escapeCharacter);
+            return target.Or().Not().WhereLike(column, value, escapeCharacter);
         }
 
-        public static T WhereStarts<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereStarts<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
             target.AddComponent("where", new BasicStringCondition
             {
                 Operator = "starts",
                 Column = column,
                 Value = value,
-                CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = target.GetOr(),
                 IsNot = target.GetNot(),
@@ -306,29 +304,28 @@ namespace SqlKata
             return target;
         }
 
-        public static T WhereNotStarts<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereNotStarts<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
+            return target.Not().WhereStarts(column, value, escapeCharacter);
         }
 
-        public static T OrWhereStarts<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereStarts<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().WhereStarts(column, value, caseSensitive, escapeCharacter);
+            return target.Or().WhereStarts(column, value, escapeCharacter);
         }
 
-        public static T OrWhereNotStarts<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereNotStarts<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().Not().WhereStarts(column, value, caseSensitive, escapeCharacter);
+            return target.Or().Not().WhereStarts(column, value, escapeCharacter);
         }
 
-        public static T WhereEnds<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereEnds<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
             target.AddComponent("where", new BasicStringCondition
             {
                 Operator = "ends",
                 Column = column,
                 Value = value,
-                CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = target.GetOr(),
                 IsNot = target.GetNot(),
@@ -337,29 +334,28 @@ namespace SqlKata
             return target;
         }
 
-        public static T WhereNotEnds<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereNotEnds<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
+            return target.Not().WhereEnds(column, value, escapeCharacter);
         }
 
-        public static T OrWhereEnds<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereEnds<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().WhereEnds(column, value, caseSensitive, escapeCharacter);
+            return target.Or().WhereEnds(column, value, escapeCharacter);
         }
 
-        public static T OrWhereNotEnds<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereNotEnds<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().Not().WhereEnds(column, value, caseSensitive, escapeCharacter);
+            return target.Or().Not().WhereEnds(column, value, escapeCharacter);
         }
 
-        public static T WhereContains<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereContains<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
             target.AddComponent("where", new BasicStringCondition
             {
                 Operator = "contains",
                 Column = column,
                 Value = value,
-                CaseSensitive = caseSensitive,
                 EscapeCharacter = escapeCharacter,
                 IsOr = target.GetOr(),
                 IsNot = target.GetNot(),
@@ -368,19 +364,19 @@ namespace SqlKata
             return target;
         }
 
-        public static T WhereNotContains<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T WhereNotContains<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Not().WhereContains(column, value, caseSensitive, escapeCharacter);
+            return target.Not().WhereContains(column, value, escapeCharacter);
         }
 
-        public static T OrWhereContains<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereContains<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().WhereContains(column, value, caseSensitive, escapeCharacter);
+            return target.Or().WhereContains(column, value, escapeCharacter);
         }
 
-        public static T OrWhereNotContains<T>(this T target, string column, object value, bool caseSensitive = false, string escapeCharacter = null) where T : IConditional
+        public static T OrWhereNotContains<T>(this T target, string column, object value, string escapeCharacter = null) where T : IConditional
         {
-            return target.Or().Not().WhereContains(column, value, caseSensitive, escapeCharacter);
+            return target.Or().Not().WhereContains(column, value, escapeCharacter);
         }
 
         public static T WhereBetween<T, TVal>(this T target, string column, TVal lower, TVal higher) where T : IConditional

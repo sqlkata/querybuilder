@@ -37,9 +37,6 @@ namespace SqlKata
 
     public class BasicStringCondition : BasicCondition
     {
-
-        public bool CaseSensitive { get; set; } = false;
-
         private string escapeCharacter = null;
         public string EscapeCharacter
         {
@@ -64,7 +61,6 @@ namespace SqlKata
                 Value = Value,
                 IsOr = IsOr,
                 IsNot = IsNot,
-                CaseSensitive = CaseSensitive,
                 EscapeCharacter = EscapeCharacter,
                 Component = Component,
             };
