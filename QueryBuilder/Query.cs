@@ -425,11 +425,17 @@ namespace SqlKata
             return this;
         }
 
+        public Query OrderByRandom()
+        {
+            return OrderByRandom((string)null);
+        }
+
         public Query OrderByRandom(string seed)
         {
             OrderByClauses.Add(new OrderByRandom
             {
-                Engine = EngineScope
+                Engine = EngineScope,
+                Seed = seed,
             });
             return this;
         }

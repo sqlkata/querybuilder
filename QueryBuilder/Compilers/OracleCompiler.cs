@@ -18,6 +18,26 @@ namespace SqlKata.Compilers
         public bool UseLegacyPagination { get; set; } = false;
         protected override string SingleRowDummyTableName => "DUAL";
 
+        public override void VisitUpdateQuery(CompileContext ctx, Query query)
+        {
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("Oracle does not support UPDATE with JOIN clauses");
+            }
+
+            base.VisitUpdateQuery(ctx, query);
+        }
+
+        public override void VisitDeleteQuery(CompileContext ctx, Query query)
+        {
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("Oracle does not support DELETE with JOIN clauses");
+            }
+
+            base.VisitDeleteQuery(ctx, query);
+        }
+
         public override void VisitSelectQuery(CompileContext ctx, Query query)
         {
             if (!UseLegacyPagination)

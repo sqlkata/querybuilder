@@ -13,6 +13,26 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.PostgreSql;
         public override bool SupportsFilterClause { get; set; } = true;
 
+        public override void VisitUpdateQuery(CompileContext ctx, Query query)
+        {
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("PostgreSql does not support UPDATE with JOIN clauses");
+            }
+
+            base.VisitUpdateQuery(ctx, query);
+        }
+
+        public override void VisitDeleteQuery(CompileContext ctx, Query query)
+        {
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("PostgreSql does not support DELETE with JOIN clauses");
+            }
+
+            base.VisitDeleteQuery(ctx, query);
+        }
+
         protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);

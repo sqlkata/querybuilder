@@ -778,5 +778,49 @@ namespace SqlKata.Tests
 
             Assert.Equal("SELECT FIRST 10 DISTINCT \"NAME\" FROM \"USERS\"", result.ToString());
         }
+
+        [Fact]
+        public void OrderByRandom_Compiles_EmitsRandomExpression()
+        {
+            var query = new Query("Users").OrderByRandom();
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, query).ToString();
+            Assert.Equal("SELECT * FROM [Users] ORDER BY NEWID()", sqlServer);
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM()", postgres);
+
+            var sqlite = Compilers.CompileFor(EngineCodes.Sqlite, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM()", sqlite);
+        }
+
+        private class SeedCompiler : Compiler
+        {
+            public override string EngineCode => "seed_engine";
+            public override string CompileRandom(string seed) => $"RANDOM_WITH_SEED({seed})";
+        }
+
+        [Fact]
+        public void OrderByRandom_RetainsAndForwardsSeed_AndClonesCorrectly()
+        {
+            var query = new Query("Users").OrderByRandom("1234");
+            var cloned = query.Clone();
+
+            var clause = Assert.IsType<OrderByRandom>(Assert.Single(cloned.OrderByClauses));
+            Assert.Equal("1234", clause.Seed);
+
+            var compiler = new SeedCompiler();
+            var result = compiler.Compile(query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM_WITH_SEED(1234)", result);
+        }
+
+        [Fact]
+        public void OrderByRandom_CombinedWithOtherOrderAndLimit_DoesNotProduceDanglingOrderBy()
+        {
+            var query = new Query("Users").OrderBy("Id").OrderByRandom().Limit(10);
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY \"Id\", RANDOM() LIMIT 10", postgres);
+        }
     }
 }

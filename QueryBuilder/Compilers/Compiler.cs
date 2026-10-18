@@ -272,14 +272,8 @@ namespace SqlKata.Compilers
                 return;
             }
 
-            if (fromClause is FromClause && !string.IsNullOrEmpty(fromClause.Alias))
-            {
-                ctx.Write($"DELETE {Wrap(fromClause.Alias)} FROM {table}");
-            }
-            else
-            {
-                ctx.Write($"DELETE {table} FROM {table}");
-            }
+            var target = GetJoinTargetTable(fromClause, table);
+            ctx.Write($"DELETE {target} FROM {table}");
 
             VisitJoins(ctx, query);
             VisitWheres(ctx, query);
@@ -311,6 +305,9 @@ namespace SqlKata.Compilers
                 throw new InvalidOperationException("Invalid table expression");
             }
 
+            var hasJoins = query.Joins.ForEngine(EngineCode).Any();
+            var target = hasJoins ? GetJoinTargetTable(fromClause, table) : table;
+
             var clause = query.UpdateClauses.ForEngineOrDefault(EngineCode);
 
             if (clause != null && clause is IncrementClause increment)
@@ -319,7 +316,16 @@ namespace SqlKata.Compilers
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                ctx.Write($"UPDATE {table} SET {column} = {column} {sign} {value}");
+                if (hasJoins)
+                {
+                    ctx.Write($"UPDATE {target} SET {column} = {column} {sign} {value} FROM {table}");
+                    VisitJoins(ctx, query);
+                }
+                else
+                {
+                    ctx.Write($"UPDATE {table} SET {column} = {column} {sign} {value}");
+                }
+
                 VisitWheres(ctx, query);
                 return;
             }
@@ -334,8 +340,44 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            ctx.Write($"UPDATE {table} SET {sets}");
+            if (hasJoins)
+            {
+                ctx.Write($"UPDATE {target} SET {sets} FROM {table}");
+                VisitJoins(ctx, query);
+            }
+            else
+            {
+                ctx.Write($"UPDATE {table} SET {sets}");
+            }
+
             VisitWheres(ctx, query);
+        }
+
+        protected virtual string GetJoinTargetTable(AbstractFrom fromClause, string table)
+        {
+            if (fromClause is FromClause from)
+            {
+                var (_, alias) = SplitAlias(from.Table);
+                if (!string.IsNullOrEmpty(alias))
+                {
+                    return WrapValue(alias);
+                }
+
+                var tableName = from.Table;
+                if (tableName.Contains('.'))
+                {
+                    tableName = tableName.Substring(tableName.LastIndexOf('.') + 1);
+                }
+
+                return WrapValue(tableName);
+            }
+
+            if (!string.IsNullOrEmpty(fromClause.Alias))
+            {
+                return WrapValue(fromClause.Alias);
+            }
+
+            return table;
         }
 
         public virtual void VisitInsertQuery(CompileContext ctx, Query query)
@@ -769,7 +811,16 @@ namespace SqlKata.Compilers
                     var direction = orderBy.Ascending ? "" : " DESC";
                     ctx.Write(Wrap(orderBy.Column)).Write(direction);
                 }
+                else if (x is OrderByRandom random)
+                {
+                    VisitOrderByRandom(ctx, random);
+                }
             }
+        }
+
+        public virtual void VisitOrderByRandom(CompileContext ctx, OrderByRandom random)
+        {
+            ctx.Write(CompileRandom(random.Seed));
         }
 
         public virtual void VisitLimit(CompileContext ctx, Query query)

@@ -43,12 +43,16 @@ namespace SqlKata
 
     public class OrderByRandom : AbstractOrderBy
     {
+        public string Seed { get; set; }
+
         /// <inheritdoc />
         public override AbstractClause Clone()
         {
             return new OrderByRandom
             {
                 Engine = Engine,
+                Component = Component,
+                Seed = Seed,
             };
         }
     }
