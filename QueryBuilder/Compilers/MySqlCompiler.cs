@@ -24,6 +24,7 @@ namespace SqlKata.Compilers
             }
 
             var fromClause = query.FromClauses.ForEngineOrDefault(EngineCode);
+
             if (fromClause is null)
             {
                 throw new InvalidOperationException("No table set to update");
@@ -51,16 +52,19 @@ namespace SqlKata.Compilers
 
             if (clause != null && clause is IncrementClause increment)
             {
+                ctx.Write($"UPDATE {table}");
+                VisitJoins(ctx, query);
                 var column = Wrap(increment.Column);
                 var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
-                ctx.Write($"UPDATE {table}");
-                VisitJoins(ctx, query);
                 ctx.Write($" SET {column} = {column} {sign} {value}");
                 VisitWheres(ctx, query);
                 return;
             }
+
+            ctx.Write($"UPDATE {table}");
+            VisitJoins(ctx, query);
 
             var toUpdate = clause as InsertClause;
             var parts = new List<string>();
@@ -72,8 +76,6 @@ namespace SqlKata.Compilers
 
             var sets = string.Join(", ", parts);
 
-            ctx.Write($"UPDATE {table}");
-            VisitJoins(ctx, query);
             ctx.Write($" SET {sets}");
             VisitWheres(ctx, query);
         }
