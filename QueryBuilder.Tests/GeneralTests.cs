@@ -792,6 +792,15 @@ namespace SqlKata.Tests
 
             var sqlite = Compilers.CompileFor(EngineCodes.Sqlite, query).ToString();
             Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM()", sqlite);
+
+            var mysql = Compilers.CompileFor(EngineCodes.MySql, query).ToString();
+            Assert.Equal("SELECT * FROM `Users` ORDER BY RAND()", mysql);
+
+            var firebird = Compilers.CompileFor(EngineCodes.Firebird, query).ToString();
+            Assert.Equal("SELECT * FROM \"USERS\" ORDER BY RAND()", firebird);
+
+            var oracle = Compilers.CompileFor(EngineCodes.Oracle, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY DBMS_RANDOM.VALUE", oracle);
         }
 
         private class SeedCompiler : Compiler

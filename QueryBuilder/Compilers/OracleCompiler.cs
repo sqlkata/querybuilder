@@ -196,5 +196,10 @@ namespace SqlKata.Compilers
 
             ctx.Write(" SELECT 1 FROM DUAL");
         }
+
+        public override string CompileRandom(string seed)
+        {
+            return "DBMS_RANDOM.VALUE";
+        }
     }
 }

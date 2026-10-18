@@ -108,5 +108,11 @@ namespace SqlKata.Compilers
             ctx.Bindings.Add(offset);
             ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
         }
+
+        public override string CompileRandom(string seed)
+        {
+            var hasSeed = !string.IsNullOrEmpty(seed);
+            return hasSeed ? $"RAND({seed})" : "RAND()";
+        }
     }
 }
