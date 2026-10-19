@@ -824,6 +824,20 @@ namespace SqlKata.Tests
         }
 
         [Fact]
+        public void OrderByRandom_RetainsAndForwardsSeed_InMySQL()
+        {
+            var query = new Query("Users").OrderByRandom(1234);
+            var cloned = query.Clone();
+
+            var clause = Assert.IsType<OrderByRandom>(Assert.Single(cloned.OrderByClauses));
+            Assert.Equal(1234, clause.Seed);
+
+            var compiler = new MySqlCompiler();
+            var result = compiler.Compile(query).ToString();
+            Assert.Equal("SELECT * FROM `Users` ORDER BY RAND(1234)", result);
+        }
+
+        [Fact]
         public void OrderByRandom_CombinedWithOtherOrderAndLimit_DoesNotProduceDanglingOrderBy()
         {
             var query = new Query("Users").OrderBy("Id").OrderByRandom().Limit(10);
