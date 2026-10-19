@@ -294,10 +294,11 @@ namespace SqlKata.Compilers
                 table = Wrap(fromClauseCast.Table);
             }
 
+            RawFromClause rawFrom = null;
             if (fromClause is RawFromClause rawFromClause)
             {
+                rawFrom = rawFromClause;
                 table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
             if (table is null)
@@ -307,6 +308,11 @@ namespace SqlKata.Compilers
 
             var hasJoins = query.Joins.ForEngine(EngineCode).Any();
             var target = hasJoins ? GetJoinTargetTable(fromClause, table) : table;
+
+            if (!hasJoins && rawFrom != null)
+            {
+                ctx.Bindings.AddRange(rawFrom.Bindings);
+            }
 
             var clause = query.UpdateClauses.ForEngineOrDefault(EngineCode);
 
@@ -319,6 +325,10 @@ namespace SqlKata.Compilers
                 if (hasJoins)
                 {
                     ctx.Write($"UPDATE {target} SET {column} = {column} {sign} {value} FROM {table}");
+                    if (rawFrom != null)
+                    {
+                        ctx.Bindings.AddRange(rawFrom.Bindings);
+                    }
                     VisitJoins(ctx, query);
                 }
                 else
@@ -343,6 +353,10 @@ namespace SqlKata.Compilers
             if (hasJoins)
             {
                 ctx.Write($"UPDATE {target} SET {sets} FROM {table}");
+                if (rawFrom != null)
+                {
+                    ctx.Bindings.AddRange(rawFrom.Bindings);
+                }
                 VisitJoins(ctx, query);
             }
             else
@@ -375,6 +389,16 @@ namespace SqlKata.Compilers
             if (!string.IsNullOrEmpty(fromClause.Alias))
             {
                 return WrapValue(fromClause.Alias);
+            }
+
+            if (fromClause is RawFromClause raw)
+            {
+                var (_, alias) = SplitAlias(raw.Expression);
+                if (!string.IsNullOrEmpty(alias))
+                {
+                    var cleanAlias = alias.Trim().Trim('[', ']', '"', '`');
+                    return WrapValue(cleanAlias);
+                }
             }
 
             return table;
@@ -924,7 +948,7 @@ namespace SqlKata.Compilers
             return columns;
         }
 
-        public virtual string CompileRandom(string seed)
+        public virtual string CompileRandom(int? seed)
         {
             return "RANDOM()";
         }

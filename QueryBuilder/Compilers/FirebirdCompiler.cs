@@ -138,7 +138,7 @@ namespace SqlKata.Compilers
             return "0";
         }
 
-        public override string CompileRandom(string seed)
+        public override string CompileRandom(int? seed)
         {
             return "RAND()";
         }

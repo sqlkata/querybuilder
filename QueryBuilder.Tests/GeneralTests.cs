@@ -1,8 +1,8 @@
+using System;
+using System.Linq;
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
-using System;
-using System.Linq;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -806,17 +806,17 @@ namespace SqlKata.Tests
         private class SeedCompiler : Compiler
         {
             public override string EngineCode => "seed_engine";
-            public override string CompileRandom(string seed) => $"RANDOM_WITH_SEED({seed})";
+            public override string CompileRandom(int? seed) => $"RANDOM_WITH_SEED({seed})";
         }
 
         [Fact]
         public void OrderByRandom_RetainsAndForwardsSeed_AndClonesCorrectly()
         {
-            var query = new Query("Users").OrderByRandom("1234");
+            var query = new Query("Users").OrderByRandom(1234);
             var cloned = query.Clone();
 
             var clause = Assert.IsType<OrderByRandom>(Assert.Single(cloned.OrderByClauses));
-            Assert.Equal("1234", clause.Seed);
+            Assert.Equal(1234, clause.Seed);
 
             var compiler = new SeedCompiler();
             var result = compiler.Compile(query).ToString();

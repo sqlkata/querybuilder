@@ -130,7 +130,7 @@ namespace SqlKata.Compilers
             ctx.Write($"OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY");
         }
 
-        public override string CompileRandom(string seed)
+        public override string CompileRandom(int? seed)
         {
             return "NEWID()";
         }

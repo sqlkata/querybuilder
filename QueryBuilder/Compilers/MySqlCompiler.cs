@@ -111,10 +111,9 @@ namespace SqlKata.Compilers
             ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
         }
 
-        public override string CompileRandom(string seed)
+        public override string CompileRandom(int? seed)
         {
-            var hasSeed = !string.IsNullOrEmpty(seed);
-            return hasSeed ? $"RAND({seed})" : "RAND()";
+            return seed.HasValue ? $"RAND({seed})" : "RAND()";
         }
     }
 }

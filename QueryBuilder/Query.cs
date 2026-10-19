@@ -427,10 +427,10 @@ namespace SqlKata
 
         public Query OrderByRandom()
         {
-            return OrderByRandom((string)null);
+            return OrderByRandom(null);
         }
 
-        public Query OrderByRandom(string seed)
+        public Query OrderByRandom(int? seed)
         {
             OrderByClauses.Add(new OrderByRandom
             {
