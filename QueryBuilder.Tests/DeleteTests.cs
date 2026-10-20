@@ -27,10 +27,13 @@ namespace SqlKata.Tests
                 .Where("Authors.Id", 5)
                 .AsDelete();
 
-            var c = Compile(q);
+            Assert.Equal("DELETE [Posts] FROM [Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("DELETE `Posts` FROM `Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
 
-            Assert.Equal("DELETE [Posts] FROM [Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5", c[EngineCodes.SqlServer]);
-            Assert.Equal("DELETE `Posts` FROM `Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` WHERE `Authors`.`Id` = 5", c[EngineCodes.MySql]);
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.PostgreSql, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Sqlite, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Oracle, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Firebird, q));
         }
 
         [Fact]
@@ -41,9 +44,19 @@ namespace SqlKata.Tests
                 .Where("Authors.Id", 5)
                 .AsDelete();
 
-            var c = Compile(q);
+            Assert.Equal("DELETE [P] FROM [Posts] AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId] WHERE [Authors].[Id] = 5", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("DELETE `P` FROM `Posts` AS `P` \nINNER JOIN `Authors` ON `Authors`.`Id` = `P`.`AuthorId` WHERE `Authors`.`Id` = 5", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
+        }
 
-            Assert.Equal("DELETE [P] FROM [Posts] AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId] WHERE [Authors].[Id] = 5", c[EngineCodes.SqlServer]);
+        [Fact]
+        public void DeleteWithJoinAndSchema()
+        {
+            var q = new Query("Audit.Posts")
+                .Join("Authors", "Authors.Id", "Posts.AuthorId")
+                .AsDelete();
+
+            Assert.Equal("DELETE [Posts] FROM [Audit].[Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId]", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("DELETE `Posts` FROM `Audit`.`Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId`", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
         }
     }
 }

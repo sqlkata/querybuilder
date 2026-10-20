@@ -1,8 +1,8 @@
+using System;
+using System.Linq;
 using SqlKata.Compilers;
 using SqlKata.Extensions;
 using SqlKata.Tests.Infrastructure;
-using System;
-using System.Linq;
 using Xunit;
 
 namespace SqlKata.Tests
@@ -753,6 +753,97 @@ namespace SqlKata.Tests
             compiler.Compile(outer);
 
             Assert.Equal(2, inner.SelectClauses.Count);
+        }
+
+        [Fact]
+        public void SqlServer_SelectPrefix_TopWithColumnBindings_PreservesParameterOrder()
+        {
+            var query = new Query("users").SelectRaw("? AS [bonus]", 100).Limit(5);
+            var compiler = new SqlServerCompiler { UseLegacyPagination = true };
+
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT TOP (@p0) @p1 AS [bonus] FROM [users]", result.Sql);
+            Assert.Equal(5, result.NamedBindings["@p0"]);
+            Assert.Equal(100, result.NamedBindings["@p1"]);
+        }
+
+        [Fact]
+        public void Firebird_SelectPrefix_FirstWithDistinct()
+        {
+            var query = new Query("users").Select("name").Distinct().Limit(10);
+            var compiler = new FirebirdCompiler();
+
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT FIRST 10 DISTINCT \"NAME\" FROM \"USERS\"", result.ToString());
+        }
+
+        [Fact]
+        public void OrderByRandom_Compiles_EmitsRandomExpression()
+        {
+            var query = new Query("Users").OrderByRandom();
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, query).ToString();
+            Assert.Equal("SELECT * FROM [Users] ORDER BY NEWID()", sqlServer);
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM()", postgres);
+
+            var sqlite = Compilers.CompileFor(EngineCodes.Sqlite, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM()", sqlite);
+
+            var mysql = Compilers.CompileFor(EngineCodes.MySql, query).ToString();
+            Assert.Equal("SELECT * FROM `Users` ORDER BY RAND()", mysql);
+
+            var firebird = Compilers.CompileFor(EngineCodes.Firebird, query).ToString();
+            Assert.Equal("SELECT * FROM \"USERS\" ORDER BY RAND()", firebird);
+
+            var oracle = Compilers.CompileFor(EngineCodes.Oracle, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY DBMS_RANDOM.VALUE", oracle);
+        }
+
+        private class SeedCompiler : Compiler
+        {
+            public override string EngineCode => "seed_engine";
+            public override string CompileRandom(int? seed) => $"RANDOM_WITH_SEED({seed})";
+        }
+
+        [Fact]
+        public void OrderByRandom_RetainsAndForwardsSeed_AndClonesCorrectly()
+        {
+            var query = new Query("Users").OrderByRandom(1234);
+            var cloned = query.Clone();
+
+            var clause = Assert.IsType<OrderByRandom>(Assert.Single(cloned.OrderByClauses));
+            Assert.Equal(1234, clause.Seed);
+
+            var compiler = new SeedCompiler();
+            var result = compiler.Compile(query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY RANDOM_WITH_SEED(1234)", result);
+        }
+
+        [Fact]
+        public void OrderByRandom_RetainsAndForwardsSeed_InMySQL()
+        {
+            var query = new Query("Users").OrderByRandom(1234);
+            var cloned = query.Clone();
+
+            var clause = Assert.IsType<OrderByRandom>(Assert.Single(cloned.OrderByClauses));
+            Assert.Equal(1234, clause.Seed);
+
+            var compiler = new MySqlCompiler();
+            var result = compiler.Compile(query).ToString();
+            Assert.Equal("SELECT * FROM `Users` ORDER BY RAND(1234)", result);
+        }
+
+        [Fact]
+        public void OrderByRandom_CombinedWithOtherOrderAndLimit_DoesNotProduceDanglingOrderBy()
+        {
+            var query = new Query("Users").OrderBy("Id").OrderByRandom().Limit(10);
+
+            var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query).ToString();
+            Assert.Equal("SELECT * FROM \"Users\" ORDER BY \"Id\", RANDOM() LIMIT 10", postgres);
         }
     }
 }

@@ -14,63 +14,84 @@ namespace SqlKata.Compilers
         public override string EngineCode { get; } = EngineCodes.Firebird;
         protected override string SingleRowDummyTableName => "RDB$DATABASE";
 
-        protected override SqlResult CompileInsertQuery(Query query)
+        public override void VisitUpdateQuery(CompileContext ctx, Query query)
         {
-            var ctx = base.CompileInsertQuery(query);
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("Firebird does not support UPDATE with JOIN clauses");
+            }
 
-            var inserts = ctx.Query.InsertClauses.ForEngine(EngineCode).ToList();
+            base.VisitUpdateQuery(ctx, query);
+        }
+
+        public override void VisitDeleteQuery(CompileContext ctx, Query query)
+        {
+            if (query.Joins.ForEngine(EngineCode).Any())
+            {
+                throw new NotSupportedException("Firebird does not support DELETE with JOIN clauses");
+            }
+
+            base.VisitDeleteQuery(ctx, query);
+        }
+
+        public override void VisitInsertQuery(CompileContext ctx, Query query)
+        {
+            var before = ctx.Buffer.Length;
+            base.VisitInsertQuery(ctx, query);
+            var sql = ctx.Buffer.ToString(before, ctx.Buffer.Length - before);
+            ctx.Buffer.Length = before;
+
+            var inserts = query.InsertClauses.ForEngine(EngineCode).ToList();
 
             if (inserts.Count > 1)
             {
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)\s+VALUES\s+\(", ") SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
-                ctx.RawSql = Regex.Replace(ctx.RawSql, @"\)$", " FROM RDB$DATABASE");
+                sql = Regex.Replace(sql, @"\)\s+VALUES\s+\(", ") SELECT ");
+                sql = Regex.Replace(sql, @"\),\s*\(", " FROM RDB$DATABASE UNION ALL SELECT ");
+                sql = Regex.Replace(sql, @"\)$", " FROM RDB$DATABASE");
             }
 
-            return ctx;
+            ctx.Write(sql);
         }
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitLimit(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (limit > 0 && offset > 0)
             {
+                ctx.EnsureSpace();
                 ctx.Bindings.Add(offset + 1);
                 ctx.Bindings.Add(limit + offset);
 
-                return $"ROWS {parameterPlaceholder} TO {parameterPlaceholder}";
+                ctx.Write($"ROWS {parameterPlaceholder} TO {parameterPlaceholder}");
             }
-
-            return null;
         }
 
-
-        protected override string CompileColumns(SqlResult ctx)
+        public override void VisitSelectPrefix(CompileContext ctx, Query query)
         {
-            var compiled = base.CompileColumns(ctx);
-
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
+            var distinct = query.IsDistinct ? "DISTINCT " : "";
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Insert(0, limit);
-
-                return string.Concat($"SELECT FIRST {parameterPlaceholder}", compiled.AsSpan(6));
+                ctx.Bindings.Add(limit);
+                ctx.Write($"SELECT FIRST {parameterPlaceholder} {distinct}");
+                return;
             }
-            else if (limit == 0 && offset > 0)
+
+            if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Insert(0, offset);
-
-                return string.Concat($"SELECT SKIP {parameterPlaceholder}", compiled.AsSpan(6));
+                ctx.Bindings.Add(offset);
+                ctx.Write($"SELECT SKIP {parameterPlaceholder} {distinct}");
+                return;
             }
 
-            return compiled;
+            base.VisitSelectPrefix(ctx, query);
         }
 
-        protected override string CompileBasicDateCondition(SqlResult ctx, BasicDateCondition condition)
+        protected override void VisitBasicDateCondition(CompileContext ctx, BasicDateCondition condition)
         {
             var column = Wrap(condition.Column);
 
@@ -89,14 +110,17 @@ namespace SqlKata.Compilers
                 left = $"EXTRACT({condition.Part.ToUpperInvariant()} FROM {column})";
             }
 
-            var sql = $"{left} {condition.Operator} {Parameter(ctx, condition.Value)}";
+            if (condition.IsNot)
+            {
+                ctx.Write("NOT (");
+            }
+
+            ctx.Write(left).Write(" ").Write(condition.Operator).Write(" ").Write(Parameter(ctx, condition.Value));
 
             if (condition.IsNot)
             {
-                return $"NOT ({sql})";
+                ctx.Write(")");
             }
-
-            return sql;
         }
 
         public override string WrapValue(string value)
@@ -112,6 +136,11 @@ namespace SqlKata.Compilers
         public override string CompileFalse()
         {
             return "0";
+        }
+
+        public override string CompileRandom(int? seed)
+        {
+            return "RAND()";
         }
     }
 }

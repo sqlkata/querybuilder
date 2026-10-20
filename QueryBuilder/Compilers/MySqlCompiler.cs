@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace SqlKata.Compilers
 {
     public class MySqlCompiler : Compiler
@@ -10,40 +14,106 @@ namespace SqlKata.Compilers
 
         public override string EngineCode { get; } = EngineCodes.MySql;
 
-        public override string CompileLimit(SqlResult ctx)
+        public override void VisitUpdateQuery(CompileContext ctx, Query query)
         {
-            var limit = ctx.Query.GetLimit(EngineCode);
-            var offset = ctx.Query.GetOffset(EngineCode);
+            var hasJoins = query.Joins.ForEngine(EngineCode).Any();
+            if (!hasJoins)
+            {
+                base.VisitUpdateQuery(ctx, query);
+                return;
+            }
 
+            var fromClause = query.FromClauses.ForEngineOrDefault(EngineCode);
+
+            if (fromClause is null)
+            {
+                throw new InvalidOperationException("No table set to update");
+            }
+
+            string table = null;
+
+            if (fromClause is FromClause fromClauseCast)
+            {
+                table = Wrap(fromClauseCast.Table);
+            }
+
+            if (fromClause is RawFromClause rawFromClause)
+            {
+                table = WrapIdentifiers(rawFromClause.Expression);
+                ctx.Bindings.AddRange(rawFromClause.Bindings);
+            }
+
+            if (table is null)
+            {
+                throw new InvalidOperationException("Invalid table expression");
+            }
+
+            var clause = query.UpdateClauses.ForEngineOrDefault(EngineCode);
+
+            if (clause != null && clause is IncrementClause increment)
+            {
+                ctx.Write($"UPDATE {table}");
+                VisitJoins(ctx, query);
+                var column = Wrap(increment.Column);
+                var value = Parameter(ctx, Math.Abs(increment.Value));
+                var sign = increment.Value >= 0 ? "+" : "-";
+
+                ctx.Write($" SET {column} = {column} {sign} {value}");
+                VisitWheres(ctx, query);
+                return;
+            }
+
+            ctx.Write($"UPDATE {table}");
+            VisitJoins(ctx, query);
+
+            var toUpdate = clause as InsertClause;
+            var parts = new List<string>();
+
+            for (var i = 0; i < toUpdate.Columns.Count; i++)
+            {
+                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+            }
+
+            var sets = string.Join(", ", parts);
+
+            ctx.Write($" SET {sets}");
+            VisitWheres(ctx, query);
+        }
+
+        public override void VisitLimit(CompileContext ctx, Query query)
+        {
+            var limit = query.GetLimit(EngineCode);
+            var offset = query.GetOffset(EngineCode);
 
             if (offset == 0 && limit == 0)
             {
-                return null;
+                return;
             }
+
+            ctx.EnsureSpace();
 
             if (offset == 0)
             {
                 ctx.Bindings.Add(limit);
-                return $"LIMIT {parameterPlaceholder}";
+                ctx.Write($"LIMIT {parameterPlaceholder}");
+                return;
             }
 
             if (limit == 0)
             {
-
-                // MySql will not accept offset without limit, so we will put a large number
-                // to avoid this error.
-
                 ctx.Bindings.Add(offset);
-                return $"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}";
+                ctx.Write($"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}");
+                return;
             }
-
-            // We have both values
 
             ctx.Bindings.Add(limit);
             ctx.Bindings.Add(offset);
+            ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
+        }
 
-            return $"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}";
-
+        public override string CompileRandom(int? seed)
+        {
+            return seed.HasValue ? $"RAND({seed})" : "RAND()";
         }
     }
 }

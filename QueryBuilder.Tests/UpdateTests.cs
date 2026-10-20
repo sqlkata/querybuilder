@@ -315,5 +315,133 @@ namespace SqlKata.Tests
             var c = Compile(query);
             Assert.Equal("UPDATE [Table] SET [Total] = [Total] - 2 WHERE [Name] = 'A'", c[EngineCodes.SqlServer]);
         }
+
+        [Fact]
+        public void UpdateWithJoin()
+        {
+            var q = new Query("Posts")
+                .Join("Authors", "Authors.Id", "Posts.AuthorId")
+                .Where("Authors.Id", 5)
+                .AsUpdate(new[] { "Title" }, new[] { "Updated" });
+
+            Assert.Equal("UPDATE [Posts] SET [Title] = 'Updated' FROM [Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId] WHERE [Authors].[Id] = 5", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("UPDATE `Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` SET `Title` = 'Updated' WHERE `Authors`.`Id` = 5", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
+
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.PostgreSql, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Sqlite, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Oracle, q));
+            Assert.Throws<NotSupportedException>(() => Compilers.CompileFor(EngineCodes.Firebird, q));
+        }
+
+        [Fact]
+        public void UpdateWithJoinAndAlias()
+        {
+            var q = new Query("Posts as P")
+                .Join("Authors", "Authors.Id", "P.AuthorId")
+                .Where("Authors.Id", 5)
+                .AsUpdate(new[] { "P.Title" }, new[] { "Updated" });
+
+            Assert.Equal("UPDATE [P] SET [P].[Title] = 'Updated' FROM [Posts] AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId] WHERE [Authors].[Id] = 5", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("UPDATE `Posts` AS `P` \nINNER JOIN `Authors` ON `Authors`.`Id` = `P`.`AuthorId` SET `P`.`Title` = 'Updated' WHERE `Authors`.`Id` = 5", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
+        }
+
+        [Fact]
+        public void UpdateWithJoinAndSchema()
+        {
+            var q = new Query("Audit.Posts")
+                .Join("Authors", "Authors.Id", "Posts.AuthorId")
+                .AsUpdate(new[] { "Title" }, new[] { "Updated" });
+
+            Assert.Equal("UPDATE [Posts] SET [Title] = 'Updated' FROM [Audit].[Posts] \nINNER JOIN [Authors] ON [Authors].[Id] = [Posts].[AuthorId]", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("UPDATE `Audit`.`Posts` \nINNER JOIN `Authors` ON `Authors`.`Id` = `Posts`.`AuthorId` SET `Title` = 'Updated'", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
+        }
+
+        [Fact]
+        public void UpdateIncrementWithJoin()
+        {
+            var q = new Query("Posts as P")
+                .Join("Authors", "Authors.Id", "P.AuthorId")
+                .Where("Authors.Id", 5)
+                .AsIncrement("P.Views", 1);
+
+            Assert.Equal("UPDATE [P] SET [P].[Views] = [P].[Views] + 1 FROM [Posts] AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId] WHERE [Authors].[Id] = 5", Compilers.CompileFor(EngineCodes.SqlServer, q).ToString());
+            Assert.Equal("UPDATE `Posts` AS `P` \nINNER JOIN `Authors` ON `Authors`.`Id` = `P`.`AuthorId` SET `P`.`Views` = `P`.`Views` + 1 WHERE `Authors`.`Id` = 5", Compilers.CompileFor(EngineCodes.MySql, q).ToString());
+        }
+
+        [Fact]
+        public void UpdateWithJoinPredicate_BindsCorrectly()
+        {
+            var q = new Query("Posts")
+                .Join("Authors", j => j.On("Authors.Id", "Posts.AuthorId").Where("Authors.TenantId", 42))
+                .Where("Authors.Status", "Active")
+                .AsUpdate(new[] { "Title" }, new[] { "Updated" });
+
+            var mysql = Compilers.CompileFor(EngineCodes.MySql, q);
+            Assert.Equal("UPDATE `Posts` \nINNER JOIN `Authors` ON (`Authors`.`Id` = `Posts`.`AuthorId` AND `Authors`.`TenantId` = 42) SET `Title` = 'Updated' WHERE `Authors`.`Status` = 'Active'", mysql.ToString());
+            Assert.Equal(new object[] { 42, "Updated", "Active" }, mysql.Bindings.ToArray());
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("UPDATE [Posts] SET [Title] = 'Updated' FROM [Posts] \nINNER JOIN [Authors] ON ([Authors].[Id] = [Posts].[AuthorId] AND [Authors].[TenantId] = 42) WHERE [Authors].[Status] = 'Active'", sqlServer.ToString());
+            Assert.Equal(new object[] { "Updated", 42, "Active" }, sqlServer.Bindings.ToArray());
+        }
+
+        [Fact]
+        public void UpdateIncrementWithJoinPredicate_BindsCorrectly()
+        {
+            var q = new Query("Posts")
+                .Join("Authors", j => j.On("Authors.Id", "Posts.AuthorId").Where("Authors.TenantId", 42))
+                .Where("Authors.Status", "Active")
+                .AsIncrement("Views", 1);
+
+            var mysql = Compilers.CompileFor(EngineCodes.MySql, q);
+            Assert.Equal("UPDATE `Posts` \nINNER JOIN `Authors` ON (`Authors`.`Id` = `Posts`.`AuthorId` AND `Authors`.`TenantId` = 42) SET `Views` = `Views` + 1 WHERE `Authors`.`Status` = 'Active'", mysql.ToString());
+            Assert.Equal(new object[] { 42, 1, "Active" }, mysql.Bindings.ToArray());
+
+            var sqlServer = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("UPDATE [Posts] SET [Views] = [Views] + 1 FROM [Posts] \nINNER JOIN [Authors] ON ([Authors].[Id] = [Posts].[AuthorId] AND [Authors].[TenantId] = 42) WHERE [Authors].[Status] = 'Active'", sqlServer.ToString());
+            Assert.Equal(new object[] { 1, 42, "Active" }, sqlServer.Bindings.ToArray());
+        }
+
+        [Fact]
+        public void SqlServer_UpdateJoinedWithRawFrom_BindsCorrectly()
+        {
+            var q = new Query()
+                .FromRaw("(SELECT * FROM [Posts] WHERE [TenantId] = ?) AS [P]", 42)
+                .Join("Authors", "Authors.Id", "P.AuthorId")
+                .AsUpdate(new[] { "Title" }, new[] { "Updated" });
+
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("UPDATE [P] SET [Title] = 'Updated' FROM (SELECT * FROM [Posts] WHERE [TenantId] = 42) AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId]", c.ToString());
+            Assert.Equal(new object[] { "Updated", 42 }, c.Bindings.ToArray());
+
+            var qInc = new Query()
+                .FromRaw("(SELECT * FROM [Posts] WHERE [TenantId] = ?) AS [P]", 42)
+                .Join("Authors", "Authors.Id", "P.AuthorId")
+                .AsIncrement("P.Views", 1);
+
+            var cInc = Compilers.CompileFor(EngineCodes.SqlServer, qInc);
+            Assert.Equal("UPDATE [P] SET [P].[Views] = [P].[Views] + 1 FROM (SELECT * FROM [Posts] WHERE [TenantId] = 42) AS [P] \nINNER JOIN [Authors] ON [Authors].[Id] = [P].[AuthorId]", cInc.ToString());
+            Assert.Equal(new object[] { 1, 42 }, cInc.Bindings.ToArray());
+        }
+
+        [Fact]
+        public void SqlServer_UpdateNonJoinedWithRawFrom_PreservesBindingOrder()
+        {
+            var q = new Query()
+                .FromRaw("(SELECT * FROM [Posts] WHERE [TenantId] = ?) AS [P]", 42)
+                .AsUpdate(new[] { "Title" }, new[] { "Updated" });
+
+            var c = Compilers.CompileFor(EngineCodes.SqlServer, q);
+            Assert.Equal("UPDATE (SELECT * FROM [Posts] WHERE [TenantId] = 42) AS [P] SET [Title] = 'Updated'", c.ToString());
+            Assert.Equal(new object[] { 42, "Updated" }, c.Bindings.ToArray());
+
+            var qInc = new Query()
+                .FromRaw("(SELECT * FROM [Posts] WHERE [TenantId] = ?) AS [P]", 42)
+                .AsIncrement("Views", 1);
+
+            var cInc = Compilers.CompileFor(EngineCodes.SqlServer, qInc);
+            Assert.Equal("UPDATE (SELECT * FROM [Posts] WHERE [TenantId] = 42) AS [P] SET [Views] = [Views] + 1", cInc.ToString());
+            Assert.Equal(new object[] { 42, 1 }, cInc.Bindings.ToArray());
+        }
     }
 }

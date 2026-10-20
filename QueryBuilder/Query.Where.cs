@@ -190,99 +190,99 @@ namespace SqlKata
             return this;
         }
 
-        public Query WhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereLike(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereLike(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereLike(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotLike(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereNotLike(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereNotLike(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereLike(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereLike(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereLike(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereNotLike(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotLike(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereNotLike(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereNotLike(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereStarts(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereStarts(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereStarts(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotStarts(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereNotStarts(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereNotStarts(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereStarts(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereStarts(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereStarts(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereNotStarts(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotStarts(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereNotStarts(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereNotStarts(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereEnds(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereEnds(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereEnds(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotEnds(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereNotEnds(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereNotEnds(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereEnds(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereEnds(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereEnds(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereNotEnds(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotEnds(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereNotEnds(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereNotEnds(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereContains(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereContains(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereContains(column, value, escapeCharacter);
             return this;
         }
 
-        public Query WhereNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query WhereNotContains(string column, object value, string escapeCharacter = null)
         {
-            Wheres.WhereNotContains(column, value, caseSensitive, escapeCharacter);
+            Wheres.WhereNotContains(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereContains(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereContains(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereContains(column, value, escapeCharacter);
             return this;
         }
 
-        public Query OrWhereNotContains(string column, object value, bool caseSensitive = false, string escapeCharacter = null)
+        public Query OrWhereNotContains(string column, object value, string escapeCharacter = null)
         {
-            Wheres.OrWhereNotContains(column, value, caseSensitive, escapeCharacter);
+            Wheres.OrWhereNotContains(column, value, escapeCharacter);
             return this;
         }
 

@@ -34,7 +34,32 @@ namespace SqlKata
         public bool HasConditions(string engineCode = null)
         {
             engineCode ??= EngineScope;
-            return Clauses.Any(x => engineCode == null || x.Engine == null || engineCode == x.Engine);
+
+            return Clauses.Any(x =>
+            {
+                if (engineCode != null && x.Engine != null && engineCode != x.Engine)
+                {
+                    return false;
+                }
+
+                if (x is NestedCondition nested)
+                {
+                    if (nested.Conditions is ConditionGroup group)
+                    {
+                        return group.HasConditions(engineCode);
+                    }
+
+                    if (nested.Conditions != null)
+                    {
+                        var component = nested.Component ?? "where";
+                        return nested.Conditions.HasComponent(component, engineCode);
+                    }
+
+                    return false;
+                }
+
+                return true;
+            });
         }
 
         public List<AbstractCondition> GetConditions(string engineCode = null)
