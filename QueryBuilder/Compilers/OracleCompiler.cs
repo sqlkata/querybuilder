@@ -78,20 +78,16 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
-                ctx.Write($"OFFSET {parameterPlaceholder} ROWS");
+                ctx.Write($"OFFSET {Parameter(ctx, offset)} ROWS");
                 return;
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
-
-            ctx.Write($"OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY");
+            ctx.Write($"OFFSET {Parameter(ctx, offset)} ROWS FETCH NEXT {Parameter(ctx, limit)} ROWS ONLY");
         }
 
         internal void ApplyLegacyLimit(CompileContext ctx)
         {
-            ctx.RawSql = ApplyLegacyLimit(ctx, ctx.RawSql);
+            ctx.RawSql = ToRawSql(ApplyLegacyLimit(ctx, ctx.RawSql));
         }
 
         internal string ApplyLegacyLimit(CompileContext ctx, string sql)
@@ -107,19 +103,17 @@ namespace SqlKata.Compilers
             string newSql;
             if (limit == 0)
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\") WHERE \"row_num\" > {parameterPlaceholder}";
-                ctx.Bindings.Add(offset);
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\") WHERE \"row_num\" > {Parameter(ctx, offset)}";
             }
             else if (offset == 0)
             {
-                newSql = $"SELECT * FROM ({sql}) WHERE ROWNUM <= {parameterPlaceholder}";
-                ctx.Bindings.Add(limit);
+                newSql = $"SELECT * FROM ({sql}) WHERE ROWNUM <= {Parameter(ctx, limit)}";
             }
             else
             {
-                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\" WHERE ROWNUM <= {parameterPlaceholder}) WHERE \"row_num\" > {parameterPlaceholder}";
-                ctx.Bindings.Add(limit + offset);
-                ctx.Bindings.Add(offset);
+                var p1 = Parameter(ctx, limit + offset);
+                var p2 = Parameter(ctx, offset);
+                newSql = $"SELECT * FROM (SELECT \"results_wrapper\".*, ROWNUM \"row_num\" FROM ({sql}) \"results_wrapper\" WHERE ROWNUM <= {p1}) WHERE \"row_num\" > {p2}";
             }
 
             return newSql;

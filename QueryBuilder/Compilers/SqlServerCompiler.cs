@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SqlKata.Compilers
@@ -62,14 +63,13 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset + 1);
-                ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] >= {parameterPlaceholder}");
+                ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] >= {Parameter(ctx, offset + 1)}");
                 return;
             }
 
-            ctx.Bindings.Add(offset + 1);
-            ctx.Bindings.Add(limit + offset);
-            ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {parameterPlaceholder} AND {parameterPlaceholder}");
+            var p1 = Parameter(ctx, offset + 1);
+            var p2 = Parameter(ctx, limit + offset);
+            ctx.Write($"SELECT * FROM ({innerSql}) AS [results_wrapper] WHERE [row_num] BETWEEN {p1} AND {p2}");
         }
 
         public override void VisitSelectPrefix(CompileContext ctx, Query query)
@@ -85,10 +85,9 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Add(limit);
-
+                var p = Parameter(ctx, limit);
                 var distinct = query.IsDistinct ? "DISTINCT " : "";
-                ctx.Write($"SELECT {distinct}TOP ({parameterPlaceholder}) ");
+                ctx.Write($"SELECT {distinct}TOP ({p}) ");
                 return;
             }
 
@@ -119,15 +118,11 @@ namespace SqlKata.Compilers
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
-                ctx.Write($"OFFSET {parameterPlaceholder} ROWS");
+                ctx.Write($"OFFSET {Parameter(ctx, offset)} ROWS");
                 return;
             }
 
-            ctx.Bindings.Add(offset);
-            ctx.Bindings.Add(limit);
-
-            ctx.Write($"OFFSET {parameterPlaceholder} ROWS FETCH NEXT {parameterPlaceholder} ROWS ONLY");
+            ctx.Write($"OFFSET {Parameter(ctx, offset)} ROWS FETCH NEXT {Parameter(ctx, limit)} ROWS ONLY");
         }
 
         public override string CompileRandom(int? seed)
@@ -177,12 +172,18 @@ namespace SqlKata.Compilers
         public override void VisitAdHocTableFromClause(CompileContext ctx, AdHocTableFromClause adHoc)
         {
             var colNames = string.Join(", ", adHoc.Columns.Select(Wrap));
+            var colCount = adHoc.Columns.Count;
+            var rowCount = adHoc.Values.Count / colCount;
+            var rows = new List<string>(rowCount);
 
-            var valueRow = string.Join(", ", Enumerable.Repeat(parameterPlaceholder, adHoc.Columns.Count));
-            var valueRows = string.Join(", ", Enumerable.Repeat($"({valueRow})", adHoc.Values.Count / adHoc.Columns.Count));
+            for (var i = 0; i < rowCount; i++)
+            {
+                var rowValues = adHoc.Values.Skip(i * colCount).Take(colCount);
+                rows.Add($"({string.Join(", ", rowValues.Select(v => Parameter(ctx, v)))})");
+            }
 
+            var valueRows = string.Join(", ", rows);
             ctx.Write($"SELECT {colNames} FROM (VALUES {valueRows}) AS tbl ({colNames})");
-            ctx.Bindings.AddRange(adHoc.Values);
         }
     }
 }

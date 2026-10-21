@@ -12,6 +12,8 @@ namespace SqlKata.Compilers
         public string RawSql { get; set; } = "";
         public string ParameterPlaceholder { get; set; } = "?";
         public string EscapeCharacter { get; set; } = "\\";
+        public int ParameterOffset { get; set; } = 0;
+        public int NextParameterIndex => ParameterOffset + Bindings.Count;
 
         private readonly Stack<Query> _queryStack = new();
 
@@ -56,6 +58,7 @@ namespace SqlKata.Compilers
             {
                 ParameterPlaceholder = other.ParameterPlaceholder;
                 EscapeCharacter = other.EscapeCharacter;
+                ParameterOffset = other.NextParameterIndex;
                 CopyQueryStackFrom(other);
             }
         }

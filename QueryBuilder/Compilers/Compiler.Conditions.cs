@@ -100,8 +100,7 @@ namespace SqlKata.Compilers
 
         protected virtual void VisitRawCondition(CompileContext ctx, RawCondition x)
         {
-            ctx.Bindings.AddRange(x.Bindings);
-            ctx.Write(WrapIdentifiers(x.Expression));
+            VisitRaw(ctx, x.Expression, x.Bindings);
         }
 
         protected virtual void VisitQueryCondition(CompileContext ctx, QueryCondition x)

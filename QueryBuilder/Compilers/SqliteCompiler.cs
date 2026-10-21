@@ -50,8 +50,7 @@ namespace SqlKata.Compilers
             if (limit == 0 && offset > 0)
             {
                 ctx.EnsureSpace();
-                ctx.Bindings.Add(offset);
-                ctx.Write($"LIMIT -1 OFFSET {parameterPlaceholder}");
+                ctx.Write($"LIMIT -1 OFFSET {Parameter(ctx, offset)}");
                 return;
             }
 

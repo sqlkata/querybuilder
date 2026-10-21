@@ -56,19 +56,258 @@ namespace SqlKata.Compilers
         protected Dictionary<string, object> generateNamedBindings(object[] bindings)
         {
             return Helper.Flatten(bindings).Select((v, i) => new { i, v })
-                .ToDictionary(x => parameterPrefix + x.i, x => x.v);
+                .ToDictionary(x => FormatParameterName(x.i), x => x.v);
         }
 
-        protected SqlResult PrepareResult(CompileContext ctx)
+        protected virtual SqlResult PrepareResult(CompileContext ctx)
         {
+            string sql;
+            string rawSql;
+
+            if (ctx.Buffer.Length > 0)
+            {
+                sql = ctx.Buffer.ToString();
+                rawSql = string.IsNullOrEmpty(ctx.RawSql) ? ToRawSql(sql) : ctx.RawSql;
+            }
+            else
+            {
+                rawSql = ctx.RawSql;
+                sql = FromRawSql(rawSql);
+            }
+
             return new SqlResult(parameterPlaceholder, EscapeCharacter)
             {
                 Query = ctx.Query,
-                RawSql = ctx.RawSql,
+                RawSql = rawSql,
                 Bindings = ctx.Bindings,
                 NamedBindings = generateNamedBindings(ctx.Bindings.ToArray()),
-                Sql = Helper.ReplaceAll(ctx.RawSql, parameterPlaceholder, EscapeCharacter, i => parameterPrefix + i)
+                Sql = sql
             };
+        }
+
+        public virtual string ToRawSql(string sql)
+        {
+            if (string.IsNullOrEmpty(sql)) return sql;
+
+            var sb = new StringBuilder(sql.Length);
+            bool inSingleQuote = false;
+            var prefix = parameterPrefix;
+
+            for (int i = 0; i < sql.Length; i++)
+            {
+                char c = sql[i];
+
+                if (c == '\'')
+                {
+                    if (inSingleQuote && i + 1 < sql.Length && sql[i + 1] == '\'')
+                    {
+                        sb.Append("''");
+                        i++;
+                        continue;
+                    }
+                    inSingleQuote = !inSingleQuote;
+                    sb.Append(c);
+                    continue;
+                }
+
+                if (!inSingleQuote && IsParameterPlaceholderAt(sql, i, prefix, out int length))
+                {
+                    sb.Append(parameterPlaceholder);
+                    i += length - 1;
+                    continue;
+                }
+
+                sb.Append(c);
+            }
+
+            return sb.ToString();
+        }
+
+        private static bool IsParameterPlaceholderAt(string sql, int index, string prefix, out int length)
+        {
+            length = 0;
+            if (index + prefix.Length >= sql.Length) return false;
+
+            if (index > 0)
+            {
+                char prev = sql[index - 1];
+                if (char.IsLetterOrDigit(prev) || prev == '_') return false;
+            }
+
+            for (int p = 0; p < prefix.Length; p++)
+            {
+                if (sql[index + p] != prefix[p]) return false;
+            }
+
+            int digitStart = index + prefix.Length;
+            if (!char.IsDigit(sql[digitStart])) return false;
+
+            int cur = digitStart;
+            while (cur < sql.Length && char.IsDigit(sql[cur]))
+            {
+                cur++;
+            }
+
+            if (cur < sql.Length && (char.IsLetter(sql[cur]) || sql[cur] == '_'))
+            {
+                return false;
+            }
+
+            length = cur - index;
+            return true;
+        }
+
+        public virtual string FromRawSql(string rawSql)
+        {
+            if (string.IsNullOrEmpty(rawSql)) return rawSql;
+
+            var sb = new StringBuilder(rawSql.Length);
+            bool inSingleQuote = false;
+            int paramIndex = 0;
+
+            for (int i = 0; i < rawSql.Length; i++)
+            {
+                char c = rawSql[i];
+
+                if (c == '\'')
+                {
+                    if (inSingleQuote && i + 1 < rawSql.Length && rawSql[i + 1] == '\'')
+                    {
+                        sb.Append("''");
+                        i++;
+                        continue;
+                    }
+                    inSingleQuote = !inSingleQuote;
+                    sb.Append(c);
+                    continue;
+                }
+
+                if (!inSingleQuote && c == '?')
+                {
+                    if (i > 0 && rawSql[i - 1] == '\\')
+                    {
+                        sb.Length--;
+                        sb.Append('?');
+                        continue;
+                    }
+
+                    sb.Append(FormatParameterName(paramIndex++));
+                    continue;
+                }
+
+                sb.Append(c);
+            }
+
+            return sb.ToString();
+        }
+
+        public virtual void VisitRaw(CompileContext ctx, string sql, object[] bindings)
+        {
+            if (string.IsNullOrEmpty(sql))
+            {
+                return;
+            }
+
+            var wrappedSql = WrapIdentifiers(sql);
+            if (bindings == null || bindings.Length == 0)
+            {
+                ctx.Write(wrappedSql);
+                return;
+            }
+
+            int bindingIndex = 0;
+            bool inSingleQuote = false;
+            bool inLineComment = false;
+            bool inBlockComment = false;
+            int lastIndex = 0;
+
+            for (int i = 0; i < wrappedSql.Length; i++)
+            {
+                char c = wrappedSql[i];
+
+                if (!inSingleQuote && !inBlockComment && c == '-' && i + 1 < wrappedSql.Length && wrappedSql[i + 1] == '-')
+                {
+                    inLineComment = true;
+                }
+                if (inLineComment)
+                {
+                    if (c == '\n' || c == '\r') inLineComment = false;
+                    continue;
+                }
+
+                if (!inSingleQuote && !inLineComment && c == '/' && i + 1 < wrappedSql.Length && wrappedSql[i + 1] == '*')
+                {
+                    inBlockComment = true;
+                }
+                if (inBlockComment)
+                {
+                    if (c == '*' && i + 1 < wrappedSql.Length && wrappedSql[i + 1] == '/')
+                    {
+                        inBlockComment = false;
+                        i++;
+                    }
+                    continue;
+                }
+
+                if (c == '\'')
+                {
+                    if (inSingleQuote && i + 1 < wrappedSql.Length && wrappedSql[i + 1] == '\'')
+                    {
+                        i++;
+                        continue;
+                    }
+                    inSingleQuote = !inSingleQuote;
+                    continue;
+                }
+
+                if (!inSingleQuote && c == '?')
+                {
+                    if (i > 0 && wrappedSql[i - 1] == '\\')
+                    {
+                        if (i - 1 > lastIndex)
+                        {
+                            ctx.Write(wrappedSql.Substring(lastIndex, i - 1 - lastIndex));
+                        }
+                        ctx.Write('?');
+                        lastIndex = i + 1;
+                        continue;
+                    }
+
+                    if (i > lastIndex)
+                    {
+                        ctx.Write(wrappedSql.Substring(lastIndex, i - lastIndex));
+                    }
+
+                    if (bindingIndex < bindings.Length)
+                    {
+                        var val = bindings[bindingIndex++];
+                        if (Helper.IsArray(val))
+                        {
+                            var items = (val as System.Collections.IEnumerable).Cast<object>().ToList();
+                            for (int j = 0; j < items.Count; j++)
+                            {
+                                if (j > 0) ctx.Write(",");
+                                ctx.Write(Parameter(ctx, items[j]));
+                            }
+                        }
+                        else
+                        {
+                            ctx.Write(Parameter(ctx, val));
+                        }
+                    }
+                    else
+                    {
+                        ctx.Write(Parameter(ctx, null));
+                    }
+
+                    lastIndex = i + 1;
+                }
+            }
+
+            if (lastIndex < wrappedSql.Length)
+            {
+                ctx.Write(wrappedSql.Substring(lastIndex));
+            }
         }
 
         private Query TransformAggregateQuery(Query query)
@@ -127,7 +366,7 @@ namespace SqlKata.Compilers
         protected virtual CompileContext CompileRaw(CompileContext ctx)
         {
             VisitQuery(ctx, ctx.Query);
-            ctx.RawSql = Helper.ExpandParameters(ctx.Buffer.ToString(), parameterPlaceholder, EscapeCharacter, ctx.Bindings.ToArray());
+            ctx.RawSql = ToRawSql(ctx.Buffer.ToString());
             return ctx;
         }
 
@@ -246,6 +485,7 @@ namespace SqlKata.Compilers
             }
 
             string table = null;
+            RawFromClause rawFrom = null;
 
             if (fromClause is FromClause fromClauseCast)
             {
@@ -254,8 +494,8 @@ namespace SqlKata.Compilers
 
             if (fromClause is RawFromClause rawFromClause)
             {
+                rawFrom = rawFromClause;
                 table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
             if (table is null)
@@ -267,13 +507,29 @@ namespace SqlKata.Compilers
 
             if (!hasJoins)
             {
-                ctx.Write($"DELETE FROM {table}");
+                ctx.Write("DELETE FROM ");
+                if (rawFrom != null)
+                {
+                    VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                }
+                else
+                {
+                    ctx.Write(table);
+                }
                 VisitWheres(ctx, query);
                 return;
             }
 
             var target = GetJoinTargetTable(fromClause, table);
-            ctx.Write($"DELETE {target} FROM {table}");
+            ctx.Write($"DELETE {target} FROM ");
+            if (rawFrom != null)
+            {
+                VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+            }
+            else
+            {
+                ctx.Write(table);
+            }
 
             VisitJoins(ctx, query);
             VisitWheres(ctx, query);
@@ -288,13 +544,13 @@ namespace SqlKata.Compilers
             }
 
             string table = null;
+            RawFromClause rawFrom = null;
 
             if (fromClause is FromClause fromClauseCast)
             {
                 table = Wrap(fromClauseCast.Table);
             }
 
-            RawFromClause rawFrom = null;
             if (fromClause is RawFromClause rawFromClause)
             {
                 rawFrom = rawFromClause;
@@ -309,31 +565,40 @@ namespace SqlKata.Compilers
             var hasJoins = query.Joins.ForEngine(EngineCode).Any();
             var target = hasJoins ? GetJoinTargetTable(fromClause, table) : table;
 
-            if (!hasJoins && rawFrom != null)
-            {
-                ctx.Bindings.AddRange(rawFrom.Bindings);
-            }
-
             var clause = query.UpdateClauses.ForEngineOrDefault(EngineCode);
 
             if (clause != null && clause is IncrementClause increment)
             {
                 var column = Wrap(increment.Column);
-                var value = Parameter(ctx, Math.Abs(increment.Value));
                 var sign = increment.Value >= 0 ? "+" : "-";
 
                 if (hasJoins)
                 {
-                    ctx.Write($"UPDATE {target} SET {column} = {column} {sign} {value} FROM {table}");
+                    var value = Parameter(ctx, Math.Abs(increment.Value));
+                    ctx.Write($"UPDATE {target} SET {column} = {column} {sign} {value} FROM ");
                     if (rawFrom != null)
                     {
-                        ctx.Bindings.AddRange(rawFrom.Bindings);
+                        VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                    }
+                    else
+                    {
+                        ctx.Write(table);
                     }
                     VisitJoins(ctx, query);
                 }
                 else
                 {
-                    ctx.Write($"UPDATE {table} SET {column} = {column} {sign} {value}");
+                    ctx.Write("UPDATE ");
+                    if (rawFrom != null)
+                    {
+                        VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                    }
+                    else
+                    {
+                        ctx.Write(table);
+                    }
+                    var value = Parameter(ctx, Math.Abs(increment.Value));
+                    ctx.Write($" SET {column} = {column} {sign} {value}");
                 }
 
                 VisitWheres(ctx, query);
@@ -341,27 +606,47 @@ namespace SqlKata.Compilers
             }
 
             var toUpdate = clause as InsertClause;
-            var parts = new List<string>();
-
-            for (var i = 0; i < toUpdate.Columns.Count; i++)
-            {
-                parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
-            }
-
-            var sets = string.Join(", ", parts);
 
             if (hasJoins)
             {
-                ctx.Write($"UPDATE {target} SET {sets} FROM {table}");
+                var parts = new List<string>();
+                for (var i = 0; i < toUpdate.Columns.Count; i++)
+                {
+                    parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                }
+                var sets = string.Join(", ", parts);
+
+                ctx.Write($"UPDATE {target} SET {sets} FROM ");
                 if (rawFrom != null)
                 {
-                    ctx.Bindings.AddRange(rawFrom.Bindings);
+                    VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                }
+                else
+                {
+                    ctx.Write(table);
                 }
                 VisitJoins(ctx, query);
             }
             else
             {
-                ctx.Write($"UPDATE {table} SET {sets}");
+                ctx.Write("UPDATE ");
+                if (rawFrom != null)
+                {
+                    VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                }
+                else
+                {
+                    ctx.Write(table);
+                }
+
+                var parts = new List<string>();
+                for (var i = 0; i < toUpdate.Columns.Count; i++)
+                {
+                    parts.Add(Wrap(toUpdate.Columns[i]) + " = " + Parameter(ctx, toUpdate.Values[i]));
+                }
+                var sets = string.Join(", ", parts);
+
+                ctx.Write($" SET {sets}");
             }
 
             VisitWheres(ctx, query);
@@ -416,7 +701,16 @@ namespace SqlKata.Compilers
             if (fromClause is RawFromClause rawFromClause)
             {
                 table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
+                if (rawFromClause.Bindings != null && rawFromClause.Bindings.Length > 0)
+                {
+                    var tempCtx = new CompileContext(ctx.Query, parameterPlaceholder, EscapeCharacter)
+                    {
+                        ParameterOffset = ctx.NextParameterIndex
+                    };
+                    VisitRaw(tempCtx, rawFromClause.Expression, rawFromClause.Bindings);
+                    table = tempCtx.Buffer.ToString();
+                    ctx.Bindings.AddRange(tempCtx.Bindings);
+                }
             }
 
             if (table is null)
@@ -498,8 +792,9 @@ namespace SqlKata.Compilers
 
             if (cte is RawFromClause raw)
             {
-                ctx.Bindings.AddRange(raw.Bindings);
-                ctx.Write($"{WrapValue(raw.Alias)} AS ({WrapIdentifiers(raw.Expression)})");
+                ctx.Write($"{WrapValue(raw.Alias)} AS (");
+                VisitRaw(ctx, raw.Expression, raw.Bindings);
+                ctx.Write(")");
             }
             else if (cte is QueryFromClause queryFromClause)
             {
@@ -601,8 +896,7 @@ namespace SqlKata.Compilers
 
         public virtual void VisitRawColumn(CompileContext ctx, RawColumn raw)
         {
-            ctx.Bindings.AddRange(raw.Bindings);
-            ctx.Write(WrapIdentifiers(raw.Expression));
+            VisitRaw(ctx, raw.Expression, raw.Bindings);
         }
 
         public virtual void VisitQueryColumn(CompileContext ctx, QueryColumn queryColumn)
@@ -702,8 +996,7 @@ namespace SqlKata.Compilers
 
         public virtual void VisitRawFromClause(CompileContext ctx, RawFromClause raw)
         {
-            ctx.Bindings.AddRange(raw.Bindings);
-            ctx.Write(WrapIdentifiers(raw.Expression));
+            VisitRaw(ctx, raw.Expression, raw.Bindings);
         }
 
         public virtual void VisitQueryFromClause(CompileContext ctx, QueryFromClause queryFromClause)
@@ -717,17 +1010,23 @@ namespace SqlKata.Compilers
 
         public virtual void VisitAdHocTableFromClause(CompileContext ctx, AdHocTableFromClause adHoc)
         {
-            var row = "SELECT " + string.Join(", ", adHoc.Columns.Select(col => $"{parameterPlaceholder} AS {Wrap(col)}"));
+            var fromTable = SingleRowDummyTableName != null ? $" FROM {SingleRowDummyTableName}" : "";
+            var colCount = adHoc.Columns.Count;
+            var rowCount = adHoc.Values.Count / colCount;
+            var rows = new List<string>(rowCount);
 
-            var fromTable = SingleRowDummyTableName;
-            if (fromTable != null)
+            for (var r = 0; r < rowCount; r++)
             {
-                row += $" FROM {fromTable}";
+                var selectCols = new List<string>(colCount);
+                for (var c = 0; c < colCount; c++)
+                {
+                    var val = adHoc.Values[r * colCount + c];
+                    selectCols.Add($"{Parameter(ctx, val)} AS {Wrap(adHoc.Columns[c])}");
+                }
+                rows.Add("SELECT " + string.Join(", ", selectCols) + fromTable);
             }
 
-            var rows = string.Join(" UNION ALL ", Enumerable.Repeat(row, adHoc.Values.Count / adHoc.Columns.Count));
-            ctx.Bindings.AddRange(adHoc.Values);
-            ctx.Write(rows);
+            ctx.Write(string.Join(" UNION ALL ", rows));
         }
 
         public virtual void VisitJoins(CompileContext ctx, Query query)
@@ -827,8 +1126,7 @@ namespace SqlKata.Compilers
                 var x = columns[i];
                 if (x is RawOrderBy raw)
                 {
-                    ctx.Bindings.AddRange(raw.Bindings);
-                    ctx.Write(WrapIdentifiers(raw.Expression));
+                    VisitRaw(ctx, raw.Expression, raw.Bindings);
                 }
                 else if (x is OrderBy orderBy)
                 {
@@ -861,21 +1159,17 @@ namespace SqlKata.Compilers
 
             if (offset == 0)
             {
-                ctx.Bindings.Add(limit);
-                ctx.Write($"LIMIT {parameterPlaceholder}");
+                ctx.Write($"LIMIT {Parameter(ctx, limit)}");
                 return;
             }
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
-                ctx.Write($"OFFSET {parameterPlaceholder}");
+                ctx.Write($"OFFSET {Parameter(ctx, offset)}");
                 return;
             }
 
-            ctx.Bindings.Add(limit);
-            ctx.Bindings.Add(offset);
-            ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
+            ctx.Write($"LIMIT {Parameter(ctx, limit)} OFFSET {Parameter(ctx, offset)}");
         }
 
         public virtual void VisitUnions(CompileContext ctx, Query query)
@@ -897,8 +1191,7 @@ namespace SqlKata.Compilers
                 }
                 else if (clause is RawCombine rawCombine)
                 {
-                    ctx.Bindings.AddRange(rawCombine.Bindings);
-                    ctx.Write(WrapIdentifiers(rawCombine.Expression));
+                    VisitRaw(ctx, rawCombine.Expression, rawCombine.Bindings);
                 }
             }
         }
@@ -917,7 +1210,7 @@ namespace SqlKata.Compilers
             {
                 var result = ctx.Buffer.ToString(prevLen, ctx.Buffer.Length - prevLen).Trim();
                 ctx.Buffer.Length = prevLen;
-                return result;
+                return ToRawSql(result);
             }
             return null;
         }
@@ -1063,14 +1356,14 @@ namespace SqlKata.Compilers
 
             if (parameter is Variable variable)
             {
-                var value = ctx.FindVariable(variable.Name);
-                ctx.Bindings.Add(value);
-                return parameterPlaceholder;
+                parameter = ctx.FindVariable(variable.Name);
             }
 
             ctx.Bindings.Add(parameter);
-            return parameterPlaceholder;
+            return FormatParameterName(ctx.NextParameterIndex - 1);
         }
+
+        public virtual string FormatParameterName(int index) => $"{parameterPrefix}{index}";
 
         public virtual string Parameterize<T>(CompileContext ctx, IEnumerable<T> values)
         {

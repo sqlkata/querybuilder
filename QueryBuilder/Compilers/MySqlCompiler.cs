@@ -37,10 +37,11 @@ namespace SqlKata.Compilers
                 table = Wrap(fromClauseCast.Table);
             }
 
+            RawFromClause rawFrom = null;
             if (fromClause is RawFromClause rawFromClause)
             {
+                rawFrom = rawFromClause;
                 table = WrapIdentifiers(rawFromClause.Expression);
-                ctx.Bindings.AddRange(rawFromClause.Bindings);
             }
 
             if (table is null)
@@ -52,7 +53,15 @@ namespace SqlKata.Compilers
 
             if (clause != null && clause is IncrementClause increment)
             {
-                ctx.Write($"UPDATE {table}");
+                ctx.Write("UPDATE ");
+                if (rawFrom != null)
+                {
+                    VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+                }
+                else
+                {
+                    ctx.Write(table);
+                }
                 VisitJoins(ctx, query);
                 var column = Wrap(increment.Column);
                 var value = Parameter(ctx, Math.Abs(increment.Value));
@@ -63,7 +72,15 @@ namespace SqlKata.Compilers
                 return;
             }
 
-            ctx.Write($"UPDATE {table}");
+            ctx.Write("UPDATE ");
+            if (rawFrom != null)
+            {
+                VisitRaw(ctx, rawFrom.Expression, rawFrom.Bindings);
+            }
+            else
+            {
+                ctx.Write(table);
+            }
             VisitJoins(ctx, query);
 
             var toUpdate = clause as InsertClause;
@@ -94,21 +111,17 @@ namespace SqlKata.Compilers
 
             if (offset == 0)
             {
-                ctx.Bindings.Add(limit);
-                ctx.Write($"LIMIT {parameterPlaceholder}");
+                ctx.Write($"LIMIT {Parameter(ctx, limit)}");
                 return;
             }
 
             if (limit == 0)
             {
-                ctx.Bindings.Add(offset);
-                ctx.Write($"LIMIT 18446744073709551615 OFFSET {parameterPlaceholder}");
+                ctx.Write($"LIMIT 18446744073709551615 OFFSET {Parameter(ctx, offset)}");
                 return;
             }
 
-            ctx.Bindings.Add(limit);
-            ctx.Bindings.Add(offset);
-            ctx.Write($"LIMIT {parameterPlaceholder} OFFSET {parameterPlaceholder}");
+            ctx.Write($"LIMIT {Parameter(ctx, limit)} OFFSET {Parameter(ctx, offset)}");
         }
 
         public override string CompileRandom(int? seed)

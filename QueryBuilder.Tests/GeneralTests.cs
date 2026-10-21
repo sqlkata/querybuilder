@@ -845,5 +845,134 @@ namespace SqlKata.Tests
             var postgres = Compilers.CompileFor(EngineCodes.PostgreSql, query).ToString();
             Assert.Equal("SELECT * FROM \"Users\" ORDER BY \"Id\", RANDOM() LIMIT 10", postgres);
         }
+
+        [Fact]
+        public void RawSql_WithQuestionMarkInsideStringLiteral_DoesNotTreatAsParameter()
+        {
+            var query = new Query("Users")
+                .WhereRaw("[Title] = 'Why?' AND [Age] > ?", 18);
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE [Title] = 'Why?' AND [Age] > @p0", result.Sql);
+            Assert.Equal("SELECT * FROM [Users] WHERE [Title] = 'Why?' AND [Age] > ?", result.RawSql);
+            Assert.Single(result.Bindings);
+            Assert.Equal(18, result.Bindings[0]);
+            Assert.Equal(18, result.NamedBindings["@p0"]);
+            Assert.Equal("SELECT * FROM [Users] WHERE [Title] = 'Why?' AND [Age] > 18", result.ToString());
+        }
+
+        [Fact]
+        public void RawSql_WithEscapedQuestionMark_DoesNotTreatAsParameter()
+        {
+            var query = new Query("Documents")
+                .WhereRaw("[Data] \\? 'tags' AND [TenantId] = ?", 42);
+
+            var compiler = new PostgresCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM \"Documents\" WHERE \"Data\" ? 'tags' AND \"TenantId\" = @p0", result.Sql);
+            Assert.Equal("SELECT * FROM \"Documents\" WHERE \"Data\" ? 'tags' AND \"TenantId\" = ?", result.RawSql);
+            Assert.Single(result.Bindings);
+            Assert.Equal(42, result.Bindings[0]);
+            Assert.Equal(42, result.NamedBindings["@p0"]);
+        }
+
+        [Fact]
+        public void RawSql_WithArrayBinding_ExpandsCorrectlyDirectly()
+        {
+            var query = new Query("Users")
+                .Where("TenantId", 99)
+                .WhereRaw("[Role] IN (?)", new object[] { new[] { "Admin", "Manager" } })
+                .Where("Age", 30);
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE [TenantId] = @p0 AND [Role] IN (@p1,@p2) AND [Age] = @p3", result.Sql);
+            Assert.Equal("SELECT * FROM [Users] WHERE [TenantId] = ? AND [Role] IN (?,?) AND [Age] = ?", result.RawSql);
+            Assert.Equal(4, result.Bindings.Count);
+            Assert.Equal(new object[] { 99, "Admin", "Manager", 30 }, result.Bindings.ToArray());
+            Assert.Equal(99, result.NamedBindings["@p0"]);
+            Assert.Equal("Admin", result.NamedBindings["@p1"]);
+            Assert.Equal("Manager", result.NamedBindings["@p2"]);
+            Assert.Equal(30, result.NamedBindings["@p3"]);
+        }
+
+        [Fact]
+        public void OracleCompiler_DirectParameterEmission_UsesOraclePrefix()
+        {
+            var query = new Query("Users")
+                .Where("Id", 1)
+                .WhereRaw("\"Status\" IN (?)", new[] { 10, 20 });
+
+            var compiler = new OracleCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM \"Users\" WHERE \"Id\" = :p0 AND \"Status\" IN (:p1,:p2)", result.Sql);
+            Assert.Equal("SELECT * FROM \"Users\" WHERE \"Id\" = ? AND \"Status\" IN (?,?)", result.RawSql);
+            Assert.Equal(1, result.NamedBindings[":p0"]);
+            Assert.Equal(10, result.NamedBindings[":p1"]);
+            Assert.Equal(20, result.NamedBindings[":p2"]);
+        }
+
+        [Fact]
+        public void OrderByRaw_WithBindings_EmitsParametersCorrectly()
+        {
+            var query = new Query("Products")
+                .Where("Category", "Electronics")
+                .OrderByRaw("FIELD([Id], ?, ?)", 5, 10);
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Products] WHERE [Category] = @p0 ORDER BY FIELD([Id], @p1, @p2)", result.Sql);
+            Assert.Equal("SELECT * FROM [Products] WHERE [Category] = ? ORDER BY FIELD([Id], ?, ?)", result.RawSql);
+            Assert.Equal(3, result.Bindings.Count);
+            Assert.Equal("Electronics", result.NamedBindings["@p0"]);
+            Assert.Equal(5, result.NamedBindings["@p1"]);
+            Assert.Equal(10, result.NamedBindings["@p2"]);
+        }
+
+        [Fact]
+        public void SubQuery_SequencesParameterIndicesCorrectly()
+        {
+            var subQuery = new Query("Orders")
+                .Select("UserId")
+                .Where("Total", ">", 100);
+
+            var query = new Query("Users")
+                .Where("Active", 1)
+                .WhereIn("Id", subQuery)
+                .Where("Age", ">", 25);
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(query);
+
+            Assert.Equal("SELECT * FROM [Users] WHERE [Active] = @p0 AND [Id] IN (SELECT [UserId] FROM [Orders] WHERE [Total] > @p1) AND [Age] > @p2", result.Sql);
+            Assert.Equal("SELECT * FROM [Users] WHERE [Active] = ? AND [Id] IN (SELECT [UserId] FROM [Orders] WHERE [Total] > ?) AND [Age] > ?", result.RawSql);
+            Assert.Equal(1, result.NamedBindings["@p0"]);
+            Assert.Equal(100, result.NamedBindings["@p1"]);
+            Assert.Equal(25, result.NamedBindings["@p2"]);
+        }
+
+        [Fact]
+        public void CompileMultipleQueries_SequencesParametersWithoutCollisions()
+        {
+            var q1 = new Query("Users").Where("Id", 10);
+            var q2 = new Query("Orders").Where("UserId", 20).Where("Status", "Shipped");
+
+            var compiler = new SqlServerCompiler();
+            var result = compiler.Compile(new[] { q1, q2 });
+
+            Assert.Equal("SELECT * FROM [Users] WHERE [Id] = @p0;\nSELECT * FROM [Orders] WHERE [UserId] = @p1 AND [Status] = @p2", result.Sql);
+            Assert.Equal("SELECT * FROM [Users] WHERE [Id] = ?;\nSELECT * FROM [Orders] WHERE [UserId] = ? AND [Status] = ?", result.RawSql);
+            Assert.Equal(3, result.Bindings.Count);
+            Assert.Equal(10, result.NamedBindings["@p0"]);
+            Assert.Equal(20, result.NamedBindings["@p1"]);
+            Assert.Equal("Shipped", result.NamedBindings["@p2"]);
+        }
     }
 }
+

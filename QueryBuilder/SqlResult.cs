@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using System.Text;
+
 namespace SqlKata
 {
     public class SqlResult
@@ -40,19 +42,117 @@ namespace SqlKata
         {
             var deepParameters = Helper.Flatten(Bindings).ToList();
 
-            var subject = Helper.ReplaceAll(RawSql, ParameterPlaceholder, EscapeCharacter, i =>
+            if (string.IsNullOrWhiteSpace(RawSql))
             {
-                if (i >= deepParameters.Count)
+                return "";
+            }
+
+            if (ParameterPlaceholder.Length != 1 || EscapeCharacter.Length != 1)
+            {
+                var subject = Helper.ReplaceAll(RawSql, ParameterPlaceholder, EscapeCharacter, i =>
                 {
-                    throw new Exception(
-                        $"Failed to retrieve a binding at index {i}, the total bindings count is {Bindings.Count}");
+                    if (i >= deepParameters.Count)
+                    {
+                        throw new Exception(
+                            $"Failed to retrieve a binding at index {i}, the total bindings count is {Bindings.Count}");
+                    }
+
+                    var value = deepParameters[i];
+                    return ChangeToSqlValue(value);
+                });
+
+                return Helper.RemoveEscapeCharacter(subject, ParameterPlaceholder, EscapeCharacter);
+            }
+
+            var sb = new StringBuilder(RawSql.Length + deepParameters.Count * 8);
+            int paramIndex = 0;
+            int length = RawSql.Length;
+            char escapeChar = EscapeCharacter[0];
+            char placeholderChar = ParameterPlaceholder[0];
+
+            for (int i = 0; i < length; i++)
+            {
+                char c = RawSql[i];
+
+                if (c == escapeChar && i + 1 < length && RawSql[i + 1] == placeholderChar)
+                {
+                    sb.Append(placeholderChar);
+                    i++;
+                    continue;
                 }
 
-                var value = deepParameters[i];
-                return ChangeToSqlValue(value);
-            });
+                if (c == '\'')
+                {
+                    sb.Append('\'');
+                    i++;
+                    while (i < length)
+                    {
+                        char sc = RawSql[i];
+                        sb.Append(sc);
+                        if (sc == '\'')
+                        {
+                            if (i + 1 < length && RawSql[i + 1] == '\'')
+                            {
+                                sb.Append('\'');
+                                i += 2;
+                                continue;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+                    continue;
+                }
 
-            return Helper.RemoveEscapeCharacter(subject, ParameterPlaceholder, EscapeCharacter);
+                if (c == '-' && i + 1 < length && RawSql[i + 1] == '-')
+                {
+                    sb.Append("--");
+                    i += 2;
+                    while (i < length)
+                    {
+                        char lc = RawSql[i];
+                        sb.Append(lc);
+                        if (lc == '\n') break;
+                        i++;
+                    }
+                    continue;
+                }
+
+                if (c == '/' && i + 1 < length && RawSql[i + 1] == '*')
+                {
+                    sb.Append("/*");
+                    i += 2;
+                    while (i < length)
+                    {
+                        char bc = RawSql[i];
+                        sb.Append(bc);
+                        if (bc == '*' && i + 1 < length && RawSql[i + 1] == '/')
+                        {
+                            sb.Append('/');
+                            i++;
+                            break;
+                        }
+                        i++;
+                    }
+                    continue;
+                }
+
+                if (c == placeholderChar)
+                {
+                    if (paramIndex >= deepParameters.Count)
+                    {
+                        throw new Exception(
+                            $"Failed to retrieve a binding at index {paramIndex}, the total bindings count is {Bindings.Count}");
+                    }
+                    var value = deepParameters[paramIndex++];
+                    sb.Append(ChangeToSqlValue(value));
+                    continue;
+                }
+
+                sb.Append(c);
+            }
+
+            return sb.ToString();
         }
 
         private string ChangeToSqlValue(object value)

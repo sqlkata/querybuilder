@@ -61,10 +61,10 @@ namespace SqlKata.Compilers
             if (limit > 0 && offset > 0)
             {
                 ctx.EnsureSpace();
-                ctx.Bindings.Add(offset + 1);
-                ctx.Bindings.Add(limit + offset);
+                var p1 = Parameter(ctx, offset + 1);
+                var p2 = Parameter(ctx, limit + offset);
 
-                ctx.Write($"ROWS {parameterPlaceholder} TO {parameterPlaceholder}");
+                ctx.Write($"ROWS {p1} TO {p2}");
             }
         }
 
@@ -76,15 +76,13 @@ namespace SqlKata.Compilers
 
             if (limit > 0 && offset == 0)
             {
-                ctx.Bindings.Add(limit);
-                ctx.Write($"SELECT FIRST {parameterPlaceholder} {distinct}");
+                ctx.Write($"SELECT FIRST {Parameter(ctx, limit)} {distinct}");
                 return;
             }
 
             if (limit == 0 && offset > 0)
             {
-                ctx.Bindings.Add(offset);
-                ctx.Write($"SELECT SKIP {parameterPlaceholder} {distinct}");
+                ctx.Write($"SELECT SKIP {Parameter(ctx, offset)} {distinct}");
                 return;
             }
 
