@@ -958,5 +958,35 @@ namespace SqlKata.Tests
             Assert.Equal("SELECT * FROM [Posts] WHERE EXISTS (SELECT [Id] FROM [Comments] WHERE [Comments].[PostId] = [Posts].[Id])", sqlServer.ToString());
         }
 
+        public record Post(int Id, string Title, DateTime Published);
+
+        [Fact]
+        public void SelectType() {
+            var q = new Query("Post").Select<Post>();
+
+            var pgsql = Compilers.CompileFor(EngineCodes.PostgreSql, q);
+
+            Assert.Equal("""
+                         SELECT "Id", "Title", "Published" FROM "Post"
+                         """, pgsql.ToString());
+        }
+
+        public class Comment {
+            [Column("comment_id")] public int Id { get; set; }
+            [Column("post_id")] public int PostId { get; set; }
+            [Column("content")] public string Content { get; set; }
+            [Column("created_at")] public DateTime Created { get; set; }
+        }
+
+        [Fact]
+        public void SelectType_WithColumnAttribute() {
+            var q = new Query("Comment").Select<Comment>();
+
+            var pgsql = Compilers.CompileFor(EngineCodes.PostgreSql, q);
+
+            Assert.Equal("""
+                         SELECT "comment_id" AS "Id", "post_id" AS "PostId", "content" AS "Content", "created_at" AS "Created" FROM "Comment"
+                         """, pgsql.ToString());
+        }
     }
 }

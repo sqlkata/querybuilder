@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SqlKata
 {
@@ -120,6 +121,25 @@ namespace SqlKata
         public Query SelectMax(string column, Func<Query, Query> filter = null)
         {
             return SelectAggregate("max", column, filter);
+        }
+
+        public Query Select<T>() where T : class {
+            var properties = typeof(T).GetProperties();
+            var columns = new List<string>();
+            foreach (var property in properties) {
+                if (property.GetSetMethod() == null) {
+                    continue;
+                }
+
+                var name = property.Name;
+                var attribute = property.GetCustomAttribute<ColumnAttribute>();
+                if (attribute != null) {
+                    name = $"{attribute.Name} as {name}";
+                }
+
+                columns.Add(name);
+            }
+            return Select(columns);
         }
     }
 }
